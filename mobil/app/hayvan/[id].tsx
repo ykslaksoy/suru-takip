@@ -108,12 +108,12 @@ export default function AnimalDetailScreen() {
 
       <View style={styles.actions}>
         <Link href={`/hayvan/${animal.id}/kilo`} asChild>
-          <Pressable style={[styles.actionBtn, { backgroundColor: colors.tint }]}>
+          <Pressable style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.tint }])}>
             <Text style={styles.actionText}>📊 Kilo Takibi</Text>
           </Pressable>
         </Link>
         <Link href={`/hayvan/${animal.id}/saglik`} asChild>
-          <Pressable style={[styles.actionBtn, { backgroundColor: colors.accent }]}>
+          <Pressable style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.accent }])}>
             <Text style={[styles.actionText, { color: colors.text }]}>💊 Sağlık</Text>
           </Pressable>
         </Link>

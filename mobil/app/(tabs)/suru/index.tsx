@@ -71,7 +71,7 @@ export default function FlockScreen() {
           </Text>
         </View>
         <Link href="/hayvan/ekle" asChild>
-          <Pressable style={[styles.addBtn, { backgroundColor: colors.tint }]}>
+          <Pressable style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
             <Text style={styles.addText}>+ Ekle</Text>
           </Pressable>
         </Link>

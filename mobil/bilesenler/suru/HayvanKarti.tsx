@@ -24,15 +24,17 @@ export function HayvanKarti({
   return (
     <Link href={`/hayvan/${animal.id}`} asChild>
       <Pressable
-        style={({ pressed }) => [
-          styles.card,
-          {
-            backgroundColor: colors.card,
-            borderColor: grade && grade.id !== 'bilinmiyor' ? grade.color : colors.border,
-            opacity: pressed ? 0.85 : 1,
-            borderWidth: grade && grade.level >= 4 ? 2 : 1,
-          },
-        ]}>
+        style={({ pressed }) =>
+          StyleSheet.flatten([
+            styles.card,
+            {
+              backgroundColor: colors.card,
+              borderColor: grade && grade.id !== 'bilinmiyor' ? grade.color : colors.border,
+              opacity: pressed ? 0.85 : 1,
+              borderWidth: grade && grade.level >= 4 ? 2 : 1,
+            },
+          ])
+        }>
         <View style={styles.row}>
           <Text style={[styles.tag, { color: colors.tint }]}>{animal.earTag}</Text>
           {grade ? <DereceRozeti grade={grade} /> : null}

@@ -84,7 +84,7 @@ export default function HealthOverviewScreen() {
           }
           renderItem={({ item }) => (
             <Link href={`/hayvan/${item.animalId}/saglik`} asChild>
-              <Pressable style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Pressable style={StyleSheet.flatten([styles.card, { backgroundColor: colors.card, borderColor: colors.border }])}>
                 <Text style={[styles.tag, { color: colors.tint }]}>{item.earTag}</Text>
                 <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
                   {item.medicine || item.treatment || item.diagnosis || 'Aşı kaydı'}
@@ -114,7 +114,7 @@ export default function HealthOverviewScreen() {
           }
           renderItem={({ item }) => (
             <Link href={`/hayvan/${item.animalId}/saglik`} asChild>
-              <Pressable style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Pressable style={StyleSheet.flatten([styles.card, { backgroundColor: colors.card, borderColor: colors.border }])}>
                 <Text style={[styles.tag, { color: colors.tint }]}>{item.earTag}</Text>
                 <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
                   {item.symptoms || item.diagnosis || item.treatment || 'Kayıt'}
