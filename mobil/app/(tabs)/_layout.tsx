@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { useClientOnlyValue } from '@/bilesenler/ortak/useSadeceIstemci';
+import { WebDurumCubugu } from '@/bilesenler/ortak/WebDurumCubugu';
 
 /** 6 ana sekme — kısa etiket (dar ekran) */
 const TABS: { name: string; title: string; short: string; icon: string }[] = [
@@ -24,14 +24,21 @@ export default function TabLayout() {
   const colorScheme = useColorScheme() ?? 'light';
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
-        tabBarStyle: { minHeight: 58, paddingBottom: 4 },
-        headerShown: useClientOnlyValue(false, true),
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
-      }}>
+    <View style={{ flex: 1 }}>
+      <WebDurumCubugu />
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme].tint,
+          tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
+          tabBarStyle: {
+            minHeight: Platform.OS === 'web' ? 62 : 58,
+            paddingBottom: Platform.OS === 'web' ? 8 : 4,
+            borderTopWidth: 1,
+            borderTopColor: Colors[colorScheme].border,
+          },
+          headerShown: false,
+          tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
+        }}>
       {TABS.map((t) => (
         <Tabs.Screen
           key={t.name}
@@ -44,6 +51,7 @@ export default function TabLayout() {
         />
       ))}
       <Tabs.Screen name="index" options={{ href: null }} />
-    </Tabs>
+      </Tabs>
+    </View>
   );
 }

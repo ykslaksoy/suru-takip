@@ -22,7 +22,13 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./varliklar/images/favicon.png"
+      "favicon": "./varliklar/images/favicon.png",
+      "name": "SürüYön",
+      "shortName": "SürüYön",
+      "themeColor": "#2d6a4f",
+      "backgroundColor": "#f4f7f0",
+      "display": "standalone",
+      "orientation": "portrait"
     },
     "plugins": [
       "expo-router",

@@ -36,6 +36,9 @@ export default function HealthOverviewScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CevrimdisiBanner pendingSync={pendingSync} />
+      <View style={styles.pageHeader}>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Sağlık</Text>
+      </View>
       <AltButonlar
         items={[
           { key: 'kayitlar', label: 'Kayıtlar' },
@@ -135,6 +138,8 @@ export default function HealthOverviewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  pageHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  pageTitle: { fontSize: 26, fontWeight: '800' },
   warningBox: { marginBottom: 12, padding: 14, borderRadius: 12, borderWidth: 1 },
   warningTitle: { fontWeight: '700' },
   card: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 10 },

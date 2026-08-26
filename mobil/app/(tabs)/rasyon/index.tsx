@@ -31,6 +31,9 @@ export default function RationScreen() {
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
+      <View style={styles.pageHeader}>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Rasyon</Text>
+      </View>
       <AltButonlar
         items={[
           { key: 'hesapla', label: 'Hesapla' },
@@ -117,6 +120,8 @@ export default function RationScreen() {
 
 const styles = StyleSheet.create({
   shell: { flex: 1 },
+  pageHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  pageTitle: { fontSize: 26, fontWeight: '800' },
   container: { flex: 1, padding: 16 },
   intro: { marginBottom: 16, lineHeight: 20 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },

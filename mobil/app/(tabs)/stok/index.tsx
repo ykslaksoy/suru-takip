@@ -79,6 +79,9 @@ export default function StockScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CevrimdisiBanner pendingSync={pendingSync} />
+      <View style={styles.pageHeader}>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Stok</Text>
+      </View>
       <AltButonlar
         items={types.map((t) => ({
           key: t,
@@ -170,6 +173,8 @@ export default function StockScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  pageHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  pageTitle: { fontSize: 26, fontWeight: '800' },
   alert: { marginBottom: 12, fontWeight: '600' },
   footer: { padding: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
