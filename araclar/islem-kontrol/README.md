@@ -46,3 +46,9 @@ Değişiklik lazım
 - `kilitli: true` dosyaya **şifresiz yazma**
 - `tamamla` sonrası HTML üretildiğini doğrula
 - Kullanıcı HTML panelden kontrol eder: `islemler/rapor/index.html`
+
+## SürüYön kod eşleşmesi
+
+İşlem dosyalarının kod karşılığı `mobil/ozellikler/` kataloğunda (parça başına README):
+
+→ `mobil/ozellikler/README.md` · `mobil/ozellikler/KURAL.md`

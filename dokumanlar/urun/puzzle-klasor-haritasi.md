@@ -42,4 +42,5 @@ mobil/src/
 ```
 
 Şu an kod `mobil/kaynak/`, `mobil/bilesenler/`, `mobil/baglam/` altında.  
+Parça haritaları: `mobil/ozellikler/` (her `islemler/XX` için README).  
 Detay: `dokumanlar/urun/uygulama-agaci.md`

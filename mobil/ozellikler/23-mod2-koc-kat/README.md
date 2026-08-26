@@ -1,0 +1,23 @@
+# 23 — Mod 2 — Koç Katarak Besi
+
+**İşlemler:** [`islemler/23-mod2-koc-katarak-besi/`](../../../islemler/23-mod2-koc-katarak-besi/)
+
+## Kod yolları
+
+| Katman | Yol |
+|--------|-----|
+| kaynak | `mobil/kaynak/besi-koc-kat/` |
+| app | `mobil/app/koc-kat/` |
+| app | `mobil/app/mod/` |
+
+## Plan dosyaları
+
+### kaynak
+- `katim.ts`
+- `kuzulatma.ts`
+- `besiye-aktar.ts`
+
+## Bağımlılık
+
+- Sadece `03-cekirdek` + `bilesenler/ortak`
+- Diğer parçalara **doğrudan import yok**

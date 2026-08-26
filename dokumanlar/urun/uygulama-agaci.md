@@ -12,12 +12,25 @@
 ```
 suruyon/
 ├── mobil/           # uygulama
+│   └── ozellikler/  # ★ parça kataloğu (araclar/ gibi)
 ├── dokumanlar/      # ürün / doğrulama / taslak
-├── islemler/        # tik + kilit
-├── araclar/         # script
-├── sunucu/          # ★ sonra
-└── donanim/         # ★ sonra
+├── islemler/        # tik + kilit (her iş = 1 .md)
+├── araclar/         # script şablonu (islem-kontrol)
+├── sunucu/          # plan iskelet
+└── donanim/         # plan iskelet
 ```
+
+### Parça mantığı (`araclar/` ile aynı)
+
+| Katman | Rol | Örnek |
+|--------|-----|-------|
+| `islemler/XX-.../` | Tik + şifre kilidi | `04-suru/01-suru-listesi.md` |
+| `mobil/ozellikler/XX-.../` | Parça haritası (README) | `04-suru/README.md` |
+| `mobil/kaynak/.../` | İş mantığı | `suru/tur.ts` |
+| `mobil/bilesenler/.../` | UI | `suru/HayvanKarti.tsx` |
+| `mobil/app/.../` | Ekran | `(tabs)/suru/index.tsx` |
+
+Kural: parçalar birbirine değil, sadece `cekirdek` üzerinden bağlanır → `mobil/ozellikler/KURAL.md`
 
 ---
 
