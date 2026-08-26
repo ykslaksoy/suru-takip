@@ -15,9 +15,9 @@ suruyon/
     │   ├── [x] 01-gorusme-rehberi.md 🔒  — Çiftçi/vet görüşme rehberi
     │   ├── [x] 02-anket-formu.md 🔒  — Anket formu
     │   └── [x] 03-dogrulama-raporu.md 🔒  — Faz 0 doğrulama raporu
-    ├── 02-wireframe/
+    ├── 02-ekran-taslak/
     │   └── [x] 01-bes-ana-ekran.md 🔒  — 5 ana ekran wireframe
-    ├── 03-core/
+    ├── 03-cekirdek/
     │   ├── [x] 01-tipler.md 🔒  — Ortak TypeScript tipleri
     │   ├── [x] 02-sqlite-native.md 🔒  — SQLite veritabanı (native)
     │   ├── [x] 03-asyncstorage-web.md 🔒  — Web depolama
@@ -54,12 +54,12 @@ suruyon/
     │   ├── [x] 01-mikro-dersler.md 🔒  — Sürü Okulu mikro dersler
     │   ├── [ ] 02-besi-dersleri.md  — Mode 1 özel besi dersleri
     │   └── [ ] 03-profesyonel-sertifika.md  — Profesyonel besici yolu
-    ├── 10-vet-ai/
+    ├── 10-akilli-veteriner/
     │   ├── [x] 01-semptom-analiz.md 🔒  — Semptom → AI öneri (metin)
     │   ├── [x] 02-disclaimer.md 🔒  — Tıbbi sorumluluk reddi
     │   ├── [ ] 03-fotograf-yukle.md  — Hastalık fotoğrafı çek/yükle
     │   └── [ ] 04-ise-yaradi-geri-bildirim.md  — İşe yaradı / yaramadı geri bildirimi
-    ├── 11-vet-kopru/
+    ├── 11-veteriner-koprusu/
     │   ├── [ ] 01-vaka-paketi.md  — Veterinere gidecek vaka paketi
     │   ├── [ ] 02-veterinere-gonder.md  — Gerçek veterinere gönder butonu
     │   ├── [ ] 03-vet-inbox.md  — Veteriner gelen kutusu
@@ -72,7 +72,7 @@ suruyon/
     │   ├── [x] 01-alan-dogrulama.md 🔒  — TÜRKVET / GEKİS alan doğrulama
     │   ├── [x] 02-json-export.md 🔒  — TÜRKVET JSON export
     │   └── [ ] 03-resmi-bildirim-api.md  — Otomatik resmi bildirim API
-    ├── 14-offline-senkron/
+    ├── 14-cevrimdisi-senkron/
     │   ├── [x] 01-yerel-kayit.md 🔒  — İnternetsiz yerel kayıt
     │   ├── [x] 02-senkron-kuyrugu.md 🔒  — Senkron kuyruk iskeleti
     │   ├── [ ] 03-sunucu-senkron.md  — Gerçek sunucu push/pull senkron
@@ -126,7 +126,7 @@ suruyon/
     ├── 26-beta/
     │   ├── [x] 01-pilot-dokuman.md 🔒  — Beta pilot program dokümanı
     │   └── [x] 02-beta-kayit-ekrani.md 🔒  — Beta kayıt + geri bildirim ekranı
-    └── 27-puzzle-refactor/
+    └── 27-puzzle-tasi/
         ├── [x] 01-puzzle-harita-dokuman.md 🔒  — Puzzle klasör haritası dokümanı
         ├── [ ] 02-lib-to-src-tasi.md  — mobil/kaynak → mobile/src puzzle taşıma
         ├── [x] 03-offline-roller-rfid-dokuman.md 🔒  — Offline+roller+RFID dokümanı

@@ -16,9 +16,9 @@ python3 islemler/scripts/kilit.py set-password
 
 python3 islemler/scripts/kilit.py tamamla islemler/22-mod1-kuzu-alarak-besi/04-karantina-yonca-su.md
 
-python3 islemler/scripts/kilit.py unlock islemler/03-core/01-tipler.md
+python3 islemler/scripts/kilit.py unlock islemler/03-cekirdek/01-tipler.md
 # …düzenle…
-python3 islemler/scripts/kilit.py kilitle islemler/03-core/01-tipler.md
+python3 islemler/scripts/kilit.py kilitle islemler/03-cekirdek/01-tipler.md
 
 export SURUYON_ISLEM_SIFRE='...'
 python3 islemler/scripts/kilit.py unlock <dosya>

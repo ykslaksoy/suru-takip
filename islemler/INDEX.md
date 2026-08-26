@@ -23,19 +23,19 @@
 - [x] [`02-anket-formu.md`](./01-dogrulama/02-anket-formu.md) — Anket formu 🔒
 - [x] [`03-dogrulama-raporu.md`](./01-dogrulama/03-dogrulama-raporu.md) — Faz 0 doğrulama raporu 🔒
 
-## `02-wireframe/`
+## `02-ekran-taslak/`
 
-- [x] [`01-bes-ana-ekran.md`](./02-wireframe/01-bes-ana-ekran.md) — 5 ana ekran wireframe 🔒
+- [x] [`01-bes-ana-ekran.md`](./02-ekran-taslak/01-bes-ana-ekran.md) — 5 ana ekran wireframe 🔒
 
-## `03-core/`
+## `03-cekirdek/`
 
-- [x] [`01-tipler.md`](./03-core/01-tipler.md) — Ortak TypeScript tipleri 🔒
-- [x] [`02-sqlite-native.md`](./03-core/02-sqlite-native.md) — SQLite veritabanı (native) 🔒
-- [x] [`03-asyncstorage-web.md`](./03-core/03-asyncstorage-web.md) — Web depolama 🔒
-- [x] [`04-demo-seed.md`](./03-core/04-demo-seed.md) — Demo veri yükleme 🔒
-- [x] [`05-tema-renkler.md`](./03-core/05-tema-renkler.md) — Tema / renkler 🔒
-- [x] [`06-ui-buton-banner.md`](./03-core/06-ui-buton-banner.md) — UI: buton + offline banner 🔒
-- [x] [`07-context-db.md`](./03-core/07-context-db.md) — DatabaseContext 🔒
+- [x] [`01-tipler.md`](./03-cekirdek/01-tipler.md) — Ortak TypeScript tipleri 🔒
+- [x] [`02-sqlite-native.md`](./03-cekirdek/02-sqlite-native.md) — SQLite veritabanı (native) 🔒
+- [x] [`03-asyncstorage-web.md`](./03-cekirdek/03-asyncstorage-web.md) — Web depolama 🔒
+- [x] [`04-demo-seed.md`](./03-cekirdek/04-demo-seed.md) — Demo veri yükleme 🔒
+- [x] [`05-tema-renkler.md`](./03-cekirdek/05-tema-renkler.md) — Tema / renkler 🔒
+- [x] [`06-ui-buton-banner.md`](./03-cekirdek/06-ui-buton-banner.md) — UI: buton + offline banner 🔒
+- [x] [`07-context-db.md`](./03-cekirdek/07-context-db.md) — DatabaseContext 🔒
 
 ## `04-suru/`
 
@@ -78,19 +78,19 @@
 - [ ] [`02-besi-dersleri.md`](./09-okul/02-besi-dersleri.md) — Mode 1 özel besi dersleri
 - [ ] [`03-profesyonel-sertifika.md`](./09-okul/03-profesyonel-sertifika.md) — Profesyonel besici yolu
 
-## `10-vet-ai/`
+## `10-akilli-veteriner/`
 
-- [x] [`01-semptom-analiz.md`](./10-vet-ai/01-semptom-analiz.md) — Semptom → AI öneri (metin) 🔒
-- [x] [`02-disclaimer.md`](./10-vet-ai/02-disclaimer.md) — Tıbbi sorumluluk reddi 🔒
-- [ ] [`03-fotograf-yukle.md`](./10-vet-ai/03-fotograf-yukle.md) — Hastalık fotoğrafı çek/yükle
-- [ ] [`04-ise-yaradi-geri-bildirim.md`](./10-vet-ai/04-ise-yaradi-geri-bildirim.md) — İşe yaradı / yaramadı geri bildirimi
+- [x] [`01-semptom-analiz.md`](./10-akilli-veteriner/01-semptom-analiz.md) — Semptom → AI öneri (metin) 🔒
+- [x] [`02-disclaimer.md`](./10-akilli-veteriner/02-disclaimer.md) — Tıbbi sorumluluk reddi 🔒
+- [ ] [`03-fotograf-yukle.md`](./10-akilli-veteriner/03-fotograf-yukle.md) — Hastalık fotoğrafı çek/yükle
+- [ ] [`04-ise-yaradi-geri-bildirim.md`](./10-akilli-veteriner/04-ise-yaradi-geri-bildirim.md) — İşe yaradı / yaramadı geri bildirimi
 
-## `11-vet-kopru/`
+## `11-veteriner-koprusu/`
 
-- [ ] [`01-vaka-paketi.md`](./11-vet-kopru/01-vaka-paketi.md) — Veterinere gidecek vaka paketi
-- [ ] [`02-veterinere-gonder.md`](./11-vet-kopru/02-veterinere-gonder.md) — Gerçek veterinere gönder butonu
-- [ ] [`03-vet-inbox.md`](./11-vet-kopru/03-vet-inbox.md) — Veteriner gelen kutusu
-- [ ] [`04-vet-talimat.md`](./11-vet-kopru/04-vet-talimat.md) — Veteriner talimatı + takip
+- [ ] [`01-vaka-paketi.md`](./11-veteriner-koprusu/01-vaka-paketi.md) — Veterinere gidecek vaka paketi
+- [ ] [`02-veterinere-gonder.md`](./11-veteriner-koprusu/02-veterinere-gonder.md) — Gerçek veterinere gönder butonu
+- [ ] [`03-vet-inbox.md`](./11-veteriner-koprusu/03-vet-inbox.md) — Veteriner gelen kutusu
+- [ ] [`04-vet-talimat.md`](./11-veteriner-koprusu/04-vet-talimat.md) — Veteriner talimatı + takip
 
 ## `12-abonelik/`
 
@@ -104,12 +104,12 @@
 - [x] [`02-json-export.md`](./13-turkvet/02-json-export.md) — TÜRKVET JSON export 🔒
 - [ ] [`03-resmi-bildirim-api.md`](./13-turkvet/03-resmi-bildirim-api.md) — Otomatik resmi bildirim API
 
-## `14-offline-senkron/`
+## `14-cevrimdisi-senkron/`
 
-- [x] [`01-yerel-kayit.md`](./14-offline-senkron/01-yerel-kayit.md) — İnternetsiz yerel kayıt 🔒
-- [x] [`02-senkron-kuyrugu.md`](./14-offline-senkron/02-senkron-kuyrugu.md) — Senkron kuyruk iskeleti 🔒
-- [ ] [`03-sunucu-senkron.md`](./14-offline-senkron/03-sunucu-senkron.md) — Gerçek sunucu push/pull senkron
-- [ ] [`04-server-projesi.md`](./14-offline-senkron/04-server-projesi.md) — server/ klasörü + API
+- [x] [`01-yerel-kayit.md`](./14-cevrimdisi-senkron/01-yerel-kayit.md) — İnternetsiz yerel kayıt 🔒
+- [x] [`02-senkron-kuyrugu.md`](./14-cevrimdisi-senkron/02-senkron-kuyrugu.md) — Senkron kuyruk iskeleti 🔒
+- [ ] [`03-sunucu-senkron.md`](./14-cevrimdisi-senkron/03-sunucu-senkron.md) — Gerçek sunucu push/pull senkron
+- [ ] [`04-server-projesi.md`](./14-cevrimdisi-senkron/04-server-projesi.md) — server/ klasörü + API
 
 ## `15-roller/`
 
@@ -184,12 +184,12 @@
 - [x] [`01-pilot-dokuman.md`](./26-beta/01-pilot-dokuman.md) — Beta pilot program dokümanı 🔒
 - [x] [`02-beta-kayit-ekrani.md`](./26-beta/02-beta-kayit-ekrani.md) — Beta kayıt + geri bildirim ekranı 🔒
 
-## `27-puzzle-refactor/`
+## `27-puzzle-tasi/`
 
-- [x] [`01-puzzle-harita-dokuman.md`](./27-puzzle-refactor/01-puzzle-harita-dokuman.md) — Puzzle klasör haritası dokümanı 🔒
-- [ ] [`02-lib-to-src-tasi.md`](./27-puzzle-refactor/02-lib-to-src-tasi.md) — mobil/kaynak → mobile/src puzzle taşıma
-- [x] [`03-offline-roller-rfid-dokuman.md`](./27-puzzle-refactor/03-offline-roller-rfid-dokuman.md) — Offline+roller+RFID dokümanı 🔒
-- [x] [`04-vet-kopru-dokuman.md`](./27-puzzle-refactor/04-vet-kopru-dokuman.md) — Akıllı vet köprüsü dokümanı 🔒
+- [x] [`01-puzzle-harita-dokuman.md`](./27-puzzle-tasi/01-puzzle-harita-dokuman.md) — Puzzle klasör haritası dokümanı 🔒
+- [ ] [`02-lib-to-src-tasi.md`](./27-puzzle-tasi/02-lib-to-src-tasi.md) — mobil/kaynak → mobile/src puzzle taşıma
+- [x] [`03-offline-roller-rfid-dokuman.md`](./27-puzzle-tasi/03-offline-roller-rfid-dokuman.md) — Offline+roller+RFID dokümanı 🔒
+- [x] [`04-vet-kopru-dokuman.md`](./27-puzzle-tasi/04-vet-kopru-dokuman.md) — Akıllı vet köprüsü dokümanı 🔒
 
 ---
 
