@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getPendingSyncCount } from '@/kaynak/veritabani';
-import { seedDemoDataIfEmpty } from '@/kaynak/ornek-veri';
+import { getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';
+import { seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
 
 interface DatabaseContextValue {
   ready: boolean;

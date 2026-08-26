@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getAnimalLimit, getSubscriptionTier, getTierInfo, purchaseSubscription } from '@/kaynak/abonelik';
-import { SUBSCRIPTION_PRICES, type SubscriptionTier } from '@/kaynak/tipler';
+import { getAnimalLimit, getSubscriptionTier, getTierInfo, purchaseSubscription } from '@/kaynak/abonelik/limit';
+import { SUBSCRIPTION_PRICES, type SubscriptionTier } from '@/kaynak/cekirdek/tipler';
 
 interface SubscriptionContextValue {
   tier: SubscriptionTier;

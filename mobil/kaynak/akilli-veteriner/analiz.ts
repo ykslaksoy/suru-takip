@@ -1,4 +1,4 @@
-import type { VetSuggestion } from './tipler';
+import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 
 const RULES: { keywords: string[]; suggestion: VetSuggestion }[] = [
   {

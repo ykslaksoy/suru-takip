@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Alert, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import { exportTurkvetData, getAnimals } from '@/kaynak/veritabani';
-import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { exportTurkvetData, getAnimals } from '@/kaynak/cekirdek/veritabani';
+import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
 
 export default function TurkvetExportScreen() {
   const scheme = useColorScheme() ?? 'light';

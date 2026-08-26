@@ -2,14 +2,14 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import {
   getSmartSuggestions,
   AKILLI_KUZU,
   SUPER_KUZU_BASARI,
   akilliKuzuGreeting,
   type SmartSuggestion,
-} from '@/kaynak/akilli-kuzu';
+} from '@/kaynak/akilli-kuzu/oneri';
 
 function AkilliKuzuBubble({
   text,
@@ -106,7 +106,7 @@ function CtaLink({ cta, colors }: { cta: string; colors: (typeof Colors)['light'
         ? '/rasyon'
         : cta.includes('Aşı') || cta.includes('Sağlık')
           ? '/(tabs)/saglik'
-          : '/(tabs)/';
+          : '/(tabs)/suru';
 
   return (
     <Link href={href as never} asChild>

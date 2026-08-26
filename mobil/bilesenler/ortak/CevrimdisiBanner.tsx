@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 
 export function CevrimdisiBanner({ pendingSync }: { pendingSync: number }) {
   const scheme = useColorScheme() ?? 'light';

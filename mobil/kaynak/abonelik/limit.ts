@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { SubscriptionTier } from './tipler';
-import { SUBSCRIPTION_LIMITS, SUBSCRIPTION_PRICES } from './tipler';
+import type { SubscriptionTier } from '@/kaynak/cekirdek/tipler';
+import { SUBSCRIPTION_LIMITS, SUBSCRIPTION_PRICES } from '@/kaynak/cekirdek/tipler';
 
 const TIER_KEY = 'suruyon_subscription_tier';
 const EXPIRY_KEY = 'suruyon_subscription_expiry';

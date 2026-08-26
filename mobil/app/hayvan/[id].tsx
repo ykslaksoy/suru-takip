@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, useLocalSearchParams, router } from 'expo-router';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { calculateADG, deleteAnimal, getAnimal, getLatestWeight } from '@/kaynak/veritabani';
-import { ANIMAL_STATUS_LABELS } from '@/kaynak/tipler';
-import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet';
-import { ageInMonths, bandForAge, gradeFromAdg, type KuzuGrade } from '@/kaynak/kuzu-derece';
-import { DereceRozeti } from '@/bilesenler/DereceRozeti';
-import type { Animal } from '@/kaynak/tipler';
+import { calculateADG, deleteAnimal, getAnimal, getLatestWeight } from '@/kaynak/cekirdek/veritabani';
+import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
+import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
+import { ageInMonths, bandForAge, gradeFromAdg, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
+import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

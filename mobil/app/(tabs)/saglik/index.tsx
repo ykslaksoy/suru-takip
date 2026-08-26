@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
-import { CevrimdisiBanner } from '@/bilesenler/CevrimdisiBanner';
+import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { getActiveWithdrawals, getHealthRecords } from '@/kaynak/veritabani';
+import { getActiveWithdrawals, getHealthRecords } from '@/kaynak/cekirdek/veritabani';
 
 export default function HealthOverviewScreen() {
   const scheme = useColorScheme() ?? 'light';

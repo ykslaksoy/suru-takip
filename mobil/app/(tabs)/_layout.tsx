@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import { useClientOnlyValue } from '@/bilesenler/useSadeceIstemci';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { useClientOnlyValue } from '@/bilesenler/ortak/useSadeceIstemci';
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   const icons: Record<string, string> = {
@@ -32,7 +32,7 @@ export default function TabLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}>
       <Tabs.Screen
-        name="index"
+        name="suru"
         options={{
           title: 'Sürü',
           tabBarIcon: ({ focused }) => <TabIcon label="Sürü" focused={focused} />,

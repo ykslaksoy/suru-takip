@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Link } from 'expo-router';
-import { HayvanKarti } from '@/bilesenler/HayvanKarti';
-import { CevrimdisiBanner } from '@/bilesenler/CevrimdisiBanner';
+import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
+import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
-import { countAnimals, getAnimals, getLatestWeight, calculateADG } from '@/kaynak/veritabani';
-import type { Animal } from '@/kaynak/tipler';
-import { gradeFromAdg, type KuzuGrade } from '@/kaynak/kuzu-derece';
+import { countAnimals, getAnimals, getLatestWeight, calculateADG } from '@/kaynak/cekirdek/veritabani';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
+import { gradeFromAdg, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 
 type Filter = 'all' | 'female' | 'male' | 'lamb';
 

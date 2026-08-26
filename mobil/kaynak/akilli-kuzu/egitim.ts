@@ -1,4 +1,4 @@
-import type { EducationLesson } from './tipler';
+import type { EducationLesson } from '@/kaynak/cekirdek/tipler';
 
 /** Akıllı Kuzu — pratik rehber içerikleri (eski ad: Sürü Okulu) */
 export const EDUCATION_LESSONS: EducationLesson[] = [

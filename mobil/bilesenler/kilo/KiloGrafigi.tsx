@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import type { WeightRecord } from '@/kaynak/tipler';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
 export function KiloGrafigi({ records }: { records: WeightRecord[] }) {
   const scheme = useColorScheme() ?? 'light';

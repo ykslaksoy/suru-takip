@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { KiloGrafigi } from '@/bilesenler/KiloGrafigi';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/veritabani';
-import type { WeightRecord } from '@/kaynak/tipler';
+import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
 export default function WeightScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

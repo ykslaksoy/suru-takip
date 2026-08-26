@@ -1,11 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import type { Animal } from '@/kaynak/tipler';
-import { ANIMAL_STATUS_LABELS } from '@/kaynak/tipler';
-import { DereceRozeti } from '@/bilesenler/DereceRozeti';
-import type { KuzuGrade } from '@/kaynak/kuzu-derece';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
+import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
+import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import type { KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 
 export function HayvanKarti({
   animal,

@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import { analyzeSymptoms, VET_DISCLAIMER } from '@/kaynak/akilli-veteriner';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { analyzeSymptoms, VET_DISCLAIMER } from '@/kaynak/akilli-veteriner/analiz';
+import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 
 export default function VetScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [symptoms, setSymptoms] = useState('');
-  const [result, setResult] = useState<ReturnType<typeof analyzeSymptoms> | null>(null);
+  const [result, setResult] = useState<VetSuggestion | null>(null);
 
   const analyze = () => {
     setResult(analyzeSymptoms(symptoms));

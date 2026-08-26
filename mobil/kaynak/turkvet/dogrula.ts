@@ -1,4 +1,4 @@
-import type { Animal } from './tipler';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
 
 export function validateTurkvetNo(value: string): { valid: boolean; message: string } {
   const cleaned = value.replace(/\s/g, '').toUpperCase();

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal } from '@/kaynak/veritabani';
-import type { HealthRecord } from '@/kaynak/tipler';
+import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import type { HealthRecord } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalHealthScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

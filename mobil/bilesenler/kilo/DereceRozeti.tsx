@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import type { KuzuGrade } from '@/kaynak/kuzu-derece';
+import type { KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 
 export function DereceRozeti({
   grade,

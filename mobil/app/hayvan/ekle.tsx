@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { v4 as uuidv4 } from 'uuid';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
-import { countAnimals, upsertAnimal } from '@/kaynak/veritabani';
-import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet';
-import type { AnimalSex, AnimalStatus } from '@/kaynak/tipler';
+import { countAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet/dogrula';
+import type { AnimalSex, AnimalStatus } from '@/kaynak/cekirdek/tipler';
 
 export default function AddAnimalScreen() {
   const scheme = useColorScheme() ?? 'light';

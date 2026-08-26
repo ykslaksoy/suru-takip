@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import { calculateRation, PHASE_LABELS, type RationPhase } from '@/kaynak/rasyon';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { calculateRation, PHASE_LABELS, type RationPhase } from '@/kaynak/rasyon/hesapla';
 
 export default function RationScreen() {
   const scheme = useColorScheme() ?? 'light';

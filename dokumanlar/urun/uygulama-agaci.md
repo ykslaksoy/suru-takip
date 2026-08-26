@@ -1,115 +1,161 @@
-# SürüYön — Uygulama Ağacı (kanonik · Türkçe)
+# SürüYön — Uygulama Ağacı (grup grup · Türkçe)
 
-> Tek kaynak. Dosya/klasör adları **ASCII Türkçe** (ı→i, ğ→g, ü→u, ş→s, ö→o, ç→c).  
-> Expo zorunluları aynen: `app/`, `(tabs)/`, `_layout.tsx`, `+html.tsx`, `+not-found.tsx`.
+> Tek kaynak. ASCII Türkçe adlar. Expo zorunluları: `app/`, `(tabs)/`, `_layout.tsx`.  
+> **Derece:** Ölçülsün → Zayıf → Fit → Sportmen → Kaslı → Süper Kuzu
 
-**Durum:** YAPI TÜRKÇELEŞTİRİLDİ (2026-08-26)  
-**Derece skalası (kilitli):** Ölçülsün → Zayıf → Fit → Sportmen → Kaslı → Süper Kuzu
+**Durum:** GRUPLARA AYRILDI (2026-08-26)
 
 ---
 
-## 1) Kök
+## A) Kök gruplar
 
 ```
 suruyon/
-├── README.md
-├── AGENTS.md
-├── mobil/                    # Expo uygulama
-├── dokumanlar/               # Ürün / doğrulama / taslak
-├── islemler/                 # Tik + şifre kilidi
-├── araclar/                  # Yardımcı scriptler
-├── sunucu/                   # ★ sonra — bulut API
-└── donanim/                  # ★ sonra — RFID katalog
+├── mobil/           # uygulama
+├── dokumanlar/      # ürün / doğrulama / taslak
+├── islemler/        # tik + kilit
+├── araclar/         # script
+├── sunucu/          # ★ sonra
+└── donanim/         # ★ sonra
 ```
 
 ---
 
-## 2) `mobil/` — mevcut
+## B) Sekmeler — her biri kendi klasörü
 
 ```
-mobil/
-├── app.json
-├── package.json
-├── tsconfig.json
-│
-├── app/                              # Expo Router (zorunlu ad)
-│   ├── _layout.tsx
-│   ├── +html.tsx
-│   ├── +not-found.tsx
-│   ├── (tabs)/
-│   │   ├── _layout.tsx
-│   │   ├── index.tsx                 # Sürü
-│   │   ├── stok.tsx
-│   │   ├── saglik.tsx
-│   │   ├── akilli-kuzu.tsx
-│   │   └── menu.tsx
-│   ├── hayvan/
-│   │   ├── ekle.tsx
-│   │   ├── [id].tsx
-│   │   └── [id]/
-│   │       ├── kilo.tsx
-│   │       └── saglik.tsx
-│   ├── rasyon.tsx
-│   ├── veteriner.tsx
-│   ├── abonelik.tsx
-│   ├── beta.tsx
-│   └── turkvet-aktar.tsx
-│
-├── kaynak/                           # İş mantığı
+mobil/app/(tabs)/
+├── _layout.tsx
+├── suru/
+│   └── index.tsx              # Sürü listesi
+├── stok/
+│   └── index.tsx              # Stok listesi / gir-çık
+├── saglik/
+│   └── index.tsx              # Sağlık özeti / bekletme
+├── akilli-kuzu/
+│   └── index.tsx              # Öneri merkezi (ders listesi YOK)
+└── menu/
+    └── index.tsx              # Menü
+```
+
+---
+
+## C) Hayvan grubu
+
+```
+mobil/app/hayvan/
+├── ekle.tsx
+├── [id].tsx                   # detay + derece
+└── [id]/
+    ├── kilo.tsx               # tartım
+    └── saglik.tsx             # hayvan sağlık kayıtları
+```
+
+---
+
+## D) Diğer ekran grupları (menüden)
+
+```
+mobil/app/
+├── rasyon/index.tsx
+├── veteriner/index.tsx
+├── abonelik/index.tsx
+├── beta/index.tsx
+└── turkvet-aktar/index.tsx
+```
+
+---
+
+## E) Kaynak — iş mantığı grupları
+
+```
+mobil/kaynak/
+├── cekirdek/                  # herkes buna bağlanır
 │   ├── tipler.ts
 │   ├── veritabani.ts
 │   ├── veritabani.native.ts
 │   ├── veritabani.web.ts
-│   ├── ornek-veri.ts
-│   ├── rasyon.ts
-│   ├── abonelik.ts
-│   ├── turkvet.ts
-│   ├── akilli-veteriner.ts
-│   ├── egitim.ts
-│   ├── akilli-kuzu.ts
+│   └── ornek-veri.ts
+│
+├── suru/                      # sürü yardımcıları (büyüycek)
+│   └── index.ts
+│
+├── kilo/                      # tartım / ADG / derece
 │   └── kuzu-derece.ts
 │
-├── bilesenler/
-│   ├── HayvanKarti.tsx
-│   ├── DereceRozeti.tsx
-│   ├── KiloGrafigi.tsx
-│   ├── StokKarti.tsx
-│   ├── CevrimdisiBanner.tsx
+├── stok/                      # stok iş mantığı (büyüycek)
+│   └── index.ts
+│
+├── saglik/                    # hastalık / aşı / bekletme (büyüycek)
+│   └── index.ts
+│
+├── akilli-kuzu/               # rehber + içerik
+│   ├── oneri.ts
+│   └── egitim.ts
+│
+├── rasyon/
+│   └── hesapla.ts
+│
+├── akilli-veteriner/
+│   └── analiz.ts
+│
+├── abonelik/
+│   └── limit.ts
+│
+└── turkvet/
+    └── dogrula.ts
+```
+
+---
+
+## F) Bileşen grupları
+
+```
+mobil/bilesenler/
+├── ortak/                     # paylaşılan UI
 │   ├── AnaButon.tsx
+│   ├── CevrimdisiBanner.tsx
 │   ├── DisBag.tsx
 │   ├── Temali.tsx
 │   ├── StilMetin.tsx
 │   ├── useRenkSemasi.ts(.web)
 │   └── useSadeceIstemci.ts(.web)
 │
-├── baglam/
-│   ├── VeritabaniBaglami.tsx
-│   └── AbonelikBaglami.tsx
+├── suru/
+│   └── HayvanKarti.tsx
 │
-├── sabitler/
-│   └── Renkler.ts
+├── kilo/
+│   ├── DereceRozeti.tsx
+│   └── KiloGrafigi.tsx
 │
-└── varliklar/
-    ├── fonts/
-    └── images/
+└── stok/
+    └── StokKarti.tsx
 ```
 
 ---
 
-## 3) `dokumanlar/`
+## G) Bağlam + sabitler + varlıklar
+
+```
+mobil/baglam/
+├── VeritabaniBaglami.tsx
+└── AbonelikBaglami.tsx
+
+mobil/sabitler/
+└── Renkler.ts
+
+mobil/varliklar/
+├── fonts/
+└── images/
+```
+
+---
+
+## H) Dokümanlar
 
 ```
 dokumanlar/
-├── urun/
-│   ├── urun-modlari.md
-│   ├── uygulama-agaci.md          # BU DOSYA
-│   ├── puzzle-klasor-haritasi.md
-│   ├── mod1-kuzu-alarak-besi.md
-│   ├── mod2-koc-katarak-besi.md
-│   ├── mod3-damizlik-kuzu.md
-│   ├── mod4-sut-koyunculugu.md
-│   ├── akilli-veteriner-koprusu.md
-│   └── offline-roller-rfid.md
+├── urun/                      # modlar + bu ağaç
 ├── dogrulama/
 ├── ekran-taslaklari/
 ├── beta/
@@ -118,61 +164,29 @@ dokumanlar/
 
 ---
 
-## 4) Hedef puzzle (`mobil/src/` — sonra)
-
-İngilizce puzzle adları **Türkçeleştirildi**:
-
-| Eski (EN) | Yeni (TR) |
-|-----------|-----------|
-| core | cekirdek |
-| flock | suru |
-| weight | kilo |
-| health | saglik |
-| stock | stok |
-| ration | rasyon |
-| school | akilli-kuzu |
-| vetAI | akilli-veteriner |
-| vetBridge | veteriner-koprusu |
-| fatteningShared | besi-ortak |
-| fatteningBuy | besi-alim |
-| fatteningBreed | besi-koc-kat |
-| breedingStock | damizlik |
-| dairy | sut |
-| billing | abonelik |
-| hardware | donanim |
-| excel | excel |
-| ocr | ocr |
-| rfid | rfid |
-| voice | ses |
-| turkvet | turkvet |
-| beta | beta |
-
-Ekranlar (eklenecek):
+## I) Hedefte eklenecek gruplar (klasör yerleri hazır değil / sonra)
 
 ```
-app/besi/           # Mod 1–2 rehber
-app/ahir/           # Seri ahır
-app/sut/            # Mod 4
-app/veteriner/      # Vet köprüsü
+app/besi/                      # Mod 1–2 rehber
+app/ahir/                      # seri ahır
+app/sut/                       # Mod 4
+app/veteriner/vaka/            # vet köprüsü
+
+kaynak/besi-ortak/
+kaynak/besi-alim/
+kaynak/besi-koc-kat/
+kaynak/damizlik/
+kaynak/sut/
 ```
 
 ---
 
-## 5) Bilinçli İngilizce kalanlar
+## Sekme ↔ klasör eşlemesi
 
-| Ad | Neden |
-|----|--------|
-| `app/` | Expo Router zorunlu |
-| `(tabs)/` | Expo Router grup |
-| `_layout.tsx`, `+html.tsx`, `+not-found.tsx` | Expo sözdizimi |
-| `index.tsx` | Varsayılan rota |
-| `package.json`, `tsconfig.json`, `node_modules/` | Araç zinciri |
-| `beta`, `turkvet`, `rfid`, `ocr`, `excel` | Marka / uluslararası kısaltma |
-
----
-
-## 6) Çıkarılanlar
-
-- `EditScreenInfo.tsx`, `wireframes.tsx`
-- Eski docs: `mode1-besi…`, `mode2-sut…`
-- `components/`, `lib/`, `context/`, `constants/`, `assets/` → Türkçe karşılıkları
+| Sekme | `app/(tabs)/` | `kaynak/` | `bilesenler/` |
+|-------|---------------|-----------|---------------|
+| Sürü | `suru/` | `suru/` + `kilo/` | `suru/` + `kilo/` |
+| Stok | `stok/` | `stok/` | `stok/` |
+| Sağlık | `saglik/` | `saglik/` | (ortak + hayvan/saglik) |
+| Akıllı Kuzu | `akilli-kuzu/` | `akilli-kuzu/` | — |
+| Menü | `menu/` | — | `ortak/` |

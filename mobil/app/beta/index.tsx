@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addBetaFeedback, addBetaSignup, getBetaFeedback, getBetaSignups } from '@/kaynak/veritabani';
-import type { BetaFeedback, BetaSignup } from '@/kaynak/tipler';
+import { addBetaFeedback, addBetaSignup, getBetaFeedback, getBetaSignups } from '@/kaynak/cekirdek/veritabani';
+import type { BetaFeedback, BetaSignup } from '@/kaynak/cekirdek/tipler';
 
 export default function BetaScreen() {
   const scheme = useColorScheme() ?? 'light';

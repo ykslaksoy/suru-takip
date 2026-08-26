@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { StokKarti } from '@/bilesenler/StokKarti';
-import { AnaButon } from '@/bilesenler/AnaButon';
-import { CevrimdisiBanner } from '@/bilesenler/CevrimdisiBanner';
+import { StokKarti } from '@/bilesenler/stok/StokKarti';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
+import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/veritabani';
-import type { StockItem, StockType } from '@/kaynak/tipler';
-import { STOCK_TYPE_LABELS } from '@/kaynak/tipler';
+import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
+import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';

@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
-import type { StockItem } from '@/kaynak/tipler';
-import { STOCK_TYPE_LABELS } from '@/kaynak/tipler';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import type { StockItem } from '@/kaynak/cekirdek/tipler';
+import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
 
 export function StokKarti({ item, onPress }: { item: StockItem; onPress?: () => void }) {
   const scheme = useColorScheme() ?? 'light';

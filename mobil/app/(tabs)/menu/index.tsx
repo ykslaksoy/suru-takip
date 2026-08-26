@@ -1,11 +1,11 @@
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
-import { AnaButon } from '@/bilesenler/AnaButon';
+import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
-import { useColorScheme } from '@/bilesenler/useRenkSemasi';
+import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
-import { exportTurkvetData } from '@/kaynak/veritabani';
-import { clearAllData, seedDemoDataIfEmpty } from '@/kaynak/ornek-veri';
+import { exportTurkvetData } from '@/kaynak/cekirdek/veritabani';
+import { clearAllData, seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 
 export default function MenuScreen() {
