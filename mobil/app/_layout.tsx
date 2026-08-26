@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { DatabaseProvider } from '@/baglam/VeritabaniBaglami';
 import { SubscriptionProvider } from '@/baglam/AbonelikBaglami';
+import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -31,19 +32,21 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <DatabaseProvider>
-      <SubscriptionProvider>
-        <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
-          <Stack.Screen name="hayvan/[id]" options={{ title: 'Hayvan Detay' }} />
-          <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
-          <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
-          <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
-          <Stack.Screen name="beta" options={{ title: 'Beta Pilot' }} />
-          <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Export' }} />
-        </Stack>
-      </SubscriptionProvider>
-    </DatabaseProvider>
+    <WebOnizlemeCercevesi>
+      <DatabaseProvider>
+        <SubscriptionProvider>
+          <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
+            <Stack.Screen name="hayvan/[id]" options={{ title: 'Hayvan Detay' }} />
+            <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
+            <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
+            <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
+            <Stack.Screen name="beta" options={{ title: 'Beta Pilot' }} />
+            <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Export' }} />
+          </Stack>
+        </SubscriptionProvider>
+      </DatabaseProvider>
+    </WebOnizlemeCercevesi>
   );
 }
