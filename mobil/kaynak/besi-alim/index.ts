@@ -1,2 +1,2 @@
-/** Mod 1 — Kuzu Alarak Besi — public API */
-export {};
+/** Mod 1 — alım girişi (ortak adımlar: besi-ortak/) */
+export * from './alim-girisi';

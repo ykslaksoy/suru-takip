@@ -1,2 +1,2 @@
-/** Mod 1 — Kuzu Alarak Besi — public API */
+/** Mod 1–2 ortak besi adımları */
 export {};

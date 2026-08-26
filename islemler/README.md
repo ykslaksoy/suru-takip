@@ -54,3 +54,4 @@ Tüm uygulamalar için şablon: `araclar/islem-kontrol/`
 | `15`–`21` | Roller, Excel, RFID, OCR, ses… |
 | `22`–`25` | Mod 1–4 |
 | `26`–`27` | Beta, puzzle |
+| `28-bakim` | Proje bakım turu |

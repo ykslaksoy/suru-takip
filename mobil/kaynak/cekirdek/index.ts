@@ -1,2 +1,2 @@
-/** Çekirdek (db, senkron, kimlik) — public API */
-export {};
+export * from './tipler';
+export * from './veritabani';

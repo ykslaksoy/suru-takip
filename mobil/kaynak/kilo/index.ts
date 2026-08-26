@@ -1,2 +1,1 @@
-/** Kilo / Tartım / Derece — public API */
-export {};
+export * from './kuzu-derece';

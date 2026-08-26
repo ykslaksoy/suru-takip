@@ -1,2 +1,1 @@
-/** Abonelik / IAP — public API */
-export {};
+export * from './limit';

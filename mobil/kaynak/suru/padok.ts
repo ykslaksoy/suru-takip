@@ -1,2 +1,2 @@
-/** Sürü / Hayvan — plan; henüz uygulanmadı */
+/** Padok / ağıl grup yönetimi — plan; henüz uygulanmadı */
 export {};

@@ -13,6 +13,7 @@ islemler/04-suru/01-....md   →  özellikler/04-suru/README.md  →  mobil/kayn
 
 | # | Parça | İşlemler | Kaynak |
 |---|-------|----------|--------|
+| 00 | [Proje bakımı](./00-bakim/README.md) | `islemler/28-bakim/` | — |
 | 02 | [Ana Sayfa + Hızlı İşlemler](./02-ana-sayfa/README.md) | `islemler/02-ekran-taslak/` | `mobil/kaynak/` |
 | 03 | [Çekirdek (db, senkron, kimlik)](./03-cekirdek/README.md) | `islemler/03-cekirdek/` | `mobil/kaynak/` |
 | 04 | [Sürü / Hayvan](./04-suru/README.md) | `islemler/04-suru/` | `mobil/kaynak/` |

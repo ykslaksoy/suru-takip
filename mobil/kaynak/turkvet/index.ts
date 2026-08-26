@@ -1,2 +1,1 @@
-/** TÜRKVET — public API */
-export {};
+export * from './dogrula';
