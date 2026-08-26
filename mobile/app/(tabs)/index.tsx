@@ -7,8 +7,9 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDatabase } from '@/context/DatabaseContext';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { countAnimals, getAnimals, getLatestWeight } from '@/lib/database';
+import { countAnimals, getAnimals, getLatestWeight, calculateADG } from '@/lib/database';
 import type { Animal } from '@/lib/types';
+import { gradeFromAdg, type KuzuGrade } from '@/lib/kuzu-derece';
 
 type Filter = 'all' | 'female' | 'male' | 'lamb';
 
@@ -17,7 +18,7 @@ export default function FlockScreen() {
   const colors = Colors[scheme];
   const { refreshKey, pendingSync, refresh, ready } = useDatabase();
   const { limit, tierLabel } = useSubscription();
-  const [animals, setAnimals] = useState<(Animal & { latestWeight?: number | null })[]>([]);
+  const [animals, setAnimals] = useState<(Animal & { latestWeight?: number | null; grade?: KuzuGrade })[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [total, setTotal] = useState(0);
@@ -33,7 +34,15 @@ export default function FlockScreen() {
       filtered = list.filter((a) => new Date(a.birthDate) > cutoff);
     }
     const withWeights = await Promise.all(
-      filtered.map(async (a) => ({ ...a, latestWeight: await getLatestWeight(a.id) }))
+      filtered.map(async (a) => {
+        const latestWeight = await getLatestWeight(a.id);
+        const adg = await calculateADG(a.id);
+        const grade = gradeFromAdg(adg, {
+          birthDate: a.birthDate,
+          isSick: a.status === 'sick',
+        });
+        return { ...a, latestWeight, grade };
+      })
     );
     setAnimals(withWeights);
     setTotal(await countAnimals());
@@ -94,7 +103,9 @@ export default function FlockScreen() {
       <FlatList
         data={animals}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <AnimalCard animal={item} latestWeight={item.latestWeight} />}
+        renderItem={({ item }) => (
+          <AnimalCard animal={item} latestWeight={item.latestWeight} grade={item.grade} />
+        )}
         contentContainerStyle={styles.list}
         onRefresh={() => {
           refresh();

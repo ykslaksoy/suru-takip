@@ -4,22 +4,49 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import type { Animal } from '@/lib/types';
 import { ANIMAL_STATUS_LABELS } from '@/lib/types';
+import { GradeBadge } from '@/components/GradeBadge';
+import type { KuzuGrade } from '@/lib/kuzu-derece';
 
-export function AnimalCard({ animal, latestWeight }: { animal: Animal; latestWeight?: number | null }) {
+export function AnimalCard({
+  animal,
+  latestWeight,
+  grade,
+}: {
+  animal: Animal;
+  latestWeight?: number | null;
+  grade?: KuzuGrade | null;
+}) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const sexIcon = animal.sex === 'female' ? '♀' : '♂';
+  const avatar = grade?.emoji ?? '🐑';
 
   return (
     <Link href={`/animal/${animal.id}`} asChild>
-      <Pressable style={({ pressed }) => [styles.card, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.85 : 1 }]}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: grade && grade.id !== 'bilinmiyor' ? grade.color : colors.border,
+            opacity: pressed ? 0.85 : 1,
+            borderWidth: grade && grade.level >= 4 ? 2 : 1,
+          },
+        ]}>
         <View style={styles.row}>
           <Text style={[styles.tag, { color: colors.tint }]}>{animal.earTag}</Text>
-          <Text style={[styles.meta, { color: colors.textSecondary }]}>
-            {sexIcon} {animal.breed}
-          </Text>
+          {grade ? <GradeBadge grade={grade} /> : null}
         </View>
-        <Text style={[styles.name, { color: colors.text }]}>{animal.name || 'İsimsiz'}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.avatar}>{avatar}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.name, { color: colors.text }]}>{animal.name || 'İsimsiz'}</Text>
+            <Text style={[styles.meta, { color: colors.textSecondary }]}>
+              {sexIcon} {animal.breed}
+              {grade && grade.id !== 'bilinmiyor' ? ` · ${grade.short}` : ''}
+            </Text>
+          </View>
+        </View>
         <View style={styles.row}>
           <Text style={{ color: colors.textSecondary }}>{animal.paddock}</Text>
           <Text style={{ color: colors.textSecondary }}>
@@ -34,7 +61,6 @@ export function AnimalCard({ animal, latestWeight }: { animal: Animal; latestWei
 const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
-    borderWidth: 1,
     padding: 16,
     marginBottom: 10,
     minHeight: 88,
@@ -44,6 +70,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginVertical: 6,
+  },
+  avatar: { fontSize: 28 },
   tag: {
     fontSize: 14,
     fontWeight: '700',
@@ -54,6 +87,5 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '600',
-    marginVertical: 4,
   },
 });

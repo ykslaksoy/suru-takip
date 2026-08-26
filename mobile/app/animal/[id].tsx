@@ -8,6 +8,8 @@ import { useDatabase } from '@/context/DatabaseContext';
 import { calculateADG, deleteAnimal, getAnimal, getLatestWeight } from '@/lib/database';
 import { ANIMAL_STATUS_LABELS } from '@/lib/types';
 import { TURKVET_FIELD_LABELS } from '@/lib/turkvet';
+import { ageInMonths, bandForAge, gradeFromAdg, type KuzuGrade } from '@/lib/kuzu-derece';
+import { GradeBadge } from '@/components/GradeBadge';
 import type { Animal } from '@/lib/types';
 
 export default function AnimalDetailScreen() {
@@ -18,6 +20,7 @@ export default function AnimalDetailScreen() {
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [adg, setAdg] = useState<number | null>(null);
+  const [grade, setGrade] = useState<KuzuGrade | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -25,8 +28,11 @@ export default function AnimalDetailScreen() {
       const a = await getAnimal(id);
       setAnimal(a);
       if (a) {
-        setWeight(await getLatestWeight(a.id));
-        setAdg(await calculateADG(a.id));
+        const w = await getLatestWeight(a.id);
+        const g = await calculateADG(a.id);
+        setWeight(w);
+        setAdg(g);
+        setGrade(gradeFromAdg(g, { birthDate: a.birthDate, isSick: a.status === 'sick' }));
       }
     })();
   }, [id, refreshKey]);
@@ -40,16 +46,47 @@ export default function AnimalDetailScreen() {
   }
 
   const sexLabel = animal.sex === 'female' ? 'Dişi ♀' : 'Erkek ♂';
+  const avatar = grade?.emoji ?? '🐑';
+  const ageMonths = ageInMonths(animal.birthDate);
+  const ageBand = bandForAge(ageMonths);
+  const ageLabel =
+    ageMonths != null ? `~${ageMonths} ay · ${ageBand.label}` : ageBand.label;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.hero, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={{ fontSize: 48, textAlign: 'center' }}>🐑</Text>
+      <View
+        style={[
+          styles.hero,
+          {
+            backgroundColor: colors.card,
+            borderColor: grade && grade.id !== 'bilinmiyor' ? grade.color : colors.border,
+            borderWidth: grade && grade.level >= 4 ? 2 : 1,
+          },
+        ]}>
+        <Text style={{ fontSize: 52, textAlign: 'center' }}>{avatar}</Text>
+        {grade ? (
+          <View style={{ alignItems: 'center', marginBottom: 8 }}>
+            <GradeBadge grade={grade} />
+          </View>
+        ) : null}
         <Text style={[styles.tag, { color: colors.tint }]}>{animal.earTag}</Text>
         <Text style={[styles.name, { color: colors.text }]}>{animal.name || 'İsimsiz'}</Text>
         <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
           {animal.breed} · {sexLabel} · {ANIMAL_STATUS_LABELS[animal.status]}
         </Text>
+        <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 13 }}>
+          {ageLabel}
+        </Text>
+        {grade ? (
+          <Text style={{ color: grade.color, textAlign: 'center', marginTop: 8, fontWeight: '600' }}>
+            {grade.short}
+          </Text>
+        ) : null}
+        {grade ? (
+          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 13 }}>
+            {grade.hint}
+          </Text>
+        ) : null}
         <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>{animal.paddock}</Text>
       </View>
 
@@ -63,6 +100,8 @@ export default function AnimalDetailScreen() {
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.tint }]}>Performans</Text>
+        <InfoRow label="Yaş bandı" value={ageLabel} colors={colors} />
+        <InfoRow label="Derece" value={grade?.label ?? '—'} colors={colors} />
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
         <InfoRow label="ADG (30 gün)" value={adg != null ? `+${adg} g/gün` : '—'} colors={colors} />
       </View>
