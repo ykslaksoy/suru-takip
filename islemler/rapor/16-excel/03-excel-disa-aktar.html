@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Excel&#x27;e liste verme — SürüYön İşlem Raporu</title>
+  <style>
+    :root {
+      --bg: #f4f7f0;
+      --card: #fff;
+      --text: #1a2e1a;
+      --muted: #4a5f4a;
+      --tint: #2d6a4f;
+      --lock: #c1121f;
+      --ok: #2d6a4f;
+      --border: #d8e2d0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(160deg, #e8f0e4, var(--bg) 40%, #eef5ea);
+      color: var(--text); line-height: 1.5; min-height: 100vh;
+    }
+    header {
+      background: var(--tint); color: #fff; padding: 1.25rem 1.5rem;
+    }
+    header a { color: #c8f0d8; }
+    main { max-width: 820px; margin: 1.5rem auto; padding: 0 1rem 3rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+      box-shadow: 0 8px 24px rgba(45,106,79,.06);
+    }
+    .badge {
+      display: inline-block; padding: .35rem .7rem; border-radius: 999px;
+      font-size: .8rem; font-weight: 700;
+    }
+    .badge.lock { background: #ffe5e5; color: var(--lock); }
+    .badge.todo { background: #e8f5e9; color: var(--ok); }
+    .badge.open { background: #fff3cd; color: #856404; }
+    h1 { margin: .5rem 0 0; font-size: 1.45rem; }
+    pre, code { font-family: ui-monospace, monospace; font-size: .85rem; }
+    pre {
+      background: #1a241a; color: #e8f0e8; padding: 1rem; border-radius: 10px;
+      overflow-x: auto;
+    }
+    .meta { color: var(--muted); font-size: .9rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .55rem .4rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: .8rem; }
+    .cmd { background: #f0f5ee; padding: .75rem 1rem; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div><strong>SürüYön</strong> · İşlem Kontrol Raporu</div>
+    <div style="opacity:.85;font-size:.9rem;margin-top:.25rem">
+      <a href="index.html">← Tüm işlemler paneli</a>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge todo">AÇIK İŞLEM</span>
+      <h1>Excel&#x27;e liste verme</h1>
+      <p class="meta">Oluşturulma: 2026-08-26 01:07 UTC</p>
+    </div>
+    
+    <div class="card">
+      <table>
+        <tr><th>Durum</th><td>TODO</td></tr>
+        <tr><th>Dosya</th><td><code>16-excel/03-excel-disa-aktar.md</code></td></tr>
+        <tr><th>status</th><td>TODO</td></tr>
+        <tr><th>kilitli</th><td>false</td></tr>
+      </table>
+    </div>
+    <div class="card"><p><em>**AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.</em></p><p>**Klasör:** `16-excel`  </p><p>**Bağımlı kod (varsa):** `—`</p><h2>Yapılacak</h2><p>Sürü/aşı/tartım export.</p><p>Kullanıcı veya agent **&quot;bu işlem tamam&quot;** dediğinde:</p><p>1. `status: DONE`</p><p>2. Başlık `[x]`</p><p>3. `kilitli: true`</p><p>4. Bu dosyaya bir daha yazma</p></div>
+    
+        <div class="card">
+          <h2>Tamamlama</h2>
+          <div class="cmd">
+            <pre>python3 islemler/scripts/kilit.py tamamla 16-excel/03-excel-disa-aktar.md
+# → HTML rapor üretilir + şifre kilidi konur</pre>
+          </div>
+        </div>
+    
+  </main>
+</body>
+</html>

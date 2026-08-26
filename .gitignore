@@ -1,6 +1,11 @@
 node_modules/
 .expo/
 dist/
+agent-tools/
+islemler/.unlock-session.json
+*.log
+.env
+.env.local
 npm-debug.*
 *.jks
 *.p8

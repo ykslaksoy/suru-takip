@@ -19,7 +19,7 @@ gecici_acik: true
 (+ Ölçülsün — tartım yok)
 
 ## Motor
-`mobile/lib/kuzu-derece.ts` — yaş bandı + ADG; BCS/FCR/hedef/hasta opsiyonel
+`mobil/kaynak/kuzu-derece.ts` — yaş bandı + ADG; BCS/FCR/hedef/hasta opsiyonel
 
 ## UI
 - Sürü kartı: rozet + emoji avatar

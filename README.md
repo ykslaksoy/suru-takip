@@ -1,34 +1,24 @@
 # SürüYön — Koyun/Kuzu Sürü Takip Uygulaması
 
-Türkiye odaklı, offline-first koyun/kuzu sürü yönetim uygulaması.
+Türkiye odaklı, offline-first koyun/keçi ağıl yönetim uygulaması.
 
-## Özellikler
+## İşlem tik listesi
 
-### MVP (Faz 1)
-- Sürü kartı (küpe, TÜRKVET, GEKİS, ırk, padok)
-- Kilo takibi + ADG grafiği
-- Hastalık/tedavi/aşı kayıtları + bekletme süresi
-- Yem/aşı/ilaç stok takibi + düşük stok uyarısı
-- Offline SQLite + senkron kuyruğu
+Her iş **ayrı dosya**. Tamamlanınca `[x]` + şifre kilidi.
 
-### v1.0+
-- Rasyon hesaplayıcı
-- Freemium abonelik (simülasyon)
+```bash
+python3 islemler/scripts/kilit.py unlock <dosya.md>
+python3 islemler/scripts/kilit.py kilitle <dosya.md>
+```
 
-### v1.5
-- Akıllı veteriner asistanı (semptom yönlendirme)
-- Sürü Okulu mikro eğitimler
-
-### v2.0 hazırlık
-- TÜRKVET/GEKİS export
-- Resmi kayıt alanları
+→ **[islemler/INDEX.md](islemler/INDEX.md)**
 
 ## Kurulum
 
 ```bash
-cd mobile
+cd mobil
 npm install
-npm run web    # tarayıcıda test
+npm run web
 npm run android
 npm run ios
 ```
@@ -36,22 +26,21 @@ npm run ios
 ## Proje yapısı
 
 ```
-docs/validation/     — Faz 0 görüşme rehberi, anket, doğrulama raporu
-docs/wireframes/     — 5 ana ekran wireframe
-mobile/              — Expo React Native uygulaması
+dokumanlar/     — ürün, doğrulama, ekran taslakları
+mobil/          — Expo React Native uygulama
+islemler/       — tik + şifre kilidi
+araclar/        — yardımcı scriptler
 ```
 
-## Abonelik paketleri
+Kanonik ağaç: `dokumanlar/urun/uygulama-agaci.md`
+
+## Abonelik
 
 | Paket | Fiyat | Limit |
 |-------|-------|-------|
 | Ücretsiz | 0 | 30 hayvan |
 | Çiftçi | 1.490 TL/yıl | 200 hayvan |
 | Profesyonel | 3.490 TL/yıl | 1.000 hayvan |
-
-## Beta pilot
-
-Menü → Beta Pilot: 50 çiftlik kayıt ve geri bildirim modülü.
 
 ## Lisans
 
