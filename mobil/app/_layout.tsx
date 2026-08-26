@@ -41,9 +41,9 @@ export default function RootLayout() {
           <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
           <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
           <Stack.Screen name="beta" options={{ title: 'Beta Pilot' }} />
-          <Stack.Screen name="rasyon" options={{ title: 'Rasyon Hesaplayıcı' }} />
-          <Stack.Screen name="veteriner" options={{ title: 'Akıllı Veteriner' }} />
           <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Export' }} />
+          <Stack.Screen name="rasyon/index" options={{ title: 'Rasyon' }} />
+          <Stack.Screen name="veteriner/index" options={{ title: 'Veteriner' }} />
         </Stack>
       </SubscriptionProvider>
     </DatabaseProvider>

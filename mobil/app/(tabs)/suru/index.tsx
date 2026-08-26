@@ -3,6 +3,7 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { Link } from 'expo-router';
 import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
+import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -75,6 +76,11 @@ export default function FlockScreen() {
           </Pressable>
         </Link>
       </View>
+      <AltButonlar
+        items={filters.map((f) => ({ key: f.key, label: f.label }))}
+        activeKey={filter}
+        onSelect={(k) => setFilter(k as Filter)}
+      />
       <TextInput
         placeholder="Küpe, isim veya TÜRKVET ara..."
         placeholderTextColor={colors.textSecondary}
@@ -82,24 +88,6 @@ export default function FlockScreen() {
         onChangeText={setSearch}
         style={[styles.search, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
       />
-      <View style={styles.filters}>
-        {filters.map((f) => (
-          <Pressable
-            key={f.key}
-            onPress={() => setFilter(f.key)}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: filter === f.key ? colors.tint : colors.card,
-                borderColor: colors.border,
-              },
-            ]}>
-            <Text style={{ color: filter === f.key ? '#fff' : colors.text, fontWeight: '600', fontSize: 13 }}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
       <FlatList
         data={animals}
         keyExtractor={(item) => item.id}
@@ -136,13 +124,12 @@ const styles = StyleSheet.create({
   addText: { color: '#fff', fontWeight: '700' },
   search: {
     marginHorizontal: 16,
+    marginTop: 10,
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
     minHeight: 48,
   },
-  filters: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
   list: { padding: 16, paddingBottom: 32 },
 });

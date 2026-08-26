@@ -21,22 +21,20 @@ suruyon/
 
 ---
 
-## B) Sekmeler — her biri kendi klasörü
+## B) 6 ana sekme + alt butonlar
 
 ```
 mobil/app/(tabs)/
 ├── _layout.tsx
-├── suru/
-│   └── index.tsx              # Sürü listesi
-├── stok/
-│   └── index.tsx              # Stok listesi / gir-çık
-├── saglik/
-│   └── index.tsx              # Sağlık özeti / bekletme
-├── akilli-kuzu/
-│   └── index.tsx              # Öneri merkezi (ders listesi YOK)
-└── menu/
-    └── index.tsx              # Menü
+├── suru/index.tsx           # alt: Tümü · Dişi · Erkek · Kuzu
+├── stok/index.tsx           # alt: Tümü · Yem · Aşı · İlaç
+├── saglik/index.tsx         # alt: Kayıtlar · Aşı · Bekletme
+├── rasyon/index.tsx         # alt: Hesapla · Akıllı öneri
+├── veteriner/index.tsx      # alt: Semptom · Fotoğraf
+└── akilli-kuzu/index.tsx    # alt: Öneriler · Abonelik · TÜRKVET · Beta · Daha
 ```
+
+Ortak bileşen: `bilesenler/ortak/AltButonlar.tsx`
 
 ---
 
@@ -183,10 +181,11 @@ kaynak/sut/
 
 ## Sekme ↔ klasör eşlemesi
 
-| Sekme | `app/(tabs)/` | `kaynak/` | `bilesenler/` |
-|-------|---------------|-----------|---------------|
-| Sürü | `suru/` | `suru/` + `kilo/` | `suru/` + `kilo/` |
-| Stok | `stok/` | `stok/` | `stok/` |
-| Sağlık | `saglik/` | `saglik/` | (ortak + hayvan/saglik) |
-| Akıllı Kuzu | `akilli-kuzu/` | `akilli-kuzu/` | — |
-| Menü | `menu/` | — | `ortak/` |
+| Sekme | Alt butonlar | `kaynak/` | `bilesenler/` |
+|-------|--------------|-----------|---------------|
+| Sürü | Tümü / Dişi / Erkek / Kuzu | `suru/` + `kilo/` | `suru/` + `kilo/` |
+| Stok | Tümü / Yem / Aşı / İlaç | `stok/` | `stok/` |
+| Sağlık | Kayıtlar / Aşı / Bekletme | `saglik/` | ortak |
+| Rasyon | Hesapla / Akıllı öneri | `rasyon/` | ortak |
+| Vet | Semptom / Fotoğraf | `akilli-veteriner/` | ortak |
+| Akıllı Kuzu | Öneriler / Abonelik / TÜRKVET / Beta | `akilli-kuzu/` | — |

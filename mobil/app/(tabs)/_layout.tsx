@@ -4,18 +4,19 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useClientOnlyValue } from '@/bilesenler/ortak/useSadeceIstemci';
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    Sürü: '🐑',
-    Stok: '📦',
-    Sağlık: '💊',
-    'Akıllı Kuzu': '🐑',
-    Menü: '☰',
-  };
+/** 6 ana sekme — kısa etiket (dar ekran) */
+const TABS: { name: string; title: string; short: string; icon: string }[] = [
+  { name: 'suru', title: 'Sürü', short: 'Sürü', icon: '🐑' },
+  { name: 'stok', title: 'Stok', short: 'Stok', icon: '📦' },
+  { name: 'saglik', title: 'Sağlık', short: 'Sağlık', icon: '💊' },
+  { name: 'rasyon', title: 'Rasyon', short: 'Rasyon', icon: '🌾' },
+  { name: 'veteriner', title: 'Akıllı Vet', short: 'Vet', icon: '🩺' },
+  { name: 'akilli-kuzu', title: 'Akıllı Kuzu', short: 'Kuzu', icon: '✨' },
+];
+
+function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
-    <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.7 }}>
-      {icons[label] ?? '•'}
-    </Text>
+    <Text style={{ fontSize: focused ? 20 : 18, opacity: focused ? 1 : 0.65 }}>{icon}</Text>
   );
 }
 
@@ -27,45 +28,21 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme].tint,
         tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
-        tabBarStyle: { minHeight: 56 },
+        tabBarStyle: { minHeight: 58, paddingBottom: 4 },
         headerShown: useClientOnlyValue(false, true),
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
       }}>
-      <Tabs.Screen
-        name="suru"
-        options={{
-          title: 'Sürü',
-          tabBarIcon: ({ focused }) => <TabIcon label="Sürü" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="stok"
-        options={{
-          title: 'Stok',
-          tabBarIcon: ({ focused }) => <TabIcon label="Stok" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="saglik"
-        options={{
-          title: 'Sağlık',
-          tabBarIcon: ({ focused }) => <TabIcon label="Sağlık" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="akilli-kuzu"
-        options={{
-          title: 'Akıllı Kuzu',
-          tabBarIcon: ({ focused }) => <TabIcon label="Akıllı Kuzu" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="menu"
-        options={{
-          title: 'Menü',
-          tabBarIcon: ({ focused }) => <TabIcon label="Menü" focused={focused} />,
-        }}
-      />
+      {TABS.map((t) => (
+        <Tabs.Screen
+          key={t.name}
+          name={t.name}
+          options={{
+            title: t.title,
+            tabBarLabel: t.short,
+            tabBarIcon: ({ focused }) => <TabIcon icon={t.icon} focused={focused} />,
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

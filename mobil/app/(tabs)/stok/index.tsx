@@ -3,6 +3,7 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } 
 import { StokKarti } from '@/bilesenler/stok/StokKarti';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
+import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -78,18 +79,14 @@ export default function StockScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CevrimdisiBanner pendingSync={pendingSync} />
-      <View style={styles.filters}>
-        {types.map((t) => (
-          <Pressable
-            key={t}
-            onPress={() => setTypeFilter(t)}
-            style={[styles.chip, { backgroundColor: typeFilter === t ? colors.tint : colors.card, borderColor: colors.border }]}>
-            <Text style={{ color: typeFilter === t ? '#fff' : colors.text, fontWeight: '600', fontSize: 13 }}>
-              {t === 'all' ? 'Tümü' : STOCK_TYPE_LABELS[t]}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <AltButonlar
+        items={types.map((t) => ({
+          key: t,
+          label: t === 'all' ? 'Tümü' : STOCK_TYPE_LABELS[t],
+        }))}
+        activeKey={typeFilter}
+        onSelect={(k) => setTypeFilter(k as StockType | 'all')}
+      />
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}
@@ -173,8 +170,6 @@ export default function StockScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  filters: { flexDirection: 'row', padding: 16, gap: 8, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
   alert: { marginBottom: 12, fontWeight: '600' },
   footer: { padding: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
@@ -182,4 +177,5 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },
   typeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
 });
