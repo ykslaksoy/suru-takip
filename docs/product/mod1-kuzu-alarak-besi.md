@@ -64,9 +64,9 @@
 ## Kuzu derecesi (yaş bandına göre)
 
 Derece **ham ADG’ye göre değil**, kuzunun **kaçıncı ayında** olduğuna göre yorumlanır.  
-Örnek: ~200 g/gün, alım bandında (2–3,5 ay) **Sportmen**; aktif beside eşik yükselince aynı tempo **Gelişen** kalabilir. Bitiş ayında ADG doğal yavaşladığı için eşikler biraz düşer.
+Örnek: ~200 g/gün, alım bandında (2–3,5 ay) **Sportmen**; aktif beside eşik yükselince aynı tempo **Fit** kalabilir. Bitiş ayında ADG doğal yavaşladığı için eşikler biraz düşer.
 
-Geçici skala: **Ölçülsün → Sıska → Gelişen → Sportmen → Şampiyon → Süper Kuzu**  
+Geçici skala: **Ölçülsün → Zayıf → Fit → Sportmen → Elit → Süper Kuzu**  
 Kod: `mobile/lib/kuzu-derece.ts` (`AGE_BANDS` + `gradeLamb`). Eşikler sonra ırk/ırk tipine göre netleştirilir.
 
 Detaylı ekran / puzzle notları için önceki `mode1-besi-kuzuculugu.md` içeriği bu akışla aynıdır; isimlendirme **“kuzu alarak”** olarak netleştirilmiştir.

@@ -2,13 +2,13 @@
  * Kuzu gelişim derecelendirmesi (geçici skala — sonra netleştirilir).
  *
  * ÖNEMLİ: Derece, kuzunun **kaçıncı ayında** olduğuna göre yorumlanır.
- * Aynı ADG, 2. ayda “Sportmen”, 6. ayda “Gelişen” olabilir.
+ * Aynı ADG, farklı yaş bandında farklı derece olabilir.
  *
  * Bilimsel taban: yaş bandı + ADG + opsiyonel BCS/FCR/hedef.
- * Marka dili: Sıska → Gelişen → Sportmen → Şampiyon → Süper Kuzu
+ * Marka dili: Zayıf → Fit → Sportmen → Elit → Süper Kuzu
  */
 
-export type KuzuGradeId = 'siska' | 'gelisen' | 'sportmen' | 'sampiyon' | 'super_kuzu' | 'bilinmiyor';
+export type KuzuGradeId = 'zayif' | 'fit' | 'sportmen' | 'elit' | 'super_kuzu' | 'bilinmiyor';
 
 export interface KuzuGrade {
   id: KuzuGradeId;
@@ -30,22 +30,22 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     short: 'Henüz tartım yok',
     hint: 'İlk tartımı al; Akıllı Kuzu yaşa göre derecelendirsin.',
   },
-  siska: {
-    id: 'siska',
+  zayif: {
+    id: 'zayif',
     level: 1,
-    label: 'Sıska',
+    label: 'Zayıf',
     emoji: '😟🐑',
     color: '#c1121f',
     short: 'Gelişim zayıf / risk',
     hint: 'Bu ay için beklenenin altında — padok, yem, sağlık kontrol.',
   },
-  gelisen: {
-    id: 'gelisen',
+  fit: {
+    id: 'fit',
     level: 2,
-    label: 'Gelişen',
+    label: 'Fit',
     emoji: '🌱🐑',
     color: '#e09f3e',
-    short: 'Toparlanıyor',
+    short: 'Form tutuyor',
     hint: 'Bu aya göre yolunda — düzenli tartım sürdür.',
   },
   sportmen: {
@@ -57,10 +57,10 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     short: 'Formda (yaşına göre)',
     hint: 'Bu ay için iyi tempo. FCR’yi de izle.',
   },
-  sampiyon: {
-    id: 'sampiyon',
+  elit: {
+    id: 'elit',
     level: 4,
-    label: 'Şampiyon',
+    label: 'Elit',
     emoji: '🥇🐑',
     color: '#1b4332',
     short: 'Üst seviye (yaşına göre)',
@@ -82,12 +82,12 @@ export interface AgeBand {
   minMonth: number;
   maxMonth: number;
   label: string;
-  /** Bu bandda Sıska / Gelişen / Sportmen / Şampiyon eşikleri (ADG g/gün) */
+  /** Bu bandda Zayıf / Fit / Sportmen / Elit eşikleri (ADG g/gün) */
   thresholds: {
-    siskaBelow: number;
-    gelisenBelow: number;
+    zayifBelow: number;
+    fitBelow: number;
     sportmenBelow: number;
-    /** sportmenBelow ve üzeri → Şampiyon adayı; Süper Kuzu ek şart */
+    /** sportmenBelow ve üzeri → Elit adayı; Süper Kuzu ek şart */
   };
 }
 
@@ -100,32 +100,32 @@ export const AGE_BANDS: AgeBand[] = [
     minMonth: 0,
     maxMonth: 2,
     label: '0–2 ay (süt / erken)',
-    thresholds: { siskaBelow: 100, gelisenBelow: 160, sportmenBelow: 220 },
+    thresholds: { zayifBelow: 100, fitBelow: 160, sportmenBelow: 220 },
   },
   {
     minMonth: 2,
     maxMonth: 3.5,
     label: '2–3,5 ay (alım / karantina dönemi)',
-    thresholds: { siskaBelow: 120, gelisenBelow: 180, sportmenBelow: 250 },
+    thresholds: { zayifBelow: 120, fitBelow: 180, sportmenBelow: 250 },
   },
   {
     minMonth: 3.5,
     maxMonth: 5,
     label: '3,5–5 ay (aktif besi)',
-    thresholds: { siskaBelow: 140, gelisenBelow: 200, sportmenBelow: 270 },
+    thresholds: { zayifBelow: 140, fitBelow: 200, sportmenBelow: 270 },
   },
   {
     minMonth: 5,
     maxMonth: 7,
     label: '5–7 ay (bitiş / satışa yakın)',
     // İleri ayda ADG genelde yavaşlar — eşikler biraz düşer
-    thresholds: { siskaBelow: 100, gelisenBelow: 160, sportmenBelow: 220 },
+    thresholds: { zayifBelow: 100, fitBelow: 160, sportmenBelow: 220 },
   },
   {
     minMonth: 7,
     maxMonth: 24,
     label: '7+ ay',
-    thresholds: { siskaBelow: 80, gelisenBelow: 130, sportmenBelow: 180 },
+    thresholds: { zayifBelow: 80, fitBelow: 130, sportmenBelow: 180 },
   },
 ];
 
@@ -174,23 +174,23 @@ export function gradeLamb(input: GradeInput): KuzuGrade {
   }
 
   let id: KuzuGradeId;
-  if (adgGrams < t.siskaBelow) id = 'siska';
-  else if (adgGrams < t.gelisenBelow) id = 'gelisen';
+  if (adgGrams < t.zayifBelow) id = 'zayif';
+  else if (adgGrams < t.fitBelow) id = 'fit';
   else if (adgGrams < t.sportmenBelow) id = 'sportmen';
-  else id = 'sampiyon';
+  else id = 'elit';
 
   if (bcs != null) {
-    if (bcs <= 1.5) id = 'siska';
-    else if (bcs <= 2 && id !== 'siska') id = 'gelisen';
-    else if (bcs >= 4.5 && (id === 'sportmen' || id === 'sampiyon')) id = 'sportmen';
+    if (bcs <= 1.5) id = 'zayif';
+    else if (bcs <= 2 && id !== 'zayif') id = 'fit';
+    else if (bcs >= 4.5 && (id === 'sportmen' || id === 'elit')) id = 'sportmen';
   }
 
-  if (isSick && id !== 'siska') {
-    id = id === 'gelisen' ? 'siska' : 'gelisen';
+  if (isSick && id !== 'zayif') {
+    id = id === 'fit' ? 'zayif' : 'fit';
   }
 
   const fcrOk = fcr == null || (fcr > 0 && fcr <= 4.5);
-  // Süper Kuzu: yaş bandında Şampiyon seviyesinde ADG + hedef + FCR
+  // Süper Kuzu: yaş bandında Elit seviyesinde ADG + hedef + FCR
   if (adgGrams >= t.sportmenBelow && targetReached && fcrOk && !isSick && (bcs == null || bcs >= 2.5)) {
     id = 'super_kuzu';
   }
