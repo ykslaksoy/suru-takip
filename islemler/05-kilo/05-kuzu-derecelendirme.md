@@ -1,9 +1,12 @@
 ---
 status: DONE
 kilitli: false
+gecici_acik: true
 ---
 
 # [x] Kuzu derecelendirme (geçici skala)
+
+> ⚠️ **GEÇİCİ AÇIK** — düzenleme sonrası `kilitle` çalıştırın.
 
 > Eşikler sonra netleştirilir. Derece **yaş bandına** göre yorumlanır.
 
@@ -11,7 +14,7 @@ kilitli: false
 1. Zayıf
 2. Fit
 3. Sportmen
-4. Elit
+4. Kaslı
 5. Süper Kuzu
 (+ Ölçülsün — tartım yok)
 

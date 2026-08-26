@@ -5,10 +5,10 @@
  * Aynı ADG, farklı yaş bandında farklı derece olabilir.
  *
  * Bilimsel taban: yaş bandı + ADG + opsiyonel BCS/FCR/hedef.
- * Marka dili: Zayıf → Fit → Sportmen → Elit → Süper Kuzu
+ * Marka dili: Zayıf → Fit → Sportmen → Kaslı → Süper Kuzu
  */
 
-export type KuzuGradeId = 'zayif' | 'fit' | 'sportmen' | 'elit' | 'super_kuzu' | 'bilinmiyor';
+export type KuzuGradeId = 'zayif' | 'fit' | 'sportmen' | 'kasli' | 'super_kuzu' | 'bilinmiyor';
 
 export interface KuzuGrade {
   id: KuzuGradeId;
@@ -57,15 +57,16 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     short: 'Formda (yaşına göre)',
     hint: 'Bu ay için iyi tempo. FCR’yi de izle.',
   },
-  elit: {
-    id: 'elit',
+  kasli: {
+    id: 'kasli',
     level: 4,
-    label: 'Elit',
+    label: 'Kaslı',
     emoji: '🥇🐑',
     color: '#1b4332',
-    short: 'Üst seviye (yaşına göre)',
-    hint: 'Yaş bandının üstünde — Süper Kuzu eşiğine yakın.',
+    short: 'Kas durumu güçlü (yaşına göre)',
+    hint: 'Yaş bandının üstünde, kas yapısı iyi — Süper Kuzu eşiğine yakın.',
   },
+
   super_kuzu: {
     id: 'super_kuzu',
     level: 5,
@@ -82,12 +83,12 @@ export interface AgeBand {
   minMonth: number;
   maxMonth: number;
   label: string;
-  /** Bu bandda Zayıf / Fit / Sportmen / Elit eşikleri (ADG g/gün) */
+  /** Bu bandda Zayıf / Fit / Sportmen / Kaslı eşikleri (ADG g/gün) */
   thresholds: {
     zayifBelow: number;
     fitBelow: number;
     sportmenBelow: number;
-    /** sportmenBelow ve üzeri → Elit adayı; Süper Kuzu ek şart */
+    /** sportmenBelow ve üzeri → Kaslı adayı; Süper Kuzu ek şart */
   };
 }
 
@@ -177,12 +178,12 @@ export function gradeLamb(input: GradeInput): KuzuGrade {
   if (adgGrams < t.zayifBelow) id = 'zayif';
   else if (adgGrams < t.fitBelow) id = 'fit';
   else if (adgGrams < t.sportmenBelow) id = 'sportmen';
-  else id = 'elit';
+  else id = 'kasli';
 
   if (bcs != null) {
     if (bcs <= 1.5) id = 'zayif';
     else if (bcs <= 2 && id !== 'zayif') id = 'fit';
-    else if (bcs >= 4.5 && (id === 'sportmen' || id === 'elit')) id = 'sportmen';
+    else if (bcs >= 4.5 && (id === 'sportmen' || id === 'kasli')) id = 'sportmen';
   }
 
   if (isSick && id !== 'zayif') {
@@ -190,7 +191,7 @@ export function gradeLamb(input: GradeInput): KuzuGrade {
   }
 
   const fcrOk = fcr == null || (fcr > 0 && fcr <= 4.5);
-  // Süper Kuzu: yaş bandında Elit seviyesinde ADG + hedef + FCR
+  // Süper Kuzu: yaş bandında Kaslı seviyesinde ADG + hedef + FCR
   if (adgGrams >= t.sportmenBelow && targetReached && fcrOk && !isSick && (bcs == null || bcs >= 2.5)) {
     id = 'super_kuzu';
   }
