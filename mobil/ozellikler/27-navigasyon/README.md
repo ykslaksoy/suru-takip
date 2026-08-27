@@ -15,14 +15,15 @@
 ## Plan dosyaları
 
 ### kaynak
-- `HizliIslemler.ts`
-- `Modlar.ts`
-- `Roller.ts`
-- `Yetkiler.ts`
+- `Modlar.ts` ✅
 
 ### bilesenler
-- `SekmeBasligi.tsx`
-- `ModSecimKarti.tsx`
+- `ModSecimKarti.tsx` ✅
+
+### app
+- `ayarlar/index.tsx` ✅ — 4 mod seçimi
+- `besi/index.tsx` ✅ — Mod 1 yolculuk
+
 
 ## Bağımlılık
 
