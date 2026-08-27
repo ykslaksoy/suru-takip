@@ -10,7 +10,8 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import { kaydetYemSayim } from '@/kaynak/stok/sayim';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
-import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
+import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
+import { TAKVIYE_KATALOGU } from '@/kaynak/stok';
 import { terim } from '@/sabitler/Metinler';
 
 export default function StockScreen() {
@@ -90,7 +91,7 @@ export default function StockScreen() {
     load();
   };
 
-  const types: (StockType | 'all')[] = ['all', 'feed', 'vaccine', 'medicine'];
+  const types: (StockType | 'all')[] = ['all', ...STOCK_TYPE_ORDER];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -152,12 +153,56 @@ export default function StockScreen() {
               />
             ))}
             <View style={styles.typeRow}>
-              {(['feed', 'vaccine', 'medicine'] as StockType[]).map((t) => (
-                <Pressable key={t} onPress={() => setForm({ ...form, type: t })} style={[styles.chip, { backgroundColor: form.type === t ? colors.tint : colors.background, borderColor: colors.border }]}>
+              {STOCK_TYPE_ORDER.map((t) => (
+                <Pressable
+                  key={t}
+                  onPress={() =>
+                    setForm({
+                      ...form,
+                      type: t,
+                      unit: t === 'supplement' && !form.unit ? 'kg' : form.unit,
+                    })
+                  }
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: form.type === t ? colors.tint : colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}>
                   <Text style={{ color: form.type === t ? '#fff' : colors.text }}>{STOCK_TYPE_LABELS[t]}</Text>
                 </Pressable>
               ))}
             </View>
+            {form.type === 'supplement' ? (
+              <View style={styles.presetWrap}>
+                <Text style={[styles.presetTitle, { color: colors.textSecondary }]}>Hazır takviyeler</Text>
+                <View style={styles.presetRow}>
+                  {TAKVIYE_KATALOGU.map((t) => (
+                    <Pressable
+                      key={t.id}
+                      onPress={() =>
+                        setForm({
+                          ...form,
+                          name: t.ad,
+                          type: 'supplement',
+                          unit: t.birim,
+                          minQuantity: String(t.minMiktar),
+                        })
+                      }
+                      style={[
+                        styles.presetChip,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: form.name === t.ad ? colors.accent + '55' : colors.background,
+                        },
+                      ]}>
+                      <Text style={{ color: colors.text, fontSize: 12, fontWeight: '600' }}>{t.ad}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
             <AnaButon title="Kaydet" onPress={saveItem} />
             <AnaButon title="İptal" variant="secondary" onPress={() => setModalVisible(false)} />
           </View>
@@ -205,6 +250,16 @@ const styles = StyleSheet.create({
   modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '80%' },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },
-  typeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
+  presetWrap: { marginBottom: 12 },
+  presetTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
+  presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  presetChip: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    maxWidth: '100%',
+  },
 });

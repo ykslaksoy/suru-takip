@@ -146,6 +146,33 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     notes: 'Demo: stok yok',
   });
   await upsertStockItem({ name: 'Albendazol', type: 'medicine', quantity: 8, unit: 'flakon', minQuantity: 5, expiryDate: '2026-06-15', notes: '' });
+  await upsertStockItem({
+    name: 'Mineral yalama taşı',
+    type: 'supplement',
+    quantity: 1,
+    unit: 'adet',
+    minQuantity: 2,
+    expiryDate: null,
+    notes: 'Padok A',
+  });
+  await upsertStockItem({
+    name: 'Vitamin-mineral premiks',
+    type: 'supplement',
+    quantity: 12,
+    unit: 'kg',
+    minQuantity: 5,
+    expiryDate: '2026-10-01',
+    notes: 'Yeme karışım',
+  });
+  await upsertStockItem({
+    name: 'Hayvan tuzu',
+    type: 'supplement',
+    quantity: 25,
+    unit: 'kg',
+    minQuantity: 10,
+    expiryDate: null,
+    notes: '',
+  });
 
   return true;
 }

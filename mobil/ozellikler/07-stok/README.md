@@ -10,10 +10,15 @@
 | bilesenler | `mobil/bilesenler/stok/` |
 | app | `mobil/app/(tabs)/stok/` |
 
-## Plan dosyaları
+### kaynak
+- `takviye.ts` — takviye katalogu + düşük/SKT yardımcıları
+- `sayim.ts` / `yem-tuketim.ts`
 
+### bilesenler
+- `StokKarti.tsx`
 
-## Bağımlılık
+Stok tipleri: Yem · Takviye · Aşı · İlaç
+
 
 - Sadece `03-cekirdek` + `bilesenler/ortak`
 - Diğer parçalara **doğrudan import yok**

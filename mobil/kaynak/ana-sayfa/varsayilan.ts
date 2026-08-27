@@ -11,5 +11,5 @@ export const VARSAYILAN_ANA_SAYFA = {
     'akilli-kuzu',
     'turkvet',
   ],
-  kestirmeIds: ['abonelik', 'beta', 'bekletme', 'dusuk-stok', 'rasyon-oneri', 'hayvan-ara'],
+  kestirmeIds: ['abonelik', 'beta', 'bekletme', 'dusuk-stok', 'takviye', 'rasyon-oneri', 'hayvan-ara'],
 };

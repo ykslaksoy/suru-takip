@@ -1,6 +1,6 @@
 export type AnimalSex = 'female' | 'male';
 export type AnimalStatus = 'healthy' | 'sick' | 'pregnant' | 'lactating' | 'dry' | 'sold' | 'dead';
-export type StockType = 'feed' | 'vaccine' | 'medicine';
+export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement';
 export type SubscriptionTier = 'free' | 'farmer' | 'professional' | 'enterprise';
 export type SyncStatus = 'synced' | 'pending' | 'error';
 export type RationPhase = 'maintenance' | 'pregnant' | 'lactating' | 'lamb_fattening' | 'dry';
@@ -152,4 +152,8 @@ export const STOCK_TYPE_LABELS: Record<StockType, string> = {
   feed: 'Yem',
   vaccine: 'Aşı',
   medicine: 'İlaç',
+  supplement: 'Takviye',
 };
+
+/** Stok ekranı filtre sırası */
+export const STOCK_TYPE_ORDER: StockType[] = ['feed', 'supplement', 'vaccine', 'medicine'];

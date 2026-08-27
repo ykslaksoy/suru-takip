@@ -7,6 +7,7 @@ import {
   getStockItems,
 } from '@/kaynak/cekirdek/veritabani';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
+import type { StockItem } from '@/kaynak/cekirdek/tipler';
 
 export type BugunSeviye = 'uyari' | 'sira' | 'bilgi';
 
@@ -26,9 +27,24 @@ function kalanGun(recordedAt: string, withdrawalDays: number): number {
   return Math.max(0, Math.ceil((bitis - Date.now()) / 86400000));
 }
 
+function dusukTakviyeler(items: StockItem[]): StockItem[] {
+  return items.filter((i) => i.type === 'supplement' && i.quantity <= i.minQuantity);
+}
+
+function sktYakinTakviyeler(items: StockItem[], gun = 60): StockItem[] {
+  const limit = Date.now() + gun * 86400000;
+  return items.filter(
+    (i) =>
+      i.type === 'supplement' &&
+      i.expiryDate &&
+      new Date(i.expiryDate).getTime() <= limit &&
+      new Date(i.expiryDate).getTime() >= Date.now()
+  );
+}
+
 /**
  * Ana sayfa “Bugün” kartı — en fazla 3 madde.
- * Sıra: bekletme → aşı stoğu / yapılacak aşı → düşük stok → sağlık → tartım.
+ * Sıra: bekletme → aşı stoğu → takviye → düşük stok → sağlık → tartım.
  */
 export async function getBugunMaddeleri(): Promise<BugunMadde[]> {
   const out: BugunMadde[] = [];
@@ -72,11 +88,41 @@ export async function getBugunMaddeleri(): Promise<BugunMadde[]> {
     });
   }
 
+  const dusukTakviye = dusukTakviyeler(stock);
+  const sktTakviye = sktYakinTakviyeler(stock);
+  if (dusukTakviye.length > 0 && out.length < MAX_MADDE) {
+    const first = dusukTakviye[0];
+    out.push({
+      id: 'takviye-stok',
+      seviye: 'uyari',
+      baslik: 'Takviye stoğu düşük',
+      aciklama:
+        dusukTakviye.length === 1
+          ? `${first.name} · ${first.quantity} ${first.unit} (min ${first.minQuantity})`
+          : `${dusukTakviye.length} takviye düşük · örn. ${first.name}`,
+      href: '/(tabs)/stok',
+      cta: 'Stoka git',
+    });
+  } else if (sktTakviye.length > 0 && out.length < MAX_MADDE) {
+    const first = sktTakviye[0];
+    out.push({
+      id: 'takviye-skt',
+      seviye: 'sira',
+      baslik: 'Takviye SKT yakın',
+      aciklama: `${first.name} · son kullanma yaklaşıyor`,
+      href: '/(tabs)/stok',
+      cta: 'Stoka git',
+    });
+  }
+
   const asiStokAdlari = new Set(
     asiDurum.map((d) => d.stokAdi?.toLocaleLowerCase('tr-TR')).filter(Boolean) as string[]
   );
+  const takviyeIds = new Set(dusukTakviye.map((i) => i.id));
   const lowStock = (await getLowStockItems()).filter(
-    (i) => !(i.type === 'vaccine' && asiStokAdlari.has(i.name.toLocaleLowerCase('tr-TR')))
+    (i) =>
+      !(i.type === 'vaccine' && asiStokAdlari.has(i.name.toLocaleLowerCase('tr-TR'))) &&
+      !takviyeIds.has(i.id)
   );
   if (lowStock.length > 0 && out.length < MAX_MADDE) {
     const first = lowStock[0];
