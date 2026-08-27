@@ -7,7 +7,6 @@ import { KestirmelerSatiri } from '@/bilesenler/ana-sayfa/KestirmelerSatiri';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { useAnaSayfa } from '@/baglam/AnaSayfaBaglami';
 import { useMod } from '@/baglam/ModBaglami';
 
@@ -16,7 +15,6 @@ export default function AnaSayfaScreen() {
   const colors = Colors[scheme];
   const { width } = useWindowDimensions();
   const { pendingSync } = useDatabase();
-  const { tierLabel } = useSubscription();
   const { hizliIslemler, kestirmeler, loading } = useAnaSayfa();
   const { aktifMod } = useMod();
   const dar = width < 360;
@@ -39,9 +37,7 @@ export default function AnaSayfaScreen() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.title, { color: colors.text, fontSize: dar ? 22 : 26 }]}>SürüYön</Text>
-            <Text style={{ color: colors.textSecondary }}>
-              {tierLabel} · {aktifMod.baslik}
-            </Text>
+            <Text style={{ color: colors.textSecondary }}>{aktifMod.baslik}</Text>
           </View>
           <View style={styles.headerActions}>
             <Link href="/ayarlar" asChild>
