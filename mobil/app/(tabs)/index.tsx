@@ -61,7 +61,7 @@ export default function AnaSayfaScreen() {
 
 const styles = StyleSheet.create({
   shell: { flex: 1 },
-  scroll: { paddingBottom: 16 },
+  scroll: { paddingBottom: 32 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -12,13 +12,15 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
 
+  if (items.length === 0) return null;
+
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.title, { color: colors.textSecondary }]}>Kestirmeler</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}>
+      <View style={styles.headerRow}>
+        <Text style={[styles.title, { color: colors.textSecondary }]}>Kestirmeler</Text>
+        <Text style={[styles.count, { color: colors.textSecondary }]}>{items.length} kısayol</Text>
+      </View>
+      <View style={styles.grid}>
         {items.map((item) => (
           <Pressable
             key={item.id}
@@ -33,10 +35,13 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
                 opacity: pressed ? 0.85 : 1,
               },
             ]}>
-            <Text style={[styles.chipText, { color: colors.text }]}>{item.label}</Text>
+            <Text style={styles.chipIcon}>{item.icon}</Text>
+            <Text style={[styles.chipText, { color: colors.text }]} numberOfLines={2}>
+              {item.label}
+            </Text>
           </Pressable>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -46,29 +51,51 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
   title: {
     fontSize: 13,
     fontWeight: '700',
-    paddingHorizontal: 16,
-    marginBottom: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  row: {
-    paddingHorizontal: 16,
-    gap: 8,
-    flexDirection: 'row',
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minHeight: 36,
-    justifyContent: 'center',
-  },
-  chipText: {
+  count: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minHeight: 40,
+    maxWidth: '100%',
+    flexGrow: 1,
+    flexBasis: '47%',
+  },
+  chipIcon: {
+    fontSize: 16,
+    width: 22,
+    textAlign: 'center',
+  },
+  chipText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
   },
 });
