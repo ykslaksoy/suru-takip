@@ -7,14 +7,19 @@
 | Katman | Yol |
 |--------|-----|
 | kaynak | `mobil/kaynak/damizlik/` |
-| app | `mobil/app/damizlik/` |
-| app | `mobil/app/mod/` |
+| app | `(tabs)/yolculuk` — Mod 3 aktifken |
 
 ## Plan dosyaları
 
 ### kaynak
-- `secilim.ts`
-- `secere.ts`
+- `adim-kilidi.ts` ✅
+- `veri-ilerleme.ts` ✅
+- `birlesik.ts` ✅
+- `secilim.ts` (iskelet)
+- `secere.ts` (iskelet)
+
+### app
+- `(tabs)/yolculuk` — 7 adımlı yolculuk; veri/manuel ilerleme
 
 ## Bağımlılık
 

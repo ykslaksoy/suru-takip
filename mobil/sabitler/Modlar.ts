@@ -43,7 +43,7 @@ export const URUN_MODLARI: UrunMod[] = [
     kisa: 'Genetik / yetiştirme',
     aciklama: 'Damızlık kalite, şecere ve seleksiyon odaklı.',
     icon: '🏆',
-    hazir: false,
+    hazir: true,
     href: '/(tabs)/yolculuk',
   },
   {
@@ -53,7 +53,7 @@ export const URUN_MODLARI: UrunMod[] = [
     kisa: 'Sağım / laktasyon',
     aciklama: 'Sağmal sürü, sağım kaydı ve süt rasyonu.',
     icon: '🥛',
-    hazir: false,
+    hazir: true,
     href: '/(tabs)/yolculuk',
   },
 ];

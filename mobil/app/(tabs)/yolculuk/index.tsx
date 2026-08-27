@@ -34,6 +34,27 @@ import {
   type Mod2AdimId,
   type Mod2BirlesikIlerleme,
 } from '@/kaynak/besi-koc-kat';
+import {
+  MOD3_ADIMLAR,
+  adimAcikMiMod3,
+  adimTamamlaMod3,
+  getMod3BirlesikIlerleme,
+  resetMod3Ilerleme,
+  sonrakiAcikAdimMod3,
+  type Mod3AdimId,
+  type Mod3BirlesikIlerleme,
+} from '@/kaynak/damizlik';
+import {
+  MOD4_ADIMLAR,
+  adimAcikMiMod4,
+  adimTamamlaMod4,
+  addSagimKaydi,
+  getMod4BirlesikIlerleme,
+  resetMod4Ilerleme,
+  sonrakiAcikAdimMod4,
+  type Mod4AdimId,
+  type Mod4BirlesikIlerleme,
+} from '@/kaynak/sut';
 import { useMod } from '@/baglam/ModBaglami';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 
@@ -51,6 +72,20 @@ const BOS2: Mod2BirlesikIlerleme = {
   ozet: { disi: 0, koc: 0, gebe: 0, kuzu: 0, katim: 0, asi: 0, t0: 0 },
 };
 
+const BOS3: Mod3BirlesikIlerleme = {
+  tamamlanan: [],
+  kaynak: {},
+  kanitlar: [],
+  ozet: { hayvan: 0, turkvet: 0, tartim: 0, asi: 0, aday: 0 },
+};
+
+const BOS4: Mod4BirlesikIlerleme = {
+  tamamlanan: [],
+  kaynak: {},
+  kanitlar: [],
+  ozet: { disi: 0, sagmal: 0, kuzu: 0, sagim: 0, litre: 0, laktasyon: 0, asi: 0 },
+};
+
 export default function YolculukScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -59,11 +94,18 @@ export default function YolculukScreen() {
   const navigation = useNavigation();
   const [m1, setM1] = useState<Mod1BirlesikIlerleme>(BOS1);
   const [m2, setM2] = useState<Mod2BirlesikIlerleme>(BOS2);
+  const [m3, setM3] = useState<Mod3BirlesikIlerleme>(BOS3);
+  const [m4, setM4] = useState<Mod4BirlesikIlerleme>(BOS4);
   const [loading, setLoading] = useState(true);
   const [katimForm, setKatimForm] = useState({
     kocEarTag: '',
     padok: '',
     disiSayisi: '10',
+    notes: '',
+  });
+  const [sagimForm, setSagimForm] = useState({
+    litre: '',
+    hayvanSayisi: '20',
     notes: '',
   });
 
@@ -72,6 +114,8 @@ export default function YolculukScreen() {
     try {
       if (aktifMod.id === 'mod1') setM1(await getMod1BirlesikIlerleme());
       else if (aktifMod.id === 'mod2') setM2(await getMod2BirlesikIlerleme());
+      else if (aktifMod.id === 'mod3') setM3(await getMod3BirlesikIlerleme());
+      else if (aktifMod.id === 'mod4') setM4(await getMod4BirlesikIlerleme());
     } finally {
       setLoading(false);
     }
@@ -86,28 +130,6 @@ export default function YolculukScreen() {
   useEffect(() => {
     navigation.setOptions({ title: aktifMod.baslik });
   }, [navigation, aktifMod.baslik]);
-
-  if (aktifMod.id !== 'mod1' && aktifMod.id !== 'mod2') {
-    return (
-      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
-        <Text style={[styles.h1, { color: colors.text }]}>
-          {aktifMod.icon} {aktifMod.baslik}
-        </Text>
-        <Text style={[styles.sub, { color: colors.textSecondary }]}>{aktifMod.aciklama}</Text>
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.soonTitle, { color: colors.text }]}>Yolculuk yakında</Text>
-          <Text style={{ color: colors.textSecondary, marginTop: 8, lineHeight: 20 }}>
-            Bu modun adımları sıradaki sürümde açılacak.
-          </Text>
-        </View>
-        <Pressable
-          onPress={() => router.push('/(tabs)/ayarlar' as never)}
-          style={[styles.cta, { backgroundColor: colors.tint }]}>
-          <Text style={styles.ctaText}>Mod değiştir →</Text>
-        </Pressable>
-      </ScrollView>
-    );
-  }
 
   if (aktifMod.id === 'mod2') {
     const sonraki = sonrakiAcikAdimMod2(m2.tamamlanan);
@@ -244,6 +266,234 @@ export default function YolculukScreen() {
     );
   }
 
+  if (aktifMod.id === 'mod3') {
+    const sonraki = sonrakiAcikAdimMod3(m3.tamamlanan);
+    const kanitMap = Object.fromEntries(m3.kanitlar.map((k) => [k.id, k]));
+    const durumOf = (id: Mod3AdimId) => {
+      const adim = MOD3_ADIMLAR.find((a) => a.id === id)!;
+      if (m3.tamamlanan.includes(id)) return 'tamam' as const;
+      if (adimAcikMiMod3(adim, m3.tamamlanan)) return 'aktif' as const;
+      return 'kilitli' as const;
+    };
+
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
+        <Text style={[styles.h1, { color: colors.text }]}>
+          {aktifMod.icon} {aktifMod.baslik}
+        </Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>
+          Aday → kimlik → büyüme → seleksiyon. Kayıtlardan otomatik ilerler.
+          {loading ? ' Güncelleniyor…' : ''}
+        </Text>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.ozetTitle, { color: colors.text }]}>Veri özeti</Text>
+          <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
+            {m3.ozet.hayvan} hayvan · {m3.ozet.aday} aday · TÜRKVET {m3.ozet.turkvet} · tartım{' '}
+            {m3.ozet.tartim} · aşı {m3.ozet.asi}
+          </Text>
+        </View>
+
+        {sonraki ? (
+          <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>
+            <Text style={styles.nextLabel}>Şimdi</Text>
+            <Text style={styles.nextTitle}>{sonraki.baslik}</Text>
+            <Text style={styles.nextDesc}>{kanitMap[sonraki.id]?.kanit ?? sonraki.aciklama}</Text>
+          </View>
+        ) : (
+          <View style={[styles.nextBox, { backgroundColor: colors.success }]}>
+            <Text style={styles.nextTitle}>Yolculuk tamam</Text>
+            <Text style={styles.nextDesc}>Mod 3 adımları dolu — yönlendirmeyi Akıllı Kuzu’dan izleyin.</Text>
+          </View>
+        )}
+
+        {MOD3_ADIMLAR.map((adim) => {
+          const durum = durumOf(adim.id);
+          const kanit = kanitMap[adim.id];
+          return (
+            <YolculukAdimi
+              key={adim.id}
+              adim={adim}
+              durum={durum}
+              kanit={kanit?.kanit}
+              kaynak={m3.kaynak[adim.id]}
+              onPress={
+                durum === 'kilitli'
+                  ? undefined
+                  : () => {
+                      if (adim.href) router.push(adim.href as never);
+                    }
+              }
+              onTamamla={
+                durum === 'aktif' && !kanit?.tamam
+                  ? async () => {
+                      await adimTamamlaMod3(adim.id);
+                      await load();
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+
+        <Pressable
+          onPress={() => {
+            Alert.alert('Manuel onayları sıfırla', 'Elle onaylar silinir; veri adımları kalır.', [
+              { text: 'Vazgeç', style: 'cancel' },
+              {
+                text: 'Sıfırla',
+                style: 'destructive',
+                onPress: async () => {
+                  await resetMod3Ilerleme();
+                  await load();
+                },
+              },
+            ]);
+          }}
+          style={{ marginTop: 8, marginBottom: 24 }}>
+          <Text style={{ color: colors.danger, textAlign: 'center', fontWeight: '700' }}>
+            Manuel onayları sıfırla
+          </Text>
+        </Pressable>
+      </ScrollView>
+    );
+  }
+
+  if (aktifMod.id === 'mod4') {
+    const sonraki = sonrakiAcikAdimMod4(m4.tamamlanan);
+    const kanitMap = Object.fromEntries(m4.kanitlar.map((k) => [k.id, k]));
+    const durumOf = (id: Mod4AdimId) => {
+      const adim = MOD4_ADIMLAR.find((a) => a.id === id)!;
+      if (m4.tamamlanan.includes(id)) return 'tamam' as const;
+      if (adimAcikMiMod4(adim, m4.tamamlanan)) return 'aktif' as const;
+      return 'kilitli' as const;
+    };
+
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
+        <Text style={[styles.h1, { color: colors.text }]}>
+          {aktifMod.icon} {aktifMod.baslik}
+        </Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>
+          Grup → sağım → laktasyon → rasyon. Kayıtlardan otomatik ilerler.
+          {loading ? ' Güncelleniyor…' : ''}
+        </Text>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.ozetTitle, { color: colors.text }]}>Veri özeti</Text>
+          <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
+            {m4.ozet.disi} dişi · {m4.ozet.sagmal} sağmal · {m4.ozet.kuzu} kuzu · {m4.ozet.sagim} sağım ·{' '}
+            {m4.ozet.litre.toFixed(1)} L · laktasyon {m4.ozet.laktasyon} · aşı {m4.ozet.asi}
+          </Text>
+        </View>
+
+        {sonraki?.id === 'sagim' ? (
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.tint }]}>
+            <Text style={[styles.ozetTitle, { color: colors.text }]}>Sağım kaydı ekle</Text>
+            {(
+              [
+                ['litre', 'Toplam litre'],
+                ['hayvanSayisi', 'Sağılan hayvan sayısı'],
+                ['notes', 'Not (opsiyonel)'],
+              ] as const
+            ).map(([key, ph]) => (
+              <TextInput
+                key={key}
+                placeholder={ph}
+                placeholderTextColor={colors.textSecondary}
+                value={sagimForm[key]}
+                onChangeText={(v) => setSagimForm({ ...sagimForm, [key]: v })}
+                keyboardType={key === 'notes' ? 'default' : 'decimal-pad'}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              />
+            ))}
+            <AnaButon
+              title="Sağımı kaydet"
+              onPress={async () => {
+                const litre = parseFloat(sagimForm.litre.replace(',', '.'));
+                if (!Number.isFinite(litre) || litre <= 0) {
+                  Alert.alert('Eksik', 'Geçerli litre girin');
+                  return;
+                }
+                await addSagimKaydi({
+                  litre,
+                  hayvanSayisi: parseInt(sagimForm.hayvanSayisi, 10) || 1,
+                  tarih: new Date().toISOString().slice(0, 10),
+                  notes: sagimForm.notes.trim(),
+                });
+                setSagimForm({ litre: '', hayvanSayisi: sagimForm.hayvanSayisi, notes: '' });
+                await load();
+                Alert.alert('Tamam', 'Sağım kaydı eklendi');
+              }}
+            />
+          </View>
+        ) : null}
+
+        {sonraki ? (
+          <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>
+            <Text style={styles.nextLabel}>Şimdi</Text>
+            <Text style={styles.nextTitle}>{sonraki.baslik}</Text>
+            <Text style={styles.nextDesc}>{kanitMap[sonraki.id]?.kanit ?? sonraki.aciklama}</Text>
+          </View>
+        ) : (
+          <View style={[styles.nextBox, { backgroundColor: colors.success }]}>
+            <Text style={styles.nextTitle}>Yolculuk tamam</Text>
+            <Text style={styles.nextDesc}>Mod 4 adımları dolu — süt özetini Akıllı Kuzu’dan izleyin.</Text>
+          </View>
+        )}
+
+        {MOD4_ADIMLAR.map((adim) => {
+          const durum = durumOf(adim.id);
+          const kanit = kanitMap[adim.id];
+          return (
+            <YolculukAdimi
+              key={adim.id}
+              adim={adim}
+              durum={durum}
+              kanit={kanit?.kanit}
+              kaynak={m4.kaynak[adim.id]}
+              onPress={
+                durum === 'kilitli'
+                  ? undefined
+                  : () => {
+                      if (adim.href) router.push(adim.href as never);
+                    }
+              }
+              onTamamla={
+                durum === 'aktif' && !kanit?.tamam
+                  ? async () => {
+                      await adimTamamlaMod4(adim.id);
+                      await load();
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+
+        <Pressable
+          onPress={() => {
+            Alert.alert('Manuel onayları sıfırla', 'Elle onaylar silinir; veri adımları kalır.', [
+              { text: 'Vazgeç', style: 'cancel' },
+              {
+                text: 'Sıfırla',
+                style: 'destructive',
+                onPress: async () => {
+                  await resetMod4Ilerleme();
+                  await load();
+                },
+              },
+            ]);
+          }}
+          style={{ marginTop: 8, marginBottom: 24 }}>
+          <Text style={{ color: colors.danger, textAlign: 'center', fontWeight: '700' }}>
+            Manuel onayları sıfırla
+          </Text>
+        </Pressable>
+      </ScrollView>
+    );
+  }
+
   // Mod 1
   const sonraki = sonrakiAcikAdim(m1.tamamlanan);
   const kanitMap = Object.fromEntries(m1.kanitlar.map((k) => [k.id, k]));
@@ -356,7 +606,4 @@ const styles = StyleSheet.create({
   nextLabel: { color: '#ffffffcc', fontWeight: '800', fontSize: 11, textTransform: 'uppercase' },
   nextTitle: { color: '#fff', fontWeight: '800', fontSize: 18, marginTop: 4 },
   nextDesc: { color: '#ffffffee', marginTop: 4, lineHeight: 18 },
-  soonTitle: { fontWeight: '800', fontSize: 18 },
-  cta: { borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  ctaText: { color: '#fff', fontWeight: '800' },
 });

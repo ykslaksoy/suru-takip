@@ -7,15 +7,20 @@
 | Katman | Yol |
 |--------|-----|
 | kaynak | `mobil/kaynak/sut/` |
-| app | `mobil/app/sut/` |
-| app | `mobil/app/mod/` |
+| app | `(tabs)/yolculuk` — Mod 4 aktifken |
 
 ## Plan dosyaları
 
 ### kaynak
-- `sagim.ts`
-- `laktasyon.ts`
-- `yonlendirme.ts`
+- `adim-kilidi.ts` ✅
+- `veri-ilerleme.ts` ✅
+- `birlesik.ts` ✅
+- `sagim.ts` ✅
+- `laktasyon.ts` ✅
+- `yonlendirme.ts` ✅
+
+### app
+- `(tabs)/yolculuk` — 8 adımlı yolculuk; sağım formu; veri/manuel ilerleme
 
 ## Bağımlılık
 
