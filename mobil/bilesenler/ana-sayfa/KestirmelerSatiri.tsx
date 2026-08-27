@@ -2,10 +2,10 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { KESTIRMELER, type Kestirme } from '@/kaynak/ana-sayfa';
+import { KESTIRMELER, type MenuOgesi } from '@/kaynak/ana-sayfa';
 
 interface Props {
-  items?: Kestirme[];
+  items?: MenuOgesi[];
 }
 
 export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {

@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { DatabaseProvider } from '@/baglam/VeritabaniBaglami';
 import { SubscriptionProvider } from '@/baglam/AbonelikBaglami';
+import { AnaSayfaProvider } from '@/baglam/AnaSayfaBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 
 export { ErrorBoundary } from 'expo-router';
@@ -35,6 +36,7 @@ export default function RootLayout() {
     <WebOnizlemeCercevesi>
       <DatabaseProvider>
         <SubscriptionProvider>
+          <AnaSayfaProvider>
           <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
@@ -44,7 +46,9 @@ export default function RootLayout() {
             <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
             <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
             <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
+            <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
           </Stack>
+          </AnaSayfaProvider>
         </SubscriptionProvider>
       </DatabaseProvider>
     </WebOnizlemeCercevesi>

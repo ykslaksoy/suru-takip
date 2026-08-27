@@ -2,17 +2,17 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { HIZLI_ISLEMLER, type HizliIslem } from '@/kaynak/ana-sayfa';
+import { HIZLI_ISLEMLER, type MenuOgesi } from '@/kaynak/ana-sayfa';
 
 interface Props {
-  items?: HizliIslem[];
+  items?: MenuOgesi[];
 }
 
 export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
 
-  const rows: HizliIslem[][] = [];
+  const rows: MenuOgesi[][] = [];
   for (let i = 0; i < items.length; i += 3) {
     rows.push(items.slice(i, i + 3));
   }
