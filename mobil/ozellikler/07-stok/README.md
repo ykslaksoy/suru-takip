@@ -11,13 +11,16 @@
 | app | `mobil/app/(tabs)/stok/` |
 
 ### kaynak
-- `takviye.ts` — takviye katalogu + düşük/SKT yardımcıları
+- `katalog.ts` — yem / takviye / ilaç / aşı tam listesi
+- `kullanim.ts` — kullanım skoru + sıralı liste
+- `takviye.ts` — geriye dönük export
 - `sayim.ts` / `yem-tuketim.ts`
 
 ### bilesenler
 - `StokKarti.tsx`
 
-Stok tipleri: Yem · Takviye · Aşı · İlaç
+Stok tipleri: Yem · Takviye · Aşı · İlaç  
+Liste: katalogun tamamı, **kullanıma göre üstte**
 
 
 - Sadece `03-cekirdek` + `bilesenler/ortak`

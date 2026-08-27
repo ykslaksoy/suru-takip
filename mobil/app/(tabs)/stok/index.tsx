@@ -1,5 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { StokKarti } from '@/bilesenler/stok/StokKarti';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
@@ -9,29 +19,67 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import { kaydetYemSayim } from '@/kaynak/stok/sayim';
+import {
+  getSiraliStokListesi,
+  kaydetKatalogKullanim,
+  type StokListeSatiri,
+} from '@/kaynak/stok';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
-import { TAKVIYE_KATALOGU } from '@/kaynak/stok';
 import { terim } from '@/sabitler/Metinler';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refreshKey, pendingSync, refresh, ready } = useDatabase();
-  const [items, setItems] = useState<StockItem[]>([]);
+  const [satirlar, setSatirlar] = useState<StokListeSatiri[]>([]);
   const [typeFilter, setTypeFilter] = useState<StockType | 'all'>('all');
+  const [arama, setArama] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const [selected, setSelected] = useState<StockItem | null>(null);
-  const [form, setForm] = useState({ name: '', type: 'feed' as StockType, quantity: '0', unit: 'kg', minQuantity: '0', expiryDate: '' });
+  const [form, setForm] = useState({
+    name: '',
+    type: 'feed' as StockType,
+    quantity: '0',
+    unit: 'kg',
+    minQuantity: '10',
+    expiryDate: '',
+    katalogId: null as string | null,
+  });
 
   const load = useCallback(async () => {
-    const list = await getStockItems(typeFilter === 'all' ? undefined : typeFilter);
-    setItems(list);
+    setSatirlar(await getSiraliStokListesi(typeFilter));
   }, [typeFilter]);
 
   useEffect(() => {
     if (ready) load();
   }, [ready, refreshKey, load]);
+
+  const filtered = useMemo(() => {
+    const q = arama.trim().toLocaleLowerCase('tr-TR');
+    if (!q) return satirlar;
+    return satirlar.filter(
+      (s) =>
+        s.ad.toLocaleLowerCase('tr-TR').includes(q) ||
+        s.aciklama.toLocaleLowerCase('tr-TR').includes(q)
+    );
+  }, [satirlar, arama]);
+
+  const openFromSatir = (satir: StokListeSatiri) => {
+    if (satir.item) {
+      openAdjust(satir.item);
+      return;
+    }
+    setForm({
+      name: satir.ad,
+      type: satir.type,
+      quantity: '0',
+      unit: satir.birim,
+      minQuantity: String(satir.minMiktar),
+      expiryDate: '',
+      katalogId: satir.katalogId,
+    });
+    setModalVisible(true);
+  };
 
   const saveItem = async () => {
     if (!form.name.trim()) {
@@ -39,7 +87,6 @@ export default function StockScreen() {
       return;
     }
     await upsertStockItem({
-      id: selected?.id,
       name: form.name.trim(),
       type: form.type,
       quantity: parseFloat(form.quantity) || 0,
@@ -48,13 +95,15 @@ export default function StockScreen() {
       expiryDate: form.expiryDate || null,
       notes: '',
     });
+    if (form.katalogId) await kaydetKatalogKullanim(form.katalogId, 3);
+    else await kaydetKatalogKullanim(form.name.trim(), 2);
+
     if (form.type === 'feed') {
       const items = await getStockItems('feed');
       const saved = items.find((i) => i.name === form.name.trim()) ?? items[items.length - 1];
       if (saved) await kaydetYemSayim(saved.id, saved.quantity, 'sayım');
     }
     setModalVisible(false);
-    setSelected(null);
     refresh();
     load();
   };
@@ -81,10 +130,18 @@ export default function StockScreen() {
     const notes =
       adjustItem.type === 'feed' && adjustPadok.trim() ? adjustPadok.trim() : '';
     await adjustStock(adjustItem.id, movementType, q, notes);
+    if (movementType === 'out') {
+      await kaydetKatalogKullanim(adjustItem.name, Math.max(1, Math.round(q)));
+    }
     if (adjustItem.type === 'feed') {
       const items = await getStockItems('feed');
       const updated = items.find((i) => i.id === adjustItem.id);
-      if (updated) await kaydetYemSayim(updated.id, updated.quantity, movementType === 'out' ? 'çıkış sonrası' : 'giriş sonrası');
+      if (updated)
+        await kaydetYemSayim(
+          updated.id,
+          updated.quantity,
+          movementType === 'out' ? 'çıkış sonrası' : 'giriş sonrası'
+        );
     }
     setAdjustModal(false);
     refresh();
@@ -98,6 +155,9 @@ export default function StockScreen() {
       <CevrimdisiBanner pendingSync={pendingSync} />
       <View style={styles.pageHeader}>
         <Text style={[styles.pageTitle, { color: colors.text }]}>Stok</Text>
+        <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
+          Tüm liste · çok kullanılan üstte
+        </Text>
       </View>
       <AltButonlar
         items={types.map((t) => ({
@@ -107,28 +167,45 @@ export default function StockScreen() {
         activeKey={typeFilter}
         onSelect={(k) => setTypeFilter(k as StockType | 'all')}
       />
+      <TextInput
+        placeholder="Listede ara..."
+        placeholderTextColor={colors.textSecondary}
+        value={arama}
+        onChangeText={setArama}
+        style={[
+          styles.search,
+          { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
+        ]}
+      />
       <FlatList
-        data={items}
-        keyExtractor={(i) => i.id}
-        contentContainerStyle={{ padding: 16 }}
-        renderItem={({ item }) => (
-          <StokKarti
-            item={item}
-            onPress={() => openAdjust(item)}
-          />
-        )}
+        data={filtered}
+        keyExtractor={(i) => i.key}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        renderItem={({ item }) => <StokKarti satir={item} onPress={() => openFromSatir(item)} />}
         ListHeaderComponent={
-          items.some((i) => i.quantity <= i.minQuantity) ? (
-            <Text style={[styles.alert, { color: colors.warning }]}>⚠ Düşük stok uyarısı olan kalemler var</Text>
-          ) : null
+          <Text style={[styles.hint, { color: colors.textSecondary }]}>
+            {filtered.length} kalem · çıkış yaptıkça sıra yükselir
+          </Text>
+        }
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 24 }}>
+            Eşleşen kalem yok
+          </Text>
         }
       />
       <View style={styles.footer}>
         <AnaButon
-          title="+ Stok Ekle"
+          title="+ Özel kalem ekle"
           onPress={() => {
-            setSelected(null);
-            setForm({ name: '', type: 'feed', quantity: '0', unit: 'kg', minQuantity: '10', expiryDate: '' });
+            setForm({
+              name: '',
+              type: typeFilter === 'all' ? 'feed' : typeFilter,
+              quantity: '0',
+              unit: 'kg',
+              minQuantity: '10',
+              expiryDate: '',
+              katalogId: null,
+            });
             setModalVisible(true);
           }}
         />
@@ -136,76 +213,50 @@ export default function StockScreen() {
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modal, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>{selected ? 'Stok Düzenle' : 'Yeni Stok'}</Text>
-            {(['name', 'quantity', 'minQuantity', 'unit', 'expiryDate'] as const).map((field) => (
-              <TextInput
-                key={field}
-                placeholder={
-                  field === 'name' ? 'Ad (ör: Arpa kırması)' :
-                  field === 'quantity' ? 'Miktar' :
-                  field === 'minQuantity' ? 'Minimum stok' :
-                  field === 'unit' ? 'Birim (kg, doz, flakon)' : `${terim('SKT')} (YYYY-MM-DD)`
-                }
-                value={form[field === 'name' ? 'name' : field === 'quantity' ? 'quantity' : field === 'minQuantity' ? 'minQuantity' : field === 'unit' ? 'unit' : 'expiryDate']}
-                onChangeText={(v) => setForm({ ...form, [field === 'expiryDate' ? 'expiryDate' : field]: v })}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              />
-            ))}
-            <View style={styles.typeRow}>
-              {STOCK_TYPE_ORDER.map((t) => (
-                <Pressable
-                  key={t}
-                  onPress={() =>
-                    setForm({
-                      ...form,
-                      type: t,
-                      unit: t === 'supplement' && !form.unit ? 'kg' : form.unit,
-                    })
+          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+            <View style={[styles.modal, { backgroundColor: colors.card }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Stok kaydı</Text>
+              {(['name', 'quantity', 'minQuantity', 'unit', 'expiryDate'] as const).map((field) => (
+                <TextInput
+                  key={field}
+                  placeholder={
+                    field === 'name'
+                      ? 'Ad'
+                      : field === 'quantity'
+                        ? 'Miktar'
+                        : field === 'minQuantity'
+                          ? 'Minimum stok'
+                          : field === 'unit'
+                            ? 'Birim'
+                            : `${terim('SKT')} (YYYY-MM-DD)`
                   }
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: form.type === t ? colors.tint : colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}>
-                  <Text style={{ color: form.type === t ? '#fff' : colors.text }}>{STOCK_TYPE_LABELS[t]}</Text>
-                </Pressable>
+                  value={form[field]}
+                  onChangeText={(v) => setForm({ ...form, [field]: v })}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+                />
               ))}
-            </View>
-            {form.type === 'supplement' ? (
-              <View style={styles.presetWrap}>
-                <Text style={[styles.presetTitle, { color: colors.textSecondary }]}>Hazır takviyeler</Text>
-                <View style={styles.presetRow}>
-                  {TAKVIYE_KATALOGU.map((t) => (
-                    <Pressable
-                      key={t.id}
-                      onPress={() =>
-                        setForm({
-                          ...form,
-                          name: t.ad,
-                          type: 'supplement',
-                          unit: t.birim,
-                          minQuantity: String(t.minMiktar),
-                        })
-                      }
-                      style={[
-                        styles.presetChip,
-                        {
-                          borderColor: colors.border,
-                          backgroundColor: form.name === t.ad ? colors.accent + '55' : colors.background,
-                        },
-                      ]}>
-                      <Text style={{ color: colors.text, fontSize: 12, fontWeight: '600' }}>{t.ad}</Text>
-                    </Pressable>
-                  ))}
-                </View>
+              <View style={styles.typeRow}>
+                {STOCK_TYPE_ORDER.map((t) => (
+                  <Pressable
+                    key={t}
+                    onPress={() => setForm({ ...form, type: t })}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: form.type === t ? colors.tint : colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}>
+                    <Text style={{ color: form.type === t ? '#fff' : colors.text }}>
+                      {STOCK_TYPE_LABELS[t]}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
-            ) : null}
-            <AnaButon title="Kaydet" onPress={saveItem} />
-            <AnaButon title="İptal" variant="secondary" onPress={() => setModalVisible(false)} />
-          </View>
+              <AnaButon title="Kaydet" onPress={saveItem} />
+              <AnaButon title="İptal" variant="secondary" onPress={() => setModalVisible(false)} />
+            </View>
+          </ScrollView>
         </View>
       </Modal>
 
@@ -213,7 +264,7 @@ export default function StockScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modal, { backgroundColor: colors.card }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Stok Giriş/Çıkış — {adjustItem?.name}
+              Giriş/Çıkış — {adjustItem?.name}
             </Text>
             <TextInput
               placeholder={`Miktar (${adjustItem?.unit ?? ''})`}
@@ -244,22 +295,21 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   pageHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   pageTitle: { fontSize: 26, fontWeight: '800' },
-  alert: { marginBottom: 12, fontWeight: '600' },
-  footer: { padding: 16 },
+  search: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    minHeight: 48,
+  },
+  hint: { marginBottom: 10, fontSize: 12, fontWeight: '600' },
+  footer: { padding: 16, position: 'absolute', left: 0, right: 0, bottom: 0 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '80%' },
+  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
-  presetWrap: { marginBottom: 12 },
-  presetTitle: { fontSize: 12, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
-  presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  presetChip: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    maxWidth: '100%',
-  },
 });

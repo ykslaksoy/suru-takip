@@ -1,16 +1,26 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
+import type { StokListeSatiri } from '@/kaynak/stok';
 import { terim } from '@/sabitler/Metinler';
 
-export function StokKarti({ item, onPress }: { item: StockItem; onPress?: () => void }) {
+export function StokKarti({
+  satir,
+  onPress,
+}: {
+  satir: StokListeSatiri;
+  onPress?: () => void;
+}) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const isLow = item.quantity <= item.minQuantity;
+  const item = satir.item;
+  const qty = item?.quantity ?? 0;
+  const minQ = item?.minQuantity ?? satir.minMiktar;
+  const isLow = item ? qty <= minQ : false;
+  const stoktaYok = !item;
   const isExpiring =
-    item.expiryDate && new Date(item.expiryDate).getTime() - Date.now() < 90 * 86400000;
+    item?.expiryDate && new Date(item.expiryDate).getTime() - Date.now() < 90 * 86400000;
 
   return (
     <Pressable
@@ -19,19 +29,25 @@ export function StokKarti({ item, onPress }: { item: StockItem; onPress?: () => 
         styles.card,
         {
           backgroundColor: colors.card,
-          borderColor: isLow ? colors.warning : colors.border,
-          opacity: pressed ? 0.9 : 1,
+          borderColor: isLow ? colors.warning : stoktaYok ? colors.border : colors.border,
+          opacity: pressed ? 0.9 : stoktaYok ? 0.92 : 1,
         },
       ]}>
       <View style={styles.row}>
-        <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
-        <Text style={[styles.type, { color: colors.tint }]}>{STOCK_TYPE_LABELS[item.type]}</Text>
+        <Text style={[styles.name, { color: colors.text }]}>{satir.ad}</Text>
+        <Text style={[styles.type, { color: colors.tint }]}>{STOCK_TYPE_LABELS[satir.type]}</Text>
       </View>
-      <Text style={[styles.qty, { color: isLow ? colors.warning : colors.text }]}>
-        {item.quantity} {item.unit}
-        {isLow ? ' · Düşük stok!' : ''}
-      </Text>
-      {item.expiryDate ? (
+      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>{satir.aciklama}</Text>
+      {stoktaYok ? (
+        <Text style={[styles.qty, { color: colors.textSecondary }]}>Stokta yok · dokunarak ekle</Text>
+      ) : (
+        <Text style={[styles.qty, { color: isLow ? colors.warning : colors.text }]}>
+          {qty} {item!.unit}
+          {isLow ? ' · Düşük stok!' : ''}
+          {satir.kullanim > 0 ? ` · kullanım ${satir.kullanim}` : ''}
+        </Text>
+      )}
+      {!stoktaYok && item?.expiryDate ? (
         <Text style={{ color: isExpiring ? colors.danger : colors.textSecondary, fontSize: 12 }}>
           {terim('SKT')}: {new Date(item.expiryDate).toLocaleDateString('tr-TR')}
           {isExpiring ? ' ⚠' : ''}
@@ -51,10 +67,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 8,
   },
   name: {
     fontSize: 16,
     fontWeight: '600',
+    flex: 1,
   },
   type: {
     fontSize: 12,

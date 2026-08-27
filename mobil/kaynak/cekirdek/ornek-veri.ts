@@ -10,6 +10,7 @@ import {
 } from './veritabani';
 import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
 import { kaydetYemSayim, clearAllYemSayim } from '@/kaynak/stok/sayim';
+import { kaydetKatalogKullanim, clearKatalogKullanim } from '@/kaynak/stok/kullanim';
 
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
@@ -174,6 +175,14 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     notes: '',
   });
 
+  // Kullanım skorları — demo sıralama (çok kullanılan üstte)
+  await kaydetKatalogKullanim('arpa-kirmasi', 80);
+  await kaydetKatalogKullanim('yonca-kuru', 40);
+  await kaydetKatalogKullanim('albendazol', 25);
+  await kaydetKatalogKullanim('mineral-yalama', 15);
+  await kaydetKatalogKullanim('premiks', 12);
+  await kaydetKatalogKullanim('clostridial', 10);
+
   return true;
 }
 
@@ -181,4 +190,5 @@ export async function clearAllData(): Promise<void> {
   await clearAllStorage();
   await clearAllRationPlans();
   await clearAllYemSayim();
+  await clearKatalogKullanim();
 }
