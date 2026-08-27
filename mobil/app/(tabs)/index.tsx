@@ -28,17 +28,30 @@ export default function AnaSayfaScreen() {
             <Text style={[styles.title, { color: colors.text, fontSize: dar ? 22 : 26 }]}>SürüYön</Text>
             <Text style={{ color: colors.textSecondary }}>{tierLabel} · Ağıl menüsü</Text>
           </View>
-          <Link href="/ana-sayfa/duzenle" asChild>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Ana ekranı planla"
-              style={({ pressed }) => [
-                styles.planBtn,
-                { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
-              ]}>
-              <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Planla</Text>
-            </Pressable>
-          </Link>
+          <View style={styles.headerActions}>
+            <Link href="/ayarlar" asChild>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Ayarlar"
+                style={({ pressed }) => [
+                  styles.planBtn,
+                  { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
+                ]}>
+                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Ayarlar</Text>
+              </Pressable>
+            </Link>
+            <Link href="/ana-sayfa/duzenle" asChild>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Ana ekranı planla"
+                style={({ pressed }) => [
+                  styles.planBtn,
+                  { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
+                ]}>
+                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Planla</Text>
+              </Pressable>
+            </Link>
+          </View>
         </View>
 
         <BugunKarti />
@@ -76,6 +89,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: { fontSize: 26, fontWeight: '800' },
+  headerActions: { flexDirection: 'row', gap: 8 },
   planBtn: {
     borderWidth: 1,
     borderRadius: 10,

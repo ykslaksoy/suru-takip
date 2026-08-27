@@ -47,6 +47,8 @@ export default function RootLayout() {
             <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
             <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
             <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
+            <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar' }} />
+            <Stack.Screen name="besi/index" options={{ title: 'Kuzu alarak besi' }} />
           </Stack>
           </AnaSayfaProvider>
         </SubscriptionProvider>

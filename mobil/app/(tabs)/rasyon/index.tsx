@@ -51,7 +51,8 @@ export default function RationScreen() {
         ) : (
           <>
             <Text style={[styles.intro, { color: colors.textSecondary }]}>
-              Canlı ağırlık ve döneme göre günlük kuru madde / yem ihtiyacı
+              Canlı ağırlık ve döneme göre günlük yem ihtiyacı. Tartım kaydı girilince hayvan başına günlük
+              verilen rasyon otomatik güncellenir; FCR stok çıkışı ve sayımla birlikte hesaplanır.
             </Text>
 
             <TextInput
