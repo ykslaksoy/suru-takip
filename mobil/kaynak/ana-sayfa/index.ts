@@ -1,2 +1,1 @@
-/** Ana Sayfa + Hızlı İşlemler — public API */
-export {};
+export { HIZLI_ISLEMLER, KESTIRMELER, type HizliIslem, type Kestirme } from './hizli-islemler';

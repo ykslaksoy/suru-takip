@@ -4,8 +4,9 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { WebDurumCubugu } from '@/bilesenler/ortak/WebDurumCubugu';
 
-/** 6 ana sekme — kısa etiket (dar ekran) */
+/** 7 ana sekme — kısa etiket (dar ekran) */
 const TABS: { name: string; title: string; short: string; icon: string }[] = [
+  { name: 'index', title: 'Ana Sayfa', short: 'Ana', icon: '🏠' },
   { name: 'suru', title: 'Sürü', short: 'Sürü', icon: '🐑' },
   { name: 'stok', title: 'Stok', short: 'Stok', icon: '📦' },
   { name: 'saglik', title: 'Sağlık', short: 'Sağlık', icon: '💊' },
@@ -50,7 +51,6 @@ export default function TabLayout() {
           }}
         />
       ))}
-      <Tabs.Screen name="index" options={{ href: null }} />
       </Tabs>
     </View>
   );
