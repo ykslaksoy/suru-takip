@@ -16,11 +16,16 @@
 - `index.ts`
 - `ozet.ts`
 - `hizli-islemler.ts`
+- `bugun.ts`
+- `katalog.ts` / `tercih.ts` / `varsayilan.ts`
 
 ### bilesenler
 - `HizliIslemlerGrid.tsx`
-- `OzetKarti.tsx`
-- `ModKarti.tsx`
+- `KestirmelerSatiri.tsx`
+- `BugunKarti.tsx`
+- `AnaSayfaPlanlayici.tsx`
+- `OzetKarti.tsx` (stub)
+- `ModKarti.tsx` (stub — modlar Ayarlar’da)
 
 ## Bağımlılık
 

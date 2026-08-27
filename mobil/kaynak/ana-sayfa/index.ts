@@ -9,3 +9,4 @@ export {
   type AnaSayfaTercih,
 } from './tercih';
 export { HIZLI_ISLEMLER, KESTIRMELER } from './hizli-islemler';
+export { getBugunMaddeleri, type BugunMadde, type BugunSeviye } from './bugun';
