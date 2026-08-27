@@ -3,6 +3,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
+import { terim } from '@/sabitler/Metinler';
 
 export function StokKarti({ item, onPress }: { item: StockItem; onPress?: () => void }) {
   const scheme = useColorScheme() ?? 'light';
@@ -32,7 +33,7 @@ export function StokKarti({ item, onPress }: { item: StockItem; onPress?: () => 
       </Text>
       {item.expiryDate ? (
         <Text style={{ color: isExpiring ? colors.danger : colors.textSecondary, fontSize: 12 }}>
-          SKT: {new Date(item.expiryDate).toLocaleDateString('tr-TR')}
+          {terim('SKT')}: {new Date(item.expiryDate).toLocaleDateString('tr-TR')}
           {isExpiring ? ' ⚠' : ''}
         </Text>
       ) : null}

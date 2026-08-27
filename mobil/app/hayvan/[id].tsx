@@ -8,8 +8,9 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { calculateADG, deleteAnimal, getAnimal, getLatestWeight } from '@/kaynak/cekirdek/veritabani';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
-import { ageInMonths, bandForAge, gradeFromAdg, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
+import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import { terim } from '@/sabitler/Metinler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalDetailScreen() {
@@ -101,9 +102,9 @@ export default function AnimalDetailScreen() {
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.tint }]}>Performans</Text>
         <InfoRow label="Yaş bandı" value={ageLabel} colors={colors} />
-        <InfoRow label="Derece" value={grade?.label ?? '—'} colors={colors} />
+        <InfoRow label="Derece" value={grade ? dereceEtiket(grade) : '—'} colors={colors} />
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
-        <InfoRow label="Günlük artış (30 gün)" value={adg != null ? `+${adg} g/gün` : '—'} colors={colors} />
+        <InfoRow label={`${terim('ADG')} · 30 gün`} value={adg != null ? `+${adg} g/gün` : '—'} colors={colors} />
       </View>
 
       <View style={styles.actions}>

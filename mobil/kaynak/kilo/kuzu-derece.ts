@@ -8,6 +8,8 @@
  * Marka dili: Zayıf → Fit → Sportmen → Kaslı → Süper Kuzu
  */
 
+import { terim, type TerimAnahtar } from '@/sabitler/Metinler';
+
 export type KuzuGradeId = 'zayif' | 'fit' | 'sportmen' | 'kasli' | 'super_kuzu' | 'bilinmiyor';
 
 export interface KuzuGrade {
@@ -55,7 +57,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     emoji: '💪🐑',
     color: '#2d6a4f',
     short: 'Formda (yaşına göre)',
-    hint: 'Bu ay için iyi tempo. Yem dönüşüm oranını da izle.',
+    hint: `Bu ay için iyi tempo. ${terim('FCR')} değerini de izle.`,
   },
   kasli: {
     id: 'kasli',
@@ -74,9 +76,20 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     emoji: '🏆🐑',
     color: '#b8860b',
     short: 'En üst verim',
-    hint: 'Yaşına göre zirve + hedef/yem dönüşüm oranı — tebrikler!',
+    hint: `Yaşına göre zirve + hedef · ${terim('FCR')} — tebrikler!`,
   },
 };
+
+const DERECE_TERIM: Partial<Record<KuzuGradeId, TerimAnahtar>> = {
+  fit: 'FIT',
+  sportmen: 'SPORTMEN',
+};
+
+/** Fit / Sportmen gibi kısa derece adları açıklamalı gösterilir. */
+export function dereceEtiket(grade: KuzuGrade): string {
+  const key = DERECE_TERIM[grade.id];
+  return key ? terim(key) : grade.label;
+}
 
 /** Yaş bandı (ay) — besi kuzusu için geçici beklenti ADG (g/gün) */
 export interface AgeBand {

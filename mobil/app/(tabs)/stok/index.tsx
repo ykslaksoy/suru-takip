@@ -10,6 +10,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
+import { terim } from '@/sabitler/Metinler';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -128,7 +129,7 @@ export default function StockScreen() {
                   field === 'name' ? 'Ad (ör: Arpa kırması)' :
                   field === 'quantity' ? 'Miktar' :
                   field === 'minQuantity' ? 'Minimum stok' :
-                  field === 'unit' ? 'Birim (kg, doz, flakon)' : 'SKT (YYYY-MM-DD)'
+                  field === 'unit' ? 'Birim (kg, doz, flakon)' : `${terim('SKT')} (YYYY-MM-DD)`
                 }
                 value={form[field === 'name' ? 'name' : field === 'quantity' ? 'quantity' : field === 'minQuantity' ? 'minQuantity' : field === 'unit' ? 'unit' : 'expiryDate']}
                 onChangeText={(v) => setForm({ ...form, [field === 'expiryDate' ? 'expiryDate' : field]: v })}

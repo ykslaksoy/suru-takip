@@ -5,6 +5,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { exportTurkvetData, getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
+import { terim } from '@/sabitler/Metinler';
 
 export default function TurkvetAktarimEkrani() {
   const scheme = useColorScheme() ?? 'light';
@@ -41,7 +42,7 @@ export default function TurkvetAktarimEkrani() {
       </View>
 
       <AnaButon title="Önizleme Yükle" onPress={loadPreview} />
-      <AnaButon title="JSON Dışa Aktar (Paylaş)" onPress={exportData} />
+      <AnaButon title={`${terim('JSON')} Dışa Aktar (Paylaş)`} onPress={exportData} />
 
       {preview ? (
         <View style={[styles.preview, { backgroundColor: colors.card, borderColor: colors.border }]}>

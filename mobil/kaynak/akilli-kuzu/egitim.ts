@@ -1,4 +1,5 @@
 import type { EducationLesson } from '@/kaynak/cekirdek/tipler';
+import { terim } from '@/sabitler/Metinler';
 
 /** Akıllı Kuzu — pratik rehber içerikleri (eski ad: Sürü Okulu) */
 export const EDUCATION_LESSONS: EducationLesson[] = [
@@ -18,7 +19,7 @@ export const EDUCATION_LESSONS: EducationLesson[] = [
     category: 'Sağlık',
     summary: 'Mevsimsel parazit ilacı uygulama zamanlaması.',
     content: 'İlkbahar ve sonbahar rutin dış parazit uygulaması yapın. İç parazit için dışkı yumurta sayımı veya FAMACHA skoru kullanın. Gereksiz ilaç kullanımından kaçının — direnç gelişir.',
-    tips: ['Bekletme süresine dikkat edin', 'Tüm sürüye aynı gün uygulamayın — rotasyon yapın', 'İlaç stokunu SKT takibi ile yönetin'],
+    tips: ['Bekletme süresine dikkat edin', 'Tüm sürüye aynı gün uygulamayın — rotasyon yapın', `İlaç stokunu ${terim('SKT')} takibi ile yönetin`],
   },
   {
     id: '3',
@@ -45,7 +46,7 @@ export const EDUCATION_LESSONS: EducationLesson[] = [
     category: 'Sağlık',
     summary: 'Clostridial ve enterotoksemi aşı programı.',
     content: 'Yıllık clostridial aşı tüm sürüye uygulanmalı. Kuzular 2-3 aylıkken ilk doz, 3-4 hafta sonra rapel. Gebe koyunlara doğumdan 4 hafta önce rapel aşı.',
-    tips: ['Aşı sonrası 24 saat stres azaltın', 'SKT geçmiş aşı kullanmayın', 'Uygulamayı sağlık modülüne kaydedin'],
+    tips: ['Aşı sonrası 24 saat stres azaltın', `${terim('SKT')} geçmiş aşı kullanmayın`, 'Uygulamayı sağlık modülüne kaydedin'],
   },
   {
     id: '6',

@@ -8,6 +8,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
+import { terim } from '@/sabitler/Metinler';
 
 export default function WeightScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,7 +59,7 @@ export default function WeightScreen() {
       <Text style={[styles.sub, { color: colors.textSecondary, paddingHorizontal: 16 }]}>{earTag}</Text>
       {adg != null && (
         <Text style={[styles.adg, { color: colors.tint, paddingHorizontal: 16 }]}>
-          Günlük artış: +{adg} g/gün (son 30 gün)
+          {terim('ADG')}: +{adg} g/gün (son 30 gün)
         </Text>
       )}
       <KiloGrafigi records={records} />

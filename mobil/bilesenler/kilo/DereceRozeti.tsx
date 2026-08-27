@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import type { KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
+import { dereceEtiket } from '@/kaynak/kilo/kuzu-derece';
 
 export function DereceRozeti({
   grade,
@@ -8,11 +9,12 @@ export function DereceRozeti({
   grade: KuzuGrade;
   compact?: boolean;
 }) {
+  const label = dereceEtiket(grade);
   return (
     <View style={[styles.badge, { borderColor: grade.color, backgroundColor: grade.color + '18' }]}>
       <Text style={styles.emoji}>{grade.emoji}</Text>
       {!compact ? (
-        <Text style={[styles.label, { color: grade.color }]}>{grade.label}</Text>
+        <Text style={[styles.label, { color: grade.color }]}>{label}</Text>
       ) : null}
     </View>
   );

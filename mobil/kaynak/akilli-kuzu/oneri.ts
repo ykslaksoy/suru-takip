@@ -1,3 +1,5 @@
+import { terim, terimKisa } from '@/sabitler/Metinler';
+
 export type SuggestionUrgency = 'info' | 'action' | 'alert';
 
 export interface SmartSuggestion {
@@ -31,7 +33,7 @@ export const SUPER_KUZU_BASARI = {
   name: 'Süper Kuzu',
   emoji: '🏆🐑',
   title: 'Süper Kuzu seviyesine ulaştın!',
-  desc: 'Hedef kilo, iyi günlük artış ve düşük yem dönüşüm oranı — bu parti en üst verimde. İşte senin Süper Kuzun.',
+  desc: `Hedef kilo, iyi ${terim('ADG')} ve düşük ${terim('FCR')} — bu parti en üst verimde. İşte senin Süper Kuzun.`,
 } as const;
 
 /**
@@ -77,9 +79,9 @@ export function getSmartSuggestions(ctx?: {
   if (ctx?.needsWeigh) {
     out.push({
       id: 'w0',
-      title: 'İlk tartım',
-      body: 'İlk tartım kilosu olmadan günlük artış hesaplanmaz.',
-      voice: `Besi başlamadan bir tartım alalım — buna ilk tartım (T0) diyoruz. Sonraki tartımlarda “günde kaç gram aldık”ı ben hesaplarım.`,
+      title: `${terim('T0')}`,
+      body: `${terim('T0')} kilosu olmadan ${terim('ADG')} hesaplanmaz.`,
+      voice: `Besi başlamadan bir tartım alalım — buna ${terim('T0')} diyoruz. Sonraki tartımlarda “günde kaç gram aldık”ı ben hesaplarım.`,
       urgency: 'action',
       source: 'tartim',
       cta: 'Tartım',
@@ -89,9 +91,9 @@ export function getSmartSuggestions(ctx?: {
   if (ctx?.adgGrams != null && ctx.adgGrams < 150) {
     out.push({
       id: 'adg-low',
-      title: 'Günlük artış düşük',
-      body: `Günlük artış ~${ctx.adgGrams} g/gün.`,
-      voice: `Hmm… günde yaklaşık ${ctx.adgGrams} gram. Biraz düşük. Rasyona ve strese bak — istersen sana daha kârlı bir rasyon önerisi çıkarayım. Süper Kuzu seviyesine böyle çıkılır.`,
+      title: `${terimKisa('ADG')} düşük`,
+      body: `${terim('ADG')} ~${ctx.adgGrams} g/gün.`,
+      voice: `Hmm… ${terim('ADG')} yaklaşık ${ctx.adgGrams} g/gün. Biraz düşük. Rasyona ve strese bak — istersen sana daha kârlı bir rasyon önerisi çıkarayım. Süper Kuzu seviyesine böyle çıkılır.`,
       urgency: 'alert',
       source: 'rasyon',
       cta: 'Rasyon önerisi',
@@ -115,15 +117,15 @@ export function getSmartSuggestions(ctx?: {
       id: 'welcome',
       title: 'Sıra önemli',
       body: 'Karantina → aşı → tartım → rasyon.',
-      voice: `Kuzu alınca acele etme. Önce karantina (yonca + su), sonra aşı, sonra ilk tartım, sonra rasyon. Bu sırayı bozma — ben hatırlatırım. En üstte Süper Kuzu seni bekliyor.`,
+      voice: `Kuzu alınca acele etme. Önce karantina (yonca + su), sonra aşı, sonra ${terim('T0')}, sonra rasyon. Bu sırayı bozma — ben hatırlatırım. En üstte Süper Kuzu seni bekliyor.`,
       urgency: 'info',
       source: 'genel',
     });
     out.push({
       id: 'tip-fcr',
-      title: 'Yem dönüşüm oranı',
+      title: terim('FCR'),
       body: '1 kg artış için kaç kg yem?',
-      voice: `Kârın sırrı yem dönüşüm oranı: 1 kilo almak için kaç kilo yem yedik? Tartım + yem kaydı yap, ben hesabı çıkarayım.`,
+      voice: `Kârın sırrı ${terim('FCR')}: 1 kilo almak için kaç kilo yem yedik? Tartım + yem kaydı yap, ben hesabı çıkarayım.`,
       urgency: 'info',
       source: 'rasyon',
     });
