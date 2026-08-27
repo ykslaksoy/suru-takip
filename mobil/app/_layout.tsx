@@ -49,6 +49,7 @@ export default function RootLayout() {
                 <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
                 <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
                 <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
+                <Stack.Screen name="gorevler/index" options={{ title: 'Görevler' }} />
                 <Stack.Screen name="ayarlar/index" options={{ headerShown: false }} />
                 <Stack.Screen name="besi/index" options={{ headerShown: false }} />
               </Stack>

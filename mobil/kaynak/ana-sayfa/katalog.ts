@@ -25,6 +25,7 @@ export const MENU_KATALOGU: MenuOgesi[] = [
   { id: 'rasyon-oneri', label: 'Rasyon önerisi', icon: '💡', href: '/(tabs)/rasyon' },
   { id: 'ayarlar', label: 'Ayarlar', icon: '⚙️', href: '/(tabs)/ayarlar' },
   { id: 'besi', label: 'Aktif mod', icon: '🛤️', href: '/(tabs)/yolculuk' },
+  { id: 'gorevler', label: 'Görevler', icon: '✅', href: '/gorevler' },
   { id: 'hayvan-ara', label: 'Hayvan ara', icon: '🔍', href: '/(tabs)/suru' },
 ];
 
