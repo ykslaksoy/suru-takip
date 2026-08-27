@@ -6,12 +6,12 @@ import { Text, View } from '@/bilesenler/ortak/Temali';
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
+      <Stack.Screen options={{ title: 'Sayfa bulunamadı' }} />
       <View style={styles.container}>
-        <Text style={styles.title}>This screen doesn't exist.</Text>
+        <Text style={styles.title}>Bu sayfa mevcut değil.</Text>
 
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen!</Text>
+          <Text style={styles.linkText}>Ana sayfaya git</Text>
         </Link>
       </View>
     </>

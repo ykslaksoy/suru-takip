@@ -103,7 +103,7 @@ export default function AnimalDetailScreen() {
         <InfoRow label="Yaş bandı" value={ageLabel} colors={colors} />
         <InfoRow label="Derece" value={grade?.label ?? '—'} colors={colors} />
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
-        <InfoRow label="ADG (30 gün)" value={adg != null ? `+${adg} g/gün` : '—'} colors={colors} />
+        <InfoRow label="Günlük artış (30 gün)" value={adg != null ? `+${adg} g/gün` : '—'} colors={colors} />
       </View>
 
       <View style={styles.actions}>

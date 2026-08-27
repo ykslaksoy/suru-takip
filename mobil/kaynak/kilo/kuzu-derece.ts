@@ -55,7 +55,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     emoji: '💪🐑',
     color: '#2d6a4f',
     short: 'Formda (yaşına göre)',
-    hint: 'Bu ay için iyi tempo. FCR’yi de izle.',
+    hint: 'Bu ay için iyi tempo. Yem dönüşüm oranını da izle.',
   },
   kasli: {
     id: 'kasli',
@@ -74,7 +74,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     emoji: '🏆🐑',
     color: '#b8860b',
     short: 'En üst verim',
-    hint: 'Yaşına göre zirve + hedef/FCR — tebrikler!',
+    hint: 'Yaşına göre zirve + hedef/yem dönüşüm oranı — tebrikler!',
   },
 };
 

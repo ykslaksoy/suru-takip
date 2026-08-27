@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addBetaFeedback, addBetaSignup, getBetaFeedback, getBetaSignups } from '@/kaynak/cekirdek/veritabani';
 import type { BetaFeedback, BetaSignup } from '@/kaynak/cekirdek/tipler';
+import { BETA_KATEGORILER, type BetaKategori } from '@/sabitler/Metinler';
 
-export default function BetaScreen() {
+export default function PilotProgramEkrani() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refreshKey, refresh, ready } = useDatabase();
@@ -20,7 +21,7 @@ export default function BetaScreen() {
     region: '',
     phone: '',
     rating: '5',
-    category: 'general',
+    category: 'general' as BetaKategori,
     message: '',
   });
 
@@ -49,7 +50,7 @@ export default function BetaScreen() {
     });
     refresh();
     load();
-    Alert.alert('Kayıt alındı', 'Beta pilot programına hoş geldiniz!');
+    Alert.alert('Kayıt alındı', 'Pilot programa hoş geldiniz!');
     setSignupForm({ name: '', phone: '', region: '', flockSize: '100' });
   };
 
@@ -75,7 +76,7 @@ export default function BetaScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.banner, { backgroundColor: colors.tint }]}>
-        <Text style={styles.bannerTitle}>Beta Pilot — 50 Çiftlik</Text>
+        <Text style={styles.bannerTitle}>Pilot Program — 50 Çiftlik</Text>
         <Text style={styles.bannerSub}>Kayıtlı: {signups.length}/50 · Geri bildirim: {feedbackList.length}</Text>
       </View>
 
@@ -107,7 +108,7 @@ export default function BetaScreen() {
               style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
           ))}
-          <AnaButon title="Beta'ya Katıl" onPress={submitSignup} />
+          <AnaButon title="Pilot Programa Katıl" onPress={submitSignup} />
         </View>
       )}
 
@@ -119,18 +120,42 @@ export default function BetaScreen() {
             { k: 'region', p: 'Bölge' },
             { k: 'phone', p: 'Telefon' },
             { k: 'rating', p: 'Puan (1-5)' },
-            { k: 'category', p: 'Kategori (general, bug, feature)' },
-            { k: 'message', p: 'Mesajınız' },
           ].map((f) => (
             <TextInput
               key={f.k}
               placeholder={f.p}
               value={feedbackForm[f.k as keyof typeof feedbackForm]}
               onChangeText={(v) => setFeedbackForm({ ...feedbackForm, [f.k]: v })}
-              multiline={f.k === 'message'}
-              style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: f.k === 'message' ? 100 : 48 }]}
+              keyboardType={f.k === 'rating' ? 'number-pad' : 'default'}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
           ))}
+          <Text style={[styles.h, { color: colors.text, fontSize: 14, marginBottom: 8 }]}>Kategori</Text>
+          <View style={styles.categoryRow}>
+            {(Object.keys(BETA_KATEGORILER) as BetaKategori[]).map((k) => (
+              <Pressable
+                key={k}
+                onPress={() => setFeedbackForm({ ...feedbackForm, category: k })}
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: feedbackForm.category === k ? colors.tint : colors.background,
+                    borderColor: colors.border,
+                  },
+                ]}>
+                <Text style={{ color: feedbackForm.category === k ? '#fff' : colors.text, fontSize: 12 }}>
+                  {BETA_KATEGORILER[k]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <TextInput
+            placeholder="Mesajınız"
+            value={feedbackForm.message}
+            onChangeText={(v) => setFeedbackForm({ ...feedbackForm, message: v })}
+            multiline
+            style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 100 }]}
+          />
           <AnaButon title="Gönder" onPress={submitFeedback} />
         </View>
       )}
@@ -146,7 +171,8 @@ export default function BetaScreen() {
           <Text style={[styles.h, { color: colors.text, marginTop: 16 }]}>Geri bildirimler</Text>
           {feedbackList.map((f) => (
             <Text key={f.id} style={{ color: colors.textSecondary, marginBottom: 8 }}>
-              ⭐{f.rating} {f.message.slice(0, 80)}...
+              ⭐{f.rating}{' '}
+              {BETA_KATEGORILER[f.category as BetaKategori] ?? f.category}: {f.message.slice(0, 80)}...
             </Text>
           ))}
         </View>
@@ -164,4 +190,6 @@ const styles = StyleSheet.create({
   form: { padding: 16 },
   h: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16 },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
 });

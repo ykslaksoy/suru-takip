@@ -31,7 +31,7 @@ export const SUPER_KUZU_BASARI = {
   name: 'Süper Kuzu',
   emoji: '🏆🐑',
   title: 'Süper Kuzu seviyesine ulaştın!',
-  desc: 'Hedef kilo, iyi ADG ve düşük FCR — bu parti en üst verimde. İşte senin Süper Kuzun.',
+  desc: 'Hedef kilo, iyi günlük artış ve düşük yem dönüşüm oranı — bu parti en üst verimde. İşte senin Süper Kuzun.',
 } as const;
 
 /**
@@ -78,8 +78,8 @@ export function getSmartSuggestions(ctx?: {
     out.push({
       id: 'w0',
       title: 'İlk tartım',
-      body: 'T0 kilosu olmadan ADG hesaplanmaz.',
-      voice: `Besi başlamadan bir tartım alalım — buna T0 diyoruz. Sonraki tartımlarda “günde kaç gram aldık”ı ben hesaplarım.`,
+      body: 'İlk tartım kilosu olmadan günlük artış hesaplanmaz.',
+      voice: `Besi başlamadan bir tartım alalım — buna ilk tartım (T0) diyoruz. Sonraki tartımlarda “günde kaç gram aldık”ı ben hesaplarım.`,
       urgency: 'action',
       source: 'tartim',
       cta: 'Tartım',
@@ -90,7 +90,7 @@ export function getSmartSuggestions(ctx?: {
     out.push({
       id: 'adg-low',
       title: 'Günlük artış düşük',
-      body: `ADG ~${ctx.adgGrams} g/gün.`,
+      body: `Günlük artış ~${ctx.adgGrams} g/gün.`,
       voice: `Hmm… günde yaklaşık ${ctx.adgGrams} gram. Biraz düşük. Rasyona ve strese bak — istersen sana daha kârlı bir rasyon önerisi çıkarayım. Süper Kuzu seviyesine böyle çıkılır.`,
       urgency: 'alert',
       source: 'rasyon',
@@ -121,9 +121,9 @@ export function getSmartSuggestions(ctx?: {
     });
     out.push({
       id: 'tip-fcr',
-      title: 'FCR dostun olsun',
+      title: 'Yem dönüşüm oranı',
       body: '1 kg artış için kaç kg yem?',
-      voice: `Kârın sırrı FCR: 1 kilo almak için kaç kilo yem yedik? Tartım + yem kaydı yap, ben hesabı çıkarayım.`,
+      voice: `Kârın sırrı yem dönüşüm oranı: 1 kilo almak için kaç kilo yem yedik? Tartım + yem kaydı yap, ben hesabı çıkarayım.`,
       urgency: 'info',
       source: 'rasyon',
     });

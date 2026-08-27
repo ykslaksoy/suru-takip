@@ -8,7 +8,7 @@ import { SUBSCRIPTION_LIMITS, SUBSCRIPTION_PRICES, type SubscriptionTier } from 
 
 const TIERS: SubscriptionTier[] = ['free', 'farmer', 'professional', 'enterprise'];
 
-export default function SubscriptionScreen() {
+export default function AbonelikEkrani() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { tier, purchase } = useSubscription();
@@ -26,7 +26,7 @@ export default function SubscriptionScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.intro, { color: colors.textSecondary }]}>
-        Freemium model — 30 hayvana kadar ücretsiz. App Store / Play Store abonelik entegrasyonu production build&apos;de aktif edilecek.
+        Ücretsiz paket — 30 hayvana kadar. App Store / Play Store abonelik entegrasyonu canlı sürümde etkinleştirilecek.
       </Text>
 
       <View style={styles.billingRow}>
@@ -64,7 +64,7 @@ export default function SubscriptionScreen() {
             </Text>
             {t !== 'free' && (
               <AnaButon
-                title={active ? 'Aktif Paket' : 'Satın Al (Simülasyon)'}
+                title={active ? 'Aktif Paket' : 'Satın Al (Deneme)'}
                 variant={active ? 'secondary' : 'primary'}
                 disabled={active}
                 onPress={() => buy(t)}
@@ -75,7 +75,8 @@ export default function SubscriptionScreen() {
       })}
 
       <Text style={[styles.note, { color: colors.textSecondary }]}>
-        Production: expo-in-app-purchases veya RevenueCat ile gerçek IAP. Mevcut simülasyon geliştirme/test içindir.
+        Canlı sürümde uygulama içi satın alma (App Store / Play Store) etkinleştirilecek. Şu anki satın alma yalnızca
+        geliştirme ve test içindir.
       </Text>
     </ScrollView>
   );

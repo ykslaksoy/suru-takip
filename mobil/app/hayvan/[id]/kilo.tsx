@@ -58,7 +58,7 @@ export default function WeightScreen() {
       <Text style={[styles.sub, { color: colors.textSecondary, paddingHorizontal: 16 }]}>{earTag}</Text>
       {adg != null && (
         <Text style={[styles.adg, { color: colors.tint, paddingHorizontal: 16 }]}>
-          ADG: +{adg} g/gün (son 30 gün)
+          Günlük artış: +{adg} g/gün (son 30 gün)
         </Text>
       )}
       <KiloGrafigi records={records} />

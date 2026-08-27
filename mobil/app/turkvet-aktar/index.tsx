@@ -6,7 +6,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { exportTurkvetData, getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
 
-export default function TurkvetExportScreen() {
+export default function TurkvetAktarimEkrani() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [preview, setPreview] = useState('');
@@ -19,9 +19,9 @@ export default function TurkvetExportScreen() {
   const exportData = async () => {
     const json = await exportTurkvetData();
     try {
-      await Share.share({ message: json, title: 'TÜRKVET Export' });
+      await Share.share({ message: json, title: 'TÜRKVET Dışa Aktarım' });
     } catch {
-      Alert.alert('Export', `${(await getAnimals()).length} hayvan export edildi.`);
+      Alert.alert('Dışa aktarım', `${(await getAnimals()).length} hayvan dışa aktarıldı.`);
     }
   };
 
@@ -30,7 +30,7 @@ export default function TurkvetExportScreen() {
       <Text style={[styles.title, { color: colors.text }]}>TÜRKVET / GEKİS Uyumu</Text>
       <Text style={{ color: colors.textSecondary, lineHeight: 22, marginBottom: 16 }}>
         v2.0 entegrasyon hazırlığı: hayvan kayıtları resmi alanlarla uyumlu tutulur. 2030 ulusal dijital hayvancılık
-        sistemine export desteği planlanmaktadır.
+        sistemine dışa aktarma desteği planlanmaktadır.
       </Text>
 
       <View style={[styles.fields, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -41,7 +41,7 @@ export default function TurkvetExportScreen() {
       </View>
 
       <AnaButon title="Önizleme Yükle" onPress={loadPreview} />
-      <AnaButon title="JSON Export (Paylaş)" onPress={exportData} />
+      <AnaButon title="JSON Dışa Aktar (Paylaş)" onPress={exportData} />
 
       {preview ? (
         <View style={[styles.preview, { backgroundColor: colors.card, borderColor: colors.border }]}>

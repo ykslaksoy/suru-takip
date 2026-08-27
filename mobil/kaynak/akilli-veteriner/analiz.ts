@@ -49,7 +49,7 @@ const RULES: { keywords: string[]; suggestion: VetSuggestion }[] = [
   {
     keywords: ['burun akıntı', 'göz akıntı', 'ateş'],
     suggestion: {
-      conditions: ['Solunum yolu enfeksiyonu', 'Contagious ecthyma'],
+      conditions: ['Solunum yolu enfeksiyonu', 'Bulaşıcı ekthima (Orf)'],
       advice: 'Hasta hayvanları izole edin. Ateş ve iştahsızlık birlikteyse acil veteriner müdahalesi gerekir.',
       urgency: 'high',
       seeVet: true,

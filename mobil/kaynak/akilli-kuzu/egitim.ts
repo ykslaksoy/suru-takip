@@ -54,6 +54,6 @@ export const EDUCATION_LESSONS: EducationLesson[] = [
     category: 'Resmi Kayıt',
     summary: 'Küpe numarası ve dijital kayıt uyumu.',
     content: 'Her hayvanın TÜRKVET numarası uygulamadaki kimlik alanına girilmeli. Doğum, ölüm, satış ve aşı olayları resmi kayıtlarla eşleşmeli.',
-    tips: ['Küpe kaybında 7 gün içinde bildirim', 'GEKİS alanlarını boş bırakmayın', 'Export ile yedek alın'],
+    tips: ['Küpe kaybında 7 gün içinde bildirim', 'GEKİS alanlarını boş bırakmayın', 'Dışa aktarım ile yedek alın'],
   },
 ];

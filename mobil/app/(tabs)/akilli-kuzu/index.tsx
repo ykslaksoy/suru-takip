@@ -69,7 +69,7 @@ export default function AkilliKuzuScreen() {
           { key: 'oneriler', label: 'Öneriler' },
           { key: 'abonelik', label: 'Abonelik' },
           { key: 'turkvet', label: 'TÜRKVET' },
-          { key: 'beta', label: 'Beta' },
+          { key: 'beta', label: 'Pilot' },
           { key: 'daha', label: 'Daha' },
         ]}
         activeKey={alt}
@@ -163,7 +163,7 @@ function CtaLink({ cta, colors }: { cta: string; colors: (typeof Colors)['light'
         ? '/(tabs)/rasyon'
         : cta.includes('Aşı') || cta.includes('Sağlık')
           ? '/(tabs)/saglik'
-          : cta.includes('Vet')
+          : cta.includes('Veteriner')
             ? '/(tabs)/veteriner'
             : '/(tabs)/suru';
 

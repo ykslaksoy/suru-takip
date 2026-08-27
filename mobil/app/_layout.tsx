@@ -42,8 +42,8 @@ export default function RootLayout() {
             <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
             <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
             <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
-            <Stack.Screen name="beta" options={{ title: 'Beta Pilot' }} />
-            <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Export' }} />
+            <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
+            <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
           </Stack>
         </SubscriptionProvider>
       </DatabaseProvider>

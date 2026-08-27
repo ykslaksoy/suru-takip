@@ -35,3 +35,9 @@ python3 islemler/scripts/kilit.py tamamla islemler/XX-.../YY-dosya.md
 - Kilitli işlem dosyasına şifresiz yazma.
 - Parça dışına logic taşıma (cekirdek istisna).
 - Yeni dosya → doğru parça README'sine ekle.
+
+## 6) Arayüz dili
+
+- Kullanıcıya görünen **tüm** metinler Türkçe olmalı (buton, uyarı, yer tutucu, sekme, başlık).
+- İstisna: resmi kısaltmalar (TÜRKVET, GEKİS) ve ürün derece adları (Fit, Sportmen, Süper Kuzu).
+- Sabit metinler için `mobil/sabitler/Metinler.ts` kullanılabilir.

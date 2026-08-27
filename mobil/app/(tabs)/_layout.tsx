@@ -10,7 +10,7 @@ const TABS: { name: string; title: string; short: string; icon: string }[] = [
   { name: 'stok', title: 'Stok', short: 'Stok', icon: '📦' },
   { name: 'saglik', title: 'Sağlık', short: 'Sağlık', icon: '💊' },
   { name: 'rasyon', title: 'Rasyon', short: 'Rasyon', icon: '🌾' },
-  { name: 'veteriner', title: 'Akıllı Vet', short: 'Vet', icon: '🩺' },
+  { name: 'veteriner', title: 'Akıllı Veteriner', short: 'Veteriner', icon: '🩺' },
   { name: 'akilli-kuzu', title: 'Akıllı Kuzu', short: 'Kuzu', icon: '✨' },
 ];
 

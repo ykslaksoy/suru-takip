@@ -59,6 +59,6 @@ export async function purchaseSubscription(tier: SubscriptionTier, billing: 'mon
   await setSubscriptionTier(tier, months);
   return {
     success: true,
-    message: `${SUBSCRIPTION_PRICES[tier].label} paketi aktif (${price} TL/${billing === 'yearly' ? 'yıl' : 'ay'}). App Store/Play Store entegrasyonu production build'de tamamlanacak.`,
+    message: `${SUBSCRIPTION_PRICES[tier].label} paketi aktif (${price} TL/${billing === 'yearly' ? 'yıl' : 'ay'}). App Store/Play Store entegrasyonu canlı sürümde tamamlanacak.`,
   };
 }
