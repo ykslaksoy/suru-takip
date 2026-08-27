@@ -12,3 +12,10 @@ export {
 } from './adim-kilidi';
 export { getMod3BirlesikIlerleme, type Mod3BirlesikIlerleme } from './birlesik';
 export { tespitMod3VeriDurumu, type Mod3AdimKanit, type Mod3VeriDurum } from './veri-ilerleme';
+export {
+  damizlikAdayIsaretle,
+  listeleAdaylar,
+  secilimSirala,
+  type DamizlikSkor,
+} from './secilim';
+export { secereBagla, secereOzeti } from './secere';

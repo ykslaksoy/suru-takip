@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
+import { RasyonFormu } from '@/bilesenler/rasyon/RasyonFormu';
+import { AkilliOneriKarti } from '@/bilesenler/rasyon/AkilliOneriKarti';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { calculateRation, PHASE_LABELS, type RationPhase } from '@/kaynak/rasyon/hesapla';
 
-type Alt = 'hesapla' | 'oneri';
+type Alt = 'hesapla' | 'benim' | 'oneri';
 
 export default function RationScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -37,17 +39,17 @@ export default function RationScreen() {
       <AltButonlar
         items={[
           { key: 'hesapla', label: 'Hesapla' },
+          { key: 'benim', label: 'Benim rasyonum' },
           { key: 'oneri', label: 'Akıllı öneri' },
         ]}
         activeKey={alt}
         onSelect={(k) => setAlt(k as Alt)}
       />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
-        {alt === 'oneri' ? (
-          <Text style={{ color: colors.textSecondary, lineHeight: 22, marginTop: 8 }}>
-            Hedef kilo, süre, maliyet ve kâr ile akıllı rasyon önerisi bir sonraki adımda eklenecek.
-            Şimdilik Hesapla ile günlük ihtiyacı çıkar.
-          </Text>
+        {alt === 'benim' ? (
+          <RasyonFormu />
+        ) : alt === 'oneri' ? (
+          <AkilliOneriKarti />
         ) : (
           <>
             <Text style={[styles.intro, { color: colors.textSecondary }]}>

@@ -21,5 +21,5 @@ export {
   clearKatimKayitlari,
   type KatimKaydi,
 } from './katim';
-export { anneKuzuOnerileri } from './kuzulatma';
-export { besiyeHazirKuzular } from './besiye-aktar';
+export { anneKuzuOnerileri, baglaAnneKuzu, kuzulatmaDurumuOku } from './kuzulatma';
+export { besiyeHazirKuzular, besiyeHazirListele, besiyeAl, besiyeAlToplu } from './besiye-aktar';

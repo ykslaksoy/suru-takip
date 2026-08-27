@@ -55,6 +55,9 @@ import {
   type Mod4AdimId,
   type Mod4BirlesikIlerleme,
 } from '@/kaynak/sut';
+import { Mod2IslemPaneli } from '@/bilesenler/yolculuk/Mod2IslemPaneli';
+import { Mod3IslemPaneli } from '@/bilesenler/yolculuk/Mod3IslemPaneli';
+import { Mod4IslemPaneli } from '@/bilesenler/yolculuk/Mod4IslemPaneli';
 import { useMod } from '@/baglam/ModBaglami';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 
@@ -201,6 +204,13 @@ export default function YolculukScreen() {
           </View>
         ) : null}
 
+        <Mod2IslemPaneli
+          adim={
+            sonraki?.id === 'kuzulatma' || sonraki?.id === 'besiye-aktar' ? sonraki.id : null
+          }
+          onDegisti={load}
+        />
+
         {sonraki ? (
           <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>
             <Text style={styles.nextLabel}>Şimdi</Text>
@@ -293,6 +303,15 @@ export default function YolculukScreen() {
             {m3.ozet.tartim} · aşı {m3.ozet.asi}
           </Text>
         </View>
+
+        <Mod3IslemPaneli
+          adim={
+            sonraki?.id === 'aday' || sonraki?.id === 'kimlik' || sonraki?.id === 'seleksiyon'
+              ? sonraki.id
+              : null
+          }
+          onDegisti={load}
+        />
 
         {sonraki ? (
           <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>
@@ -428,6 +447,13 @@ export default function YolculukScreen() {
             />
           </View>
         ) : null}
+
+        <Mod4IslemPaneli
+          adim={
+            sonraki?.id === 'laktasyon' || sonraki?.id === 'yonlendirme' ? sonraki.id : null
+          }
+          onDegisti={load}
+        />
 
         {sonraki ? (
           <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>
