@@ -33,7 +33,7 @@ export const URUN_MODLARI: UrunMod[] = [
     kisa: 'Kuzulat → besi',
     aciklama: 'Kendi koyununa koç kat, kuzulat, sonra besiye al.',
     icon: '🐏',
-    hazir: false,
+    hazir: true,
     href: '/(tabs)/yolculuk',
   },
   {

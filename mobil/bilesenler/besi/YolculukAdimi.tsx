@@ -3,8 +3,10 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { BesiAdim } from '@/kaynak/besi-ortak';
 
+type AdimGorunum = Pick<BesiAdim, 'sira' | 'baslik' | 'aciklama' | 'href'> & { id: string };
+
 interface Props {
-  adim: BesiAdim;
+  adim: AdimGorunum;
   durum: 'kilitli' | 'aktif' | 'tamam';
   kanit?: string;
   kaynak?: 'veri' | 'manuel';

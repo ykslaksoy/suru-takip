@@ -13,9 +13,15 @@
 ## Plan dosyaları
 
 ### kaynak
-- `katim.ts`
-- `kuzulatma.ts`
-- `besiye-aktar.ts`
+- `adim-kilidi.ts` ✅
+- `veri-ilerleme.ts` ✅
+- `birlesik.ts` ✅
+- `katim.ts` ✅
+- `kuzulatma.ts` ✅
+- `besiye-aktar.ts` ✅
+
+### app
+- `(tabs)/yolculuk` — Mod 2 aktifken bu yolculuk
 
 ## Bağımlılık
 
