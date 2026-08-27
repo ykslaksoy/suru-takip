@@ -71,8 +71,20 @@ export interface AnimalRationPlan {
   liveWeightKg: number;
   phase: RationPhase;
   forageQuality: 'low' | 'medium' | 'high';
+  /** Hesaplanan ihtiyaç (kg/hayvan/gün) */
   dailyFeedKg: number;
+  /** Günlük verilen yem (kg/hayvan/gün) — FCR için esas alınır */
+  dailyGivenKg: number;
   updatedAt: string;
+}
+
+/** Yem stok sayımı — son envanter kaydı */
+export interface YemSayim {
+  id: string;
+  stockId: string;
+  quantityKg: number;
+  recordedAt: string;
+  note: string;
 }
 
 export interface BetaFeedback {

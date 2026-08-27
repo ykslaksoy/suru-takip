@@ -8,6 +8,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { kaydetYemSayim } from '@/kaynak/stok/sayim';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
 import { terim } from '@/sabitler/Metinler';
@@ -46,6 +47,11 @@ export default function StockScreen() {
       expiryDate: form.expiryDate || null,
       notes: '',
     });
+    if (form.type === 'feed') {
+      const items = await getStockItems('feed');
+      const saved = items.find((i) => i.name === form.name.trim()) ?? items[items.length - 1];
+      if (saved) await kaydetYemSayim(saved.id, saved.quantity, 'sayım');
+    }
     setModalVisible(false);
     setSelected(null);
     refresh();
@@ -55,10 +61,12 @@ export default function StockScreen() {
   const [adjustModal, setAdjustModal] = useState(false);
   const [adjustQty, setAdjustQty] = useState('');
   const [adjustItem, setAdjustItem] = useState<StockItem | null>(null);
+  const [adjustPadok, setAdjustPadok] = useState('');
 
   const openAdjust = (item: StockItem) => {
     setAdjustItem(item);
     setAdjustQty('');
+    setAdjustPadok('');
     setAdjustModal(true);
   };
 
@@ -69,7 +77,14 @@ export default function StockScreen() {
       Alert.alert('Hata', 'Geçerli miktar girin');
       return;
     }
-    await adjustStock(adjustItem.id, movementType, q);
+    const notes =
+      adjustItem.type === 'feed' && adjustPadok.trim() ? adjustPadok.trim() : '';
+    await adjustStock(adjustItem.id, movementType, q, notes);
+    if (adjustItem.type === 'feed') {
+      const items = await getStockItems('feed');
+      const updated = items.find((i) => i.id === adjustItem.id);
+      if (updated) await kaydetYemSayim(updated.id, updated.quantity, movementType === 'out' ? 'çıkış sonrası' : 'giriş sonrası');
+    }
     setAdjustModal(false);
     refresh();
     load();
@@ -162,6 +177,14 @@ export default function StockScreen() {
               onChangeText={setAdjustQty}
               style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
+            {adjustItem?.type === 'feed' ? (
+              <TextInput
+                placeholder="Padok (opsiyonel — FCR paylaşımı için)"
+                value={adjustPadok}
+                onChangeText={setAdjustPadok}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              />
+            ) : null}
             <AnaButon title="Giriş (+)" onPress={() => doAdjust('in')} />
             <AnaButon title="Çıkış (-)" variant="danger" onPress={() => doAdjust('out')} />
             <AnaButon title="İptal" variant="secondary" onPress={() => setAdjustModal(false)} />

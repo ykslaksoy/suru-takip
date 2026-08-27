@@ -170,6 +170,30 @@ export async function getLowStockItems(): Promise<StockItem[]> {
   return (await getStockItems()).filter((i) => i.quantity <= i.minQuantity);
 }
 
+export async function getStockMovements(filter?: {
+  stockId?: string;
+  from?: string;
+  to?: string;
+}): Promise<StockMovement[]> {
+  let list = await read<StockMovement>(KEYS.movements);
+  if (filter?.stockId) list = list.filter((m) => m.stockId === filter.stockId);
+  if (filter?.from) {
+    const t = new Date(filter.from).getTime();
+    list = list.filter((m) => new Date(m.recordedAt).getTime() >= t);
+  }
+  if (filter?.to) {
+    const t = new Date(filter.to).getTime();
+    list = list.filter((m) => new Date(m.recordedAt).getTime() <= t);
+  }
+  return list.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+}
+
+export async function countAnimalsInPaddock(paddock: string): Promise<number> {
+  const p = paddock.trim();
+  if (!p) return countAnimals();
+  return (await getAnimals()).filter((a) => a.paddock.trim() === p).length;
+}
+
 export async function addBetaSignup(signup: Omit<BetaSignup, 'id' | 'createdAt'>): Promise<BetaSignup> {
   const full: BetaSignup = { ...signup, id: uuidv4(), createdAt: new Date().toISOString() };
   await write(KEYS.betaSignups, [...(await read<BetaSignup>(KEYS.betaSignups)), full]);

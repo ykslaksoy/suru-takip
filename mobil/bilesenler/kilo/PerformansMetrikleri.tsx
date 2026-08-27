@@ -6,8 +6,15 @@ import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { getAnimal } from '@/kaynak/cekirdek/veritabani';
 import { hesaplaFcr, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
+import { sonYemSayimMiktari } from '@/kaynak/stok/yem-tuketim';
 import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
 import { adgDeger, fcrDeger, terim } from '@/sabitler/Metinler';
+
+const KAYNAK_ETIKET: Record<FcrHesap['kaynak'], string> = {
+  gunluk_rasyon: 'günlük verilen rasyon × gün',
+  stok_cikis: 'stok çıkış kayıtları',
+  sayim_farki: 'yem sayım farkı',
+};
 
 export function PerformansMetrikleri({
   animalId,
@@ -21,8 +28,9 @@ export function PerformansMetrikleri({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [fcrHesap, setFcrHesap] = useState<FcrHesap | null>(null);
-  const [dailyFeedKg, setDailyFeedKg] = useState<number | null>(null);
+  const [dailyGivenKg, setDailyGivenKg] = useState<number | null>(null);
   const [phaseLabel, setPhaseLabel] = useState<string>('');
+  const [sonSayim, setSonSayim] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const a = await getAnimal(animalId);
@@ -33,10 +41,10 @@ export function PerformansMetrikleri({
     );
     const latestWeight = sorted[0]?.weightKg ?? null;
     const plan = (await ensureRationPlan(a, latestWeight)) ?? (await getAnimalRationPlan(animalId));
-    setDailyFeedKg(plan?.dailyFeedKg ?? null);
+    setDailyGivenKg(plan?.dailyGivenKg ?? null);
     setPhaseLabel(plan ? PHASE_LABELS[plan.phase] : '');
-
-    setFcrHesap(hesaplaFcr(a, records));
+    setSonSayim(await sonYemSayimMiktari());
+    setFcrHesap(await hesaplaFcr(a, records));
   }, [animalId, records]);
 
   useEffect(() => {
@@ -56,14 +64,14 @@ export function PerformansMetrikleri({
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 4 }]}>Günlük rasyon</Text>
-      {dailyFeedKg != null ? (
+      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 4 }]}>Günlük verilen rasyon</Text>
+      {dailyGivenKg != null ? (
         <>
           <Text style={[styles.value, { color: colors.text }]}>
-            {dailyFeedKg.toLocaleString('tr-TR')} kg yem / gün
+            {dailyGivenKg.toLocaleString('tr-TR')} kg yem / gün / hayvan
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
-            Son tartıma göre otomatik · {phaseLabel || '—'}
+            Son tartıma göre · {phaseLabel || '—'}
           </Text>
         </>
       ) : (
@@ -71,12 +79,17 @@ export function PerformansMetrikleri({
           Tartım kaydı olunca günlük rasyon otomatik hesaplanır.
         </Text>
       )}
+      {sonSayim != null ? (
+        <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
+          Son yem sayımı: {sonSayim.toLocaleString('tr-TR')} kg (stokta)
+        </Text>
+      ) : null}
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 6 }]}>{terim('FCR')}</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
-        Günlük rasyon × tartım dönemi gün sayısı ÷ kilo artışı — otomatik hesaplanır.
+        Tartım dönemi + günlük rasyon + stok/sayım birlikte hesaplanır.
       </Text>
 
       {fcrHesap ? (
@@ -85,15 +98,25 @@ export function PerformansMetrikleri({
             {fcrHesap.periodDays} gün · +{fcrHesap.gainKg.toLocaleString('tr-TR')} kg artış (
             {fcrHesap.startWeightKg} → {fcrHesap.endWeightKg} kg)
           </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }}>
-            Tahmini yem: {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg (
-            {fcrHesap.dailyFeedKg.toLocaleString('tr-TR')} kg/gün ort.)
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 4 }}>
+            Verilen yem (dönem): {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg · kaynak:{' '}
+            {KAYNAK_ETIKET[fcrHesap.kaynak]}
           </Text>
+          {fcrHesap.stokToplamKg != null && fcrHesap.kaynak !== 'gunluk_rasyon' ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
+              Rasyon tahmini: {fcrHesap.rasyonToplamKg.toLocaleString('tr-TR')} kg · Stok/sayım:{' '}
+              {fcrHesap.stokToplamKg.toLocaleString('tr-TR')} kg
+            </Text>
+          ) : (
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
+              Rasyon × gün: {fcrHesap.rasyonToplamKg.toLocaleString('tr-TR')} kg
+            </Text>
+          )}
           <Text style={[styles.value, { color: colors.tint }]}>{fcrDeger(fcrHesap.fcr)}</Text>
         </>
       ) : (
         <Text style={[styles.value, { color: colors.textSecondary }]}>
-          — (en az 2 tartım ve pozitif artış gerekir)
+          — (en az 2 tartım, pozitif artış ve rasyon gerekir)
         </Text>
       )}
     </View>

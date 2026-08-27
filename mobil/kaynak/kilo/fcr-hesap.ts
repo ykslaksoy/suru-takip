@@ -1,6 +1,7 @@
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
-import { dailyFeedForAnimal } from '@/kaynak/rasyon/hayvan-plani';
 import { calculateFCR } from '@/kaynak/kilo/fcr';
+import { getAnimalRationPlan, dailyFeedForAnimal } from '@/kaynak/rasyon/hayvan-plani';
+import { hayvanBasinaYemTuketimi } from '@/kaynak/stok/yem-tuketim';
 
 export interface TartimDonemi {
   gainKg: number;
@@ -11,14 +12,19 @@ export interface TartimDonemi {
   endAt: string;
 }
 
+export type FcrKaynak = 'gunluk_rasyon' | 'stok_cikis' | 'sayim_farki';
+
 export interface FcrHesap {
   fcr: number;
   gainKg: number;
   periodDays: number;
-  dailyFeedKg: number;
+  dailyGivenKg: number;
   totalFeedKg: number;
   startWeightKg: number;
   endWeightKg: number;
+  kaynak: FcrKaynak;
+  rasyonToplamKg: number;
+  stokToplamKg: number | null;
 }
 
 /** Tartım kayıtlarından dönem artışı ve gün sayısı. */
@@ -52,21 +58,41 @@ export function tartimDonemi(records: WeightRecord[], maxDays = 30): TartimDonem
 }
 
 /**
- * FCR = dönem yem tüketimi / kilo artışı.
- * Günlük yem: dönem başı + sonu tartımına göre rasyon ortalaması × gün sayısı.
+ * FCR otomatik:
+ * - Tartım → kilo artışı ve dönem günü
+ * - Günlük verilen rasyon → plan × gün (yedek)
+ * - Stok çıkışı / sayım farkı → gerçek tüketim (öncelikli)
  */
-export function hesaplaFcr(
+export async function hesaplaFcr(
   animal: Animal,
   records: WeightRecord[],
   maxDays = 30
-): FcrHesap | null {
+): Promise<FcrHesap | null> {
   const donem = tartimDonemi(records, maxDays);
   if (!donem) return null;
 
-  const feedStart = dailyFeedForAnimal(animal, donem.startWeightKg);
-  const feedEnd = dailyFeedForAnimal(animal, donem.endWeightKg);
-  const dailyFeedKg = Math.round(((feedStart + feedEnd) / 2) * 100) / 100;
-  const totalFeedKg = Math.round(dailyFeedKg * donem.periodDays * 10) / 10;
+  const plan = await getAnimalRationPlan(animal.id);
+  let dailyGivenKg = plan?.dailyGivenKg ?? plan?.dailyFeedKg ?? 0;
+  if (dailyGivenKg <= 0) {
+    dailyGivenKg = dailyFeedForAnimal(animal, donem.endWeightKg);
+  }
+
+  const rasyonToplamKg = Math.round(dailyGivenKg * donem.periodDays * 10) / 10;
+
+  const stok = await hayvanBasinaYemTuketimi(animal, donem.startAt, donem.endAt);
+  const stokToplamKg = stok?.kg ?? null;
+
+  let totalFeedKg: number;
+  let kaynak: FcrKaynak;
+
+  if (stokToplamKg != null && stokToplamKg > 0 && stok) {
+    totalFeedKg = stokToplamKg;
+    kaynak = stok.kaynak;
+  } else {
+    totalFeedKg = rasyonToplamKg;
+    kaynak = 'gunluk_rasyon';
+  }
+
   const fcr = calculateFCR(totalFeedKg, donem.gainKg);
   if (fcr == null) return null;
 
@@ -74,9 +100,12 @@ export function hesaplaFcr(
     fcr,
     gainKg: donem.gainKg,
     periodDays: donem.periodDays,
-    dailyFeedKg,
+    dailyGivenKg,
     totalFeedKg,
     startWeightKg: donem.startWeightKg,
     endWeightKg: donem.endWeightKg,
+    kaynak,
+    rasyonToplamKg,
+    stokToplamKg,
   };
 }

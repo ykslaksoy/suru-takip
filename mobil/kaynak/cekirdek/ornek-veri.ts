@@ -1,6 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
-import { addHealthRecord, addWeightRecord, countAnimals, clearAllStorage, upsertAnimal, upsertStockItem } from './veritabani';
+import {
+  addHealthRecord,
+  addWeightRecord,
+  adjustStock,
+  countAnimals,
+  clearAllStorage,
+  upsertAnimal,
+  upsertStockItem,
+} from './veritabani';
 import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
+import { kaydetYemSayim, clearAllYemSayim } from '@/kaynak/stok/sayim';
 
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
@@ -12,6 +21,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     date.setDate(date.getDate() - d);
     return date.toISOString().split('T')[0];
   };
+  const isoDaysAgo = (d: number) => new Date(now.getTime() - d * 86400000).toISOString();
 
   const animals = [
     {
@@ -102,7 +112,21 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     notes: 'Bekletme süresi devam ediyor',
   });
 
-  await upsertStockItem({ name: 'Arpa kırması', type: 'feed', quantity: 120, unit: 'kg', minQuantity: 200, expiryDate: null, notes: 'Günlük yem' });
+  const feed = await upsertStockItem({
+    name: 'Arpa kırması',
+    type: 'feed',
+    quantity: 500,
+    unit: 'kg',
+    minQuantity: 200,
+    expiryDate: null,
+    notes: 'Günlük yem',
+  });
+  await kaydetYemSayim(feed.id, 500, 'dönem başı sayım', isoDaysAgo(22));
+  await adjustStock(feed.id, 'out', 36, 'Padok A');
+  await adjustStock(feed.id, 'out', 30, 'Padok B');
+  await upsertStockItem({ ...feed, quantity: 120 });
+  await kaydetYemSayim(feed.id, 120, 'son sayım', isoDaysAgo(1));
+
   await upsertStockItem({ name: 'Clostridial aşı', type: 'vaccine', quantity: 45, unit: 'doz', minQuantity: 20, expiryDate: '2027-12-01', notes: '' });
   await upsertStockItem({ name: 'Albendazol', type: 'medicine', quantity: 8, unit: 'flakon', minQuantity: 5, expiryDate: '2026-06-15', notes: '' });
 
@@ -112,4 +136,5 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
 export async function clearAllData(): Promise<void> {
   await clearAllStorage();
   await clearAllRationPlans();
+  await clearAllYemSayim();
 }

@@ -36,12 +36,12 @@ export default function AnimalDetailScreen() {
         const w = await getLatestWeight(a.id);
         const g = await calculateADG(a.id);
         const records = await getWeightRecords(a.id);
-        const fcr = hesaplaFcr(a, records);
+        const fcr = await hesaplaFcr(a, records);
         const plan = await ensureRationPlan(a, w);
         setWeight(w);
         setAdg(g);
         setFcrValue(fcr?.fcr ?? null);
-        setDailyRation(plan?.dailyFeedKg ?? fcr?.dailyFeedKg ?? null);
+        setDailyRation(fcr?.dailyGivenKg ?? plan?.dailyGivenKg ?? null);
         setGrade(
           gradeFromAdg(g, {
             birthDate: a.birthDate,
@@ -121,7 +121,7 @@ export default function AnimalDetailScreen() {
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
         <InfoRow label={`${terim('ADG')} · 30 gün`} value={adg != null ? adgDeger(adg) : '—'} colors={colors} />
         <InfoRow
-          label="Günlük rasyon"
+          label="Günlük verilen rasyon"
           value={dailyRation != null ? `${dailyRation.toLocaleString('tr-TR')} kg/gün` : '—'}
           colors={colors}
         />

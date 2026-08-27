@@ -105,6 +105,11 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       created_at TEXT NOT NULL
     );
   `);
+  try {
+    await database.execAsync(`ALTER TABLE stock_movements ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
+  } catch {
+    /* sütun zaten var */
+  }
 }
 
 function rowToAnimal(row: Record<string, unknown>): Animal {
@@ -265,6 +270,46 @@ export async function adjustStock(stockId: string, movementType: 'in' | 'out', q
 
 export async function getLowStockItems(): Promise<StockItem[]> {
   return (await getStockItems()).filter((i) => i.quantity <= i.minQuantity);
+}
+
+export async function getStockMovements(filter?: {
+  stockId?: string;
+  from?: string;
+  to?: string;
+}): Promise<StockMovement[]> {
+  const database = await getDatabase();
+  let rows = await database.getAllAsync<Record<string, unknown>>(
+    'SELECT * FROM stock_movements ORDER BY recorded_at DESC'
+  );
+  let list = rows.map((r) => ({
+    id: r.id as string,
+    stockId: r.stock_id as string,
+    movementType: r.movement_type as StockMovement['movementType'],
+    quantity: r.quantity as number,
+    recordedAt: r.recorded_at as string,
+    notes: (r.notes as string) ?? '',
+  }));
+  if (filter?.stockId) list = list.filter((m) => m.stockId === filter.stockId);
+  if (filter?.from) {
+    const t = new Date(filter.from).getTime();
+    list = list.filter((m) => new Date(m.recordedAt).getTime() >= t);
+  }
+  if (filter?.to) {
+    const t = new Date(filter.to).getTime();
+    list = list.filter((m) => new Date(m.recordedAt).getTime() <= t);
+  }
+  return list;
+}
+
+export async function countAnimalsInPaddock(paddock: string): Promise<number> {
+  const p = paddock.trim();
+  if (!p) return countAnimals();
+  const database = await getDatabase();
+  const row = await database.getFirstAsync<{ c: number }>(
+    'SELECT COUNT(*) as c FROM animals WHERE paddock = ?',
+    [p]
+  );
+  return row?.c ?? 0;
 }
 
 export async function addBetaSignup(signup: Omit<BetaSignup, 'id' | 'createdAt'>): Promise<BetaSignup> {
