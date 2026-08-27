@@ -9,6 +9,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { useAnaSayfa } from '@/baglam/AnaSayfaBaglami';
+import { useMod } from '@/baglam/ModBaglami';
 
 export default function AnaSayfaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -17,7 +18,19 @@ export default function AnaSayfaScreen() {
   const { pendingSync } = useDatabase();
   const { tierLabel } = useSubscription();
   const { hizliIslemler, kestirmeler, loading } = useAnaSayfa();
+  const { aktifMod } = useMod();
   const dar = width < 360;
+
+  const kestirmeGoster = kestirmeler.map((k) =>
+    k.id === 'besi'
+      ? { ...k, label: aktifMod.baslik, icon: aktifMod.icon, href: aktifMod.href ?? '/besi' }
+      : k
+  );
+  const hizliGoster = hizliIslemler.map((k) =>
+    k.id === 'besi'
+      ? { ...k, label: aktifMod.baslik, icon: aktifMod.icon, href: aktifMod.href ?? '/besi' }
+      : k
+  );
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
@@ -26,7 +39,9 @@ export default function AnaSayfaScreen() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.title, { color: colors.text, fontSize: dar ? 22 : 26 }]}>SürüYön</Text>
-            <Text style={{ color: colors.textSecondary }}>{tierLabel} · Ağıl menüsü</Text>
+            <Text style={{ color: colors.textSecondary }}>
+              {tierLabel} · {aktifMod.baslik}
+            </Text>
           </View>
           <View style={styles.headerActions}>
             <Link href="/ayarlar" asChild>
@@ -64,14 +79,14 @@ export default function AnaSayfaScreen() {
           </View>
         ) : null}
 
-        {hizliIslemler.length > 0 ? (
+        {hizliGoster.length > 0 ? (
           <>
             <Text style={[styles.section, { color: colors.text }]}>Hızlı işlemler</Text>
-            <HizliIslemlerGrid items={hizliIslemler} />
+            <HizliIslemlerGrid items={hizliGoster} />
           </>
         ) : null}
 
-        {kestirmeler.length > 0 ? <KestirmelerSatiri items={kestirmeler} /> : null}
+        {kestirmeGoster.length > 0 ? <KestirmelerSatiri items={kestirmeGoster} /> : null}
       </ScrollView>
     </View>
   );

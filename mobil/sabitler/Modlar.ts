@@ -34,7 +34,7 @@ export const URUN_MODLARI: UrunMod[] = [
     aciklama: 'Kendi koyununa koç kat, kuzulat, sonra besiye al.',
     icon: '🐏',
     hazir: false,
-    href: null,
+    href: '/besi',
   },
   {
     id: 'mod3',
@@ -44,7 +44,7 @@ export const URUN_MODLARI: UrunMod[] = [
     aciklama: 'Damızlık kalite, şecere ve seleksiyon odaklı.',
     icon: '🏆',
     hazir: false,
-    href: null,
+    href: '/besi',
   },
   {
     id: 'mod4',
@@ -54,7 +54,7 @@ export const URUN_MODLARI: UrunMod[] = [
     aciklama: 'Sağmal sürü, sağım kaydı ve süt rasyonu.',
     icon: '🥛',
     hazir: false,
-    href: null,
+    href: '/besi',
   },
 ];
 

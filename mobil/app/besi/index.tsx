@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { YolculukAdimi } from '@/bilesenler/besi/YolculukAdimi';
@@ -14,12 +14,13 @@ import {
   type BesiAdimId,
   type Mod1Ilerleme,
 } from '@/kaynak/besi-ortak';
-import { getMod } from '@/sabitler/Modlar';
+import { useMod } from '@/baglam/ModBaglami';
 
 export default function BesiYolculukScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const mod = getMod('mod1');
+  const { aktifMod } = useMod();
+  const navigation = useNavigation();
   const [ilerleme, setIlerleme] = useState<Mod1Ilerleme>({ tamamlanan: [], guncelleme: '' });
 
   const load = useCallback(async () => {
@@ -29,6 +30,34 @@ export default function BesiYolculukScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    navigation.setOptions({ title: aktifMod.baslik });
+  }, [navigation, aktifMod.baslik]);
+
+  /** Mod 1 dışındakiler — isim görünür, yolculuk yakında */
+  if (aktifMod.id !== 'mod1') {
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
+        <Text style={[styles.h1, { color: colors.text }]}>
+          {aktifMod.icon} {aktifMod.baslik}
+        </Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>{aktifMod.aciklama}</Text>
+        <View style={[styles.nextBox, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}>
+          <Text style={[styles.soonTitle, { color: colors.text }]}>Yolculuk yakında</Text>
+          <Text style={{ color: colors.textSecondary, marginTop: 8, lineHeight: 20 }}>
+            {aktifMod.baslik} adımları bir sonraki sürümde açılacak. Şimdilik Ayarlar’dan başka moda
+            geçebilir veya sürü / stok işlemlerini kullanabilirsiniz.
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push('/ayarlar' as never)}
+          style={[styles.cta, { backgroundColor: colors.tint }]}>
+          <Text style={styles.ctaText}>Mod değiştir →</Text>
+        </Pressable>
+      </ScrollView>
+    );
+  }
 
   const sonraki = sonrakiAcikAdim(ilerleme.tamamlanan);
 
@@ -41,9 +70,11 @@ export default function BesiYolculukScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
-      <Text style={[styles.h1, { color: colors.text }]}>{mod.baslik}</Text>
+      <Text style={[styles.h1, { color: colors.text }]}>
+        {aktifMod.icon} {aktifMod.baslik}
+      </Text>
       <Text style={[styles.sub, { color: colors.textSecondary }]}>
-        {mod.aciklama} Adımlar sırayla açılır.
+        {aktifMod.aciklama} Adımlar sırayla açılır.
       </Text>
 
       {sonraki ? (
@@ -86,7 +117,7 @@ export default function BesiYolculukScreen() {
 
       <Pressable
         onPress={() => {
-          Alert.alert('Sıfırla', 'Mod 1 ilerlemesi başa döner.', [
+          Alert.alert('Sıfırla', `${aktifMod.baslik} ilerlemesi başa döner.`, [
             { text: 'Vazgeç', style: 'cancel' },
             {
               text: 'Sıfırla',
@@ -116,4 +147,11 @@ const styles = StyleSheet.create({
   nextLabel: { color: '#ffffffcc', fontWeight: '800', fontSize: 11, textTransform: 'uppercase' },
   nextTitle: { color: '#fff', fontWeight: '800', fontSize: 18, marginTop: 4 },
   nextDesc: { color: '#ffffffee', marginTop: 4, lineHeight: 18 },
+  soonTitle: { fontWeight: '800', fontSize: 18 },
+  cta: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  ctaText: { color: '#fff', fontWeight: '800' },
 });

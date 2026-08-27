@@ -12,13 +12,11 @@ interface Props {
 export function ModSecimKarti({ mod, secili, onPress }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const disabled = !mod.hazir;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected: !!secili, disabled }}
-      disabled={disabled}
+      accessibilityState={{ selected: !!secili }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -26,7 +24,7 @@ export function ModSecimKarti({ mod, secili, onPress }: Props) {
           backgroundColor: colors.card,
           borderColor: secili ? colors.tint : colors.border,
           borderWidth: secili ? 2 : 1,
-          opacity: disabled ? 0.55 : pressed ? 0.9 : 1,
+          opacity: pressed ? 0.9 : 1,
         },
       ]}>
       <View style={styles.top}>
@@ -38,7 +36,7 @@ export function ModSecimKarti({ mod, secili, onPress }: Props) {
         </View>
         {secili ? (
           <Text style={[styles.badge, { color: colors.tint }]}>Aktif</Text>
-        ) : disabled ? (
+        ) : !mod.hazir ? (
           <Text style={[styles.badge, { color: colors.textSecondary }]}>Yakında</Text>
         ) : null}
       </View>

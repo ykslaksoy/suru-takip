@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 import { DatabaseProvider } from '@/baglam/VeritabaniBaglami';
 import { SubscriptionProvider } from '@/baglam/AbonelikBaglami';
 import { AnaSayfaProvider } from '@/baglam/AnaSayfaBaglami';
+import { ModProvider } from '@/baglam/ModBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 
 export { ErrorBoundary } from 'expo-router';
@@ -37,6 +38,7 @@ export default function RootLayout() {
       <DatabaseProvider>
         <SubscriptionProvider>
           <AnaSayfaProvider>
+          <ModProvider>
           <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
@@ -48,8 +50,9 @@ export default function RootLayout() {
             <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
             <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
             <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar' }} />
-            <Stack.Screen name="besi/index" options={{ title: 'Kuzu alarak besi' }} />
+            <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />
           </Stack>
+          </ModProvider>
           </AnaSayfaProvider>
         </SubscriptionProvider>
       </DatabaseProvider>
