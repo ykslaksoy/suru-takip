@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
+import { PerformansMetrikleri } from '@/bilesenler/kilo/PerformansMetrikleri';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
-import { terim } from '@/sabitler/Metinler';
 
 export default function WeightScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -57,11 +57,7 @@ export default function WeightScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.sub, { color: colors.textSecondary, paddingHorizontal: 16 }]}>{earTag}</Text>
-      {adg != null && (
-        <Text style={[styles.adg, { color: colors.tint, paddingHorizontal: 16 }]}>
-          {terim('ADG')}: +{adg} g/gün (son 30 gün)
-        </Text>
-      )}
+      {id ? <PerformansMetrikleri animalId={id} adg={adg} records={records} /> : null}
       <KiloGrafigi records={records} />
       <FlatList
         data={records}
@@ -108,8 +104,7 @@ export default function WeightScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  sub: { marginTop: 8 },
-  adg: { fontSize: 18, fontWeight: '700', marginTop: 4 },
+  sub: { marginTop: 8, marginBottom: 4 },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -10,8 +10,8 @@ export type BetaKategori = keyof typeof BETA_KATEGORILER;
 
 /** Kısa terim + Türkçe açıklama — arayüzde birlikte gösterilir. */
 export const TERIMLER = {
-  ADG: { kisa: 'ADG', aciklama: 'günlük canlı ağırlık artışı' },
-  FCR: { kisa: 'FCR', aciklama: 'yem dönüşüm oranı' },
+  ADG: { kisa: 'ADG', aciklama: 'günlük kilo alım miktarı' },
+  FCR: { kisa: 'FCR', aciklama: '1 kg et için kaç kg yem gerekir' },
   T0: { kisa: 'T0', aciklama: 'ilk tartım' },
   BCS: { kisa: 'BCS', aciklama: 'vücut kondisyon skoru' },
   SKT: { kisa: 'SKT', aciklama: 'son kullanma tarihi' },
@@ -24,7 +24,7 @@ export const TERIMLER = {
 
 export type TerimAnahtar = keyof typeof TERIMLER;
 
-/** Örn. "FCR (yem dönüşüm oranı)" */
+/** Örn. "FCR (1 kg et için kaç kg yem gerekir)" */
 export function terim(key: TerimAnahtar): string {
   const t = TERIMLER[key];
   return `${t.kisa} (${t.aciklama})`;
@@ -33,6 +33,17 @@ export function terim(key: TerimAnahtar): string {
 /** Yalnızca kısa ad — örn. "ADG" */
 export function terimKisa(key: TerimAnahtar): string {
   return TERIMLER[key].kisa;
+}
+
+/** ADG değer metni — örn. "+250 g/gün · 0,25 kg/gün" */
+export function adgDeger(gramGun: number): string {
+  const kgGun = Math.round((gramGun / 1000) * 1000) / 1000;
+  return `+${gramGun} g/gün · ${kgGun.toLocaleString('tr-TR')} kg/gün`;
+}
+
+/** FCR değer metni — örn. "4,2 kg yem / 1 kg artış" */
+export function fcrDeger(orani: number): string {
+  return `${orani.toLocaleString('tr-TR')} kg yem / 1 kg artış`;
 }
 
 export const UI_KURAL =

@@ -124,8 +124,8 @@ export function getSmartSuggestions(ctx?: {
     out.push({
       id: 'tip-fcr',
       title: terim('FCR'),
-      body: '1 kg artış için kaç kg yem?',
-      voice: `Kârın sırrı ${terim('FCR')}: 1 kilo almak için kaç kilo yem yedik? Tartım + yem kaydı yap, ben hesabı çıkarayım.`,
+      body: '1 kg et artışı için kaç kg yem?',
+      voice: `${terim('FCR')} kârın sırrı: 1 kg et almak için kaç kg yem yedik? Tartım + yem kaydı yap, ben hesabı çıkarayım.`,
       urgency: 'info',
       source: 'rasyon',
     });

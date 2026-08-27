@@ -10,7 +10,7 @@ import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
 import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
-import { terim } from '@/sabitler/Metinler';
+import { terim, adgDeger } from '@/sabitler/Metinler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalDetailScreen() {
@@ -104,7 +104,7 @@ export default function AnimalDetailScreen() {
         <InfoRow label="Yaş bandı" value={ageLabel} colors={colors} />
         <InfoRow label="Derece" value={grade ? dereceEtiket(grade) : '—'} colors={colors} />
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
-        <InfoRow label={`${terim('ADG')} · 30 gün`} value={adg != null ? `+${adg} g/gün` : '—'} colors={colors} />
+        <InfoRow label={`${terim('ADG')} · 30 gün`} value={adg != null ? adgDeger(adg) : '—'} colors={colors} />
       </View>
 
       <View style={styles.actions}>
