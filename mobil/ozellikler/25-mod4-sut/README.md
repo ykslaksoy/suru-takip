@@ -20,7 +20,7 @@
 - `yonlendirme.ts` ✅
 
 ### app
-- `(tabs)/yolculuk` — 8 adımlı yolculuk; sağım formu; veri/manuel ilerleme
+- `(tabs)/yolculuk` — sağım / laktasyon / yönlendirme panelleri
 
 ## Bağımlılık
 

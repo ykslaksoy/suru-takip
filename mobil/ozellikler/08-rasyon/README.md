@@ -8,20 +8,24 @@
 |--------|-----|
 | kaynak | `mobil/kaynak/rasyon/` |
 | bilesenler | `mobil/bilesenler/rasyon/` |
-| app | `mobil/app/rasyon/` |
 | app | `mobil/app/(tabs)/rasyon/` |
 
 ## Plan dosyaları
 
 ### kaynak
-- `kullanici-rasyon.ts`
-- `akilli-oneri.ts`
-- `karsilastirma.ts`
+- `hesapla.ts` ✅
+- `hayvan-plani.ts` ✅
+- `kullanici-rasyon.ts` ✅ — bileşen + miktar + fiyat
+- `akilli-oneri.ts` ✅ — sürü ort. + maliyet
+- `karsilastirma.ts` (iskelet)
 
 ### bilesenler
-- `RasyonFormu.tsx`
-- `AkilliOneriKarti.tsx`
-- `KarsilastirmaTablosu.tsx`
+- `RasyonFormu.tsx` ✅
+- `AkilliOneriKarti.tsx` ✅
+- `KarsilastirmaTablosu.tsx` (iskelet)
+
+### app
+- `(tabs)/rasyon` — Hesapla · Benim rasyonum · Akıllı öneri
 
 ## Bağımlılık
 

@@ -17,11 +17,11 @@
 - `veri-ilerleme.ts` ✅
 - `birlesik.ts` ✅
 - `katim.ts` ✅
-- `kuzulatma.ts` ✅
-- `besiye-aktar.ts` ✅
+- `kuzulatma.ts` ✅ — anne bağlama
+- `besiye-aktar.ts` ✅ — besiye alma
 
 ### app
-- `(tabs)/yolculuk` — Mod 2 aktifken bu yolculuk
+- `(tabs)/yolculuk` — katım / kuzulatma / besiye panelleri
 
 ## Bağımlılık
 

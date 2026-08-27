@@ -14,12 +14,13 @@
 ## Plan dosyaları
 
 ### kaynak
-- `asi-takvimi.ts`
+- `asi-takvimi.ts` ✅
+- `asi-hatirlatma.ts` ✅ — bu hafta listesi + yerel bildirim
 
 ### bilesenler
-- `SaglikKarti.tsx`
-- `AsiTakvimi.tsx`
-- `BekletmeUyarisi.tsx`
+- `AsiTakvimi.tsx` ✅ — stok + bu hafta + hatırlatma
+- `SaglikKarti.tsx` (iskelet)
+- `BekletmeUyarisi.tsx` (iskelet)
 
 ## Bağımlılık
 

@@ -15,11 +15,11 @@
 - `adim-kilidi.ts` ✅
 - `veri-ilerleme.ts` ✅
 - `birlesik.ts` ✅
-- `secilim.ts` (iskelet)
-- `secere.ts` (iskelet)
+- `secilim.ts` ✅ — skor + aday işaretle
+- `secere.ts` ✅ — TÜRKVET / anne-baba
 
 ### app
-- `(tabs)/yolculuk` — 7 adımlı yolculuk; veri/manuel ilerleme
+- `(tabs)/yolculuk` — aday / kimlik / seleksiyon panelleri
 
 ## Bağımlılık
 
