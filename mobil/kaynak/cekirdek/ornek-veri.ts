@@ -38,6 +38,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       motherId: null,
       gehisId: null,
       notes: 'Damızlık aday',
+      createdAt: isoDaysAgo(20),
     },
     {
       id: uuidv4(),
@@ -51,7 +52,8 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       status: 'healthy' as const,
       motherId: null,
       gehisId: null,
-      notes: 'Besi grubu',
+      notes: 'Besi grubu · karantina tamam',
+      createdAt: isoDaysAgo(12),
     },
     {
       id: uuidv4(),
@@ -65,7 +67,8 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       status: 'healthy' as const,
       motherId: null,
       gehisId: null,
-      notes: 'Kuzu',
+      notes: 'Kuzu · alım sonrası karantina',
+      createdAt: isoDaysAgo(8),
     },
   ];
 
@@ -98,6 +101,19 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     vetName: 'Dr. Ahmet Yılmaz',
     recordedAt: daysAgo(30),
     notes: 'Yıllık aşı programı',
+  });
+
+  await addHealthRecord({
+    animalId: animals[2].id,
+    recordType: 'vaccine',
+    symptoms: '',
+    diagnosis: 'Alım sonrası aşı',
+    treatment: 'Clostridial kombine aşı',
+    medicine: 'Clostridial aşı',
+    withdrawalDays: 0,
+    vetName: 'Dr. Ahmet Yılmaz',
+    recordedAt: daysAgo(6),
+    notes: 'Karantina sonrası',
   });
 
   await addHealthRecord({

@@ -135,3 +135,42 @@ export function adimAcikMi(adim: BesiAdim, tamamlanan: BesiAdimId[]): boolean {
 export function sonrakiAcikAdim(tamamlanan: BesiAdimId[]): BesiAdim | null {
   return MOD1_ADIMLAR.find((a) => adimAcikMi(a, tamamlanan) && !tamamlanan.includes(a.id)) ?? null;
 }
+
+import type { AdimKanit, Mod1VeriDurum } from './veri-ilerleme';
+import { tespitMod1VeriDurumu } from './veri-ilerleme';
+
+export type Mod1BirlesikIlerleme = {
+  tamamlanan: BesiAdimId[];
+  /** Adım veri ile mi manuel mi kapandı */
+  kaynak: Partial<Record<BesiAdimId, 'veri' | 'manuel'>>;
+  kanitlar: AdimKanit[];
+  ozet: Mod1VeriDurum['ozet'];
+};
+
+/** Veri tespiti + manuel onay — sırayı bozmadan birleştirir */
+export async function getMod1BirlesikIlerleme(): Promise<Mod1BirlesikIlerleme> {
+  const [manuel, veri] = await Promise.all([getMod1Ilerleme(), tespitMod1VeriDurumu()]);
+  const autoSet = new Set(veri.otomatikTamamlanan);
+  const manuelSet = new Set(manuel.tamamlanan);
+  const tamamlanan: BesiAdimId[] = [];
+  const kaynak: Partial<Record<BesiAdimId, 'veri' | 'manuel'>> = {};
+
+  for (const adim of MOD1_ADIMLAR) {
+    const oncekiOk =
+      adim.sira === 0 ||
+      MOD1_ADIMLAR.filter((a) => a.sira < adim.sira).every((a) => tamamlanan.includes(a.id));
+    if (!oncekiOk) break;
+
+    if (autoSet.has(adim.id)) {
+      tamamlanan.push(adim.id);
+      kaynak[adim.id] = 'veri';
+    } else if (manuelSet.has(adim.id)) {
+      tamamlanan.push(adim.id);
+      kaynak[adim.id] = 'manuel';
+    } else {
+      break;
+    }
+  }
+
+  return { tamamlanan, kaynak, kanitlar: veri.kanitlar, ozet: veri.ozet };
+}
