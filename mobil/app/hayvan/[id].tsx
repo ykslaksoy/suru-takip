@@ -5,12 +5,14 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { calculateADG, deleteAnimal, getAnimal, getLatestWeight } from '@/kaynak/cekirdek/veritabani';
+import { calculateADG, deleteAnimal, getAnimal, getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
 import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
+import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
+import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
-import { terim, adgDeger } from '@/sabitler/Metinler';
+import { terim, adgDeger, fcrDeger } from '@/sabitler/Metinler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalDetailScreen() {
@@ -22,6 +24,8 @@ export default function AnimalDetailScreen() {
   const [weight, setWeight] = useState<number | null>(null);
   const [adg, setAdg] = useState<number | null>(null);
   const [grade, setGrade] = useState<KuzuGrade | null>(null);
+  const [fcrValue, setFcrValue] = useState<number | null>(null);
+  const [dailyRation, setDailyRation] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -31,9 +35,20 @@ export default function AnimalDetailScreen() {
       if (a) {
         const w = await getLatestWeight(a.id);
         const g = await calculateADG(a.id);
+        const records = await getWeightRecords(a.id);
+        const fcr = hesaplaFcr(a, records);
+        const plan = await ensureRationPlan(a, w);
         setWeight(w);
         setAdg(g);
-        setGrade(gradeFromAdg(g, { birthDate: a.birthDate, isSick: a.status === 'sick' }));
+        setFcrValue(fcr?.fcr ?? null);
+        setDailyRation(plan?.dailyFeedKg ?? fcr?.dailyFeedKg ?? null);
+        setGrade(
+          gradeFromAdg(g, {
+            birthDate: a.birthDate,
+            isSick: a.status === 'sick',
+            fcr: fcr?.fcr ?? null,
+          })
+        );
       }
     })();
   }, [id, refreshKey]);
@@ -105,6 +120,12 @@ export default function AnimalDetailScreen() {
         <InfoRow label="Derece" value={grade ? dereceEtiket(grade) : '—'} colors={colors} />
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
         <InfoRow label={`${terim('ADG')} · 30 gün`} value={adg != null ? adgDeger(adg) : '—'} colors={colors} />
+        <InfoRow
+          label="Günlük rasyon"
+          value={dailyRation != null ? `${dailyRation.toLocaleString('tr-TR')} kg/gün` : '—'}
+          colors={colors}
+        />
+        <InfoRow label={terim('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
       </View>
 
       <View style={styles.actions}>

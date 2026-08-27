@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { addHealthRecord, addWeightRecord, countAnimals, clearAllStorage, upsertAnimal, upsertStockItem } from './veritabani';
+import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
 
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
@@ -57,21 +58,22 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     },
   ];
 
-  for (const animal of animals) {
-    await upsertAnimal(animal);
-    const weights = animal.sex === 'male'
+  for (const seed of animals) {
+    const saved = await upsertAnimal(seed);
+    const weights = saved.sex === 'male'
       ? [42, 45, 48, 52]
-      : animal.name === 'Yavrucuk'
+      : saved.name === 'Yavrucuk'
         ? [12, 15, 18, 22]
         : [62, 64, 66, 68];
     for (let i = 0; i < weights.length; i++) {
       await addWeightRecord({
-        animalId: animal.id,
+        animalId: saved.id,
         weightKg: weights[i],
         recordedAt: new Date(now.getTime() - (weights.length - 1 - i) * 7 * 86400000).toISOString(),
         notes: '',
       });
     }
+    await upsertRationPlanFromWeight(saved, weights[weights.length - 1]);
   }
 
   await addHealthRecord({
@@ -109,4 +111,5 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
 
 export async function clearAllData(): Promise<void> {
   await clearAllStorage();
+  await clearAllRationPlans();
 }

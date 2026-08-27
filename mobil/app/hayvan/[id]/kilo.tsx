@@ -9,6 +9,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
+import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 
 export default function WeightScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -47,6 +48,8 @@ export default function WeightScreen() {
       recordedAt: new Date().toISOString(),
       notes: notes.trim(),
     });
+    const animal = await getAnimal(id);
+    if (animal) await upsertRationPlanFromWeight(animal, w);
     setModal(false);
     setWeight('');
     setNotes('');

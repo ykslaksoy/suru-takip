@@ -3,6 +3,7 @@ export type AnimalStatus = 'healthy' | 'sick' | 'pregnant' | 'lactating' | 'dry'
 export type StockType = 'feed' | 'vaccine' | 'medicine';
 export type SubscriptionTier = 'free' | 'farmer' | 'professional' | 'enterprise';
 export type SyncStatus = 'synced' | 'pending' | 'error';
+export type RationPhase = 'maintenance' | 'pregnant' | 'lactating' | 'lamb_fattening' | 'dry';
 
 export interface Animal {
   id: string;
@@ -62,6 +63,16 @@ export interface StockMovement {
   quantity: number;
   recordedAt: string;
   notes: string;
+}
+
+/** Hayvan bazlı günlük rasyon — son tartımdan otomatik güncellenir. */
+export interface AnimalRationPlan {
+  animalId: string;
+  liveWeightKg: number;
+  phase: RationPhase;
+  forageQuality: 'low' | 'medium' | 'high';
+  dailyFeedKg: number;
+  updatedAt: string;
 }
 
 export interface BetaFeedback {

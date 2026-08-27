@@ -1,13 +1,13 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StyleSheet, Text, View } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
-import { calculateFCR, weightGainKg } from '@/kaynak/kilo/fcr';
+import { getAnimal } from '@/kaynak/cekirdek/veritabani';
+import { hesaplaFcr, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
+import { ensureRationPlan, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
+import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
 import { adgDeger, fcrDeger, terim } from '@/sabitler/Metinler';
-
-const feedKey = (animalId: string) => `suruyon_fcr_feed_${animalId}`;
 
 export function PerformansMetrikleri({
   animalId,
@@ -20,24 +20,28 @@ export function PerformansMetrikleri({
 }) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const [feedKg, setFeedKg] = useState('');
-  const gainKg = weightGainKg(records);
-  const fcr = calculateFCR(parseFloat(feedKg) || 0, gainKg ?? 0);
+  const [fcrHesap, setFcrHesap] = useState<FcrHesap | null>(null);
+  const [dailyFeedKg, setDailyFeedKg] = useState<number | null>(null);
+  const [phaseLabel, setPhaseLabel] = useState<string>('');
 
-  const loadFeed = useCallback(async () => {
-    const saved = await AsyncStorage.getItem(feedKey(animalId));
-    if (saved) setFeedKg(saved);
-  }, [animalId]);
+  const load = useCallback(async () => {
+    const a = await getAnimal(animalId);
+    if (!a) return;
+
+    const sorted = [...records].sort(
+      (x, y) => new Date(y.recordedAt).getTime() - new Date(x.recordedAt).getTime()
+    );
+    const latestWeight = sorted[0]?.weightKg ?? null;
+    const plan = (await ensureRationPlan(a, latestWeight)) ?? (await getAnimalRationPlan(animalId));
+    setDailyFeedKg(plan?.dailyFeedKg ?? null);
+    setPhaseLabel(plan ? PHASE_LABELS[plan.phase] : '');
+
+    setFcrHesap(hesaplaFcr(a, records));
+  }, [animalId, records]);
 
   useEffect(() => {
-    loadFeed();
-  }, [loadFeed]);
-
-  const saveFeed = async (value: string) => {
-    setFeedKg(value);
-    if (value.trim()) await AsyncStorage.setItem(feedKey(animalId), value);
-    else await AsyncStorage.removeItem(feedKey(animalId));
-  };
+    load();
+  }, [load]);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -52,29 +56,46 @@ export function PerformansMetrikleri({
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 6 }]}>{terim('FCR')}</Text>
-      <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
-        Son 30 günde bu hayvana verilen toplam yem miktarını gir; tartımlardan kilo artışına göre hesaplanır.
-      </Text>
-      <TextInput
-        placeholder="Son 30 günde verilen yem (kg)"
-        keyboardType="decimal-pad"
-        value={feedKg}
-        onChangeText={saveFeed}
-        style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-      />
-      {gainKg != null ? (
-        <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }}>
-          Dönem artışı: +{gainKg.toLocaleString('tr-TR')} kg
-        </Text>
+      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 4 }]}>Günlük rasyon</Text>
+      {dailyFeedKg != null ? (
+        <>
+          <Text style={[styles.value, { color: colors.text }]}>
+            {dailyFeedKg.toLocaleString('tr-TR')} kg yem / gün
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+            Son tartıma göre otomatik · {phaseLabel || '—'}
+          </Text>
+        </>
       ) : (
-        <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }}>
-          FCR için en az iki tartım ve pozitif kilo artışı gerekir.
+        <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+          Tartım kaydı olunca günlük rasyon otomatik hesaplanır.
         </Text>
       )}
-      <Text style={[styles.value, { color: fcr != null ? colors.tint : colors.textSecondary }]}>
-        {fcr != null ? fcrDeger(fcr) : '—'}
+
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 6 }]}>{terim('FCR')}</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
+        Günlük rasyon × tartım dönemi gün sayısı ÷ kilo artışı — otomatik hesaplanır.
       </Text>
+
+      {fcrHesap ? (
+        <>
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 4 }}>
+            {fcrHesap.periodDays} gün · +{fcrHesap.gainKg.toLocaleString('tr-TR')} kg artış (
+            {fcrHesap.startWeightKg} → {fcrHesap.endWeightKg} kg)
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }}>
+            Tahmini yem: {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg (
+            {fcrHesap.dailyFeedKg.toLocaleString('tr-TR')} kg/gün ort.)
+          </Text>
+          <Text style={[styles.value, { color: colors.tint }]}>{fcrDeger(fcrHesap.fcr)}</Text>
+        </>
+      ) : (
+        <Text style={[styles.value, { color: colors.textSecondary }]}>
+          — (en az 2 tartım ve pozitif artış gerekir)
+        </Text>
+      )}
     </View>
   );
 }
@@ -92,12 +113,4 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: '600' },
   value: { fontSize: 16, fontWeight: '700' },
   divider: { height: 1, marginVertical: 12 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    minHeight: 48,
-    marginBottom: 8,
-  },
 });
