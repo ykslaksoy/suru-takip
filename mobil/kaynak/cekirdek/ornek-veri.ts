@@ -127,7 +127,24 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
   await upsertStockItem({ ...feed, quantity: 120 });
   await kaydetYemSayim(feed.id, 120, 'son sayım', isoDaysAgo(1));
 
-  await upsertStockItem({ name: 'Clostridial aşı', type: 'vaccine', quantity: 45, unit: 'doz', minQuantity: 20, expiryDate: '2027-12-01', notes: '' });
+  await upsertStockItem({
+    name: 'Clostridial aşı',
+    type: 'vaccine',
+    quantity: 1,
+    unit: 'doz',
+    minQuantity: 20,
+    expiryDate: '2027-12-01',
+    notes: 'Demo: yapılacak aşıya göre stok düşük',
+  });
+  await upsertStockItem({
+    name: 'Enterotoksemi aşısı',
+    type: 'vaccine',
+    quantity: 0,
+    unit: 'doz',
+    minQuantity: 10,
+    expiryDate: '2026-11-01',
+    notes: 'Demo: stok yok',
+  });
   await upsertStockItem({ name: 'Albendazol', type: 'medicine', quantity: 8, unit: 'flakon', minQuantity: 5, expiryDate: '2026-06-15', notes: '' });
 
   return true;

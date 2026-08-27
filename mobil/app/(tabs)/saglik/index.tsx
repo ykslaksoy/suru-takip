@@ -3,6 +3,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
+import { AsiTakvimi } from '@/bilesenler/saglik/AsiTakvimi';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -27,11 +28,7 @@ export default function HealthOverviewScreen() {
     if (ready) load();
   }, [ready, refreshKey, load]);
 
-  const asiKayitlari = records.filter(
-    (r) =>
-      /aşı|asi|vaccine|aşılama/i.test(`${r.treatment ?? ''} ${r.diagnosis ?? ''} ${r.symptoms ?? ''}`) ||
-      (r.medicine && /aşı|asi|vaccine/i.test(r.medicine))
-  );
+  const asiKayitlari = records.filter((r) => r.recordType === 'vaccine');
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -79,24 +76,29 @@ export default function HealthOverviewScreen() {
         <FlatList
           data={asiKayitlari}
           keyExtractor={(r) => r.id}
-          contentContainerStyle={{ padding: 16 }}
-          ListHeaderComponent={
-            <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
-              Aşı kayıtları. Takvim ve hatırlatıcı sonraki adımda eklenecek.
-            </Text>
-          }
+          contentContainerStyle={{ paddingBottom: 24 }}
+          ListHeaderComponent={<AsiTakvimi />}
           renderItem={({ item }) => (
             <Link href={`/hayvan/${item.animalId}/saglik`} asChild>
-              <Pressable style={StyleSheet.flatten([styles.card, { backgroundColor: colors.card, borderColor: colors.border }])}>
+              <Pressable
+                style={StyleSheet.flatten([
+                  styles.card,
+                  { backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16 },
+                ])}>
                 <Text style={[styles.tag, { color: colors.tint }]}>{item.earTag}</Text>
                 <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
                   {item.medicine || item.treatment || item.diagnosis || 'Aşı kaydı'}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
+                  {new Date(item.recordedAt).toLocaleDateString('tr-TR')}
                 </Text>
               </Pressable>
             </Link>
           )}
           ListEmptyComponent={
-            <Text style={{ textAlign: 'center', color: colors.textSecondary }}>Henüz aşı kaydı yok</Text>
+            <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 8 }}>
+              Henüz uygulanmış aşı kaydı yok
+            </Text>
           }
         />
       ) : null}

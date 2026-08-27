@@ -1,0 +1,216 @@
+import type { Animal, HealthRecord, StockItem } from './tipler';
+
+/** Standart aşı programı — 1 doz / hayvan */
+export type AsiProgramKalemi = {
+  id: string;
+  ad: string;
+  /** Stok adıyla eşleşme için anahtar kelimeler */
+  stokAnahtarlar: string[];
+  /** Son aşıdan sonra tekrar süresi (gün) */
+  tekrarGun: number;
+  /** Bu kadar gün kala “yaklaşan” sayılır */
+  hatirlatmaGun: number;
+  dozHayvan: number;
+};
+
+export const ASI_PROGRAMI: AsiProgramKalemi[] = [
+  {
+    id: 'clostridial',
+    ad: 'Clostridial aşı',
+    stokAnahtarlar: ['clostridial', 'klostridial', 'kombine'],
+    tekrarGun: 365,
+    hatirlatmaGun: 30,
+    dozHayvan: 1,
+  },
+  {
+    id: 'enterotoksemi',
+    ad: 'Enterotoksemi aşısı',
+    stokAnahtarlar: ['enterotoksemi', 'enterotoxemia'],
+    tekrarGun: 180,
+    hatirlatmaGun: 21,
+    dozHayvan: 1,
+  },
+  {
+    id: 'parazit',
+    ad: 'Parazit aşısı / programı',
+    stokAnahtarlar: ['parazit', 'antiparasit'],
+    tekrarGun: 180,
+    hatirlatmaGun: 14,
+    dozHayvan: 1,
+  },
+];
+
+export type AsiHayvanDurum = {
+  animalId: string;
+  earTag: string;
+  sonAsiAt: string | null;
+  durum: 'yapilacak' | 'yaklasiyor' | 'tamam';
+  kalanGun: number | null;
+};
+
+export type AsiStokDurum = {
+  programId: string;
+  asiAdi: string;
+  yapilacakSayisi: number;
+  yaklasanSayisi: number;
+  gerekenDoz: number;
+  stokAdi: string | null;
+  stokMiktar: number;
+  stokBirim: string;
+  stokYeterli: boolean;
+  eksikDoz: number;
+  sktYakin: boolean;
+  hayvanlar: AsiHayvanDurum[];
+};
+
+function normalize(s: string): string {
+  return s
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i');
+}
+
+function eslesir(metin: string, anahtarlar: string[]): boolean {
+  const n = normalize(metin);
+  return anahtarlar.some((k) => n.includes(normalize(k)));
+}
+
+function aktifHayvanlar(animals: Animal[]): Animal[] {
+  return animals.filter((a) => a.status !== 'sold' && a.status !== 'dead');
+}
+
+function sonAsiKaydi(
+  animalId: string,
+  program: AsiProgramKalemi,
+  health: HealthRecord[]
+): HealthRecord | null {
+  const related = health
+    .filter((h) => h.animalId === animalId && h.recordType === 'vaccine')
+    .filter((h) => eslesir(`${h.medicine} ${h.treatment} ${h.diagnosis}`, [program.ad, ...program.stokAnahtarlar]))
+    .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+  return related[0] ?? null;
+}
+
+function stokBul(program: AsiProgramKalemi, stock: StockItem[]): StockItem | null {
+  const vaccines = stock.filter((s) => s.type === 'vaccine');
+  return (
+    vaccines.find((s) => eslesir(s.name, [program.ad, ...program.stokAnahtarlar])) ??
+    stock.find((s) => eslesir(s.name, [program.ad, ...program.stokAnahtarlar])) ??
+    null
+  );
+}
+
+function sktYakinMi(expiryDate: string | null, gun = 60): boolean {
+  if (!expiryDate) return false;
+  const left = (new Date(expiryDate).getTime() - Date.now()) / 86400000;
+  return left >= 0 && left <= gun;
+}
+
+/**
+ * Yapılacak / yaklaşan aşılar ve stok yeterliliği.
+ * gerekenDoz = (yapılacak + yaklaşan) × doz/hayvan
+ */
+export function hesaplaAsiStokDurumu(
+  animals: Animal[],
+  health: HealthRecord[],
+  stock: StockItem[],
+  now = Date.now()
+): AsiStokDurum[] {
+  const aktif = aktifHayvanlar(animals);
+
+  return ASI_PROGRAMI.map((program) => {
+    const hayvanlar: AsiHayvanDurum[] = aktif.map((a) => {
+      const last = sonAsiKaydi(a.id, program, health);
+      if (!last) {
+        return {
+          animalId: a.id,
+          earTag: a.earTag,
+          sonAsiAt: null,
+          durum: 'yapilacak',
+          kalanGun: null,
+        };
+      }
+      const nextAt = new Date(last.recordedAt).getTime() + program.tekrarGun * 86400000;
+      const kalanGun = Math.ceil((nextAt - now) / 86400000);
+      let durum: AsiHayvanDurum['durum'] = 'tamam';
+      if (kalanGun <= 0) durum = 'yapilacak';
+      else if (kalanGun <= program.hatirlatmaGun) durum = 'yaklasiyor';
+      return {
+        animalId: a.id,
+        earTag: a.earTag,
+        sonAsiAt: last.recordedAt,
+        durum,
+        kalanGun,
+      };
+    });
+
+    const yapilacakSayisi = hayvanlar.filter((h) => h.durum === 'yapilacak').length;
+    const yaklasanSayisi = hayvanlar.filter((h) => h.durum === 'yaklasiyor').length;
+    const gerekenDoz = (yapilacakSayisi + yaklasanSayisi) * program.dozHayvan;
+    const item = stokBul(program, stock);
+    const stokMiktar = item?.quantity ?? 0;
+    const eksikDoz = Math.max(0, gerekenDoz - stokMiktar);
+
+    return {
+      programId: program.id,
+      asiAdi: program.ad,
+      yapilacakSayisi,
+      yaklasanSayisi,
+      gerekenDoz,
+      stokAdi: item?.name ?? null,
+      stokMiktar,
+      stokBirim: item?.unit ?? 'doz',
+      stokYeterli: gerekenDoz === 0 || stokMiktar >= gerekenDoz,
+      eksikDoz,
+      sktYakin: item ? sktYakinMi(item.expiryDate) : false,
+      hayvanlar,
+    };
+  }).filter((d) => d.yapilacakSayisi > 0 || d.yaklasanSayisi > 0 || (!d.stokYeterli && d.gerekenDoz > 0));
+}
+
+/** Bugün kartı / uyarılar için özet satırlar */
+export function asiStokUyarilari(durumlar: AsiStokDurum[]): {
+  id: string;
+  baslik: string;
+  aciklama: string;
+  seviye: 'uyari' | 'sira';
+}[] {
+  const out: { id: string; baslik: string; aciklama: string; seviye: 'uyari' | 'sira' }[] = [];
+
+  for (const d of durumlar) {
+    if (d.gerekenDoz > 0 && !d.stokYeterli) {
+      out.push({
+        id: `asi-stok-${d.programId}`,
+        baslik: 'Aşı stoğu yetersiz',
+        aciklama: `${d.asiAdi} · ${d.gerekenDoz} doz gerekli, stokta ${d.stokMiktar} ${d.stokBirim} (eksik ${d.eksikDoz})`,
+        seviye: 'uyari',
+      });
+    } else if (d.yapilacakSayisi > 0) {
+      out.push({
+        id: `asi-yap-${d.programId}`,
+        baslik: 'Aşı yapılacak',
+        aciklama: `${d.asiAdi} · ${d.yapilacakSayisi} hayvan · stok ${d.stokMiktar} ${d.stokBirim}`,
+        seviye: 'sira',
+      });
+    } else if (d.yaklasanSayisi > 0) {
+      out.push({
+        id: `asi-yaklas-${d.programId}`,
+        baslik: 'Aşı yaklaşıyor',
+        aciklama: `${d.asiAdi} · ${d.yaklasanSayisi} hayvan · stok ${d.stokMiktar} ${d.stokBirim}`,
+        seviye: 'sira',
+      });
+    }
+
+    if (d.sktYakin && d.gerekenDoz > 0) {
+      out.push({
+        id: `asi-skt-${d.programId}`,
+        baslik: 'Aşı SKT yakın',
+        aciklama: `${d.stokAdi ?? d.asiAdi} · kullanılacak doz var, son kullanma yaklaşıyor`,
+        seviye: 'uyari',
+      });
+    }
+  }
+
+  return out;
+}

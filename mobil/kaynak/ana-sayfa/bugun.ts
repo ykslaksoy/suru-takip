@@ -1,9 +1,12 @@
 import {
   getActiveWithdrawals,
   getAnimals,
+  getHealthRecords,
   getLatestWeight,
   getLowStockItems,
+  getStockItems,
 } from '@/kaynak/cekirdek/veritabani';
+import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 
 export type BugunSeviye = 'uyari' | 'sira' | 'bilgi';
 
@@ -25,7 +28,7 @@ function kalanGun(recordedAt: string, withdrawalDays: number): number {
 
 /**
  * Ana sayfa “Bugün” kartı — en fazla 3 madde.
- * Sıra: bekletme → düşük stok → aşı/tartım ihtiyacı.
+ * Sıra: bekletme → aşı stoğu / yapılacak aşı → düşük stok → sağlık → tartım.
  */
 export async function getBugunMaddeleri(): Promise<BugunMadde[]> {
   const out: BugunMadde[] = [];
@@ -51,8 +54,31 @@ export async function getBugunMaddeleri(): Promise<BugunMadde[]> {
     });
   }
 
-  const lowStock = await getLowStockItems();
-  if (lowStock.length > 0) {
+  const animals = await getAnimals();
+  const health = await getHealthRecords();
+  const stock = await getStockItems();
+  const asiDurum = hesaplaAsiStokDurumu(animals, health, stock);
+  const asiUyarilar = asiStokUyarilari(asiDurum);
+
+  for (const u of asiUyarilar) {
+    if (out.length >= MAX_MADDE) break;
+    out.push({
+      id: u.id,
+      seviye: u.seviye,
+      baslik: u.baslik,
+      aciklama: u.aciklama,
+      href: u.baslik.includes('stok') || u.baslik.includes('SKT') ? '/(tabs)/stok' : '/(tabs)/saglik',
+      cta: u.baslik.includes('stok') || u.baslik.includes('SKT') ? 'Stoka git' : 'Aşıya bak',
+    });
+  }
+
+  const asiStokAdlari = new Set(
+    asiDurum.map((d) => d.stokAdi?.toLocaleLowerCase('tr-TR')).filter(Boolean) as string[]
+  );
+  const lowStock = (await getLowStockItems()).filter(
+    (i) => !(i.type === 'vaccine' && asiStokAdlari.has(i.name.toLocaleLowerCase('tr-TR')))
+  );
+  if (lowStock.length > 0 && out.length < MAX_MADDE) {
     const first = lowStock[0];
     out.push({
       id: 'stok',
@@ -67,9 +93,8 @@ export async function getBugunMaddeleri(): Promise<BugunMadde[]> {
     });
   }
 
-  const animals = await getAnimals();
   const hasta = animals.find((a) => a.status === 'sick');
-  if (hasta) {
+  if (hasta && out.length < MAX_MADDE) {
     out.push({
       id: 'saglik-takip',
       seviye: 'sira',
