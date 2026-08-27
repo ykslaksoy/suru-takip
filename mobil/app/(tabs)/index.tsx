@@ -40,7 +40,7 @@ export default function AnaSayfaScreen() {
             <Text style={{ color: colors.textSecondary }}>{aktifMod.baslik}</Text>
           </View>
           <View style={styles.headerActions}>
-            <Link href="/ayarlar" asChild>
+            <Link href="/(tabs)/ayarlar" asChild>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Ayarlar"

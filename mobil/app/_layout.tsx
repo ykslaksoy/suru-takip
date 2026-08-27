@@ -38,21 +38,21 @@ export default function RootLayout() {
       <DatabaseProvider>
         <SubscriptionProvider>
           <AnaSayfaProvider>
-          <ModProvider>
-          <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
-            <Stack.Screen name="hayvan/[id]" options={{ title: 'Hayvan Detay' }} />
-            <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
-            <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
-            <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
-            <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
-            <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
-            <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
-            <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar' }} />
-            <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />
-          </Stack>
-          </ModProvider>
+            <ModProvider>
+              <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
+                <Stack.Screen name="hayvan/[id]" options={{ title: 'Hayvan Detay' }} />
+                <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
+                <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
+                <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
+                <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
+                <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
+                <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
+                <Stack.Screen name="ayarlar/index" options={{ headerShown: false }} />
+                <Stack.Screen name="besi/index" options={{ headerShown: false }} />
+              </Stack>
+            </ModProvider>
           </AnaSayfaProvider>
         </SubscriptionProvider>
       </DatabaseProvider>

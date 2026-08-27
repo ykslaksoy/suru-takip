@@ -23,8 +23,8 @@ export const MENU_KATALOGU: MenuOgesi[] = [
   { id: 'dusuk-stok', label: 'Düşük stok', icon: '⚠️', href: '/(tabs)/stok' },
   { id: 'takviye', label: 'Takviye', icon: '🧂', href: '/(tabs)/stok' },
   { id: 'rasyon-oneri', label: 'Rasyon önerisi', icon: '💡', href: '/(tabs)/rasyon' },
-  { id: 'ayarlar', label: 'Ayarlar', icon: '⚙️', href: '/ayarlar' },
-  { id: 'besi', label: 'Aktif mod', icon: '🛤️', href: '/besi' },
+  { id: 'ayarlar', label: 'Ayarlar', icon: '⚙️', href: '/(tabs)/ayarlar' },
+  { id: 'besi', label: 'Aktif mod', icon: '🛤️', href: '/(tabs)/yolculuk' },
   { id: 'hayvan-ara', label: 'Hayvan ara', icon: '🔍', href: '/(tabs)/suru' },
 ];
 
