@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { HizliIslemlerGrid } from '@/bilesenler/ana-sayfa/HizliIslemlerGrid';
@@ -12,9 +12,11 @@ import { useAnaSayfa } from '@/baglam/AnaSayfaBaglami';
 export default function AnaSayfaScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { width } = useWindowDimensions();
   const { pendingSync } = useDatabase();
   const { tierLabel } = useSubscription();
   const { hizliIslemler, kestirmeler, loading } = useAnaSayfa();
+  const dar = width < 360;
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
@@ -22,7 +24,7 @@ export default function AnaSayfaScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: colors.text }]}>SürüYön</Text>
+            <Text style={[styles.title, { color: colors.text, fontSize: dar ? 22 : 26 }]}>SürüYön</Text>
             <Text style={{ color: colors.textSecondary }}>{tierLabel} · Ağıl menüsü</Text>
           </View>
           <Link href="/ana-sayfa/duzenle" asChild>

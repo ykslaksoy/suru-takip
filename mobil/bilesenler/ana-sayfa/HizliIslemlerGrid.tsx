@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { useAnaSayfaDuzeni } from '@/bilesenler/ortak/duyarli-izgara';
 import { HIZLI_ISLEMLER, type MenuOgesi } from '@/kaynak/ana-sayfa';
 
 interface Props {
@@ -11,16 +12,17 @@ interface Props {
 export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { onLayout, horizontalPadding, olcek, hizliHucreGenislik } = useAnaSayfaDuzeni();
 
   const rows: MenuOgesi[][] = [];
-  for (let i = 0; i < items.length; i += 3) {
-    rows.push(items.slice(i, i + 3));
+  for (let i = 0; i < items.length; i += olcek.hizliSutun) {
+    rows.push(items.slice(i, i + olcek.hizliSutun));
   }
 
   return (
-    <View style={styles.grid}>
+    <View onLayout={onLayout} style={[styles.grid, { paddingHorizontal: horizontalPadding, gap: olcek.hizliGap }]}>
       {rows.map((row, rowIndex) => (
-        <View key={`row-${rowIndex}`} style={styles.row}>
+        <View key={`row-${rowIndex}`} style={[styles.row, { gap: olcek.hizliGap }]}>
           {row.map((item) => (
             <Pressable
               key={item.id}
@@ -30,17 +32,28 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
               style={({ pressed }) => [
                 styles.cell,
                 {
+                  width: hizliHucreGenislik,
+                  minHeight: olcek.hizliHucreYukseklik,
                   backgroundColor: colors.card,
                   borderColor: colors.border,
                   opacity: pressed ? 0.88 : 1,
                 },
               ]}>
-              <Text style={styles.icon}>{item.icon}</Text>
-              <Text style={[styles.label, { color: colors.text }]} numberOfLines={2}>
+              <Text style={[styles.icon, { fontSize: olcek.hizliIcon }]}>{item.icon}</Text>
+              <Text
+                style={[styles.label, { color: colors.text, fontSize: olcek.hizliYazi, lineHeight: olcek.hizliYazi + 4 }]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}>
                 {item.label}
               </Text>
             </Pressable>
           ))}
+          {row.length < olcek.hizliSutun
+            ? Array.from({ length: olcek.hizliSutun - row.length }).map((_, i) => (
+                <View key={`spacer-${rowIndex}-${i}`} style={{ width: hizliHucreGenislik }} />
+              ))
+            : null}
         </View>
       ))}
     </View>
@@ -48,17 +61,11 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
 }
 
 const styles = StyleSheet.create({
-  grid: {
-    paddingHorizontal: 16,
-    gap: 10,
-  },
+  grid: {},
   row: {
     flexDirection: 'row',
-    gap: 10,
   },
   cell: {
-    flex: 1,
-    minHeight: 96,
     borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
@@ -67,13 +74,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   icon: {
-    fontSize: 26,
     marginBottom: 6,
   },
   label: {
-    fontSize: 12,
     fontWeight: '700',
     textAlign: 'center',
-    lineHeight: 16,
   },
 });

@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { useAnaSayfaDuzeni } from '@/bilesenler/ortak/duyarli-izgara';
 import { KESTIRMELER, type MenuOgesi } from '@/kaynak/ana-sayfa';
 
 interface Props {
@@ -11,16 +12,21 @@ interface Props {
 export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { onLayout, horizontalPadding, olcek, kestirmeGenislik } = useAnaSayfaDuzeni();
 
   if (items.length === 0) return null;
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.headerRow}>
+    <View onLayout={onLayout} style={styles.wrap}>
+      <View style={[styles.headerRow, { paddingHorizontal: horizontalPadding }]}>
         <Text style={[styles.title, { color: colors.textSecondary }]}>Kestirmeler</Text>
         <Text style={[styles.count, { color: colors.textSecondary }]}>{items.length} kısayol</Text>
       </View>
-      <View style={styles.grid}>
+      <View
+        style={[
+          styles.grid,
+          { paddingHorizontal: horizontalPadding, gap: olcek.kestirmeGap },
+        ]}>
         {items.map((item) => (
           <Pressable
             key={item.id}
@@ -30,13 +36,21 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
             style={({ pressed }) => [
               styles.chip,
               {
+                width: kestirmeGenislik,
                 backgroundColor: colors.background,
                 borderColor: colors.border,
                 opacity: pressed ? 0.85 : 1,
               },
             ]}>
-            <Text style={styles.chipIcon}>{item.icon}</Text>
-            <Text style={[styles.chipText, { color: colors.text }]} numberOfLines={2}>
+            <Text style={[styles.chipIcon, { fontSize: olcek.kestirmeIcon }]}>{item.icon}</Text>
+            <Text
+              style={[
+                styles.chipText,
+                { color: colors.text, fontSize: olcek.kestirmeYazi, lineHeight: olcek.kestirmeYazi + 4 },
+              ]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}>
               {item.label}
             </Text>
           </Pressable>
@@ -55,7 +69,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
     marginBottom: 10,
   },
   title: {
@@ -71,8 +84,6 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 8,
   },
   chip: {
     flexDirection: 'row',
@@ -83,19 +94,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     minHeight: 40,
-    maxWidth: '100%',
-    flexGrow: 1,
-    flexBasis: '47%',
   },
   chipIcon: {
-    fontSize: 16,
     width: 22,
     textAlign: 'center',
   },
   chipText: {
     flex: 1,
-    fontSize: 12,
     fontWeight: '600',
-    lineHeight: 16,
   },
 });
