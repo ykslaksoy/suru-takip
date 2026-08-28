@@ -29,10 +29,10 @@ export type IsPlaniTurMeta = {
 export const IS_PLANI_TURLER: IsPlaniTurMeta[] = [
   {
     id: 'kirpim',
-    label: 'Baş kırpımı',
+    label: 'Kuzu kırpımı',
     icon: '✂️',
     href: '/(tabs)/suru',
-    placeholder: 'Hangi grup / padok?',
+    placeholder: 'Kaç kuzu, hangi padok?',
   },
   {
     id: 'tartim',

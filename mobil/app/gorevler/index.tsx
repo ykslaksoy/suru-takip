@@ -204,7 +204,7 @@ export default function GorevlerScreen() {
               )}
 
               <Pressable onPress={() => setSekme('is-plani')} style={{ marginTop: 16 }}>
-                <Text style={{ color: colors.tint, fontWeight: '800' }}>İş planı → kırpım / tartım / alım / satım</Text>
+                <Text style={{ color: colors.tint, fontWeight: '800' }}>İş planı → kuzu kırpımı / tartım / alım / satım</Text>
               </Pressable>
             </>
           )}

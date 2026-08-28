@@ -64,7 +64,7 @@ export function IsPlaniPaneli({ onDegisti, refreshKey }: Props) {
   return (
     <View>
       <Text style={[styles.intro, { color: colors.textSecondary }]}>
-        Baş kırpımı, tartım, kuzu alımı ve satımı için ileri tarih planlayın. Günü gelince Bugün ve
+        Kuzu kırpımı, tartım, kuzu alımı ve satımı için ileri tarih planlayın. Günü gelince Bugün ve
         Görevler’de görünür.
       </Text>
 
