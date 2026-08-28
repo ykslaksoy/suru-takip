@@ -44,6 +44,9 @@ export function KiloOnayPaneli({ earTag, kayitliKg, onayliKg, onOnay, onSifirla 
           <Text style={{ color: colors.text, lineHeight: 22 }}>
             {earTag ? `${earTag} · ` : 'Hayvan '}son tartım: <Text style={{ fontWeight: '800' }}>{kayitliKg} kg</Text>
           </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 6 }}>
+            Kuzu genelde 8–18 kg — yanlış kilo dozu çok artırır.
+          </Text>
           <AnaButon title={`${kayitliKg} kg — Onayla`} onPress={() => onOnay(kayitliKg)} />
         </>
       ) : (

@@ -34,11 +34,22 @@ export function hesaplaDozMetni(ilac: IlacDoz, kg: number): string {
   }
 
   if (parcalar.length > 0) {
-    const ana = `${parcalar.join(' + ')} uygulayın (${kg} kg hayvan)`;
+    const hesap =
+      ilac.mgPerKg != null && mgToplam != null
+        ? `Hesap: ${kg} kg × ${ilac.mgPerKg} mg/kg = ${mgToplam} mg`
+        : null;
+    const ana = `${parcalar.join(' + ')} uygulayın`;
+    const satirlar = [ana];
+    if (hesap) satirlar.push(hesap);
     if (mgToplam != null && ilac.urunMgMl != null && ilac.tip === 'igne') {
-      return `${ana}\n${urunMlTahmini(mgToplam, ilac.urunMgMl)}`;
+      satirlar.push(urunMlTahmini(mgToplam, ilac.urunMgMl));
     }
-    return ana;
+    if (ilac.mgPerKg != null && kg > 18) {
+      satirlar.push(
+        `Kuzu ise kiloyu kontrol edin — 12 kg → ${yuvarlaMg(ilac.mgPerKg * 12)} mg · 15 kg → ${yuvarlaMg(ilac.mgPerKg * 15)} mg`
+      );
+    }
+    return satirlar.join('\n');
   }
 
   if (/mg\/kg|IU\/kg/i.test(ilac.doz)) {
@@ -56,4 +67,4 @@ export function ilaclariKgIleHesapla(ilaclar: IlacDoz[], kg: number): IlacDoz[] 
   }));
 }
 
-export const PRAKTIK_KILO_SECENEKLERI = [8, 12, 15, 18, 22, 25, 28, 32, 35, 40, 45, 50];
+export const PRAKTIK_KILO_SECENEKLERI = [8, 10, 12, 15, 18, 22, 25, 28, 32, 35, 40];
