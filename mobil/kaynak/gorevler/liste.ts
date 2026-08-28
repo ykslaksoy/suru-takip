@@ -308,21 +308,36 @@ export async function getGorevler(): Promise<Gorev[]> {
   return out;
 }
 
-/** Ana sayfa özeti — en fazla 3 görev */
-export async function getGorevOzeti(limit = 3): Promise<Gorev[]> {
-  const all = await getGorevler();
-  if (all.length === 0) {
+const BUGUN_DISLA = (id: string) => id.startsWith('asi-hayvan-');
+
+/** Bugün kartı — günlük görevler (gelecek planlar hariç) */
+export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
+  const bugun = new Date().toISOString().slice(0, 10);
+  const filtered = (await getGorevler()).filter((g) => {
+    if (g.seviye === 'plan') return false;
+    if (g.tarih && g.tarih > bugun) return false;
+    if (BUGUN_DISLA(g.id)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
     return [
       {
         id: 'bos',
         seviye: 'bilgi',
         kaynak: 'planlanan',
-        baslik: 'Görev yok',
-        aciklama: 'Planlanan iş ekleyebilir veya sürüye göz atabilirsiniz.',
+        baslik: 'Bugün acil iş yok',
+        aciklama: 'Planlanan görev ekleyebilir veya tüm listeye bakabilirsiniz.',
         href: '/gorevler',
         cta: 'Görevlere git',
       },
     ];
   }
-  return all.slice(0, limit);
+
+  return filtered.slice(0, limit);
+}
+
+/** Ana sayfa özeti — en fazla 3 görev (eski ad; Bugün ile aynı) */
+export async function getGorevOzeti(limit = 3): Promise<Gorev[]> {
+  return getBugunGorevleri(limit);
 }

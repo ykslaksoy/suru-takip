@@ -1,4 +1,4 @@
-# 02 — Ana Sayfa + Hızlı İşlemler
+# 02 — Ana Sayfa + Hızlı İşlemler + Görevler
 
 **İşlemler:** [`islemler/02-ekran-taslak/`](../../../islemler/02-ekran-taslak/)
 
@@ -6,28 +6,13 @@
 
 | Katman | Yol |
 |--------|-----|
-| kaynak | `mobil/kaynak/ana-sayfa/` |
+| kaynak | `mobil/kaynak/ana-sayfa/` · `mobil/kaynak/gorevler/` |
 | bilesenler | `mobil/bilesenler/ana-sayfa/` |
-| app | `mobil/app/(tabs)/ana-sayfa/` |
+| app | `mobil/app/(tabs)/index.tsx` · `mobil/app/gorevler/` |
 
-## Plan dosyaları
+## Bugün + Görevler
 
-### kaynak
-- `index.ts`
-- `ozet.ts`
-- `hizli-islemler.ts`
-- `bugun.ts`
-- `katalog.ts` / `tercih.ts` / `varsayilan.ts`
+- **Bugün** (ana sayfa): günlük görevler — bekletme, aşı özeti, stok, yolculuk adımı, bugüne planlananlar (max 3). **Tümü →** `/gorevler`
+- **Görevler** (`/gorevler`): tüm liste + gelecek planlar + elle ekleme
 
-### bilesenler
-- `HizliIslemlerGrid.tsx`
-- `KestirmelerSatiri.tsx`
-- `BugunKarti.tsx`
-- `AnaSayfaPlanlayici.tsx`
-- `OzetKarti.tsx` (stub)
-- `ModKarti.tsx` (stub — modlar Ayarlar’da)
-
-## Bağımlılık
-
-- Sadece `03-cekirdek` + `bilesenler/ortak`
-- Diğer parçalara **doğrudan import yok**
+Kaynak: `kaynak/gorevler/liste.ts` · `getBugunGorevleri()` · `getGorevler()`

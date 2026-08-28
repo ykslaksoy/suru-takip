@@ -1,5 +1,6 @@
 export {
   getGorevler,
+  getBugunGorevleri,
   getGorevOzeti,
   type Gorev,
   type GorevKaynak,

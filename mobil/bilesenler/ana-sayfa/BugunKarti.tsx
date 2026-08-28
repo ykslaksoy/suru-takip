@@ -41,8 +41,17 @@ export function BugunKarti() {
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Bugün</Text>
-        <Text style={[styles.sub, { color: colors.textSecondary }]}>Ne yapmalısın?</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: colors.text }]}>Bugün</Text>
+          <Text style={[styles.sub, { color: colors.textSecondary }]}>Günlük görevler</Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Tüm görevler"
+          onPress={() => router.push('/gorevler' as never)}
+          hitSlop={8}>
+          <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 13 }}>Tümü →</Text>
+        </Pressable>
       </View>
 
       {loading ? (
@@ -58,7 +67,10 @@ export function BugunKarti() {
               onPress={() => router.push(m.href as never)}
               style={({ pressed }) => [
                 styles.row,
-                index < maddeler.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+                index < maddeler.length - 1 && {
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.border,
+                },
                 { opacity: pressed ? 0.85 : 1 },
               ]}>
               <View style={[styles.badge, { backgroundColor: renk + '22' }]}>
@@ -91,7 +103,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 4,
   },

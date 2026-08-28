@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
-import { GorevlerKarti } from '@/bilesenler/ana-sayfa/GorevlerKarti';
+import { BugunKarti } from '@/bilesenler/ana-sayfa/BugunKarti';
 import { HizliIslemlerGrid } from '@/bilesenler/ana-sayfa/HizliIslemlerGrid';
 import { KestirmelerSatiri } from '@/bilesenler/ana-sayfa/KestirmelerSatiri';
 import Colors from '@/sabitler/Renkler';
@@ -65,7 +65,7 @@ export default function AnaSayfaScreen() {
           </View>
         </View>
 
-        <GorevlerKarti />
+        <BugunKarti />
 
         {!loading && hizliIslemler.length === 0 && kestirmeler.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
