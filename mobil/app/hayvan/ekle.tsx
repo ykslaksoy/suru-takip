@@ -3,13 +3,15 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 import { router } from 'expo-router';
 import { v4 as uuidv4 } from 'uuid';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
+import { TurSecici } from '@/bilesenler/suru/TurSecici';
+import { PadokSecici } from '@/bilesenler/suru/PadokSecici';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { countAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet/dogrula';
-import type { AnimalSex, AnimalStatus } from '@/kaynak/cekirdek/tipler';
+import type { AnimalSex, AnimalSpecies, AnimalStatus } from '@/kaynak/cekirdek/tipler';
 
 export default function AddAnimalScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -22,6 +24,7 @@ export default function AddAnimalScreen() {
     gehisId: '',
     name: '',
     breed: 'Merinos',
+    species: 'sheep' as AnimalSpecies,
     sex: 'female' as AnimalSex,
     birthDate: new Date().toISOString().split('T')[0],
     paddock: 'Padok A',
@@ -61,6 +64,7 @@ export default function AddAnimalScreen() {
       gehisId: form.gehisId.replace(/\s/g, '') || null,
       name: form.name.trim(),
       breed: form.breed.trim(),
+      species: form.species,
       sex: form.sex,
       birthDate: form.birthDate,
       paddock: form.paddock.trim(),
@@ -79,7 +83,6 @@ export default function AddAnimalScreen() {
     { key: 'name', label: 'İsim', placeholder: 'Koyun adı (opsiyonel)' },
     { key: 'breed', label: 'Irk', placeholder: 'Merinos, İvesi, Sakız...' },
     { key: 'birthDate', label: 'Doğum Tarihi', placeholder: 'YYYY-MM-DD' },
-    { key: 'paddock', label: 'Padok', placeholder: 'Padok A' },
     { key: 'motherId', label: 'Anne TÜRKVET No', placeholder: 'Opsiyonel' },
     { key: 'notes', label: 'Not', placeholder: 'Ek bilgi' },
   ];
@@ -101,6 +104,12 @@ export default function AddAnimalScreen() {
           />
         </View>
       ))}
+      <View style={styles.field}>
+        <TurSecici value={form.species} onChange={(species) => setForm({ ...form, species })} />
+      </View>
+      <View style={styles.field}>
+        <PadokSecici value={form.paddock} onChange={(paddock) => setForm({ ...form, paddock })} />
+      </View>
       <View style={styles.field}>
         <Text style={[styles.label, { color: colors.text }]}>Cinsiyet</Text>
         <View style={styles.row}>

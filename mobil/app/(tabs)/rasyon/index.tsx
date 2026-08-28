@@ -4,11 +4,12 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import { RasyonFormu } from '@/bilesenler/rasyon/RasyonFormu';
 import { AkilliOneriKarti } from '@/bilesenler/rasyon/AkilliOneriKarti';
+import { KarsilastirmaTablosu } from '@/bilesenler/rasyon/KarsilastirmaTablosu';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { calculateRation, PHASE_LABELS, type RationPhase } from '@/kaynak/rasyon/hesapla';
 
-type Alt = 'hesapla' | 'benim' | 'oneri';
+type Alt = 'hesapla' | 'benim' | 'oneri' | 'karsilastirma';
 
 export default function RationScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -41,6 +42,7 @@ export default function RationScreen() {
           { key: 'hesapla', label: 'Hesapla' },
           { key: 'benim', label: 'Benim rasyonum' },
           { key: 'oneri', label: 'Akıllı öneri' },
+          { key: 'karsilastirma', label: 'Öneri vs gerçek' },
         ]}
         activeKey={alt}
         onSelect={(k) => setAlt(k as Alt)}
@@ -50,6 +52,8 @@ export default function RationScreen() {
           <RasyonFormu />
         ) : alt === 'oneri' ? (
           <AkilliOneriKarti />
+        ) : alt === 'karsilastirma' ? (
+          <KarsilastirmaTablosu />
         ) : (
           <>
             <Text style={[styles.intro, { color: colors.textSecondary }]}>

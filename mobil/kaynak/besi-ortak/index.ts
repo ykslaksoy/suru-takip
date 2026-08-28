@@ -14,3 +14,4 @@ export {
   type Mod1BirlesikIlerleme,
 } from './adim-kilidi';
 export { tespitMod1VeriDurumu, type AdimKanit, type Mod1VeriDurum } from './veri-ilerleme';
+export { hesaplaMod1MetrikRapor, type Mod1MetrikRapor } from './metrik-rapor';

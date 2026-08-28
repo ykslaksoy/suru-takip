@@ -12,6 +12,7 @@ import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, type KuzuGrade } f
 import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import { turEtiketi, turEmoji } from '@/kaynak/suru/tur';
 import { terim, adgDeger, fcrDeger } from '@/sabitler/Metinler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 
@@ -62,7 +63,7 @@ export default function AnimalDetailScreen() {
   }
 
   const sexLabel = animal.sex === 'female' ? 'Dişi ♀' : 'Erkek ♂';
-  const avatar = grade?.emoji ?? '🐑';
+  const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
   const ageMonths = ageInMonths(animal.birthDate);
   const ageBand = bandForAge(ageMonths);
   const ageLabel =
@@ -88,7 +89,7 @@ export default function AnimalDetailScreen() {
         <Text style={[styles.tag, { color: colors.tint }]}>{animal.earTag}</Text>
         <Text style={[styles.name, { color: colors.text }]}>{animal.name || 'İsimsiz'}</Text>
         <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
-          {animal.breed} · {sexLabel} · {ANIMAL_STATUS_LABELS[animal.status]}
+          {turEtiketi(animal.species ?? 'sheep')} · {animal.breed} · {sexLabel} · {ANIMAL_STATUS_LABELS[animal.status]}
         </Text>
         <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 13 }}>
           {ageLabel}

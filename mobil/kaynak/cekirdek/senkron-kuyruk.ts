@@ -1,2 +1,2 @@
-/** Çekirdek (db, senkron, kimlik) — plan; henüz uygulanmadı */
-export {};
+export type { SyncQueueEntry } from '@/kaynak/cekirdek/veritabani';
+export { getSyncQueueEntries, getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';

@@ -5,6 +5,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import { turEmoji } from '@/kaynak/suru/tur';
 import type { KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 
 export function HayvanKarti({
@@ -19,7 +20,7 @@ export function HayvanKarti({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const sexIcon = animal.sex === 'female' ? '♀' : '♂';
-  const avatar = grade?.emoji ?? '🐑';
+  const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
 
   return (
     <Link href={`/hayvan/${animal.id}`} asChild>

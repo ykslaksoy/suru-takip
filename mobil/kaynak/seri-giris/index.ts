@@ -1,2 +1,1 @@
-/** Seri Ahır Modu — public API */
-export {};
+export * from './mod';

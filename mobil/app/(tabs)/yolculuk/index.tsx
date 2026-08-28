@@ -12,6 +12,7 @@ import { router, useFocusEffect, useNavigation } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { YolculukAdimi } from '@/bilesenler/besi/YolculukAdimi';
+import { MetrikPanel } from '@/bilesenler/besi/MetrikPanel';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import {
   MOD1_ADIMLAR,
@@ -548,6 +549,8 @@ export default function YolculukScreen() {
           {m1.ozet.karantinaGun != null ? ` · karantina gün ${m1.ozet.karantinaGun}` : ''}
         </Text>
       </View>
+
+      {(sonraki?.id === 'rapor' || m1.tamamlanan.includes('rapor')) && <MetrikPanel />}
 
       {sonraki ? (
         <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>

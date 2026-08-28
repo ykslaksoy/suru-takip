@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { analyzeSymptoms, VET_DISCLAIMER } from '@/kaynak/akilli-veteriner/analiz';
+import { olusturVakaPaketi } from '@/kaynak/veteriner-koprusu/vaka-paketi';
+import { gonderVakaPaketi, vakaPaketiPaylasimMetni, vakaPaketiToJson } from '@/kaynak/veteriner-koprusu/gonder';
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 
-type Alt = 'semptom' | 'foto';
+type Alt = 'semptom' | 'foto' | 'vaka';
 
 export default function VetScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [alt, setAlt] = useState<Alt>('semptom');
   const [symptoms, setSymptoms] = useState('');
+  const [kupe, setKupe] = useState('');
   const [result, setResult] = useState<VetSuggestion | null>(null);
 
   const analyze = () => {
@@ -31,6 +34,7 @@ export default function VetScreen() {
       <AltButonlar
         items={[
           { key: 'semptom', label: 'Semptom' },
+          { key: 'vaka', label: 'Vet paketi' },
           { key: 'foto', label: 'Fotoğraf' },
         ]}
         activeKey={alt}
@@ -45,6 +49,39 @@ export default function VetScreen() {
           <Text style={{ color: colors.textSecondary, lineHeight: 22 }}>
             Hastalık fotoğrafı çek / yükle bir sonraki adımda eklenecek. Şimdilik Semptom ile yazarak analiz et.
           </Text>
+        ) : alt === 'vaka' ? (
+          <>
+            <Text style={[styles.title, { color: colors.text }]}>Veterinere vaka paketi</Text>
+            <TextInput
+              placeholder="Kulak küpe no"
+              value={kupe}
+              onChangeText={setKupe}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            <TextInput
+              placeholder="Semptom / gözlem"
+              multiline
+              value={symptoms}
+              onChangeText={setSymptoms}
+              style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 100 }]}
+            />
+            <AnaButon
+              title="Paket oluştur ve paylaş"
+              onPress={async () => {
+                const paket = await olusturVakaPaketi(kupe, symptoms);
+                if (!paket) {
+                  Alert.alert('Eksik', 'Küpe numarası gerekli');
+                  return;
+                }
+                const g = await gonderVakaPaketi(paket);
+                await Share.share({
+                  message: `${vakaPaketiPaylasimMetni(paket)}\n\n--- JSON ---\n${vakaPaketiToJson(paket)}`,
+                  title: 'SürüYön vaka paketi',
+                });
+                Alert.alert('Tamam', g.message);
+              }}
+            />
+          </>
         ) : (
           <>
             <Text style={[styles.title, { color: colors.text }]}>Akıllı Veteriner</Text>

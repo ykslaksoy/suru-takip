@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { v4 as uuidv4 } from 'uuid';
 import type {
   Animal,
+  AnimalSpecies,
   BetaFeedback,
   BetaSignup,
   HealthRecord,
@@ -110,6 +111,11 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
   } catch {
     /* sütun zaten var */
   }
+  try {
+    await database.execAsync(`ALTER TABLE animals ADD COLUMN species TEXT NOT NULL DEFAULT 'sheep'`);
+  } catch {
+    /* sütun zaten var */
+  }
 }
 
 function rowToAnimal(row: Record<string, unknown>): Animal {
@@ -119,6 +125,7 @@ function rowToAnimal(row: Record<string, unknown>): Animal {
     turkvetNo: row.turkvet_no as string,
     name: row.name as string,
     breed: row.breed as string,
+    species: ((row.species as AnimalSpecies) || 'sheep') as AnimalSpecies,
     sex: row.sex as Animal['sex'],
     birthDate: row.birth_date as string,
     paddock: row.paddock as string,
@@ -164,10 +171,10 @@ export async function upsertAnimal(animal: Omit<Animal, 'createdAt' | 'updatedAt
   const database = await getDatabase();
   const now = new Date().toISOString();
   const existing = await getAnimal(animal.id);
-  const record: Animal = { ...animal, createdAt: existing?.createdAt ?? animal.createdAt ?? now, updatedAt: now, syncStatus: 'pending' };
+  const record: Animal = { ...animal, species: animal.species ?? existing?.species ?? 'sheep', createdAt: existing?.createdAt ?? animal.createdAt ?? now, updatedAt: now, syncStatus: 'pending' };
   await database.runAsync(
-    `INSERT OR REPLACE INTO animals (id, ear_tag, turkvet_no, name, breed, sex, birth_date, paddock, status, mother_id, gehis_id, notes, created_at, updated_at, sync_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [record.id, record.earTag, record.turkvetNo, record.name, record.breed, record.sex, record.birthDate, record.paddock, record.status, record.motherId, record.gehisId, record.notes, record.createdAt, record.updatedAt, record.syncStatus]
+    `INSERT OR REPLACE INTO animals (id, ear_tag, turkvet_no, name, breed, species, sex, birth_date, paddock, status, mother_id, gehis_id, notes, created_at, updated_at, sync_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [record.id, record.earTag, record.turkvetNo, record.name, record.breed, record.species ?? 'sheep', record.sex, record.birthDate, record.paddock, record.status, record.motherId, record.gehisId, record.notes, record.createdAt, record.updatedAt, record.syncStatus]
   );
   await enqueueSync('animals', record.id, existing ? 'update' : 'create', record);
   return record;
@@ -344,6 +351,37 @@ export async function getPendingSyncCount(): Promise<number> {
   return row?.count ?? 0;
 }
 
+export type SyncQueueEntry = {
+  id: string;
+  tableName: string;
+  recordId: string;
+  action: string;
+  payload: string;
+  createdAt: string;
+};
+
+export async function getSyncQueueEntries(): Promise<SyncQueueEntry[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<Record<string, unknown>>(
+    'SELECT * FROM sync_queue ORDER BY created_at ASC'
+  );
+  return rows.map((row) => ({
+    id: row.id as string,
+    tableName: row.table_name as string,
+    recordId: row.record_id as string,
+    action: row.action as string,
+    payload: row.payload as string,
+    createdAt: row.created_at as string,
+  }));
+}
+
+export async function flushSyncQueue(): Promise<number> {
+  const database = await getDatabase();
+  const n = await getPendingSyncCount();
+  await database.runAsync('DELETE FROM sync_queue');
+  return n;
+}
+
 async function enqueueSync(tableName: string, recordId: string, action: string, payload: unknown): Promise<void> {
   const database = await getDatabase();
   await database.runAsync('INSERT INTO sync_queue (id, table_name, record_id, action, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)', [uuidv4(), tableName, recordId, action, JSON.stringify(payload), new Date().toISOString()]);
@@ -351,7 +389,7 @@ async function enqueueSync(tableName: string, recordId: string, action: string, 
 
 export async function exportTurkvetData(): Promise<string> {
   const animals = await getAnimals();
-  return JSON.stringify({ version: '1.0', source: 'SuruYon', exportedAt: new Date().toISOString(), animals: animals.map((a) => ({ turkvetNo: a.turkvetNo, earTag: a.earTag, gehisId: a.gehisId, species: 'ovine', breed: a.breed, sex: a.sex, birthDate: a.birthDate, status: a.status, motherTurkvetNo: a.motherId, lastUpdated: a.updatedAt })) }, null, 2);
+  return JSON.stringify({ version: '1.0', source: 'SuruYon', exportedAt: new Date().toISOString(), animals: animals.map((a) => ({ turkvetNo: a.turkvetNo, earTag: a.earTag, gehisId: a.gehisId, species: a.species === 'goat' ? 'caprine' : 'ovine', breed: a.breed, sex: a.sex, birthDate: a.birthDate, status: a.status, motherTurkvetNo: a.motherId, lastUpdated: a.updatedAt })) }, null, 2);
 }
 
 export async function clearAllStorage(): Promise<void> {

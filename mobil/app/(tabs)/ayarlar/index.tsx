@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Link, router, useNavigation } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { ModSecimKarti } from '@/bilesenler/ortak/ModSecimKarti';
+import { SenkronDurumu } from '@/bilesenler/ortak/SenkronDurumu';
 import { useMod } from '@/baglam/ModBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import type { UrunModId } from '@/sabitler/Modlar';
+import { hayvanListesiCsv } from '@/kaynak/excel/disa-aktar';
 
 export default function AyarlarScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -56,6 +58,19 @@ export default function AyarlarScreen() {
       </Pressable>
 
       <Text style={[styles.section, { color: colors.text, marginTop: 20 }]}>Diğer</Text>
+      <SenkronDurumu />
+      <Link href="/ses" asChild>
+        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>Sesli komut</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
+      </Link>
+      <Link href="/seri-giris" asChild>
+        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>Seri ahır modu</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
+      </Link>
       <Link href="/abonelik" asChild>
         <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <Text style={{ color: colors.text, fontWeight: '700' }}>Abonelik</Text>
@@ -80,6 +95,15 @@ export default function AyarlarScreen() {
           <Text style={{ color: colors.tint }}>→</Text>
         </Pressable>
       </Link>
+      <Pressable
+        onPress={async () => {
+          const csv = await hayvanListesiCsv();
+          await Share.share({ message: csv, title: 'suruyon-hayvanlar.csv' });
+        }}
+        style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <Text style={{ color: colors.text, fontWeight: '700' }}>Excel / CSV dışa aktar</Text>
+        <Text style={{ color: colors.tint }}>↗</Text>
+      </Pressable>
     </ScrollView>
   );
 }

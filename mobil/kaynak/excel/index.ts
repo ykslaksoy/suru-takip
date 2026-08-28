@@ -1,2 +1,1 @@
-/** Excel İçe/Dışa Aktar — public API */
-export {};
+export * from './disa-aktar';

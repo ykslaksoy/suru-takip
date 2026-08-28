@@ -35,7 +35,10 @@ export async function countAnimals(): Promise<number> {
 }
 
 export async function getAnimals(filter?: { sex?: string; status?: string; search?: string }): Promise<Animal[]> {
-  let list = await read<Animal>(KEYS.animals);
+  let list = (await read<Animal>(KEYS.animals)).map((a) => ({
+    ...a,
+    species: a.species ?? 'sheep',
+  }));
   if (filter?.sex) list = list.filter((a) => a.sex === filter.sex);
   if (filter?.status) list = list.filter((a) => a.status === filter.status);
   if (filter?.search) {
@@ -62,6 +65,7 @@ export async function upsertAnimal(
   const existing = animals.find((a) => a.id === animal.id);
   const record: Animal = {
     ...animal,
+    species: animal.species ?? existing?.species ?? 'sheep',
     createdAt: existing?.createdAt ?? animal.createdAt ?? now,
     updatedAt: now,
     syncStatus: 'pending',
@@ -222,6 +226,42 @@ export async function getPendingSyncCount(): Promise<number> {
   return (await read<{ id: string }>(KEYS.syncQueue)).length;
 }
 
+export type SyncQueueEntry = {
+  id: string;
+  tableName: string;
+  recordId: string;
+  action: string;
+  payload: string;
+  createdAt: string;
+};
+
+export async function getSyncQueueEntries(): Promise<SyncQueueEntry[]> {
+  const rows = await read<{
+    id: string;
+    table_name: string;
+    record_id: string;
+    action: string;
+    payload: string;
+    created_at: string;
+  }>(KEYS.syncQueue);
+  return rows
+    .map((r) => ({
+      id: r.id,
+      tableName: r.table_name,
+      recordId: r.record_id,
+      action: r.action,
+      payload: r.payload,
+      createdAt: r.created_at,
+    }))
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function flushSyncQueue(): Promise<number> {
+  const n = await getPendingSyncCount();
+  await write(KEYS.syncQueue, []);
+  return n;
+}
+
 async function enqueueSync(tableName: string, recordId: string, action: string, payload: unknown): Promise<void> {
   await write(KEYS.syncQueue, [
     ...(await read<{ id: string; table_name: string; record_id: string; action: string; payload: string; created_at: string }>(KEYS.syncQueue)),
@@ -242,7 +282,7 @@ export async function exportTurkvetData(): Promise<string> {
     turkvetNo: a.turkvetNo,
     earTag: a.earTag,
     gehisId: a.gehisId,
-    species: 'ovine',
+    species: a.species === 'goat' ? 'caprine' : 'ovine',
     breed: a.breed,
     sex: a.sex,
     birthDate: a.birthDate,

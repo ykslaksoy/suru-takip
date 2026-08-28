@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
+import { PadokYonetimiPaneli } from '@/bilesenler/suru/PadokYonetimiPaneli';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -91,6 +92,7 @@ export default function FlockScreen() {
       <FlatList
         data={animals}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={<PadokYonetimiPaneli />}
         renderItem={({ item }) => (
           <HayvanKarti animal={item} latestWeight={item.latestWeight} grade={item.grade} />
         )}

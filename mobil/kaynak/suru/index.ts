@@ -1,2 +1,2 @@
-/** Sürü grubu — hayvan CRUD yardımcıları buraya büyür */
-export {};
+export * from './tur';
+export * from './padok';

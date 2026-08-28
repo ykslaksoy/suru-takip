@@ -1,4 +1,5 @@
 export type AnimalSex = 'female' | 'male';
+export type AnimalSpecies = 'sheep' | 'goat';
 export type AnimalStatus = 'healthy' | 'sick' | 'pregnant' | 'lactating' | 'dry' | 'sold' | 'dead';
 export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement';
 export type SubscriptionTier = 'free' | 'farmer' | 'professional' | 'enterprise';
@@ -11,6 +12,7 @@ export interface Animal {
   turkvetNo: string;
   name: string;
   breed: string;
+  species: AnimalSpecies;
   sex: AnimalSex;
   birthDate: string;
   paddock: string;
