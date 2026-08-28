@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { Alert, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
+import { VetIletisimFormu } from '@/bilesenler/veteriner/VetIletisimFormu';
+import { VetInboxKarti } from '@/bilesenler/veteriner/VetInboxKarti';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { analyzeSymptoms, VET_DISCLAIMER } from '@/kaynak/akilli-veteriner/analiz';
 import { olusturVakaPaketi } from '@/kaynak/veteriner-koprusu/vaka-paketi';
-import { gonderVakaPaketi, vakaPaketiPaylasimMetni, vakaPaketiToJson } from '@/kaynak/veteriner-koprusu/gonder';
+import { gonderVakaPaketi } from '@/kaynak/veteriner-koprusu/gonder';
+import { vetGonderimKanali } from '@/kaynak/veteriner-koprusu/vet-iletisim';
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 
-type Alt = 'semptom' | 'foto' | 'vaka';
+type Alt = 'semptom' | 'gonder' | 'vakalar' | 'vet-ayar';
 
 export default function VetScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -18,9 +22,46 @@ export default function VetScreen() {
   const [symptoms, setSymptoms] = useState('');
   const [kupe, setKupe] = useState('');
   const [result, setResult] = useState<VetSuggestion | null>(null);
+  const [kanalAciklama, setKanalAciklama] = useState('');
+  const [inboxKey, setInboxKey] = useState(0);
 
-  const analyze = () => {
-    setResult(analyzeSymptoms(symptoms));
+  const loadKanal = useCallback(async () => {
+    const k = await vetGonderimKanali();
+    setKanalAciklama(k.aciklama);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadKanal();
+    }, [loadKanal])
+  );
+
+  const aiOzet = result
+    ? `Aciliyet: ${result.urgency} · ${result.advice.slice(0, 120)}${result.advice.length > 120 ? '…' : ''}`
+    : undefined;
+
+  const veterinerGonder = async () => {
+    const paket = await olusturVakaPaketi(kupe, symptoms, { aiOzet });
+    if (!paket) {
+      Alert.alert('Eksik', 'Kulak küpe numarası gerekli');
+      return;
+    }
+    const sonuc = await gonderVakaPaketi(paket);
+    if (!sonuc.ok) {
+      Alert.alert('Veteriner tanımlı değil', sonuc.message, [
+        { text: 'Tamam' },
+        { text: 'Vet ayarları', onPress: () => setAlt('vet-ayar') },
+      ]);
+      return;
+    }
+    setInboxKey((k) => k + 1);
+    Alert.alert(
+      sonuc.kanal === 'program' ? 'Programa iletildi' : 'WhatsApp',
+      sonuc.message,
+      sonuc.kanal === 'program'
+        ? [{ text: 'Vakalar', onPress: () => setAlt('vakalar') }, { text: 'Tamam' }]
+        : [{ text: 'Tamam' }]
+    );
   };
 
   const urgencyColor = {
@@ -34,8 +75,9 @@ export default function VetScreen() {
       <AltButonlar
         items={[
           { key: 'semptom', label: 'Semptom' },
-          { key: 'vaka', label: 'Vet paketi' },
-          { key: 'foto', label: 'Fotoğraf' },
+          { key: 'gonder', label: 'Vet gönder' },
+          { key: 'vakalar', label: 'Vakalar' },
+          { key: 'vet-ayar', label: 'Vet ayarı' },
         ]}
         activeKey={alt}
         onSelect={(k) => setAlt(k as Alt)}
@@ -45,13 +87,24 @@ export default function VetScreen() {
           <Text style={{ color: colors.text, fontSize: 13, lineHeight: 20 }}>{VET_DISCLAIMER}</Text>
         </View>
 
-        {alt === 'foto' ? (
-          <Text style={{ color: colors.textSecondary, lineHeight: 22 }}>
-            Hastalık fotoğrafı çek / yükle bir sonraki adımda eklenecek. Şimdilik Semptom ile yazarak analiz et.
-          </Text>
-        ) : alt === 'vaka' ? (
+        {alt === 'vet-ayar' ? (
+          <VetIletisimFormu
+            onKaydedildi={() => {
+              loadKanal();
+              setAlt('gonder');
+            }}
+          />
+        ) : alt === 'vakalar' ? (
           <>
-            <Text style={[styles.title, { color: colors.text }]}>Veterinere vaka paketi</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Gönderilen vakalar</Text>
+            <VetInboxKarti refreshKey={inboxKey} />
+          </>
+        ) : alt === 'gonder' ? (
+          <>
+            <Text style={[styles.title, { color: colors.text }]}>Veterinere gönder</Text>
+            <Text style={{ color: colors.tint, fontWeight: '700', marginBottom: 12, lineHeight: 20 }}>
+              {kanalAciklama}
+            </Text>
             <TextInput
               placeholder="Kulak küpe no"
               value={kupe}
@@ -59,28 +112,16 @@ export default function VetScreen() {
               style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
             <TextInput
-              placeholder="Semptom / gözlem"
+              placeholder="Semptom / gözlem / ne denendi"
               multiline
               value={symptoms}
               onChangeText={setSymptoms}
               style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 100 }]}
             />
-            <AnaButon
-              title="Paket oluştur ve paylaş"
-              onPress={async () => {
-                const paket = await olusturVakaPaketi(kupe, symptoms);
-                if (!paket) {
-                  Alert.alert('Eksik', 'Küpe numarası gerekli');
-                  return;
-                }
-                const g = await gonderVakaPaketi(paket);
-                await Share.share({
-                  message: `${vakaPaketiPaylasimMetni(paket)}\n\n--- JSON ---\n${vakaPaketiToJson(paket)}`,
-                  title: 'SürüYön vaka paketi',
-                });
-                Alert.alert('Tamam', g.message);
-              }}
-            />
+            <AnaButon title="Veterinere gönder" onPress={veterinerGonder} />
+            <Text style={{ color: colors.textSecondary, marginTop: 12, fontSize: 13, lineHeight: 18 }}>
+              Programda kayıtlı vet → uygulama içi vaka. Değilse → WhatsApp mesajı açılır.
+            </Text>
           </>
         ) : (
           <>
@@ -97,7 +138,7 @@ export default function VetScreen() {
               style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 120 }]}
             />
 
-            <AnaButon title="Analiz Et" onPress={analyze} />
+            <AnaButon title="Analiz Et" onPress={() => setResult(analyzeSymptoms(symptoms))} />
 
             {result && (
               <View style={[styles.result, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -117,6 +158,16 @@ export default function VetScreen() {
                 )}
                 <Text style={[styles.section, { color: colors.tint }]}>Önerilen adımlar</Text>
                 <Text style={{ color: colors.text, lineHeight: 22 }}>{result.advice}</Text>
+                {result.seeVet ? (
+                  <View style={{ marginTop: 14 }}>
+                    <AnaButon
+                      title="Veterinere gönder"
+                      onPress={() => {
+                        setAlt('gonder');
+                      }}
+                    />
+                  </View>
+                ) : null}
               </View>
             )}
 
@@ -134,8 +185,8 @@ const styles = StyleSheet.create({
   shell: { flex: 1 },
   container: { flex: 1, padding: 16 },
   disclaimer: { padding: 14, borderRadius: 10, borderWidth: 1, marginBottom: 16 },
-  title: { fontSize: 22, fontWeight: '800' },
-  input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 16, textAlignVertical: 'top' },
+  title: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 16, textAlignVertical: 'top', marginBottom: 10 },
   result: { marginTop: 20, padding: 16, borderRadius: 12, borderWidth: 1 },
   urgency: { fontWeight: '700', marginBottom: 12 },
   section: { fontWeight: '700', marginTop: 12, marginBottom: 6 },

@@ -5,6 +5,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { ModSecimKarti } from '@/bilesenler/ortak/ModSecimKarti';
 import { SenkronDurumu } from '@/bilesenler/ortak/SenkronDurumu';
+import { VetIletisimFormu } from '@/bilesenler/veteriner/VetIletisimFormu';
 import { useMod } from '@/baglam/ModBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import type { UrunModId } from '@/sabitler/Modlar';
@@ -59,6 +60,7 @@ export default function AyarlarScreen() {
 
       <Text style={[styles.section, { color: colors.text, marginTop: 20 }]}>Diğer</Text>
       <SenkronDurumu />
+      <VetIletisimFormu />
       <Link href="/ses" asChild>
         <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <Text style={{ color: colors.text, fontWeight: '700' }}>Sesli komut</Text>

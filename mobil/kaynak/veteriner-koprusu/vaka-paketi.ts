@@ -27,12 +27,15 @@ export type VakaPaketi = {
     recordedAt: string;
   }[];
   weights: { weightKg: number; recordedAt: string }[];
+  /** Akıllı veteriner özeti (varsa) */
+  aiOzet?: string;
   not: string;
 };
 
 export async function olusturVakaPaketi(
   kupeArama: string,
-  symptoms: string
+  symptoms: string,
+  opts?: { aiOzet?: string }
 ): Promise<VakaPaketi | null> {
   const term = kupeArama.trim().toLowerCase();
   if (!term) return null;
@@ -77,7 +80,8 @@ export async function olusturVakaPaketi(
       : null,
     healthHistory: health,
     weights,
-    not: 'Bu paket yerel oluşturuldu; gerçek vet gönderimi sunucu köprüsü ile açılacak.',
+    aiOzet: opts?.aiOzet?.trim() || undefined,
+    not: '',
   };
 }
 
