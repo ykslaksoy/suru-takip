@@ -6,6 +6,8 @@ import {
   type VetAnalizSonuc,
   type VetCevaplar,
 } from './netlestirme';
+import { eksikFotoIstekleri, zorunluFotoEksik } from './foto-istek';
+import type { VakaFotografi } from './fotograf';
 
 export type { VetAnalizSonuc, VetCevaplar, VetSoru, VetSoruSecenek } from './netlestirme';
 export { baglamMetniOlustur, netlestirmeSorulari, tespitTema } from './netlestirme';
@@ -287,13 +289,15 @@ export function analyzeVaka(input: {
 export function analyzeVakaTam(input: {
   symptoms: string;
   fotoTurleri?: FotoTur[];
+  fotograflar?: VakaFotografi[];
   cevaplar?: VetCevaplar;
 }): VetAnalizSonuc {
   const cevaplar = input.cevaplar ?? {};
   const baglamMetni = baglamMetniOlustur(input.symptoms, cevaplar);
+  const fotograflar = input.fotograflar ?? [];
   const sorular = netlestirmeSorulari({
     symptoms: input.symptoms,
-    fotoTurleri: input.fotoTurleri,
+    fotoTurleri: input.fotoTurleri ?? fotograflar.map((f) => f.tur),
     cevaplar,
   });
 
@@ -301,19 +305,45 @@ export function analyzeVakaTam(input: {
     return {
       oneri: null,
       sorular,
+      fotoIstekleri: [],
       netlestirmeGerekli: true,
+      fotoBekleniyor: false,
+      hazir: false,
       baglamMetni,
     };
   }
 
+  const fotoIstekleri = eksikFotoIstekleri({
+    symptoms: input.symptoms,
+    fotograflar,
+    cevaplar,
+  });
+
+  if (fotoIstekleri.length > 0 && zorunluFotoEksik(fotoIstekleri)) {
+    return {
+      oneri: null,
+      sorular: [],
+      fotoIstekleri,
+      netlestirmeGerekli: false,
+      fotoBekleniyor: true,
+      hazir: false,
+      baglamMetni,
+    };
+  }
+
+  const oneri = analyzeVaka({
+    symptoms: input.symptoms,
+    fotoTurleri: input.fotoTurleri ?? fotograflar.map((f) => f.tur),
+    cevaplar,
+  });
+
   return {
-    oneri: analyzeVaka({
-      symptoms: input.symptoms,
-      fotoTurleri: input.fotoTurleri,
-      cevaplar,
-    }),
+    oneri,
     sorular: [],
+    fotoIstekleri: fotoIstekleri.filter((i) => i.zorunlu),
     netlestirmeGerekli: false,
+    fotoBekleniyor: fotoIstekleri.some((i) => i.zorunlu),
+    hazir: true,
     baglamMetni,
   };
 }

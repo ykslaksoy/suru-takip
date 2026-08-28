@@ -13,7 +13,11 @@ export type VetCevaplar = Record<string, string>;
 export type VetAnalizSonuc = {
   oneri: import('@/kaynak/cekirdek/tipler').VetSuggestion | null;
   sorular: VetSoru[];
+  fotoIstekleri: import('./foto-istek').FotoIstek[];
   netlestirmeGerekli: boolean;
+  fotoBekleniyor: boolean;
+  /** Sorular + zorunlu foto tamam — tedavi önerisi hazır */
+  hazir: boolean;
   baglamMetni: string;
 };
 
