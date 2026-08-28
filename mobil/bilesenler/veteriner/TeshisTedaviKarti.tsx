@@ -98,7 +98,7 @@ export function TeshisTedaviKarti({
         </>
       ) : (
         <Text style={{ color: colors.textSecondary, marginTop: 12, fontStyle: 'italic' }}>
-          Doz hesabı için önce kiloyu onaylayın.
+          Doz (ml) için önce kiloyu onaylayın.
         </Text>
       )}
 

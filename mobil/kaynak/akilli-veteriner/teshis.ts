@@ -14,12 +14,13 @@ export type IlacDoz = {
   uygulama: string;
   siklik: string;
   not?: string;
-  /** kg × mgPerKg → pratik mg dozu (etken madde) */
+  /** kg × mgPerKg → ml hesabı (iç hesap) */
   mgPerKg?: number;
   mlSabit?: number;
   iuPerKg?: number;
-  /** Ürün konsantrasyonu mg/ml — enjeksiyonluk hacim tahmini için */
+  /** Şişe konsantrasyonu — kg'den ml çevirmek için */
   urunMgMl?: number;
+  urunIuMl?: number;
 };
 
 export type VetDanisma = 'zorunlu' | 'onerilen' | 'gerekmez';
@@ -87,6 +88,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 15,
+        urunMgMl: 400,
         uygulama: 'IM',
         siklik: '1×3 gün',
       },
@@ -118,6 +120,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 10,
+        urunMgMl: 400,
         uygulama: 'SC',
         siklik: 'Tek doz',
       },
@@ -158,7 +161,9 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 10,
+        urunMgMl: 250,
         iuPerKg: 10000,
+        urunIuMl: 300000,
         uygulama: 'IM',
         siklik: '1×5 gün',
       },
@@ -168,6 +173,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 0.5,
+        urunMgMl: 5,
         uygulama: 'SC',
         siklik: '1×3 gün',
       },
@@ -209,6 +215,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: 'Veteriner dozu',
         mgPerKg: 15,
+        urunMgMl: 300,
         uygulama: 'IM',
         siklik: '1×5 gün',
         not: 'Göbek enfeksiyonu şüphesi',
@@ -240,6 +247,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 20,
+        urunMgMl: 200,
         uygulama: 'IM',
         siklik: '1×3 gün',
       },
@@ -261,6 +269,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 0.5,
+        urunMgMl: 5,
         uygulama: 'SC',
         siklik: '1×3 gün',
       },
@@ -270,8 +279,9 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'ss1',
         ilacAdi: 'Pastörella aşısı',
         tip: 'asi',
-        doz: '1 doz',
-        uygulama: 'SC',
+        doz: '2 ml / hayvan',
+        mlSabit: 2,
+        uygulama: 'SC veya IM',
         siklik: 'Tek doz — vet programı',
       },
     ],
@@ -282,6 +292,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: 'Veteriner dozu',
         mgPerKg: 15,
+        urunMgMl: 300,
         uygulama: 'IM',
         siklik: 'Vet talimatı',
       },
@@ -304,6 +315,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 0.2,
+        urunMgMl: 10,
         uygulama: 'SC',
         siklik: 'Tek doz',
       },
@@ -316,6 +328,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         doz: '',
         mlSabit: 2,
         mgPerKg: 0.2,
+        urunMgMl: 10,
         uygulama: 'SC',
         siklik: '1×2 gün',
       },
@@ -349,6 +362,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: 'Veteriner dozu',
         mgPerKg: 15,
+        urunMgMl: 300,
         uygulama: 'IM',
         siklik: 'Vet talimatı',
       },

@@ -191,6 +191,13 @@ export function AsiModuPaneli() {
       <Text style={{ color: colors.textSecondary, marginBottom: 14, lineHeight: 20 }}>
         Yer, cinse, besi şekline göre öneri alın; istemediklerinizi kapatın — uyarıları onaylayın.
       </Text>
+      <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
+        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Doz hep ml ile söylenir</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
+          Aşı: hayvan başı sabit ml (genelde 1–2 ml). İğne: kilo onaylandıktan sonra toplam ml hesaplanır —
+          çoban şırıngaya o kadar çeker.
+        </Text>
+      </View>
 
       <Secici
         label="Bölge / iklim"
@@ -321,4 +328,5 @@ const styles = StyleSheet.create({
   tercihBtn: { flex: 1, borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
   uyari: { borderWidth: 1, borderRadius: 12, padding: 12, marginTop: 10 },
   eksik: { borderWidth: 1, borderRadius: 10, padding: 12, marginTop: 12 },
+  bilgi: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 14 },
 });

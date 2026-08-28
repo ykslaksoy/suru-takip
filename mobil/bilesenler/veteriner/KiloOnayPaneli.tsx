@@ -45,13 +45,13 @@ export function KiloOnayPaneli({ earTag, kayitliKg, onayliKg, onOnay, onSifirla 
             {earTag ? `${earTag} · ` : 'Hayvan '}son tartım: <Text style={{ fontWeight: '800' }}>{kayitliKg} kg</Text>
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 6 }}>
-            Kuzu genelde 8–18 kg — yanlış kilo dozu çok artırır.
+            Kuzu genelde 8–18 kg — yanlış kilo yanlış ml demek, tedavi tutmaz.
           </Text>
           <AnaButon title={`${kayitliKg} kg — Onayla`} onPress={() => onOnay(kayitliKg)} />
         </>
       ) : (
         <Text style={{ color: colors.textSecondary, marginBottom: 8, lineHeight: 20 }}>
-          Kayıtlı tartım yok. Kilo seçin veya girin — doz buna göre hesaplanır.
+          Kayıtlı tartım yok. Kilo seçin veya girin — şırıngaya çekilecek ml buna göre hesaplanır.
         </Text>
       )}
 
