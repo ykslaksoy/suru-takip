@@ -1,5 +1,6 @@
-import { Linking } from 'react-native';
+import { Linking, Platform, Share } from 'react-native';
 import type { VakaPaketi } from './vaka-paketi';
+import { fotoTurEtiketi } from '@/kaynak/akilli-veteriner/fotograf';
 import { programVakaKaydet, whatsappVakaKaydet } from './case-thread';
 import {
   vetGonderimKanali,
@@ -22,19 +23,41 @@ export function vakaPaketiToJson(paket: VakaPaketi): string {
 export function vakaPaketiPaylasimMetni(paket: VakaPaketi, vetAd?: string): string {
   const a = paket.animal;
   const hayvan = a ? `${a.earTag} · ${a.breed} · ${a.paddock}` : 'Hayvan eşleşmedi';
+  const fotoSatir =
+    paket.fotograflar.length > 0
+      ? `Fotoğraf: ${paket.fotograflar.length} adet (${paket.fotograflar.map((f) => f.etiket || fotoTurEtiketi(f.tur)).join(', ')})`
+      : null;
   const satirlar = [
     'SürüYön — Veteriner vaka paketi',
     vetAd ? `Veteriner: ${vetAd}` : null,
     `Tarih: ${new Date(paket.createdAt).toLocaleString('tr-TR')}`,
     `Hayvan: ${hayvan}`,
     `Semptom: ${paket.symptoms || '—'}`,
+    fotoSatir,
     `Son sağlık kaydı: ${paket.healthHistory[0]?.diagnosis || '—'}`,
     `Son tartım: ${paket.weights[0]?.weightKg != null ? `${paket.weights[0].weightKg} kg` : '—'}`,
     paket.aiOzet ? `AI özeti: ${paket.aiOzet}` : null,
+    fotoSatir ? 'Not: Fotoğrafları mesaja ekleyin (ataç simgesi).' : null,
     '',
     'Lütfen talimatınızı paylaşın.',
   ].filter(Boolean) as string[];
   return satirlar.join('\n');
+}
+
+/** WhatsApp sonrası fotoğrafları sistem paylaşımı ile ilet (mobil). */
+export async function fotograflariPaylas(paket: VakaPaketi): Promise<boolean> {
+  if (paket.fotograflar.length === 0 || Platform.OS === 'web') return false;
+  const ilk = paket.fotograflar[0];
+  try {
+    await Share.share(
+      Platform.OS === 'ios'
+        ? { url: ilk.uri, message: `SürüYön vaka fotoğrafı — ${ilk.etiket}` }
+        : { message: `SürüYön vaka fotoğrafı — ${ilk.etiket}`, url: ilk.uri }
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export type VakaGonderSonuc = {
@@ -98,6 +121,9 @@ export async function gonderVakaPaketi(paket: VakaPaketi): Promise<VakaGonderSon
     kanal: 'whatsapp',
     vakaId: kayit.id,
     whatsappUrl: url,
-    message: `${vetLabel} WhatsApp ile açıldı. Mesajı gönderin.`,
+    message:
+      paket.fotograflar.length > 0
+        ? `${vetLabel} WhatsApp ile açıldı. Mesajı gönderin; ardından fotoğrafları ekleyin.`
+        : `${vetLabel} WhatsApp ile açıldı. Mesajı gönderin.`,
   };
 }

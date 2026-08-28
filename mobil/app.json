@@ -47,6 +47,13 @@
         {
           "color": "#2d6a4f"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kuzu ve hayvan fotoğraflarını veterinere göndermek için galeri erişimi gerekir.",
+          "cameraPermission": "Veteriner vakası için hayvan fotoğrafı çekmek üzere kamera erişimi gerekir."
+        }
       ]
     ],
     "experiments": {

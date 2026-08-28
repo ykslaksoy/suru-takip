@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
@@ -57,6 +57,18 @@ export function VetInboxKarti({ refreshKey = 0 }: { refreshKey?: number }) {
           <Text style={{ color: colors.text, marginTop: 6 }} numberOfLines={2}>
             {v.paket.symptoms || '—'}
           </Text>
+          {v.paket.fotograflar?.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+              {v.paket.fotograflar.map((f) => (
+                <View key={f.id} style={[styles.fotoThumb, { borderColor: colors.border }]}>
+                  <Image source={{ uri: f.uri }} style={styles.fotoImg} />
+                  <Text style={{ color: colors.textSecondary, fontSize: 10, textAlign: 'center' }} numberOfLines={1}>
+                    {f.etiket}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
           {v.talimat ? (
             <View style={[styles.talimat, { backgroundColor: colors.tint + '15' }]}>
               <Text style={{ color: colors.tint, fontWeight: '800' }}>Veteriner talimatı</Text>
@@ -93,4 +105,6 @@ const styles = StyleSheet.create({
   kart: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 10 },
   ust: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
   talimat: { marginTop: 10, padding: 10, borderRadius: 10 },
+  fotoThumb: { width: 72, marginRight: 8, borderWidth: 1, borderRadius: 8, overflow: 'hidden' },
+  fotoImg: { width: 72, height: 56 },
 });

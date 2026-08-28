@@ -122,6 +122,10 @@ export interface EducationLesson {
 export interface VetSuggestion {
   conditions: string[];
   advice: string;
+  /** Önerilen ilk müdahale / tedavi adımları (bilgilendirme) */
+  tedaviOnerileri: string[];
+  /** Fotoğraftan çıkarılan gözlemler */
+  fotoGozlemleri: string[];
   urgency: 'low' | 'medium' | 'high';
   seeVet: boolean;
 }

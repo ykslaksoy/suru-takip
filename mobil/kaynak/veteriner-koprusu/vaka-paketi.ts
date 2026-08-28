@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import type { VakaFotografi } from '@/kaynak/akilli-veteriner/fotograf';
 import {
   getAnimal,
   getAnimals,
@@ -29,13 +30,15 @@ export type VakaPaketi = {
   weights: { weightKg: number; recordedAt: string }[];
   /** Akıllı veteriner özeti (varsa) */
   aiOzet?: string;
+  /** Vaka fotoğrafları (URI yerel; vet mesajında tür bilgisi) */
+  fotograflar: VakaFotografi[];
   not: string;
 };
 
 export async function olusturVakaPaketi(
   kupeArama: string,
   symptoms: string,
-  opts?: { aiOzet?: string }
+  opts?: { aiOzet?: string; fotograflar?: VakaFotografi[] }
 ): Promise<VakaPaketi | null> {
   const term = kupeArama.trim().toLowerCase();
   if (!term) return null;
@@ -81,6 +84,7 @@ export async function olusturVakaPaketi(
     healthHistory: health,
     weights,
     aiOzet: opts?.aiOzet?.trim() || undefined,
+    fotograflar: opts?.fotograflar ?? [],
     not: '',
   };
 }
