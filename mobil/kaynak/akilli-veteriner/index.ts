@@ -36,6 +36,8 @@ export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, t
 export {
   hesaplaDozMetni,
   hesaplaDozFormul,
+  hesaplaToplamMl,
+  dozdanMlOku,
   ilaclariKgIleHesapla,
   hastalikTamAd,
   PRAKTIK_KILO_SECENEKLERI,

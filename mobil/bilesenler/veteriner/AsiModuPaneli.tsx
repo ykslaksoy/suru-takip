@@ -192,10 +192,10 @@ export function AsiModuPaneli() {
         Yer, cinse, besi şekline göre öneri alın; istemediklerinizi kapatın — uyarıları onaylayın.
       </Text>
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
-        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Doz hep ml ile söylenir</Text>
+        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Her doz ml ile</Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          Aşı: hayvan başı sabit ml (genelde 1–2 ml). İğne: kilo onaylandıktan sonra toplam ml hesaplanır —
-          çoban şırıngaya o kadar çeker.
+          Aşı, iğne, oral ve topikal — hepsi ml olarak söylenir. İğnede kilo onaylandıktan sonra
+          toplam ml hesaplanır.
         </Text>
       </View>
 
