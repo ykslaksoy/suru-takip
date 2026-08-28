@@ -11,6 +11,8 @@ export type IlacDoz = {
   tip: 'igne' | 'asi' | 'oral' | 'topikal';
   /** Sabit doz metni (oral/topikal) veya hesap sonrası dolar */
   doz: string;
+  /** Kg'ye göre ml karşılaştırma — bilgi notu */
+  bilgiNotu?: string;
   uygulama: string;
   siklik: string;
   not?: string;

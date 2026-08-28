@@ -35,6 +35,7 @@ export {
 export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
 export {
   hesaplaDozMetni,
+  hesaplaDozBilgiNotu,
   ilaclariKgIleHesapla,
   hastalikTamAd,
   PRAKTIK_KILO_SECENEKLERI,
