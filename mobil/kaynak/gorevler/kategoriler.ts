@@ -43,6 +43,7 @@ export function gorevKategorisi(g: Gorev): GorevKategoriId | 'diger' {
     }
     return 'asi';
   }
+  if (g.kaynak === 'is-plani') return 'diger';
   return 'diger';
 }
 

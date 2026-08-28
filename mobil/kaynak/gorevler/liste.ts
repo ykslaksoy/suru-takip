@@ -14,6 +14,13 @@ import { getMod2BirlesikIlerleme, sonrakiAcikAdimMod2 } from '@/kaynak/besi-koc-
 import { getMod3BirlesikIlerleme, sonrakiAcikAdimMod3 } from '@/kaynak/damizlik';
 import { getMod4BirlesikIlerleme, sonrakiAcikAdimMod4 } from '@/kaynak/sut';
 import { getPlanlananGorevler } from '@/kaynak/gorevler/planlanan';
+import {
+  getIsPlaniKayitlari,
+  IS_PLANI_META,
+  isPlaniAciklama,
+  isPlaniKalanGun,
+  type IsPlaniTur,
+} from '@/kaynak/gorevler/is-plani';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 
 export type GorevSeviye = 'uyari' | 'sira' | 'plan' | 'bilgi';
@@ -24,7 +31,8 @@ export type GorevKaynak =
   | 'saglik'
   | 'tartim'
   | 'yolculuk'
-  | 'planlanan';
+  | 'planlanan'
+  | 'is-plani';
 
 export type Gorev = {
   id: string;
@@ -126,6 +134,19 @@ async function yolculukGorevi(): Promise<Gorev | null> {
   return null;
 }
 
+function isPlaniGorevKaynak(tur: IsPlaniTur): GorevKaynak {
+  if (tur === 'tartim') return 'tartim';
+  if (tur === 'kirpim') return 'saglik';
+  return 'is-plani';
+}
+
+function isPlaniCta(tur: IsPlaniTur): string {
+  if (tur === 'kuzu-alim') return 'Kuzu ekle';
+  if (tur === 'tartim') return 'Tartıma git';
+  if (tur === 'kuzu-satim') return 'Satış kaydı';
+  return 'Aç';
+}
+
 /**
  * Tüm planlanan / bekleyen görevler — limit yok.
  * Kaynaklar: bekletme, aşı, stok, sağlık, tartım, yolculuk adımı, elle planlanan.
@@ -184,30 +205,29 @@ export async function getGorevler(): Promise<Gorev[]> {
   const dusukTakviye = dusukTakviyeler(stock);
   const sktTakviye = sktYakinTakviyeler(stock);
   if (dusukTakviye.length > 0) {
-    const first = dusukTakviye[0];
-    out.push({
-      id: 'takviye-stok',
-      seviye: 'uyari',
-      kaynak: 'stok',
-      baslik: 'Takviye stoğu düşük',
-      aciklama:
-        dusukTakviye.length === 1
-          ? `${first.name} · ${first.quantity} ${first.unit} (min ${first.minQuantity})`
-          : `${dusukTakviye.length} takviye düşük · örn. ${first.name}`,
-      href: '/(tabs)/stok',
-      cta: 'Stoka git',
-    });
+    for (const item of dusukTakviye.slice(0, 10)) {
+      out.push({
+        id: `takviye-stok-${item.id}`,
+        seviye: 'uyari',
+        kaynak: 'stok',
+        baslik: 'Takviye stoğu düşük',
+        aciklama: `${item.name} · ${item.quantity} ${item.unit} (min ${item.minQuantity})`,
+        href: '/(tabs)/stok',
+        cta: 'Stoka git',
+      });
+    }
   } else if (sktTakviye.length > 0) {
-    const first = sktTakviye[0];
-    out.push({
-      id: 'takviye-skt',
-      seviye: 'sira',
-      kaynak: 'stok',
-      baslik: 'Takviye SKT yakın',
-      aciklama: `${first.name} · son kullanma yaklaşıyor`,
-      href: '/(tabs)/stok',
-      cta: 'Stoka git',
-    });
+    for (const item of sktTakviye.slice(0, 10)) {
+      out.push({
+        id: `takviye-skt-${item.id}`,
+        seviye: 'sira',
+        kaynak: 'stok',
+        baslik: 'Takviye SKT yakın',
+        aciklama: `${item.name} · son kullanma yaklaşıyor`,
+        href: '/(tabs)/stok',
+        cta: 'Stoka git',
+      });
+    }
   }
 
   const asiStokAdlari = new Set(
@@ -219,31 +239,27 @@ export async function getGorevler(): Promise<Gorev[]> {
       !(i.type === 'vaccine' && asiStokAdlari.has(i.name.toLocaleLowerCase('tr-TR'))) &&
       !takviyeIds.has(i.id)
   );
-  if (lowStock.length > 0) {
-    const first = lowStock[0];
+  for (const item of lowStock.slice(0, 15)) {
     out.push({
-      id: 'stok',
+      id: `stok-${item.id}`,
       seviye: 'uyari',
       kaynak: 'stok',
       baslik: 'Düşük stok',
-      aciklama:
-        lowStock.length === 1
-          ? `${first.name} · ${first.quantity} ${first.unit} (min ${first.minQuantity})`
-          : `${lowStock.length} kalem düşük · örn. ${first.name}`,
+      aciklama: `${item.name} · ${item.quantity} ${item.unit} (min ${item.minQuantity})`,
       href: '/(tabs)/stok',
       cta: 'Stoka git',
     });
   }
 
-  const hasta = animals.find((a) => a.status === 'sick');
-  if (hasta) {
+  const hasta = animals.filter((a) => a.status === 'sick');
+  for (const h of hasta.slice(0, 15)) {
     out.push({
-      id: 'saglik-takip',
+      id: `saglik-hasta-${h.id}`,
       seviye: 'sira',
       kaynak: 'saglik',
       baslik: 'Sağlık takibi',
-      aciklama: `${hasta.earTag} hasta kayıtlı — tedavi / aşıya bak`,
-      href: `/hayvan/${hasta.id}/saglik`,
+      aciklama: `${h.earTag || h.name} hasta — tedavi / kontrol`,
+      href: `/hayvan/${h.id}/saglik`,
       cta: 'Kayıt aç',
     });
   }
@@ -268,6 +284,33 @@ export async function getGorevler(): Promise<Gorev[]> {
   if (yol) out.push(yol);
 
   const bugun = new Date().toISOString().slice(0, 10);
+  for (const ip of await getIsPlaniKayitlari()) {
+    const meta = IS_PLANI_META[ip.tur];
+    const kalan = isPlaniKalanGun(ip.tarih, bugun);
+    let seviye: GorevSeviye = 'plan';
+    if (ip.tarih < bugun) seviye = 'uyari';
+    else if (ip.tarih === bugun) seviye = 'sira';
+
+    const zaman =
+      kalan > 0
+        ? `${kalan} gün sonra`
+        : kalan === 0
+          ? 'Bugün'
+          : `${Math.abs(kalan)} gün gecikti`;
+
+    out.push({
+      id: `is-plani-${ip.id}`,
+      seviye,
+      kaynak: isPlaniGorevKaynak(ip.tur),
+      baslik: `${meta.label}`,
+      aciklama: `${zaman} · ${isPlaniAciklama(ip)}`,
+      href: meta.href,
+      cta: isPlaniCta(ip.tur),
+      tarih: ip.tarih,
+      tamamlanabilir: true,
+    });
+  }
+
   for (const p of await getPlanlananGorevler()) {
     if (p.tamam) continue;
     out.push({
@@ -330,6 +373,18 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       cta: 'Görevlere bak',
     });
   }
+  const stokN = ham.filter((g) => g.kaynak === 'stok' && gunluk(g)).length;
+  if (stokN) {
+    ozetler.push({
+      id: 'bugun-stok-ozet',
+      seviye: 'uyari',
+      kaynak: 'stok',
+      baslik: 'Stok',
+      aciklama: `${stokN} kalem · düşük veya SKT yakın`,
+      href: '/gorevler',
+      cta: 'Görevlere bak',
+    });
+  }
   const bekN = ham.filter((g) => g.kaynak === 'bekletme' && gunluk(g)).length;
   if (bekN) {
     ozetler.push({
@@ -338,6 +393,18 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       kaynak: 'bekletme',
       baslik: 'Bekletme',
       aciklama: `${bekN} hayvan · ilaç bekletmesi devam ediyor`,
+      href: '/gorevler',
+      cta: 'Görevlere bak',
+    });
+  }
+  const isPlaniN = ham.filter((g) => g.id.startsWith('is-plani-') && gunluk(g)).length;
+  if (isPlaniN) {
+    ozetler.push({
+      id: 'bugun-is-plani-ozet',
+      seviye: 'sira',
+      kaynak: 'is-plani',
+      baslik: 'Planlanan iş',
+      aciklama: `${isPlaniN} iş · bugün veya gecikmiş`,
       href: '/gorevler',
       cta: 'Görevlere bak',
     });

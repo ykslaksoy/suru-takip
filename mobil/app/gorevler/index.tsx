@@ -6,22 +6,32 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { AnaButon } from '@/bilesenler/ortak/AnaButon';
+import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
+import { IsPlaniPaneli } from '@/bilesenler/gorevler/IsPlaniPaneli';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import {
-  addPlanlananGorev,
   getGorevGruplari,
   setPlanlananTamam,
+  setIsPlaniTamam,
   type Gorev,
   type GorevGrup,
   type GorevKategoriId,
 } from '@/kaynak/gorevler';
+
+type Sekme = 'gunluk' | 'is-plani';
+
+async function gorevTamamla(id: string): Promise<void> {
+  if (id.startsWith('is-plani-')) {
+    await setIsPlaniTamam(id.replace(/^is-plani-/, ''), true);
+  } else if (id.startsWith('plan-')) {
+    await setPlanlananTamam(id.replace(/^plan-/, ''), true);
+  }
+}
 
 function GorevSatiri({
   g,
@@ -33,13 +43,13 @@ function GorevSatiri({
   onTamamla?: () => void;
 }) {
   return (
-    <View style={[styles.madde, { borderColor: colors.border }]}>
+    <View style={styles.madde}>
       <Pressable onPress={() => router.push(g.href as never)}>
         <Text style={{ color: colors.text, fontWeight: '700' }}>{g.baslik}</Text>
         <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>{g.aciklama}</Text>
         <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12, marginTop: 6 }}>{g.cta} →</Text>
       </Pressable>
-      {g.tamamlanabilir && g.id.startsWith('plan-') && onTamamla ? (
+      {g.tamamlanabilir && onTamamla ? (
         <Pressable onPress={onTamamla} style={[styles.tamamBtn, { borderColor: colors.success }]}>
           <Text style={{ color: colors.success, fontWeight: '700', fontSize: 12 }}>Tamamla</Text>
         </Pressable>
@@ -52,14 +62,11 @@ export default function GorevlerScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { ready, refreshKey } = useDatabase();
+  const [sekme, setSekme] = useState<Sekme>('gunluk');
   const [gruplar, setGruplar] = useState<GorevGrup[]>([]);
   const [diger, setDiger] = useState<Gorev[]>([]);
   const [loading, setLoading] = useState(true);
   const [secili, setSecili] = useState<GorevKategoriId | null>(null);
-  const [formAcik, setFormAcik] = useState(false);
-  const [baslik, setBaslik] = useState('');
-  const [aciklama, setAciklama] = useState('');
-  const [tarih, setTarih] = useState(new Date().toISOString().slice(0, 10));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,160 +90,124 @@ export default function GorevlerScreen() {
   );
 
   const aktifGrup = secili ? gruplar.find((g) => g.id === secili) : null;
+  const tamamlaVeYenile = async (id: string) => {
+    await gorevTamamla(id);
+    await load();
+  };
 
   return (
     <>
       <Stack.Screen options={{ title: 'Görevler' }} />
       <View style={[styles.shell, { backgroundColor: colors.background }]}>
+        <AltButonlar
+          items={[
+            { key: 'gunluk', label: 'Günlük' },
+            { key: 'is-plani', label: 'İş planı' },
+          ]}
+          activeKey={sekme}
+          onSelect={(k) => setSekme(k as Sekme)}
+        />
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.intro, { color: colors.textSecondary }]}>
-            Öncelik sırası: aşı → tartım → stok → sağlık. Kategoriye dokunun, maddeleri görün.
-          </Text>
-
-          {loading ? (
-            <ActivityIndicator color={colors.tint} style={{ marginVertical: 24 }} />
-          ) : gruplar.length === 0 && diger.length === 0 ? (
-            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 24 }}>
-              Şu an bekleyen görev yok.
-            </Text>
+          {sekme === 'is-plani' ? (
+            <IsPlaniPaneli refreshKey={refreshKey} onDegisti={load} />
           ) : (
             <>
-              <View style={styles.kategoriRow}>
-                {gruplar.map((g) => {
-                  const aktif = secili === g.id;
-                  return (
-                    <Pressable
-                      key={g.id}
-                      onPress={() => setSecili(aktif ? null : g.id)}
-                      style={[
-                        styles.kategoriBtn,
-                        {
-                          borderColor: aktif ? colors.tint : colors.border,
-                          backgroundColor: aktif ? `${colors.tint}18` : colors.card,
-                        },
-                      ]}>
-                      <Text style={styles.kategoriIcon}>{g.icon}</Text>
-                      <Text style={[styles.kategoriLabel, { color: colors.text }]}>{g.label}</Text>
-                      <View style={[styles.sayi, { backgroundColor: aktif ? colors.tint : colors.warning }]}>
-                        <Text style={styles.sayiText}>{g.adet}</Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <Text style={[styles.intro, { color: colors.textSecondary }]}>
+                Öncelik: aşı → tartım → stok → sağlık. Kategoriye dokunun; planlanan işler günü gelince
+                burada görünür.
+              </Text>
 
-              {aktifGrup ? (
-                <View style={[styles.detay, { backgroundColor: colors.card, borderColor: colors.tint }]}>
-                  <View style={styles.detayBaslik}>
-                    <Text style={[styles.detayTitle, { color: colors.text }]}>
-                      {aktifGrup.icon} {aktifGrup.label}
-                    </Text>
-                    <Text style={{ color: colors.textSecondary }}>{aktifGrup.adet} görev</Text>
-                  </View>
-                  {aktifGrup.gorevler.map((g) => (
-                    <GorevSatiri
-                      key={g.id}
-                      g={g}
-                      colors={colors}
-                      onTamamla={
-                        g.tamamlanabilir
-                          ? async () => {
-                              await setPlanlananTamam(g.id.replace(/^plan-/, ''), true);
-                              await load();
-                            }
-                          : undefined
-                      }
-                    />
-                  ))}
-                  <Pressable
-                    onPress={() => router.push(aktifGrup.href as never)}
-                    style={{ marginTop: 8 }}>
-                    <Text style={{ color: colors.tint, fontWeight: '800' }}>
-                      {aktifGrup.label} ekranına git →
-                    </Text>
-                  </Pressable>
-                </View>
-              ) : gruplar.length > 0 ? (
-                <Text style={{ color: colors.textSecondary, textAlign: 'center', marginVertical: 16 }}>
-                  Detay için bir kategori seçin.
+              {loading ? (
+                <ActivityIndicator color={colors.tint} style={{ marginVertical: 24 }} />
+              ) : gruplar.length === 0 && diger.length === 0 ? (
+                <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 24 }}>
+                  Şu an bekleyen görev yok. İş planı sekmesinden ileri tarih planlayın.
                 </Text>
-              ) : null}
+              ) : (
+                <>
+                  <View style={styles.kategoriRow}>
+                    {gruplar.map((g) => {
+                      const aktif = secili === g.id;
+                      return (
+                        <Pressable
+                          key={g.id}
+                          onPress={() => setSecili(aktif ? null : g.id)}
+                          style={[
+                            styles.kategoriBtn,
+                            {
+                              borderColor: aktif ? colors.tint : colors.border,
+                              backgroundColor: aktif ? `${colors.tint}18` : colors.card,
+                            },
+                          ]}>
+                          <Text style={styles.kategoriIcon}>{g.icon}</Text>
+                          <Text style={[styles.kategoriLabel, { color: colors.text }]}>{g.label}</Text>
+                          <View
+                            style={[styles.sayi, { backgroundColor: aktif ? colors.tint : colors.warning }]}>
+                            <Text style={styles.sayiText}>{g.adet}</Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
 
-              {diger.length > 0 ? (
-                <View style={[styles.detay, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Text style={[styles.detayTitle, { color: colors.text, marginBottom: 8 }]}>
-                    🛤️ Diğer ({diger.length})
-                  </Text>
-                  {diger.map((g) => (
-                    <GorevSatiri
-                      key={g.id}
-                      g={g}
-                      colors={colors}
-                      onTamamla={
-                        g.tamamlanabilir
-                          ? async () => {
-                              await setPlanlananTamam(g.id.replace(/^plan-/, ''), true);
-                              await load();
-                            }
-                          : undefined
-                      }
-                    />
-                  ))}
-                </View>
-              ) : null}
+                  {aktifGrup ? (
+                    <View style={[styles.detay, { backgroundColor: colors.card, borderColor: colors.tint }]}>
+                      <View style={styles.detayBaslik}>
+                        <Text style={[styles.detayTitle, { color: colors.text }]}>
+                          {aktifGrup.icon} {aktifGrup.label}
+                        </Text>
+                        <Text style={{ color: colors.textSecondary }}>{aktifGrup.adet} görev</Text>
+                      </View>
+                      {aktifGrup.gorevler.map((g) => (
+                        <GorevSatiri
+                          key={g.id}
+                          g={g}
+                          colors={colors}
+                          onTamamla={
+                            g.tamamlanabilir ? () => tamamlaVeYenile(g.id) : undefined
+                          }
+                        />
+                      ))}
+                      <Pressable onPress={() => router.push(aktifGrup.href as never)} style={{ marginTop: 8 }}>
+                        <Text style={{ color: colors.tint, fontWeight: '800' }}>
+                          {aktifGrup.label} ekranına git →
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ) : gruplar.length > 0 ? (
+                    <Text style={{ color: colors.textSecondary, textAlign: 'center', marginVertical: 16 }}>
+                      Detay için bir kategori seçin.
+                    </Text>
+                  ) : null}
+
+                  {diger.length > 0 ? (
+                    <View style={[styles.detay, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      <Text style={[styles.detayTitle, { color: colors.text, marginBottom: 8 }]}>
+                        📋 Diğer ({diger.length})
+                      </Text>
+                      <Text style={{ color: colors.textSecondary, marginBottom: 8, fontSize: 13 }}>
+                        Kuzu alım/satım planı, yolculuk adımı vb.
+                      </Text>
+                      {diger.map((g) => (
+                        <GorevSatiri
+                          key={g.id}
+                          g={g}
+                          colors={colors}
+                          onTamamla={
+                            g.tamamlanabilir ? () => tamamlaVeYenile(g.id) : undefined
+                          }
+                        />
+                      ))}
+                    </View>
+                  ) : null}
+                </>
+              )}
+
+              <Pressable onPress={() => setSekme('is-plani')} style={{ marginTop: 16 }}>
+                <Text style={{ color: colors.tint, fontWeight: '800' }}>İş planı → kırpım / tartım / alım / satım</Text>
+              </Pressable>
             </>
           )}
-
-          <Pressable onPress={() => setFormAcik(!formAcik)} style={{ marginTop: 16, marginBottom: 8 }}>
-            <Text style={{ color: colors.tint, fontWeight: '800' }}>
-              {formAcik ? 'Plan formunu gizle' : '+ Planlanan görev ekle'}
-            </Text>
-          </Pressable>
-
-          {formAcik ? (
-            <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TextInput
-                placeholder="Başlık"
-                placeholderTextColor={colors.textSecondary}
-                value={baslik}
-                onChangeText={setBaslik}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              />
-              <TextInput
-                placeholder="Açıklama (opsiyonel)"
-                placeholderTextColor={colors.textSecondary}
-                value={aciklama}
-                onChangeText={setAciklama}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              />
-              <TextInput
-                placeholder="Tarih YYYY-AA-GG"
-                placeholderTextColor={colors.textSecondary}
-                value={tarih}
-                onChangeText={setTarih}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              />
-              <AnaButon
-                title="Kaydet"
-                onPress={async () => {
-                  if (!baslik.trim()) {
-                    Alert.alert('Eksik', 'Başlık gerekli');
-                    return;
-                  }
-                  await addPlanlananGorev({
-                    baslik: baslik.trim(),
-                    aciklama: aciklama.trim(),
-                    tarih: /^\d{4}-\d{2}-\d{2}$/.test(tarih) ? tarih : new Date().toISOString().slice(0, 10),
-                    href: '/(tabs)',
-                  });
-                  setBaslik('');
-                  setAciklama('');
-                  setFormAcik(false);
-                  await load();
-                }}
-              />
-            </View>
-          ) : null}
         </ScrollView>
       </View>
     </>
@@ -296,14 +267,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-  },
-  form: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 14 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-    fontSize: 15,
-    minHeight: 44,
   },
 });
