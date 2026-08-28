@@ -19,6 +19,7 @@ import {
   baslatTakip,
   formatAiOzet,
   hayvanBulKupe,
+  hayvaniKarantinayaAl,
   teshisOzeti,
   uygulaSuruTedavisi,
   uygulaTedaviVeTakip,
@@ -229,7 +230,6 @@ export default function VetScreen() {
               Alert.alert('Küpe gerekli', 'Kulak küpe numarası girin.');
               return;
             }
-            const { hayvaniKarantinayaAl } = await import('@/kaynak/akilli-veteriner/tedavi-uygula');
             const r = await hayvaniKarantinayaAl(hayvan.id);
             Alert.alert(r.ok ? 'Karantina' : 'Hata', r.message);
           }}
