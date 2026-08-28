@@ -7,6 +7,8 @@ import { AsiModuPaneli } from '@/bilesenler/veteriner/AsiModuPaneli';
 import { FotografYukle } from '@/bilesenler/veteriner/FotografYukle';
 import { FotoIstekKarti } from '@/bilesenler/veteriner/FotoIstekKarti';
 import { NetlestirmeSorulari } from '@/bilesenler/veteriner/NetlestirmeSorulari';
+import { TakipModuPaneli } from '@/bilesenler/veteriner/TakipModuPaneli';
+import { TeshisTedaviKarti } from '@/bilesenler/veteriner/TeshisTedaviKarti';
 import { VakaDosKarti } from '@/bilesenler/veteriner/VakaDosKarti';
 import { VetIletisimFormu } from '@/bilesenler/veteriner/VetIletisimFormu';
 import { VetInboxKarti } from '@/bilesenler/veteriner/VetInboxKarti';
@@ -14,83 +16,26 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import {
   analyzeVakaTam,
+  baslatTakip,
   formatAiOzet,
+  hayvanBulKupe,
+  teshisOzeti,
+  uygulaSuruTedavisi,
+  uygulaTedaviVeTakip,
   vakaDosMetni,
   vakaDosOlustur,
+  vetDanisildiIsaretle,
   VET_DISCLAIMER,
   type VetAnalizSonuc,
   type VetCevaplar,
   type VakaDos,
 } from '@/kaynak/akilli-veteriner';
 import type { VakaFotografi } from '@/kaynak/akilli-veteriner/fotograf';
-import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 import { olusturVakaPaketi } from '@/kaynak/veteriner-koprusu/vaka-paketi';
 import { fotograflariPaylas, gonderVakaPaketi } from '@/kaynak/veteriner-koprusu/gonder';
-import { vetGonderimKanali } from '@/kaynak/veteriner-koprusu/vet-iletisim';
+import { vetGonderimKanali, type VetKanal } from '@/kaynak/veteriner-koprusu/vet-iletisim';
 
-type Alt = 'asi' | 'hastalik' | 'gonder' | 'vakalar' | 'vet-ayar';
-
-function TedaviSonucKarti({
-  result,
-  colors,
-  onVetGonder,
-}: {
-  result: VetSuggestion;
-  colors: (typeof Colors)['light'];
-  onVetGonder?: () => void;
-}) {
-  const urgencyColor = {
-    low: colors.success,
-    medium: colors.warning,
-    high: colors.danger,
-  };
-
-  return (
-    <View style={[styles.result, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.urgency, { color: urgencyColor[result.urgency] }]}>
-        Aciliyet: {result.urgency === 'high' ? 'Yüksek' : result.urgency === 'medium' ? 'Orta' : 'Düşük'}
-        {result.seeVet ? ' · Veteriner önerilir' : ''}
-      </Text>
-      {result.fotoGozlemleri.length > 0 && (
-        <>
-          <Text style={[styles.section, { color: colors.tint }]}>Fotoğraf gözlemleri</Text>
-          {result.fotoGozlemleri.map((g, i) => (
-            <Text key={i} style={{ color: colors.text, lineHeight: 20 }}>
-              • {g}
-            </Text>
-          ))}
-        </>
-      )}
-      {result.conditions.length > 0 && (
-        <>
-          <Text style={[styles.section, { color: colors.tint }]}>Olası durumlar (bilgilendirme)</Text>
-          {result.conditions.map((c, i) => (
-            <Text key={i} style={{ color: colors.text }}>
-              • {c}
-            </Text>
-          ))}
-        </>
-      )}
-      {result.tedaviOnerileri.length > 0 && (
-        <>
-          <Text style={[styles.section, { color: colors.tint }]}>Önerilen tedavi adımları</Text>
-          {result.tedaviOnerileri.map((t, i) => (
-            <Text key={i} style={{ color: colors.text, lineHeight: 22 }}>
-              {i + 1}. {t}
-            </Text>
-          ))}
-        </>
-      )}
-      <Text style={[styles.section, { color: colors.tint }]}>Genel öneri</Text>
-      <Text style={{ color: colors.text, lineHeight: 22 }}>{result.advice}</Text>
-      {result.seeVet && onVetGonder ? (
-        <View style={{ marginTop: 14 }}>
-          <AnaButon title="Veterinere gönder" onPress={onVetGonder} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
+type Alt = 'asi' | 'hastalik' | 'takip' | 'gonder' | 'vakalar' | 'vet-ayar';
 
 function useVakaAnalizi() {
   const [symptoms, setSymptomsRaw] = useState('');
@@ -113,9 +58,7 @@ function useVakaAnalizi() {
   const setFotograflar = (f: VakaFotografi[]) => {
     setFotograflarRaw(f);
     setAnaliz(null);
-    if (Object.keys(cevaplar).length > 0) {
-      calistir(symptoms, f, cevaplar);
-    }
+    if (Object.keys(cevaplar).length > 0) calistir(symptoms, f, cevaplar);
   };
 
   const analizEt = () => calistir(symptoms, fotograflar, cevaplar);
@@ -128,9 +71,9 @@ function useVakaAnalizi() {
 
   const result = analiz?.oneri ?? null;
   const dos: VakaDos | null = useMemo(() => {
-    if (!analiz?.hazir || !result) return null;
+    if (!analiz?.hazir || !result || !analiz.teshis) return null;
     return vakaDosOlustur({
-      baglamMetni: analiz.baglamMetni,
+      baglamMetni: `${teshisOzeti(analiz.teshis)}\n${analiz.baglamMetni}`,
       oneri: result,
       fotograflar,
       cevaplar,
@@ -152,73 +95,24 @@ function useVakaAnalizi() {
   };
 }
 
-function HastalikModu({
-  colors,
-  vaka,
-  onVetGonder,
-}: {
-  colors: (typeof Colors)['light'];
-  vaka: ReturnType<typeof useVakaAnalizi>;
-  onVetGonder: () => void;
-}) {
-  const { symptoms, setSymptoms, fotograflar, setFotograflar, cevaplar, analiz, analizEt, cevapVer, result, dos } =
-    vaka;
-
-  return (
-    <>
-      <Text style={[styles.title, { color: colors.text }]}>Hastalık modu</Text>
-      <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
-        Fotoğraf + semptom → sorular → gerekirse yeni foto isteği → tedavi önerisi → vaka dosyası.
-      </Text>
-
-      <TextInput
-        placeholder="Belirtileri buraya yazın..."
-        multiline
-        value={symptoms}
-        onChangeText={setSymptoms}
-        style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 120 }]}
-      />
-
-      <FotografYukle fotograflar={fotograflar} onChange={setFotograflar} />
-
-      <AnaButon title="Analiz Et" onPress={analizEt} />
-
-      {analiz?.netlestirmeGerekli && analiz.sorular.length > 0 ? (
-        <NetlestirmeSorulari sorular={analiz.sorular} cevaplar={cevaplar} onCevap={cevapVer} />
-      ) : null}
-
-      {analiz?.fotoBekleniyor && analiz.fotoIstekleri.length > 0 ? (
-        <FotoIstekKarti istekler={analiz.fotoIstekleri} />
-      ) : null}
-
-      {analiz && !analiz.hazir && !analiz.netlestirmeGerekli && !analiz.fotoBekleniyor ? (
-        <Text style={{ color: colors.textSecondary, marginTop: 12, fontSize: 13 }}>
-          Soruları yanıtlayın veya istenen fotoğrafları ekleyin.
-        </Text>
-      ) : null}
-
-      {result ? <TedaviSonucKarti result={result} colors={colors} onVetGonder={onVetGonder} /> : null}
-      {dos ? <VakaDosKarti dos={dos} onVetGonder={onVetGonder} /> : null}
-
-      <Text style={[styles.examples, { color: colors.textSecondary }]}>
-        Örnek: ishal, topallama, kuzu emmeme + ayak/yara fotoğrafı
-      </Text>
-    </>
-  );
-}
-
 export default function VetScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [alt, setAlt] = useState<Alt>('hastalik');
   const [kupe, setKupe] = useState('');
   const [kanalAciklama, setKanalAciklama] = useState('');
+  const [vetKanal, setVetKanal] = useState<VetKanal>('yapilandir');
+  const [vetAd, setVetAd] = useState('');
   const [inboxKey, setInboxKey] = useState(0);
+  const [takipKey, setTakipKey] = useState(0);
+  const [aktifTakipId, setAktifTakipId] = useState<string | null>(null);
   const vaka = useVakaAnalizi();
 
   const loadKanal = useCallback(async () => {
     const k = await vetGonderimKanali();
     setKanalAciklama(k.aciklama);
+    setVetKanal(k.kanal);
+    setVetAd(k.vet.ad || k.vet.klinikAdi);
   }, []);
 
   useFocusEffect(
@@ -227,30 +121,72 @@ export default function VetScreen() {
     }, [loadKanal])
   );
 
-  const veterinerGonder = async () => {
-    const sonucAnaliz = vaka.result ? vaka.analiz : vaka.analizEt();
-    if (!sonucAnaliz.hazir || !sonucAnaliz.oneri) {
-      Alert.alert(
-        'Eksik bilgi',
-        sonucAnaliz.fotoBekleniyor
-          ? 'Lütfen istenen açılardan fotoğraf ekleyin.'
-          : 'Netleştirme sorularını yanıtlayın ve analizi tamamlayın.'
-      );
+  const tedaviBaslat = async (opts?: { vetAtla?: boolean }) => {
+    if (!vaka.analiz?.teshis || !vaka.analiz.hazir) {
+      Alert.alert('Eksik', 'Önce analizi tamamlayın.');
+      return;
+    }
+    const hayvan = await hayvanBulKupe(kupe);
+    if (!hayvan) {
+      Alert.alert('Küpe gerekli', 'Tedavi ve takip için kulak küpe numarası girin.');
       return;
     }
 
-    const dos = vaka.dos ?? vakaDosOlustur({
-      baglamMetni: sonucAnaliz.baglamMetni,
-      oneri: sonucAnaliz.oneri,
-      fotograflar: vaka.fotograflar,
+    const takip = await baslatTakip({
+      animalId: hayvan.id,
+      earTag: hayvan.earTag,
+      paddock: hayvan.paddock,
+      teshis: vaka.analiz.teshis,
+      baglamMetni: vaka.analiz.baglamMetni,
       cevaplar: vaka.cevaplar,
-    });
-    const aiOzet = `${formatAiOzet(sonucAnaliz.oneri)}\n${vakaDosMetni(dos, kupe.trim() || undefined).slice(0, 400)}…`;
-
-    const paket = await olusturVakaPaketi(kupe, dos.baglamMetni, {
-      aiOzet,
       fotograflar: vaka.fotograflar,
     });
+    setAktifTakipId(takip.id);
+
+    const sonuc = await uygulaTedaviVeTakip(takip.id, { vetOnayAtlandi: opts?.vetAtla });
+    if (!sonuc.ok) {
+      Alert.alert('Veteriner gerekli', sonuc.message, [
+        { text: 'Vet gönder', onPress: () => setAlt('gonder') },
+        {
+          text: 'Yine de uygula',
+          style: 'destructive',
+          onPress: () => void uygulaTedaviVeTakip(takip.id, { vetOnayAtlandi: true }).then((r) => {
+            Alert.alert(r.ok ? 'Tamam' : 'Hata', r.message);
+            setTakipKey((k) => k + 1);
+            setAlt('takip');
+          }),
+        },
+      ]);
+      return;
+    }
+
+    Alert.alert('Takip başladı', sonuc.message, [{ text: 'Takip modu', onPress: () => setAlt('takip') }]);
+    setTakipKey((k) => k + 1);
+  };
+
+  const veterinerGonder = async () => {
+    const sonucAnaliz = vaka.result ? vaka.analiz : vaka.analizEt();
+    if (!sonucAnaliz?.hazir || !sonucAnaliz.oneri) {
+      Alert.alert('Eksik bilgi', 'Analizi tamamlayın.');
+      return;
+    }
+
+    const dos =
+      vaka.dos ??
+      vakaDosOlustur({
+        baglamMetni: sonucAnaliz.baglamMetni,
+        oneri: sonucAnaliz.oneri,
+        fotograflar: vaka.fotograflar,
+        cevaplar: vaka.cevaplar,
+      });
+
+    if (aktifTakipId) await vetDanisildiIsaretle(aktifTakipId);
+
+    const aiOzet = sonucAnaliz.teshis
+      ? `${teshisOzeti(sonucAnaliz.teshis)} · ${formatAiOzet(sonucAnaliz.oneri)}`
+      : formatAiOzet(sonucAnaliz.oneri);
+
+    const paket = await olusturVakaPaketi(kupe, dos.baglamMetni, { aiOzet, fotograflar: vaka.fotograflar });
     if (!paket) {
       Alert.alert('Eksik', 'Kulak küpe numarası gerekli');
       return;
@@ -264,7 +200,6 @@ export default function VetScreen() {
       return;
     }
     setInboxKey((k) => k + 1);
-
     if (sonuc.kanal === 'whatsapp' && paket.fotograflar.length > 0) {
       Alert.alert('WhatsApp', sonuc.message, [
         { text: 'Tamam' },
@@ -272,25 +207,65 @@ export default function VetScreen() {
       ]);
       return;
     }
-
-    Alert.alert(
-      sonuc.kanal === 'program' ? 'Dosya iletildi' : 'WhatsApp',
-      sonuc.message,
-      sonuc.kanal === 'program'
-        ? [{ text: 'Vakalar', onPress: () => setAlt('vakalar') }, { text: 'Tamam' }]
-        : [{ text: 'Tamam' }]
-    );
+    Alert.alert(sonuc.kanal === 'program' ? 'Dosya iletildi' : 'WhatsApp', sonuc.message);
   };
+
+  const analizPaneli = (
+    <>
+      {vaka.analiz?.netlestirmeGerekli ? (
+        <NetlestirmeSorulari sorular={vaka.analiz.sorular} cevaplar={vaka.cevaplar} onCevap={vaka.cevapVer} />
+      ) : null}
+      {vaka.analiz?.fotoBekleniyor ? <FotoIstekKarti istekler={vaka.analiz.fotoIstekleri} /> : null}
+      {vaka.analiz?.hazir && vaka.analiz.teshis ? (
+        <TeshisTedaviKarti
+          teshis={vaka.analiz.teshis}
+          vetKanal={vetKanal}
+          vetAd={vetAd}
+          onVetDanis={() => setAlt('gonder')}
+          onTedaviUygula={() => void tedaviBaslat()}
+          onKarantina={async () => {
+            const hayvan = await hayvanBulKupe(kupe);
+            if (!hayvan) {
+              Alert.alert('Küpe gerekli', 'Kulak küpe numarası girin.');
+              return;
+            }
+            const { hayvaniKarantinayaAl } = await import('@/kaynak/akilli-veteriner/tedavi-uygula');
+            const r = await hayvaniKarantinayaAl(hayvan.id);
+            Alert.alert(r.ok ? 'Karantina' : 'Hata', r.message);
+          }}
+          onSuruPadok={() => {
+            if (!aktifTakipId) {
+              Alert.alert('Önce', 'Önce tedaviyi uygulayın.');
+              return;
+            }
+            void uygulaSuruTedavisi(aktifTakipId, 'ayni_padok').then((r) =>
+              Alert.alert(r.ok ? 'Tamam' : 'Hata', r.message)
+            );
+          }}
+          onSuruTum={() => {
+            if (!aktifTakipId) {
+              Alert.alert('Önce', 'Önce tedaviyi uygulayın.');
+              return;
+            }
+            void uygulaSuruTedavisi(aktifTakipId, 'tum_kuzular').then((r) =>
+              Alert.alert(r.ok ? 'Tamam' : 'Hata', r.message)
+            );
+          }}
+        />
+      ) : null}
+      {vaka.dos ? <VakaDosKarti dos={vaka.dos} onVetGonder={() => setAlt('gonder')} /> : null}
+    </>
+  );
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
       <AltButonlar
         items={[
-          { key: 'asi', label: 'Aşı modu' },
+          { key: 'asi', label: 'Aşı' },
           { key: 'hastalik', label: 'Hastalık' },
-          { key: 'gonder', label: 'Vet gönder' },
+          { key: 'takip', label: 'Takip' },
+          { key: 'gonder', label: 'Vet' },
           { key: 'vakalar', label: 'Vakalar' },
-          { key: 'vet-ayar', label: 'Vet ayarı' },
         ]}
         activeKey={alt}
         onSelect={(k) => setAlt(k as Alt)}
@@ -301,25 +276,27 @@ export default function VetScreen() {
         </View>
 
         {alt === 'vet-ayar' ? (
-          <VetIletisimFormu
-            onKaydedildi={() => {
-              loadKanal();
-              setAlt('gonder');
-            }}
-          />
+          <VetIletisimFormu onKaydedildi={() => { loadKanal(); setAlt('gonder'); }} />
         ) : alt === 'vakalar' ? (
           <>
             <Text style={[styles.title, { color: colors.text }]}>Gönderilen vakalar</Text>
             <VetInboxKarti refreshKey={inboxKey} />
+            <AnaButon title="Vet ayarları" variant="secondary" onPress={() => setAlt('vet-ayar')} />
+          </>
+        ) : alt === 'takip' ? (
+          <>
+            <Text style={[styles.title, { color: colors.text }]}>Takip modu</Text>
+            <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
+              Etki süresi bitince fotoğraf + durum güncellemesi istenir. Taburcu olana kadar izlenir.
+            </Text>
+            <TakipModuPaneli refreshKey={takipKey} />
           </>
         ) : alt === 'asi' ? (
           <AsiModuPaneli />
         ) : alt === 'gonder' ? (
           <>
-            <Text style={[styles.title, { color: colors.text }]}>Veterinere gönder</Text>
-            <Text style={{ color: colors.tint, fontWeight: '700', marginBottom: 12, lineHeight: 20 }}>
-              {kanalAciklama}
-            </Text>
+            <Text style={[styles.title, { color: colors.text }]}>Veterinere danış / gönder</Text>
+            <Text style={{ color: colors.tint, fontWeight: '700', marginBottom: 12 }}>{kanalAciklama}</Text>
             <TextInput
               placeholder="Kulak küpe no"
               value={kupe}
@@ -327,27 +304,41 @@ export default function VetScreen() {
               style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
             <TextInput
-              placeholder="Semptom / gözlem"
+              placeholder="Semptom"
+              multiline
+              value={vaka.symptoms}
+              onChangeText={vaka.setSymptoms}
+              style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 80 }]}
+            />
+            <FotografYukle fotograflar={vaka.fotograflar} onChange={vaka.setFotograflar} />
+            <AnaButon title="Analiz et" variant="secondary" onPress={vaka.analizEt} />
+            {analizPaneli}
+            <AnaButon title="Dosyayı veterinere gönder" onPress={veterinerGonder} />
+            <AnaButon title="Vet ayarları" variant="secondary" onPress={() => setAlt('vet-ayar')} />
+          </>
+        ) : (
+          <>
+            <Text style={[styles.title, { color: colors.text }]}>Hastalık modu</Text>
+            <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
+              Teşhis → başlangıç/ileri derece → iğne/doz → vet danış → takip → taburcu
+            </Text>
+            <TextInput
+              placeholder="Kulak küpe no (zorunlu — tedavi/takip için)"
+              value={kupe}
+              onChangeText={setKupe}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            <TextInput
+              placeholder="Belirtiler..."
               multiline
               value={vaka.symptoms}
               onChangeText={vaka.setSymptoms}
               style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 100 }]}
             />
             <FotografYukle fotograflar={vaka.fotograflar} onChange={vaka.setFotograflar} />
-            <AnaButon title="Analiz / soruları getir" variant="secondary" onPress={vaka.analizEt} />
-            {vaka.analiz?.netlestirmeGerekli ? (
-              <NetlestirmeSorulari
-                sorular={vaka.analiz.sorular}
-                cevaplar={vaka.cevaplar}
-                onCevap={vaka.cevapVer}
-              />
-            ) : null}
-            {vaka.analiz?.fotoBekleniyor ? <FotoIstekKarti istekler={vaka.analiz.fotoIstekleri} /> : null}
-            {vaka.dos ? <VakaDosKarti dos={vaka.dos} /> : null}
-            <AnaButon title="Dosyayı veterinere gönder" onPress={veterinerGonder} />
+            <AnaButon title="Teşhis koy" onPress={vaka.analizEt} />
+            {analizPaneli}
           </>
-        ) : (
-          <HastalikModu colors={colors} vaka={vaka} onVetGonder={() => setAlt('gonder')} />
         )}
       </ScrollView>
     </View>
@@ -360,8 +351,4 @@ const styles = StyleSheet.create({
   disclaimer: { padding: 14, borderRadius: 10, borderWidth: 1, marginBottom: 16 },
   title: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 16, textAlignVertical: 'top', marginBottom: 10 },
-  result: { marginTop: 20, padding: 16, borderRadius: 12, borderWidth: 1 },
-  urgency: { fontWeight: '700', marginBottom: 12 },
-  section: { fontWeight: '700', marginTop: 12, marginBottom: 6 },
-  examples: { marginTop: 24, fontSize: 13, fontStyle: 'italic' },
 });

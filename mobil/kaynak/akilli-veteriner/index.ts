@@ -32,3 +32,22 @@ export {
   type AsiUyari,
   type AsiPlani,
 } from './asi-modu';
+export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
+export {
+  baslatTakip,
+  getAktifTakipler,
+  getTakip,
+  vetDanisildiIsaretle,
+  kontrolZamaniGeldi,
+  asamaEtiket,
+  taburcuEt,
+  type HastalikTakip,
+  type TakipAsama,
+} from './takip';
+export {
+  hayvaniKarantinayaAl,
+  tedaviKaydet,
+  uygulaTedaviVeTakip,
+  uygulaSuruTedavisi,
+  hayvanBulKupe,
+} from './tedavi-uygula';

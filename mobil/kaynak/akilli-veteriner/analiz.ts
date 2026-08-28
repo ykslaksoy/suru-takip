@@ -8,6 +8,7 @@ import {
 } from './netlestirme';
 import { eksikFotoIstekleri, zorunluFotoEksik } from './foto-istek';
 import type { VakaFotografi } from './fotograf';
+import { olusturTeshis } from './teshis';
 
 export type { VetAnalizSonuc, VetCevaplar, VetSoru, VetSoruSecenek } from './netlestirme';
 export { baglamMetniOlustur, netlestirmeSorulari, tespitTema } from './netlestirme';
@@ -304,6 +305,7 @@ export function analyzeVakaTam(input: {
   if (sorular.length > 0) {
     return {
       oneri: null,
+      teshis: null,
       sorular,
       fotoIstekleri: [],
       netlestirmeGerekli: true,
@@ -322,6 +324,7 @@ export function analyzeVakaTam(input: {
   if (fotoIstekleri.length > 0 && zorunluFotoEksik(fotoIstekleri)) {
     return {
       oneri: null,
+      teshis: null,
       sorular: [],
       fotoIstekleri,
       netlestirmeGerekli: false,
@@ -337,8 +340,11 @@ export function analyzeVakaTam(input: {
     cevaplar,
   });
 
+  const teshis = olusturTeshis({ symptoms: input.symptoms, cevaplar, oneri });
+
   return {
     oneri,
+    teshis,
     sorular: [],
     fotoIstekleri: fotoIstekleri.filter((i) => i.zorunlu),
     netlestirmeGerekli: false,
