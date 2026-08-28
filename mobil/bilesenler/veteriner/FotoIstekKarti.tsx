@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { FotoIstek } from '@/kaynak/akilli-veteriner/foto-istek';
