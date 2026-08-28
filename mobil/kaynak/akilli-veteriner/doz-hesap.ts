@@ -11,6 +11,11 @@ function yuvarlaMl(deger: number): number {
   return Math.round(deger);
 }
 
+/** Ekranda Türkçe ondalık — 1,6 ml */
+export function formatMlTr(deger: number): string {
+  return String(deger).replace('.', ',');
+}
+
 /** Metinden ml değerlerini topla — "500 ml + 5 ml" → 505 */
 export function dozdanMlOku(doz: string): number | null {
   const parcalar = doz.match(/(\d+(?:[.,]\d+)?)\s*ml/gi);
@@ -22,10 +27,16 @@ export function dozdanMlOku(doz: string): number | null {
   return toplam > 0 ? yuvarlaMl(toplam) : null;
 }
 
+/** Kilo aralığına göre kuzu / koyun */
+export function hayvanTipiEtiket(kg: number): string {
+  return kg <= 18 ? 'Kuzu' : 'Koyun';
+}
+
 function mlDozCumlesi(tip: IlacDoz['tip'], ml: number): string {
-  if (tip === 'oral') return `${ml} ml ver`;
-  if (tip === 'topikal') return `${ml} ml uygula`;
-  return `Şırıngaya ${ml} ml çek`;
+  const metin = formatMlTr(ml);
+  if (tip === 'oral') return `${metin} ml ver`;
+  if (tip === 'topikal') return `${metin} ml uygula`;
+  return `Şırıngaya ${metin} ml çek`;
 }
 
 /** kg + protokolden toplam ml */
@@ -48,22 +59,44 @@ export function hesaplaToplamMl(ilac: IlacDoz, kg: number): number | null {
 
   if (hesaplandi) return yuvarlaMl(ml);
 
-  const okunan = dozdanMlOku(ilac.doz);
-  return okunan;
+  return dozdanMlOku(ilac.doz);
 }
 
-/** Parantez içi küçük formül — kg → ml (yalnızca kilo etkileyen dozlar) */
-export function hesaplaDozFormul(ilac: IlacDoz, kg: number): string | null {
-  if (ilac.tip === 'oral' || ilac.tip === 'topikal') return null;
-  if (ilac.mgPerKg == null && ilac.iuPerKg == null) {
-    const ml = hesaplaToplamMl(ilac, kg);
-    if (ml == null) return null;
-    return `(kg değişse de ${ml} ml)`;
+/** Kiloya bağlı kısımdan kg başına ml */
+function hesaplaKgBasinaMl(ilac: IlacDoz, kg: number): number | null {
+  if (kg <= 0) return null;
+
+  let degiskenMl = 0;
+  if (ilac.mgPerKg != null && ilac.urunMgMl != null) {
+    degiskenMl += (kg * ilac.mgPerKg) / ilac.urunMgMl;
+  }
+  if (ilac.iuPerKg != null && ilac.urunIuMl != null) {
+    degiskenMl += (kg * ilac.iuPerKg) / ilac.urunIuMl;
   }
 
+  if (degiskenMl <= 0) return null;
+  return yuvarlaMl(degiskenMl / kg);
+}
+
+/** Parantez içi — hayvan, kilo, kg başına ml */
+export function hesaplaDozFormul(ilac: IlacDoz, kg: number): string | null {
+  if (ilac.tip === 'oral' || ilac.tip === 'topikal') return null;
+  if (kg <= 0) return null;
+
   const ml = hesaplaToplamMl(ilac, kg);
-  if (ml == null || kg <= 0) return null;
-  return `(${kg} kg → ${ml} ml)`;
+  if (ml == null) return null;
+
+  const tip = hayvanTipiEtiket(kg);
+  const kgBasina = hesaplaKgBasinaMl(ilac, kg);
+  const sabit = ilac.mlSabit != null && (ilac.mgPerKg != null || ilac.iuPerKg != null) ? ilac.mlSabit : null;
+
+  if (kgBasina != null && sabit != null) {
+    return `(${tip} ${kg} kg · kg başına ${formatMlTr(kgBasina)} ml + ${formatMlTr(sabit)} ml sabit)`;
+  }
+  if (kgBasina != null) {
+    return `(${tip} ${kg} kg · kg başına ${formatMlTr(kgBasina)} ml)`;
+  }
+  return `(${tip} ${kg} kg · sabit ${formatMlTr(ml)} ml)`;
 }
 
 /** Her zaman ml — çoban dili */

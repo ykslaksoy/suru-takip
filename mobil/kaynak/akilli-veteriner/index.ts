@@ -38,6 +38,8 @@ export {
   hesaplaDozFormul,
   hesaplaToplamMl,
   dozdanMlOku,
+  formatMlTr,
+  hayvanTipiEtiket,
   ilaclariKgIleHesapla,
   hastalikTamAd,
   PRAKTIK_KILO_SECENEKLERI,
