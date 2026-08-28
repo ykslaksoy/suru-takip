@@ -1,21 +1,18 @@
 # İşlemler Dizini — Tik + Şifre Kilidi
 
 > Kural: Her işlem = 1 dosya. **Tamam** → `[x]` + 🔒 **şifre kilidi**.
-> Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
->
-> Varsayılan şifre: `SuruYon2026!` → hemen `set-password` ile değiştirin.
 
 ## Özet
 
-- **Tamam (kilitli):** 43
-- **Açık:** 51
-- **Toplam işlem dosyası:** 94
+- **Tamam (kilitli):** 79
+- **Açık:** 25
+- **Toplam işlem dosyası:** 104
 
 ## `00-kural/`
 
 - [x] [`00-okuma-kurali.md`](./00-kural/00-okuma-kurali.md) — İşlem dosyası kuralları (şifre kilidi) 🔒
 - [x] [`01-sifre-kilit-script.md`](./00-kural/01-sifre-kilit-script.md) — Şifre kilit scripti (kilit.py) 🔒
-- [x] [`02-html-rapor-sistemi.md`](./00-kural/02-html-rapor-sistemi.md) — Tamamlanınca HTML rapor 🔒
+- [x] [`02-html-rapor-sistemi.md`](./00-kural/02-html-rapor-sistemi.md) — Tamamlanınca HTML rapor üretimi 🔒
 
 ## `01-dogrulama/`
 
@@ -43,21 +40,23 @@
 - [x] [`02-hayvan-karti.md`](./04-suru/02-hayvan-karti.md) — Hayvan kartı bileşeni 🔒
 - [x] [`03-hayvan-ekle.md`](./04-suru/03-hayvan-ekle.md) — Hayvan ekleme formu 🔒
 - [x] [`04-hayvan-detay.md`](./04-suru/04-hayvan-detay.md) — Hayvan detay ekranı 🔒
-- [ ] [`05-koyun-keci-tur.md`](./04-suru/05-koyun-keci-tur.md) — Tür alanı koyun/keçi
-- [ ] [`06-padok-agil.md`](./04-suru/06-padok-agil.md) — Padok / ağıl grup yönetimi
+- [x] [`05-koyun-keci-tur.md`](./04-suru/05-koyun-keci-tur.md) — Tür alanı koyun/keçi 🔒
+- [x] [`06-padok-agil.md`](./04-suru/06-padok-agil.md) — Padok / ağıl grup yönetimi 🔒
 
 ## `05-kilo/`
 
 - [x] [`01-tartim-kaydi.md`](./05-kilo/01-tartim-kaydi.md) — Tartım kaydı ekleme 🔒
 - [x] [`02-tartim-grafigi.md`](./05-kilo/02-tartim-grafigi.md) — Tartım grafik bileşeni 🔒
 - [x] [`03-adg-hesap.md`](./05-kilo/03-adg-hesap.md) — ADG (g/gün) hesaplama 🔒
-- [ ] [`04-fcr-hesap.md`](./05-kilo/04-fcr-hesap.md) — FCR (kg yem / kg artış)
+- [x] [`04-fcr-hesap.md`](./05-kilo/04-fcr-hesap.md) — FCR (kg yem / kg artış) 🔒
+- [x] [`05-kuzu-derecelendirme.md`](./05-kilo/05-kuzu-derecelendirme.md) — Kuzu derecelendirme (geçici skala) 🔒
+- [x] [`06-derece-yas-bandi.md`](./05-kilo/06-derece-yas-bandi.md) — Derecelendirme yaş (ay) bandına göre 🔒
 
 ## `06-saglik/`
 
 - [x] [`01-saglik-kaydi.md`](./06-saglik/01-saglik-kaydi.md) — Hastalık/tedavi/aşı kaydı 🔒
 - [x] [`02-bekletme-suresi.md`](./06-saglik/02-bekletme-suresi.md) — Bekletme süresi uyarısı 🔒
-- [ ] [`03-asi-takvimi.md`](./06-saglik/03-asi-takvimi.md) — Aşı takvimi + hatırlatıcı
+- [x] [`03-asi-takvimi.md`](./06-saglik/03-asi-takvimi.md) — Aşı takvimi + hatırlatıcı 🔒
 
 ## `07-stok/`
 
@@ -68,15 +67,20 @@
 ## `08-rasyon/`
 
 - [x] [`01-rasyon-hesaplayici.md`](./08-rasyon/01-rasyon-hesaplayici.md) — Temel rasyon hesaplayıcı 🔒
-- [ ] [`02-kullanici-rasyon-girisi.md`](./08-rasyon/02-kullanici-rasyon-girisi.md) — Kullanıcı kendi rasyonunu girer
-- [ ] [`03-akilli-rasyon-oneri.md`](./08-rasyon/03-akilli-rasyon-oneri.md) — Akıllı rasyon önerisi (hedef/süre/maliyet/kâr)
-- [ ] [`04-oneri-vs-gercek.md`](./08-rasyon/04-oneri-vs-gercek.md) — Öneri vs gerçek karşılaştırma
+- [x] [`02-kullanici-rasyon-girisi.md`](./08-rasyon/02-kullanici-rasyon-girisi.md) — Kullanıcı kendi rasyonunu girer 🔒
+- [x] [`03-akilli-rasyon-oneri.md`](./08-rasyon/03-akilli-rasyon-oneri.md) — Akıllı rasyon önerisi (hedef/süre/maliyet/kâr) 🔒
+- [x] [`04-oneri-vs-gercek.md`](./08-rasyon/04-oneri-vs-gercek.md) — Öneri vs gerçek karşılaştırma 🔒
 
 ## `09-okul/`
 
 - [x] [`01-mikro-dersler.md`](./09-okul/01-mikro-dersler.md) — Sürü Okulu mikro dersler 🔒
 - [ ] [`02-besi-dersleri.md`](./09-okul/02-besi-dersleri.md) — Mode 1 özel besi dersleri
 - [ ] [`03-profesyonel-sertifika.md`](./09-okul/03-profesyonel-sertifika.md) — Profesyonel besici yolu
+- [x] [`04-ad-akilli-kuzu.md`](./09-okul/04-ad-akilli-kuzu.md) — Bölüm adı: Akıllı Kuzu 🔒
+- [x] [`05-oneri-merkezi.md`](./09-okul/05-oneri-merkezi.md) — Akıllı Kuzu = öneri merkezi 🔒
+- [x] [`06-super-kuzu-karakter.md`](./09-okul/06-super-kuzu-karakter.md) — Karakter: Süper Kuzu 🔒
+- [x] [`07-ders-listesi-kaldirildi.md`](./09-okul/07-ders-listesi-kaldirildi.md) — Ders listesi kaldırıldı — eğitim öneriyle 🔒
+- [x] [`08-akilli-vs-super-kuzu.md`](./09-okul/08-akilli-vs-super-kuzu.md) — Akıllı Kuzu = rehber · Süper Kuzu = başarı 🔒
 
 ## `10-akilli-veteriner/`
 
@@ -87,8 +91,8 @@
 
 ## `11-veteriner-koprusu/`
 
-- [ ] [`01-vaka-paketi.md`](./11-veteriner-koprusu/01-vaka-paketi.md) — Veterinere gidecek vaka paketi
-- [ ] [`02-veterinere-gonder.md`](./11-veteriner-koprusu/02-veterinere-gonder.md) — Gerçek veterinere gönder butonu
+- [x] [`01-vaka-paketi.md`](./11-veteriner-koprusu/01-vaka-paketi.md) — Veterinere gidecek vaka paketi 🔒
+- [x] [`02-veterinere-gonder.md`](./11-veteriner-koprusu/02-veterinere-gonder.md) — Gerçek veterinere gönder butonu 🔒
 - [ ] [`03-vet-inbox.md`](./11-veteriner-koprusu/03-vet-inbox.md) — Veteriner gelen kutusu
 - [ ] [`04-vet-talimat.md`](./11-veteriner-koprusu/04-vet-talimat.md) — Veteriner talimatı + takip
 
@@ -108,7 +112,7 @@
 
 - [x] [`01-yerel-kayit.md`](./14-cevrimdisi-senkron/01-yerel-kayit.md) — İnternetsiz yerel kayıt 🔒
 - [x] [`02-senkron-kuyrugu.md`](./14-cevrimdisi-senkron/02-senkron-kuyrugu.md) — Senkron kuyruk iskeleti 🔒
-- [ ] [`03-sunucu-senkron.md`](./14-cevrimdisi-senkron/03-sunucu-senkron.md) — Gerçek sunucu push/pull senkron
+- [x] [`03-sunucu-senkron.md`](./14-cevrimdisi-senkron/03-sunucu-senkron.md) — Gerçek sunucu push/pull senkron 🔒
 - [ ] [`04-server-projesi.md`](./14-cevrimdisi-senkron/04-server-projesi.md) — server/ klasörü + API
 
 ## `15-roller/`
@@ -121,11 +125,11 @@
 
 - [ ] [`01-sablon-indir.md`](./16-excel/01-sablon-indir.md) — Excel şablon indir
 - [ ] [`02-excel-ice-aktar.md`](./16-excel/02-excel-ice-aktar.md) — Excel'den hayvan girişi
-- [ ] [`03-excel-disa-aktar.md`](./16-excel/03-excel-disa-aktar.md) — Excel'e liste verme
+- [x] [`03-excel-disa-aktar.md`](./16-excel/03-excel-disa-aktar.md) — Excel'e liste verme 🔒
 
 ## `17-seri-giris/`
 
-- [ ] [`01-ahir-modu-iskelet.md`](./17-seri-giris/01-ahir-modu-iskelet.md) — Seri ahır modu iskelet ekranı
+- [x] [`01-ahir-modu-iskelet.md`](./17-seri-giris/01-ahir-modu-iskelet.md) — Seri ahır modu iskelet ekranı 🔒
 - [ ] [`02-seri-asi.md`](./17-seri-giris/02-seri-asi.md) — Seri aşılama
 - [ ] [`03-seri-tartim.md`](./17-seri-giris/03-seri-tartim.md) — Seri tartım
 
@@ -141,7 +145,7 @@
 
 ## `20-ses/`
 
-- [ ] [`01-sesli-komut.md`](./20-ses/01-sesli-komut.md) — Sesli komut ile kayıt
+- [x] [`01-sesli-komut.md`](./20-ses/01-sesli-komut.md) — Sesli komut ile kayıt 🔒
 
 ## `21-donanim/`
 
@@ -151,33 +155,33 @@
 ## `22-mod1-kuzu-alarak-besi/`
 
 - [x] [`00-urun-dokumani.md`](./22-mod1-kuzu-alarak-besi/00-urun-dokumani.md) — Mod 1 ürün dokümanı 🔒
-- [ ] [`01-mod-secim-ekrani.md`](./22-mod1-kuzu-alarak-besi/01-mod-secim-ekrani.md) — Ana menü 4 mod seçimi
-- [ ] [`02-oncelik-karti.md`](./22-mod1-kuzu-alarak-besi/02-oncelik-karti.md) — Bugün ne yapmalısın? öncelik kartı
-- [ ] [`03-alim-girisi.md`](./22-mod1-kuzu-alarak-besi/03-alim-girisi.md) — Kuzu alım / sisteme giriş
-- [ ] [`04-karantina-yonca-su.md`](./22-mod1-kuzu-alarak-besi/04-karantina-yonca-su.md) — Karantina: yonca + su kontrol
-- [ ] [`05-adim-kilidi.md`](./22-mod1-kuzu-alarak-besi/05-adim-kilidi.md) — Adım kilidi (0→8 journey)
-- [ ] [`06-besi-metrik-raporu.md`](./22-mod1-kuzu-alarak-besi/06-besi-metrik-raporu.md) — ADG+FCR+kâr rapor ekranı
+- [x] [`01-mod-secim-ekrani.md`](./22-mod1-kuzu-alarak-besi/01-mod-secim-ekrani.md) — Ana menü 4 mod seçimi 🔒
+- [x] [`02-oncelik-karti.md`](./22-mod1-kuzu-alarak-besi/02-oncelik-karti.md) — Bugün ne yapmalısın? öncelik kartı 🔒
+- [x] [`03-alim-girisi.md`](./22-mod1-kuzu-alarak-besi/03-alim-girisi.md) — Kuzu alım / sisteme giriş 🔒
+- [x] [`04-karantina-yonca-su.md`](./22-mod1-kuzu-alarak-besi/04-karantina-yonca-su.md) — Karantina: yonca + su kontrol 🔒
+- [x] [`05-adim-kilidi.md`](./22-mod1-kuzu-alarak-besi/05-adim-kilidi.md) — Adım kilidi (0→8 journey) 🔒
+- [x] [`06-besi-metrik-raporu.md`](./22-mod1-kuzu-alarak-besi/06-besi-metrik-raporu.md) — ADG+FCR+kâr rapor ekranı 🔒
 - [ ] [`07-profesyonel-gecis.md`](./22-mod1-kuzu-alarak-besi/07-profesyonel-gecis.md) — Profesyonel besi moda geçiş
 
 ## `23-mod2-koc-katarak-besi/`
 
 - [x] [`00-urun-dokumani.md`](./23-mod2-koc-katarak-besi/00-urun-dokumani.md) — Mod 2 ürün dokümanı 🔒
-- [ ] [`01-koc-katim.md`](./23-mod2-koc-katarak-besi/01-koc-katim.md) — Koç katım planı
-- [ ] [`02-kuzulatma.md`](./23-mod2-koc-katarak-besi/02-kuzulatma.md) — Kuzulatma kaydı
-- [ ] [`03-besiye-aktar.md`](./23-mod2-koc-katarak-besi/03-besiye-aktar.md) — Kuzuyu besi akışına aktar
+- [x] [`01-koc-katim.md`](./23-mod2-koc-katarak-besi/01-koc-katim.md) — Koç katım planı 🔒
+- [x] [`02-kuzulatma.md`](./23-mod2-koc-katarak-besi/02-kuzulatma.md) — Kuzulatma kaydı 🔒
+- [x] [`03-besiye-aktar.md`](./23-mod2-koc-katarak-besi/03-besiye-aktar.md) — Kuzuyu besi akışına aktar 🔒
 
 ## `24-mod3-damizlik/`
 
 - [x] [`00-urun-dokumani.md`](./24-mod3-damizlik/00-urun-dokumani.md) — Mod 3 ürün dokümanı 🔒
-- [ ] [`01-secilim-secim.md`](./24-mod3-damizlik/01-secilim-secim.md) — Damızlık seleksiyon
-- [ ] [`02-secere.md`](./24-mod3-damizlik/02-secere.md) — Şecere anne/baba
+- [x] [`01-secilim-secim.md`](./24-mod3-damizlik/01-secilim-secim.md) — Damızlık seleksiyon 🔒
+- [x] [`02-secere.md`](./24-mod3-damizlik/02-secere.md) — Şecere anne/baba 🔒
 
 ## `25-mod4-sut/`
 
 - [x] [`00-urun-dokumani.md`](./25-mod4-sut/00-urun-dokumani.md) — Mod 4 süt ürün dokümanı 🔒
-- [ ] [`01-sagim-kaydi.md`](./25-mod4-sut/01-sagim-kaydi.md) — Sağım litre kaydı
-- [ ] [`02-laktasyon.md`](./25-mod4-sut/02-laktasyon.md) — Laktasyon dönemi
-- [ ] [`03-cogaltma-yonlendirme.md`](./25-mod4-sut/03-cogaltma-yonlendirme.md) — Kuzulatma + çoğaltma yönlendirme
+- [x] [`01-sagim-kaydi.md`](./25-mod4-sut/01-sagim-kaydi.md) — Sağım litre kaydı 🔒
+- [x] [`02-laktasyon.md`](./25-mod4-sut/02-laktasyon.md) — Laktasyon dönemi 🔒
+- [x] [`03-cogaltma-yonlendirme.md`](./25-mod4-sut/03-cogaltma-yonlendirme.md) — Kuzulatma + çoğaltma yönlendirme 🔒
 
 ## `26-beta/`
 
@@ -191,26 +195,6 @@
 - [x] [`03-offline-roller-rfid-dokuman.md`](./27-puzzle-tasi/03-offline-roller-rfid-dokuman.md) — Offline+roller+RFID dokümanı 🔒
 - [x] [`04-vet-kopru-dokuman.md`](./27-puzzle-tasi/04-vet-kopru-dokuman.md) — Akıllı vet köprüsü dokümanı 🔒
 
----
+## `28-bakim/`
 
-## Mevcut kod / docs (referans ağaç)
-
-```
-docs/
-  validation/ …
-  wireframes/ …
-  product/ …
-  beta/ …
-  monetization/ …
-mobile/
-  app/ … ekranlar
-  lib/ … iş mantığı (şimdilik; sonra src/ puzzle)
-  components/ …
-  context/ …
-islemler/  ← BU TİK SİSTEMİ
-```
-
-## Nasıl tamamlanır?
-
-Kullanıcı: **"22-mod1 … 04-karantina tamam"** veya **"bu işlem tamam"**
-Agent: ilgili dosyayı KİLİTLİ formata çevirir, INDEX'te `[x]` yapar, o dosyaya bir daha yazmaz.
+- [ ] [`01-proje-bakimi.md`](./28-bakim/01-proje-bakimi.md) — Proje bakım turu

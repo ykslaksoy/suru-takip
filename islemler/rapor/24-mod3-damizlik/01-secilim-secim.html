@@ -60,26 +60,28 @@
   </header>
   <main>
     <div class="card">
-      <span class="badge todo">AÇIK İŞLEM</span>
+      <span class="badge lock">🔒 KİLİTLİ — şifresiz değiştirilemez</span>
       <h1>Damızlık seleksiyon</h1>
-      <p class="meta">Oluşturulma: 2026-08-26 01:07 UTC</p>
+      <p class="meta">Oluşturulma: 2026-08-28 12:46 UTC</p>
     </div>
     
     <div class="card">
       <table>
-        <tr><th>Durum</th><td>TODO</td></tr>
+        <tr><th>Durum</th><td>KILITLI</td></tr>
         <tr><th>Dosya</th><td><code>24-mod3-damizlik/01-secilim-secim.md</code></td></tr>
-        <tr><th>status</th><td>TODO</td></tr>
-        <tr><th>kilitli</th><td>false</td></tr>
+        <tr><th>status</th><td>DONE</td></tr>
+        <tr><th>kilitli</th><td>true</td></tr>
       </table>
     </div>
-    <div class="card"><p><em>**AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.</em></p><p>**Klasör:** `24-mod3-damizlik`  </p><p>**Bağımlı kod (varsa):** `—`</p><h2>Yapılacak</h2><p>Detay ürün dokümanına bak.</p><p>Kullanıcı veya agent **&quot;bu işlem tamam&quot;** dediğinde:</p><p>1. `status: DONE`</p><p>2. Başlık `[x]`</p><p>3. `kilitli: true`</p><p>4. Bu dosyaya bir daha yazma</p></div>
+    <div class="card"><p><em>**KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock &lt;dosya&gt;` + şifre.</em></p><p><em>**AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.</em></p><p>**Klasör:** `24-mod3-damizlik`  </p><p>**Bağımlı kod (varsa):** `—`</p><h2>Yapılacak</h2><p>Detay ürün dokümanına bak.</p><p>Kullanıcı veya agent **&quot;bu işlem tamam&quot;** dediğinde:</p><p>1. `status: DONE`</p><p>2. Başlık `[x]`</p><p>3. `kilitli: true`</p><p>4. Bu dosyaya bir daha yazma</p></div>
     
         <div class="card">
-          <h2>Tamamlama</h2>
+          <h2>Şifre kilidi</h2>
+          <p>Bu işlem <strong>tamam</strong> olarak kilitlendi. İstemeden değişmesin diye şifre gerekir.</p>
           <div class="cmd">
-            <pre>python3 islemler/scripts/kilit.py tamamla 24-mod3-damizlik/01-secilim-secim.md
-# → HTML rapor üretilir + şifre kilidi konur</pre>
+            <pre>python3 islemler/scripts/kilit.py unlock 24-mod3-damizlik/01-secilim-secim.md
+# şifre girin, düzenleyin, sonra:
+python3 islemler/scripts/kilit.py kilitle 24-mod3-damizlik/01-secilim-secim.md</pre>
           </div>
         </div>
     

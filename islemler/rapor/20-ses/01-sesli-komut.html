@@ -60,26 +60,28 @@
   </header>
   <main>
     <div class="card">
-      <span class="badge todo">AÇIK İŞLEM</span>
+      <span class="badge lock">🔒 KİLİTLİ — şifresiz değiştirilemez</span>
       <h1>Sesli komut ile kayıt</h1>
-      <p class="meta">Oluşturulma: 2026-08-26 01:07 UTC</p>
+      <p class="meta">Oluşturulma: 2026-08-28 12:46 UTC</p>
     </div>
     
     <div class="card">
       <table>
-        <tr><th>Durum</th><td>TODO</td></tr>
+        <tr><th>Durum</th><td>KILITLI</td></tr>
         <tr><th>Dosya</th><td><code>20-ses/01-sesli-komut.md</code></td></tr>
-        <tr><th>status</th><td>TODO</td></tr>
-        <tr><th>kilitli</th><td>false</td></tr>
+        <tr><th>status</th><td>DONE</td></tr>
+        <tr><th>kilitli</th><td>true</td></tr>
       </table>
     </div>
-    <div class="card"><p><em>**AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.</em></p><p>**Klasör:** `20-ses`  </p><p>**Bağımlı kod (varsa):** `—`</p><h2>Yapılacak</h2><p>küpe 1234, 68 kilo</p><p>Kullanıcı veya agent **&quot;bu işlem tamam&quot;** dediğinde:</p><p>1. `status: DONE`</p><p>2. Başlık `[x]`</p><p>3. `kilitli: true`</p><p>4. Bu dosyaya bir daha yazma</p></div>
+    <div class="card"><p><em>**KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock &lt;dosya&gt;` + şifre.</em></p><p><em>**AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.</em></p><p>**Klasör:** `20-ses`  </p><p>**Kod:** `mobil/kaynak/ses/`</p><p>```</p><p>Kullanıcı konuşur</p><p>      ↓</p><p>Sistem ayıklar (komutAyikla)</p><p>      ↓</p><p>Geri okur (TTS): &quot;Tartım: küpe 1234, 68 kilo. Onaylamak için tamam de.&quot;</p><p>      ↓</p><p>Kullanıcı &quot;tamam&quot; der mi?</p><p>   ├─ EVET → kayıt yap (komutuUygula)</p><p>   ├─ &quot;iptal&quot; → vazgeç</p><p>   └─ HAYIR → yeni komut bekle</p><p>```</p><p>**Kural:** Onay olmadan veritabanına **yazılmaz**.</p><p>| Söylenen | Eylem |</p><p>|----------|--------|</p><p>| küpe 1234, 68 kilo | Tartım kaydı |</p><p>| küpe TR-34-001234 aşı clostridial | Aşı kaydı |</p><p>| stok giriş arpa 50 kg | Stok hareketi |</p><p>- **Onay:** tamam, evet, onayla, kaydet, olur, doğru…</p><p>- **Red:** iptal, hayır, vazgeç, yanlış, tekrar…</p><p>| Dosya | Görev |</p><p>|-------|--------|</p><p>| `oturum.ts` | SesKomutOturumu — durum makinesi |</p><p>| `komut.ts` | Metinden komut ayıklama |</p><p>| `onay.ts` | tamam / iptal algılama |</p><p>| `geri-okuma.ts` | Okunacak özet metin |</p><p>| `uygula.ts` | Onay sonrası DB yazımı |</p><p>- Native STT/TTS bağlantısı (`expo-speech` / platform STT)</p><p>- Ahır modu + seri tartım entegrasyonu</p><p>Kullanıcı veya agent **&quot;bu işlem tamam&quot;** dediğinde:</p><p>1. `status: DONE`</p><p>2. Başlık `[x]`</p><p>3. `kilitli: true`</p><p>4. Bu dosyaya bir daha yazma</p></div>
     
         <div class="card">
-          <h2>Tamamlama</h2>
+          <h2>Şifre kilidi</h2>
+          <p>Bu işlem <strong>tamam</strong> olarak kilitlendi. İstemeden değişmesin diye şifre gerekir.</p>
           <div class="cmd">
-            <pre>python3 islemler/scripts/kilit.py tamamla 20-ses/01-sesli-komut.md
-# → HTML rapor üretilir + şifre kilidi konur</pre>
+            <pre>python3 islemler/scripts/kilit.py unlock 20-ses/01-sesli-komut.md
+# şifre girin, düzenleyin, sonra:
+python3 islemler/scripts/kilit.py kilitle 20-ses/01-sesli-komut.md</pre>
           </div>
         </div>
     

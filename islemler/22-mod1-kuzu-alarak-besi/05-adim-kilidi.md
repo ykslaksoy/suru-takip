@@ -1,9 +1,13 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-08-28
 ---
 
-# [ ] Adım kilidi (0→8 journey)
+# [x] Adım kilidi (0→8 journey)
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 > **AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.
 

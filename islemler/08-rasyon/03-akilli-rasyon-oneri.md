@@ -1,9 +1,13 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-08-28
 ---
 
-# [ ] Akıllı rasyon önerisi (hedef/süre/maliyet/kâr)
+# [x] Akıllı rasyon önerisi (hedef/süre/maliyet/kâr)
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 > **AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.
 
