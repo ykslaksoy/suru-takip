@@ -14,10 +14,12 @@ export type IlacDoz = {
   uygulama: string;
   siklik: string;
   not?: string;
-  /** kg × mgPerKg → pratik mg dozu */
+  /** kg × mgPerKg → pratik mg dozu (etken madde) */
   mgPerKg?: number;
   mlSabit?: number;
   iuPerKg?: number;
+  /** Ürün konsantrasyonu mg/ml — enjeksiyonluk hacim tahmini için */
+  urunMgMl?: number;
 };
 
 export type VetDanisma = 'zorunlu' | 'onerilen' | 'gerekmez';
@@ -96,6 +98,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 20,
+        urunMgMl: 300,
         uygulama: 'IM',
         siklik: '1×3 gün',
       },
@@ -248,8 +251,9 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         tip: 'igne',
         doz: '',
         mgPerKg: 20,
+        urunMgMl: 300,
         uygulama: 'IM',
-        siklik: '1×5 gün',
+        siklik: '1×3 gün',
       },
       {
         id: 's3',

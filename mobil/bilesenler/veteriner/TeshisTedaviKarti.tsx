@@ -88,7 +88,7 @@ export function TeshisTedaviKarti({
               <Text style={{ color: colors.text, fontWeight: '700' }}>
                 {il.tip === 'igne' ? '💉' : il.tip === 'asi' ? '🛡️' : '💊'} {il.ilacAdi}
               </Text>
-              <Text style={{ color: colors.text, marginTop: 4, fontWeight: '600' }}>{il.doz}</Text>
+              <Text style={{ color: colors.text, marginTop: 4, fontWeight: '600', lineHeight: 22 }}>{il.doz}</Text>
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
                 {il.uygulama} · {il.siklik}
               </Text>

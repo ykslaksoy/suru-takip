@@ -11,22 +11,34 @@ function yuvarlaMg(deger: number): number {
   return Math.round(deger);
 }
 
+function urunMlTahmini(mgEtken: number, mgMl: number): string {
+  const ml = mgEtken / mgMl;
+  const yuvarla = ml < 10 ? Math.round(ml * 10) / 10 : Math.round(ml);
+  return `≈ ${yuvarla} ml şişeden (${mgMl} mg/ml — vet onayıyla)`;
+}
+
 /** mg/kg veya sabit dozu kg'ye göre pratik metne çevirir */
 export function hesaplaDozMetni(ilac: IlacDoz, kg: number): string {
   const parcalar: string[] = [];
+  let mgToplam: number | null = null;
 
   if (ilac.mlSabit != null) {
     parcalar.push(`${ilac.mlSabit} ml`);
   }
   if (ilac.mgPerKg != null) {
-    parcalar.push(`${yuvarlaMg(ilac.mgPerKg * kg)} mg`);
+    mgToplam = yuvarlaMg(ilac.mgPerKg * kg);
+    parcalar.push(`${mgToplam} mg etken madde`);
   }
   if (ilac.iuPerKg != null) {
     parcalar.push(`${Math.round(ilac.iuPerKg * kg)} IU`);
   }
 
   if (parcalar.length > 0) {
-    return `${parcalar.join(' + ')} uygulayın (${kg} kg hayvan)`;
+    const ana = `${parcalar.join(' + ')} uygulayın (${kg} kg hayvan)`;
+    if (mgToplam != null && ilac.urunMgMl != null && ilac.tip === 'igne') {
+      return `${ana}\n${urunMlTahmini(mgToplam, ilac.urunMgMl)}`;
+    }
+    return ana;
   }
 
   if (/mg\/kg|IU\/kg/i.test(ilac.doz)) {
