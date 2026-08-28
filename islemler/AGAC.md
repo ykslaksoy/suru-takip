@@ -64,7 +64,7 @@ suruyon/
     ├── 10-akilli-veteriner/
     │   ├── [x] 01-semptom-analiz.md 🔒  — 
     │   ├── [x] 02-disclaimer.md 🔒  — Tıbbi sorumluluk reddi
-    │   ├── [ ] 03-fotograf-yukle.md  — Hastalık fotoğrafı çek/yükle
+    │   ├── [x] 03-fotograf-yukle.md 🔒  — Hastalık fotoğrafı çek/yükle
     │   └── [ ] 04-ise-yaradi-geri-bildirim.md  — İşe yaradı / yaramadı geri bildirimi
     ├── 11-veteriner-koprusu/
     │   ├── [x] 01-vaka-paketi.md 🔒  — Veterinere gidecek vaka paketi

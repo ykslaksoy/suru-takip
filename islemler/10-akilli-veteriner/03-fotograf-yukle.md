@@ -1,21 +1,16 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
 ---
 
-# [ ] Hastalık fotoğrafı çek/yükle
+# [x] Hastalık fotoğrafı çek/yükle
 
-> **AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.
+> **KİLİTLİ — TAMAM.** Bu dosyaya dokunulmaz. Değişiklik gerekirse yeni işlem dosyası açılır.
 
-**Klasör:** `10-vet-ai`  
-**Bağımlı kod (varsa):** `—`
+**Klasör:** `10-akilli-veteriner`  
+**Kod:** `mobil/bilesenler/veteriner/FotografYukle.tsx`, `mobil/kaynak/akilli-veteriner/fotograf.ts`, `mobil/kaynak/veteriner-koprusu/vaka-paketi.ts`
 
-## Yapılacak
-Offline foto kuyruğu + vaka eki.
-
-## Tamamlandı mı?
-Kullanıcı veya agent **"bu işlem tamam"** dediğinde:
-1. `status: DONE`
-2. Başlık `[x]`
-3. `kilitli: true`
-4. Bu dosyaya bir daha yazma
+## Ne yapıldı
+- Kamera/galeri ile fotoğraf ekleme, tür seçimi (yara, ayak, dışkı, ağız, genel)
+- Akıllı Veteriner birleşik analiz (semptom + foto türü → tedavi önerileri)
+- Vaka paketine fotograflar[]; veterinere gönderimde foto bilgisi ve önizleme
