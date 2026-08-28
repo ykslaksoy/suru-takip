@@ -142,4 +142,4 @@ suruyon/
     │   └── [ ] 01-proje-bakimi.md  — Proje bakım turu
 ```
 
-**Tamam (kilitli):** 79 · **Açık:** 25 · **Toplam:** 104
+**Tamam (kilitli):** 80 · **Açık:** 24 · **Toplam:** 104
