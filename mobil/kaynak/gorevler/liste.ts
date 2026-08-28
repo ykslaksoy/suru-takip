@@ -134,24 +134,16 @@ export async function getGorevler(): Promise<Gorev[]> {
   const out: Gorev[] = [];
 
   const withdrawals = await getActiveWithdrawals();
-  if (withdrawals.length > 0) {
-    const sorted = [...withdrawals].sort(
-      (a, b) =>
-        kalanGun(a.recordedAt, a.withdrawalDays) - kalanGun(b.recordedAt, b.withdrawalDays)
-    );
-    const first = sorted[0];
-    const gun = kalanGun(first.recordedAt, first.withdrawalDays);
+  for (const w of withdrawals) {
+    const gun = kalanGun(w.recordedAt, w.withdrawalDays);
     out.push({
-      id: 'bekletme',
+      id: `bekletme-${w.animalId}`,
       seviye: 'uyari',
       kaynak: 'bekletme',
       baslik: 'Bekletme',
-      aciklama:
-        withdrawals.length === 1
-          ? `${first.earTag ?? 'Hayvan'} · ${first.medicine} · ${gun} gün kaldı`
-          : `${withdrawals.length} hayvan bekletmede · en yakın ${gun} gün`,
-      href: '/(tabs)/saglik',
-      cta: 'Sağlığa bak',
+      aciklama: `${w.earTag ?? 'Hayvan'} · ${w.medicine} · ${gun} gün kaldı`,
+      href: `/hayvan/${w.animalId}/saglik`,
+      cta: 'Kayıt aç',
     });
   }
 
@@ -161,18 +153,19 @@ export async function getGorevler(): Promise<Gorev[]> {
   const asiDurum = hesaplaAsiStokDurumu(animals, health, stock);
 
   for (const u of asiStokUyarilari(asiDurum)) {
+    const stokMu = u.baslik.includes('stok') || u.baslik.includes('SKT');
     out.push({
       id: u.id,
       seviye: u.seviye === 'uyari' ? 'uyari' : 'sira',
-      kaynak: 'asi',
+      kaynak: stokMu ? 'stok' : 'asi',
       baslik: u.baslik,
       aciklama: u.aciklama,
-      href: u.baslik.includes('stok') || u.baslik.includes('SKT') ? '/(tabs)/stok' : '/(tabs)/saglik',
-      cta: u.baslik.includes('stok') || u.baslik.includes('SKT') ? 'Stoka git' : 'Aşıya bak',
+      href: stokMu ? '/(tabs)/stok' : '/(tabs)/saglik',
+      cta: stokMu ? 'Stoka git' : 'Aşıya bak',
     });
   }
 
-  for (const s of asiBuHaftaListesi(asiDurum).slice(0, 20)) {
+  for (const s of asiBuHaftaListesi(asiDurum).slice(0, 30)) {
     // Özet uyarılar zaten var; hayvan satırlarını ayrı görev olarak ekle
     out.push({
       id: `asi-hayvan-${s.programId}-${s.animalId}`,
@@ -255,24 +248,18 @@ export async function getGorevler(): Promise<Gorev[]> {
     });
   }
 
-  if (animals.length > 0) {
-    let tartimEksik = 0;
-    for (const a of animals.slice(0, 40)) {
-      const w = await getLatestWeight(a.id);
-      if (w == null) tartimEksik += 1;
-    }
-    if (tartimEksik > 0) {
+  const aktifHayvanlar = animals.filter((a) => a.status !== 'sold' && a.status !== 'dead');
+  for (const a of aktifHayvanlar.slice(0, 50)) {
+    const w = await getLatestWeight(a.id);
+    if (w == null) {
       out.push({
-        id: 'tartim',
+        id: `tartim-hayvan-${a.id}`,
         seviye: 'sira',
         kaynak: 'tartim',
-        baslik: 'Tartım sırası',
-        aciklama:
-          tartimEksik === 1
-            ? '1 hayvanda henüz tartım yok'
-            : `${tartimEksik} hayvanda henüz tartım yok`,
-        href: '/(tabs)/suru',
-        cta: 'Sürüye git',
+        baslik: 'Tartım yok',
+        aciklama: `${a.earTag || a.name || 'Hayvan'} · henüz tartım kaydı yok`,
+        href: `/hayvan/${a.id}/kilo`,
+        cta: 'Tartım gir',
       });
     }
   }
@@ -308,19 +295,69 @@ export async function getGorevler(): Promise<Gorev[]> {
   return out;
 }
 
-const BUGUN_DISLA = (id: string) => id.startsWith('asi-hayvan-');
+const BUGUN_DISLA = (id: string) =>
+  id.startsWith('asi-hayvan-') || id.startsWith('tartim-hayvan-') || id.startsWith('bekletme-');
 
 /** Bugün kartı — günlük görevler (gelecek planlar hariç) */
 export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
   const bugun = new Date().toISOString().slice(0, 10);
-  const filtered = (await getGorevler()).filter((g) => {
-    if (g.seviye === 'plan') return false;
-    if (g.tarih && g.tarih > bugun) return false;
+  const ham = await getGorevler();
+
+  const gunluk = (g: Gorev) => g.seviye !== 'plan' && !(g.tarih && g.tarih > bugun);
+
+  const ozetler: Gorev[] = [];
+  const asiN = ham.filter((g) => g.kaynak === 'asi' && g.id.startsWith('asi-hayvan-') && gunluk(g)).length;
+  if (asiN) {
+    ozetler.push({
+      id: 'bugun-asi-ozet',
+      seviye: 'uyari',
+      kaynak: 'asi',
+      baslik: 'Aşı',
+      aciklama: `${asiN} hayvan · yapılacak veya yaklaşan`,
+      href: '/gorevler',
+      cta: 'Görevlere bak',
+    });
+  }
+  const tartimN = ham.filter((g) => g.kaynak === 'tartim' && gunluk(g)).length;
+  if (tartimN) {
+    ozetler.push({
+      id: 'bugun-tartim-ozet',
+      seviye: 'sira',
+      kaynak: 'tartim',
+      baslik: 'Tartım',
+      aciklama: `${tartimN} hayvan · tartım kaydı yok`,
+      href: '/gorevler',
+      cta: 'Görevlere bak',
+    });
+  }
+  const bekN = ham.filter((g) => g.kaynak === 'bekletme' && gunluk(g)).length;
+  if (bekN) {
+    ozetler.push({
+      id: 'bugun-bekletme-ozet',
+      seviye: 'uyari',
+      kaynak: 'bekletme',
+      baslik: 'Bekletme',
+      aciklama: `${bekN} hayvan · ilaç bekletmesi devam ediyor`,
+      href: '/gorevler',
+      cta: 'Görevlere bak',
+    });
+  }
+
+  const filtered = ham.filter((g) => {
+    if (!gunluk(g)) return false;
     if (BUGUN_DISLA(g.id)) return false;
     return true;
   });
 
-  if (filtered.length === 0) {
+  const birlesik = [...ozetler, ...filtered];
+  const sira: Record<GorevSeviye, number> = { uyari: 0, sira: 1, plan: 2, bilgi: 3 };
+  birlesik.sort((a, b) => {
+    const ds = sira[a.seviye] - sira[b.seviye];
+    if (ds !== 0) return ds;
+    return (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
+  });
+
+  if (birlesik.length === 0) {
     return [
       {
         id: 'bos',
@@ -334,7 +371,7 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
     ];
   }
 
-  return filtered.slice(0, limit);
+  return birlesik.slice(0, limit);
 }
 
 /** Ana sayfa özeti — en fazla 3 görev (eski ad; Bugün ile aynı) */
