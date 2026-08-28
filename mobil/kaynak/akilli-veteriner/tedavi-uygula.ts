@@ -53,7 +53,7 @@ export async function tedaviKaydet(
 
 export async function uygulaTedaviVeTakip(
   takipId: string,
-  opts?: { vetOnayAtlandi?: boolean }
+  opts?: { vetOnayAtlandi?: boolean; kg?: number }
 ): Promise<{ ok: boolean; message: string }> {
   const takip = await getTakip(takipId);
   if (!takip) return { ok: false, message: 'Takip kaydı yok' };
@@ -62,8 +62,13 @@ export async function uygulaTedaviVeTakip(
     return { ok: false, message: 'Önce veterinere danışın veya vet onayı alın' };
   }
 
+  const ilaclar =
+    opts?.kg && opts.kg > 0
+      ? (await import('./doz-hesap')).ilaclariKgIleHesapla(takip.teshis.ilaclar, opts.kg)
+      : takip.teshis.ilaclar;
+
   if (takip.animalId) {
-    await tedaviKaydet(takip.animalId, takip.teshis, takip.teshis.ilaclar);
+    await tedaviKaydet(takip.animalId, takip.teshis, ilaclar);
     if (takip.teshis.karantinaGerekli && !takip.karantinaYapildi) {
       const k = await hayvaniKarantinayaAl(takip.animalId);
       if (k.ok) await karantinaYapildiIsaretle(takipId, k.padok);
@@ -114,7 +119,10 @@ export async function uygulaSuruTedavisi(
 }
 
 /** Kulak küpe ile hayvan bul */
-export async function hayvanBulKupe(kupe: string): Promise<{ id: string; earTag: string; paddock: string } | null> {
+export async function hayvanBulKupe(
+  kupe: string
+): Promise<{ id: string; earTag: string; paddock: string; kiloKg: number | null } | null> {
+  const { getLatestWeight } = await import('@/kaynak/cekirdek/veritabani');
   const term = kupe.trim().toLowerCase();
   if (!term) return null;
   const animals = await getAnimals({ search: kupe.trim() });
@@ -123,5 +131,6 @@ export async function hayvanBulKupe(kupe: string): Promise<{ id: string; earTag:
     animals.find((x) => x.turkvetNo.toLowerCase().includes(term)) ??
     animals[0];
   if (!a) return null;
-  return { id: a.id, earTag: a.earTag, paddock: a.paddock };
+  const kiloKg = await getLatestWeight(a.id);
+  return { id: a.id, earTag: a.earTag, paddock: a.paddock, kiloKg };
 }

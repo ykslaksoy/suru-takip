@@ -1,6 +1,7 @@
 import type { VetCevaplar } from './netlestirme';
 import { tespitTema, type VetTema } from './netlestirme';
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
+import { hastalikTamAd } from './doz-hesap';
 
 export type HastalikDerece = 'baslangic' | 'ileri';
 
@@ -8,10 +9,15 @@ export type IlacDoz = {
   id: string;
   ilacAdi: string;
   tip: 'igne' | 'asi' | 'oral' | 'topikal';
+  /** Sabit doz metni (oral/topikal) veya hesap sonrası dolar */
   doz: string;
   uygulama: string;
   siklik: string;
   not?: string;
+  /** kg × mgPerKg → pratik mg dozu */
+  mgPerKg?: number;
+  mlSabit?: number;
+  iuPerKg?: number;
 };
 
 export type VetDanisma = 'zorunlu' | 'onerilen' | 'gerekmez';
@@ -20,7 +26,10 @@ export type SuruMudahale = 'yok' | 'ayni_padok' | 'tum_kuzular';
 
 export type HastalikTeshis = {
   hastalikId: string;
+  /** Türkçe ad (Tıbbi ad) — gösterim */
   hastalikAdi: string;
+  hastalikAdiTr: string;
+  tibbiAd: string;
   derece: HastalikDerece;
   dereceEtiket: string;
   bulasici: boolean;
@@ -35,7 +44,8 @@ export type HastalikTeshis = {
 
 type Protokol = {
   id: string;
-  ad: string;
+  adTr: string;
+  tibbiAd: string;
   bulasici: boolean;
   vetDanisma: VetDanisma;
   etkiSuresiGun: number;
@@ -51,13 +61,14 @@ type Protokol = {
 const PROTOKOLLER: Record<VetTema, Protokol> = {
   ishal: {
     id: 'enterit',
-    ad: 'Enterit / ishal sendromu',
+    adTr: 'İshal',
+    tibbiAd: 'Enterit',
     bulasici: true,
     vetDanisma: 'onerilen',
     etkiSuresiGun: 5,
     karantina: true,
     suruMudahale: 'ayni_padok',
-    aciklama: 'Sulu dışkı ve bağırsak enfeksiyonu tablosu.',
+    aciklama: 'Sulu dışkı ve bağırsak enfeksiyonu.',
     baslangic: [
       {
         id: 'e1',
@@ -72,7 +83,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'e2',
         ilacAdi: 'Sulfa grubu (vet reçetesi)',
         tip: 'igne',
-        doz: '15 mg/kg',
+        doz: '',
+        mgPerKg: 15,
         uygulama: 'IM',
         siklik: '1×3 gün',
       },
@@ -82,7 +94,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'e3',
         ilacAdi: 'Florfenikol',
         tip: 'igne',
-        doz: '20 mg/kg',
+        doz: '',
+        mgPerKg: 20,
         uygulama: 'IM',
         siklik: '1×3 gün',
       },
@@ -90,7 +103,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'e4',
         ilacAdi: 'Elektrolit + B kompleks',
         tip: 'oral',
-        doz: '500 ml + 5 ml',
+        doz: '500 ml + 5 ml / gün',
         uygulama: 'Ağızdan',
         siklik: '2×2 gün',
       },
@@ -100,7 +113,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'es1',
         ilacAdi: 'Profilaktik sulfa (vet önerisi)',
         tip: 'igne',
-        doz: '10 mg/kg',
+        doz: '',
+        mgPerKg: 10,
         uygulama: 'SC',
         siklik: 'Tek doz',
       },
@@ -108,19 +122,20 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
   },
   topallama: {
     id: 'pododermatit',
-    ad: 'Pododermatit (yay) / ayak enfeksiyonu',
+    adTr: 'Ayak yarası / topallık',
+    tibbiAd: 'Pododermatit',
     bulasici: false,
     vetDanisma: 'gerekmez',
     etkiSuresiGun: 7,
     karantina: false,
     suruMudahale: 'yok',
-    aciklama: 'Ayak/tırnak enfeksiyonu veya travma.',
+    aciklama: 'Tırnak arası enfeksiyon (yay) veya ayak travması.',
     baslangic: [
       {
         id: 'p1',
         ilacAdi: 'Ayak banyosu (antiseptik)',
         tip: 'topikal',
-        doz: '10 dk',
+        doz: '10 dk banyo',
         uygulama: 'Ayak banyosu',
         siklik: '1×2 gün',
       },
@@ -138,15 +153,18 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'p3',
         ilacAdi: 'Penisilin + streptomisin',
         tip: 'igne',
-        doz: '10.000 IU/kg + 10 mg/kg',
+        doz: '',
+        mgPerKg: 10,
+        iuPerKg: 10000,
         uygulama: 'IM',
         siklik: '1×5 gün',
       },
       {
         id: 'p4',
-        ilacAdi: 'Meloksikam (ağrı)',
+        ilacAdi: 'Meloksikam (ağrı kesici)',
         tip: 'igne',
-        doz: '0,5 mg/kg',
+        doz: '',
+        mgPerKg: 0.5,
         uygulama: 'SC',
         siklik: '1×3 gün',
       },
@@ -154,13 +172,14 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
   },
   kuzu: {
     id: 'kuzu-zayif',
-    ad: 'Zayıf kuzu / kolostrum yetersizliği',
+    adTr: 'Zayıf kuzu / emmeme',
+    tibbiAd: 'Neonatal yetmezlik · Omphalitis',
     bulasici: false,
     vetDanisma: 'onerilen',
     etkiSuresiGun: 3,
     karantina: false,
     suruMudahale: 'yok',
-    aciklama: 'Emmeme, göbek veya zayıflık tablosu.',
+    aciklama: 'Kolostrum yetersizliği veya göbek enfeksiyonu şüphesi.',
     baslangic: [
       {
         id: 'k1',
@@ -175,6 +194,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         ilacAdi: 'B vitamini',
         tip: 'igne',
         doz: '2 ml',
+        mlSabit: 2,
         uygulama: 'SC',
         siklik: 'Tek doz',
       },
@@ -184,7 +204,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'k3',
         ilacAdi: 'Geniş spektrum antibiyotik',
         tip: 'igne',
-        doz: 'vet dozu',
+        doz: 'Veteriner dozu',
+        mgPerKg: 15,
         uygulama: 'IM',
         siklik: '1×5 gün',
         not: 'Göbek enfeksiyonu şüphesi',
@@ -201,19 +222,21 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
   },
   solunum: {
     id: 'solunum-enf',
-    ad: 'Solunum yolu enfeksiyonu',
+    adTr: 'Solunum enfeksiyonu',
+    tibbiAd: 'Pasteurellosis · BRD',
     bulasici: true,
     vetDanisma: 'zorunlu',
     etkiSuresiGun: 7,
     karantina: true,
     suruMudahale: 'tum_kuzular',
-    aciklama: 'Öksürük, burun/göz akıntısı, solunum sıkıntısı.',
+    aciklama: 'Öksürük, burun/göz akıntısı, hızlı solunum.',
     baslangic: [
       {
         id: 's1',
         ilacAdi: 'Oksitetrasiklin LA',
         tip: 'igne',
-        doz: '20 mg/kg',
+        doz: '',
+        mgPerKg: 20,
         uygulama: 'IM',
         siklik: '1×3 gün',
       },
@@ -223,7 +246,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 's2',
         ilacAdi: 'Florfenikol',
         tip: 'igne',
-        doz: '20 mg/kg',
+        doz: '',
+        mgPerKg: 20,
         uygulama: 'IM',
         siklik: '1×5 gün',
       },
@@ -231,7 +255,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 's3',
         ilacAdi: 'Meloksikam',
         tip: 'igne',
-        doz: '0,5 mg/kg',
+        doz: '',
+        mgPerKg: 0.5,
         uygulama: 'SC',
         siklik: '1×3 gün',
       },
@@ -239,7 +264,7 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
     suruBaslangic: [
       {
         id: 'ss1',
-        ilacAdi: 'Pastörella aşısı (hatırlatma)',
+        ilacAdi: 'Pastörella aşısı',
         tip: 'asi',
         doz: '1 doz',
         uygulama: 'SC',
@@ -251,7 +276,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
         id: 'ss2',
         ilacAdi: 'Sürü profilaktik antibiyotik',
         tip: 'igne',
-        doz: 'vet dozu',
+        doz: 'Veteriner dozu',
+        mgPerKg: 15,
         uygulama: 'IM',
         siklik: 'Vet talimatı',
       },
@@ -259,19 +285,21 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
   },
   istahsiz: {
     id: 'istahsizlik',
-    ad: 'İştahsızlık / parazit yükü şüphesi',
+    adTr: 'İştahsızlık',
+    tibbiAd: 'Anoreksi · Parazitoz',
     bulasici: false,
     vetDanisma: 'onerilen',
     etkiSuresiGun: 5,
     karantina: false,
     suruMudahale: 'yok',
-    aciklama: 'Yem yememe, kilo kaybı.',
+    aciklama: 'Yem yememe ve kilo kaybı.',
     baslangic: [
       {
         id: 'i1',
-        ilacAdi: 'Antiparaziter (ivermektin)',
+        ilacAdi: 'İvermektin (antiparaziter)',
         tip: 'igne',
-        doz: '0,2 mg/kg',
+        doz: '',
+        mgPerKg: 0.2,
         uygulama: 'SC',
         siklik: 'Tek doz',
       },
@@ -279,9 +307,11 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
     ileri: [
       {
         id: 'i2',
-        ilacAdi: 'B kompleks + antiparaziter',
+        ilacAdi: 'B kompleks + ivermektin',
         tip: 'igne',
-        doz: '2 ml + 0,2 mg/kg',
+        doz: '',
+        mlSabit: 2,
+        mgPerKg: 0.2,
         uygulama: 'SC',
         siklik: '1×2 gün',
       },
@@ -289,7 +319,8 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
   },
   genel: {
     id: 'genel-halsiz',
-    ad: 'Genel halsizlik — gözlem gerekli',
+    adTr: 'Genel halsizlik',
+    tibbiAd: 'Sistemik hastalık (ayırıcı tanı gerekli)',
     bulasici: false,
     vetDanisma: 'onerilen',
     etkiSuresiGun: 3,
@@ -299,9 +330,10 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
     baslangic: [
       {
         id: 'g1',
-        ilacAdi: 'Destek tedavi (B vitamini)',
+        ilacAdi: 'B vitamini (destek)',
         tip: 'igne',
         doz: '2 ml',
+        mlSabit: 2,
         uygulama: 'SC',
         siklik: 'Tek doz',
       },
@@ -309,9 +341,10 @@ const PROTOKOLLER: Record<VetTema, Protokol> = {
     ileri: [
       {
         id: 'g2',
-        ilacAdi: 'Geniş spektrum (vet dozu)',
+        ilacAdi: 'Geniş spektrum antibiyotik',
         tip: 'igne',
-        doz: 'vet dozu',
+        doz: 'Veteriner dozu',
+        mgPerKg: 15,
         uygulama: 'IM',
         siklik: 'Vet talimatı',
       },
@@ -361,7 +394,9 @@ export function olusturTeshis(input: {
 
   return {
     hastalikId: proto.id,
-    hastalikAdi: proto.ad,
+    hastalikAdi: hastalikTamAd(proto.adTr, proto.tibbiAd),
+    hastalikAdiTr: proto.adTr,
+    tibbiAd: proto.tibbiAd,
     derece,
     dereceEtiket: derece === 'ileri' ? 'İleri derece' : 'Başlangıç',
     bulasici: proto.bulasici,

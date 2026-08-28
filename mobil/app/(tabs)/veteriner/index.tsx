@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
@@ -107,7 +107,24 @@ export default function VetScreen() {
   const [inboxKey, setInboxKey] = useState(0);
   const [takipKey, setTakipKey] = useState(0);
   const [aktifTakipId, setAktifTakipId] = useState<string | null>(null);
+  const [kayitliKg, setKayitliKg] = useState<number | null>(null);
+  const [onayliKg, setOnayliKg] = useState<number | null>(null);
+  const [hayvanEtiket, setHayvanEtiket] = useState('');
   const vaka = useVakaAnalizi();
+
+  useEffect(() => {
+    void (async () => {
+      setOnayliKg(null);
+      if (!kupe.trim()) {
+        setKayitliKg(null);
+        setHayvanEtiket('');
+        return;
+      }
+      const h = await hayvanBulKupe(kupe);
+      setKayitliKg(h?.kiloKg ?? null);
+      setHayvanEtiket(h?.earTag ?? '');
+    })();
+  }, [kupe]);
 
   const loadKanal = useCallback(async () => {
     const k = await vetGonderimKanali();
@@ -127,6 +144,10 @@ export default function VetScreen() {
       Alert.alert('Eksik', 'Önce analizi tamamlayın.');
       return;
     }
+    if (!onayliKg || onayliKg <= 0) {
+      Alert.alert('Kilo gerekli', 'Tedavi dozu için kiloyu onaylayın.');
+      return;
+    }
     const hayvan = await hayvanBulKupe(kupe);
     if (!hayvan) {
       Alert.alert('Küpe gerekli', 'Tedavi ve takip için kulak küpe numarası girin.');
@@ -144,14 +165,14 @@ export default function VetScreen() {
     });
     setAktifTakipId(takip.id);
 
-    const sonuc = await uygulaTedaviVeTakip(takip.id, { vetOnayAtlandi: opts?.vetAtla });
+    const sonuc = await uygulaTedaviVeTakip(takip.id, { vetOnayAtlandi: opts?.vetAtla, kg: onayliKg });
     if (!sonuc.ok) {
       Alert.alert('Veteriner gerekli', sonuc.message, [
         { text: 'Vet gönder', onPress: () => setAlt('gonder') },
         {
           text: 'Yine de uygula',
           style: 'destructive',
-          onPress: () => void uygulaTedaviVeTakip(takip.id, { vetOnayAtlandi: true }).then((r) => {
+          onPress: () => void uygulaTedaviVeTakip(takip.id, { vetOnayAtlandi: true, kg: onayliKg }).then((r) => {
             Alert.alert(r.ok ? 'Tamam' : 'Hata', r.message);
             setTakipKey((k) => k + 1);
             setAlt('takip');
@@ -222,6 +243,11 @@ export default function VetScreen() {
           teshis={vaka.analiz.teshis}
           vetKanal={vetKanal}
           vetAd={vetAd}
+          earTag={hayvanEtiket || kupe}
+          kayitliKg={kayitliKg}
+          onayliKg={onayliKg}
+          onKgOnay={setOnayliKg}
+          onKgSifirla={() => setOnayliKg(null)}
           onVetDanis={() => setAlt('gonder')}
           onTedaviUygula={() => void tedaviBaslat()}
           onKarantina={async () => {

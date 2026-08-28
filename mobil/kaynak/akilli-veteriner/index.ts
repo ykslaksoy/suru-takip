@@ -34,6 +34,12 @@ export {
 } from './asi-modu';
 export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
 export {
+  hesaplaDozMetni,
+  ilaclariKgIleHesapla,
+  hastalikTamAd,
+  PRAKTIK_KILO_SECENEKLERI,
+} from './doz-hesap';
+export {
   baslatTakip,
   getAktifTakipler,
   getTakip,
