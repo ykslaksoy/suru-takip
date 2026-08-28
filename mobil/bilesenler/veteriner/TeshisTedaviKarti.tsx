@@ -4,6 +4,7 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { KiloOnayPaneli } from '@/bilesenler/veteriner/KiloOnayPaneli';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { DozSatir } from '@/bilesenler/veteriner/DozSatir';
 import { ilaclariKgIleHesapla } from '@/kaynak/akilli-veteriner/doz-hesap';
 import type { HastalikTeshis } from '@/kaynak/akilli-veteriner/teshis';
 import type { VetKanal } from '@/kaynak/veteriner-koprusu/vet-iletisim';
@@ -83,22 +84,12 @@ export function TeshisTedaviKarti({
       {dozHazir ? (
         <>
           <Text style={[styles.section, { color: colors.tint }]}>Önerilen iğneler / tedavi</Text>
-          <View style={[styles.bilgi, { backgroundColor: colors.tint + '10', borderColor: colors.tint + '55' }]}>
-            <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 18 }}>
-              Doz hep ml ile söylenir. İğnede kilo arttıkça ml artar; aşıda kilo değişse de aynı ml (ör. 2 ml).
-            </Text>
-          </View>
           {ilaclar.map((il) => (
             <View key={il.id} style={[styles.ilac, { borderColor: colors.border }]}>
               <Text style={{ color: colors.text, fontWeight: '700' }}>
                 {il.tip === 'igne' ? '💉' : il.tip === 'asi' ? '🛡️' : '💊'} {il.ilacAdi}
               </Text>
-              <Text style={{ color: colors.text, marginTop: 4, fontWeight: '600', lineHeight: 22 }}>{il.doz}</Text>
-              {il.bilgiNotu ? (
-                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 18, fontStyle: 'italic' }}>
-                  {il.bilgiNotu}
-                </Text>
-              ) : null}
+              <DozSatir doz={il.doz} formul={il.dozFormul} buyuk />
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
                 {il.uygulama} · {il.siklik}
               </Text>
@@ -138,10 +129,10 @@ export function TeshisTedaviKarti({
             <>
               <Text style={[styles.section, { color: colors.tint }]}>Sürü tedavisi (aynı padok)</Text>
               {suruIlaclari.map((il) => (
-                <Text key={il.id} style={{ color: colors.text, fontSize: 13 }}>
-                  • {il.ilacAdi} — {il.doz}
-                  {il.bilgiNotu ? `\n  ${il.bilgiNotu}` : ''}
-                </Text>
+                <View key={il.id} style={{ marginBottom: 6 }}>
+                  <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>• {il.ilacAdi}</Text>
+                  <DozSatir doz={il.doz} formul={il.dozFormul} />
+                </View>
               ))}
               <AnaButon title="Aynı padok hayvanlarına uygula" variant="secondary" onPress={onSuruPadok} />
             </>
@@ -150,10 +141,10 @@ export function TeshisTedaviKarti({
             <>
               <Text style={[styles.section, { color: colors.tint }]}>Sürü tedavisi (tüm kuzular)</Text>
               {suruIlaclari.map((il) => (
-                <Text key={il.id} style={{ color: colors.text, fontSize: 13 }}>
-                  • {il.ilacAdi} — {il.doz}
-                  {il.bilgiNotu ? `\n  ${il.bilgiNotu}` : ''}
-                </Text>
+                <View key={il.id} style={{ marginBottom: 6 }}>
+                  <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>• {il.ilacAdi}</Text>
+                  <DozSatir doz={il.doz} formul={il.dozFormul} />
+                </View>
               ))}
               <AnaButon title="Tüm kuzulara uygula" variant="secondary" onPress={onSuruTum} />
             </>
@@ -170,7 +161,6 @@ const styles = StyleSheet.create({
   etiketRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   etiket: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, fontWeight: '700', fontSize: 12 },
   section: { fontWeight: '800', marginTop: 14, marginBottom: 8 },
-  bilgi: { borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 10 },
   ilac: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 8 },
   vetKutu: { marginTop: 12, padding: 12, borderRadius: 10 },
 });
