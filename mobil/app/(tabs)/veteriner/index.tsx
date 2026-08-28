@@ -4,11 +4,18 @@ import { useFocusEffect } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import { FotografYukle } from '@/bilesenler/veteriner/FotografYukle';
+import { NetlestirmeSorulari } from '@/bilesenler/veteriner/NetlestirmeSorulari';
 import { VetIletisimFormu } from '@/bilesenler/veteriner/VetIletisimFormu';
 import { VetInboxKarti } from '@/bilesenler/veteriner/VetInboxKarti';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { analyzeVaka, formatAiOzet, VET_DISCLAIMER } from '@/kaynak/akilli-veteriner';
+import {
+  analyzeVakaTam,
+  formatAiOzet,
+  VET_DISCLAIMER,
+  type VetAnalizSonuc,
+  type VetCevaplar,
+} from '@/kaynak/akilli-veteriner';
 import type { VakaFotografi } from '@/kaynak/akilli-veteriner/fotograf';
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 import { olusturVakaPaketi } from '@/kaynak/veteriner-koprusu/vaka-paketi';
@@ -79,16 +86,79 @@ function TedaviSonucKarti({
   );
 }
 
+function useVakaAnalizi() {
+  const [symptoms, setSymptomsRaw] = useState('');
+  const [fotograflar, setFotograflarRaw] = useState<VakaFotografi[]>([]);
+  const [cevaplar, setCevaplar] = useState<VetCevaplar>({});
+  const [analiz, setAnaliz] = useState<VetAnalizSonuc | null>(null);
+
+  const calistir = useCallback(
+    (s: string, fotos: VakaFotografi[], cvp: VetCevaplar) => {
+      const sonuc = analyzeVakaTam({
+        symptoms: s,
+        fotoTurleri: fotos.map((f) => f.tur),
+        cevaplar: cvp,
+      });
+      setAnaliz(sonuc);
+      return sonuc;
+    },
+    []
+  );
+
+  const setSymptoms = (s: string) => {
+    setSymptomsRaw(s);
+    setCevaplar({});
+    setAnaliz(null);
+  };
+
+  const setFotograflar = (f: VakaFotografi[]) => {
+    setFotograflarRaw(f);
+    setCevaplar({});
+    setAnaliz(null);
+  };
+
+  const analizEt = () => calistir(symptoms, fotograflar, cevaplar);
+
+  const cevapVer = (soruId: string, secenekId: string) => {
+    const next = { ...cevaplar, [soruId]: secenekId };
+    setCevaplar(next);
+    calistir(symptoms, fotograflar, next);
+  };
+
+  return {
+    symptoms,
+    setSymptoms,
+    fotograflar,
+    setFotograflar,
+    cevaplar,
+    analiz,
+    analizEt,
+    cevapVer,
+    baglamMetni: analiz?.baglamMetni ?? symptoms,
+    result: analiz?.oneri ?? null,
+  };
+}
+
 export default function VetScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [alt, setAlt] = useState<Alt>('semptom');
-  const [symptoms, setSymptoms] = useState('');
   const [kupe, setKupe] = useState('');
-  const [fotograflar, setFotograflar] = useState<VakaFotografi[]>([]);
-  const [result, setResult] = useState<VetSuggestion | null>(null);
   const [kanalAciklama, setKanalAciklama] = useState('');
   const [inboxKey, setInboxKey] = useState(0);
+
+  const {
+    symptoms,
+    setSymptoms,
+    fotograflar,
+    setFotograflar,
+    cevaplar,
+    analiz,
+    analizEt,
+    cevapVer,
+    baglamMetni,
+    result,
+  } = useVakaAnalizi();
 
   const loadKanal = useCallback(async () => {
     const k = await vetGonderimKanali();
@@ -101,21 +171,20 @@ export default function VetScreen() {
     }, [loadKanal])
   );
 
-  const analizEt = () => {
-    const sonuc = analyzeVaka({
+  const veterinerGonder = async () => {
+    const aiSonuc = result ?? analizEt().oneri;
+    if (!aiSonuc && analiz?.netlestirmeGerekli) {
+      Alert.alert('Eksik bilgi', 'Lütfen netleştirme sorularını yanıtlayın veya analiz edin.');
+      return;
+    }
+    const ozetKaynak = result ?? analyzeVakaTam({
       symptoms,
       fotoTurleri: fotograflar.map((f) => f.tur),
-    });
-    setResult(sonuc);
-  };
+      cevaplar,
+    }).oneri;
+    const aiOzet = ozetKaynak ? formatAiOzet(ozetKaynak) : undefined;
 
-  const veterinerGonder = async () => {
-    const aiSonuc =
-      result ??
-      analyzeVaka({ symptoms, fotoTurleri: fotograflar.map((f) => f.tur) });
-    const aiOzet = formatAiOzet(aiSonuc);
-
-    const paket = await olusturVakaPaketi(kupe, symptoms, { aiOzet, fotograflar });
+    const paket = await olusturVakaPaketi(kupe, baglamMetni, { aiOzet, fotograflar });
     if (!paket) {
       Alert.alert('Eksik', 'Kulak küpe numarası gerekli');
       return;
@@ -131,19 +200,10 @@ export default function VetScreen() {
     setInboxKey((k) => k + 1);
 
     if (sonuc.kanal === 'whatsapp' && paket.fotograflar.length > 0) {
-      Alert.alert(
-        'WhatsApp',
-        sonuc.message,
-        [
-          { text: 'Tamam' },
-          {
-            text: 'Fotoğraf paylaş',
-            onPress: () => {
-              void fotograflariPaylas(paket);
-            },
-          },
-        ]
-      );
+      Alert.alert('WhatsApp', sonuc.message, [
+        { text: 'Tamam' },
+        { text: 'Fotoğraf paylaş', onPress: () => void fotograflariPaylas(paket) },
+      ]);
       return;
     }
 
@@ -155,6 +215,25 @@ export default function VetScreen() {
         : [{ text: 'Tamam' }]
     );
   };
+
+  const analizPaneli = (
+    <>
+      {analiz?.netlestirmeGerekli && analiz.sorular.length > 0 ? (
+        <NetlestirmeSorulari sorular={analiz.sorular} cevaplar={cevaplar} onCevap={cevapVer} />
+      ) : null}
+      {result ? (
+        <TedaviSonucKarti
+          result={result}
+          colors={colors}
+          onVetGonder={() => setAlt('gonder')}
+        />
+      ) : analiz && !analiz.netlestirmeGerekli ? null : analiz ? (
+        <Text style={{ color: colors.textSecondary, marginTop: 12, fontSize: 13 }}>
+          Soruları yanıtlayınca öneri otomatik güncellenir.
+        </Text>
+      ) : null}
+    </>
+  );
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
@@ -205,25 +284,18 @@ export default function VetScreen() {
               style={[styles.input, { borderColor: colors.border, color: colors.text, minHeight: 100 }]}
             />
             <FotografYukle fotograflar={fotograflar} onChange={setFotograflar} />
-            {result ? (
-              <TedaviSonucKarti result={result} colors={colors} />
-            ) : fotograflar.length > 0 || symptoms.trim() ? (
-              <AnaButon
-                title="AI özeti oluştur"
-                variant="secondary"
-                onPress={() => setResult(analyzeVaka({ symptoms, fotoTurleri: fotograflar.map((f) => f.tur) }))}
-              />
-            ) : null}
+            <AnaButon title="Analiz / soruları getir" variant="secondary" onPress={analizEt} />
+            {analizPaneli}
             <AnaButon title="Veterinere gönder" onPress={veterinerGonder} />
             <Text style={{ color: colors.textSecondary, marginTop: 12, fontSize: 13, lineHeight: 18 }}>
-              Programda kayıtlı vet → uygulama içi vaka + fotoğraf bilgisi. Değilse → WhatsApp mesajı açılır; fotoğrafları ekleyin.
+              Yeterli bilgi yoksa Akıllı Veteriner netleştirme soruları sorar. Cevaplar vet paketine eklenir.
             </Text>
           </>
         ) : (
           <>
             <Text style={[styles.title, { color: colors.text }]}>Akıllı Veteriner</Text>
             <Text style={{ color: colors.textSecondary, marginBottom: 12 }}>
-              Belirtileri yazın ve kuzu/hayvan fotoğrafı ekleyin — semptom + fotoğraftan tedavi önerisi
+              Belirti + fotoğraf girin. Bilgi yetersizse &quot;böyle mi, şöyle mi?&quot; soruları sorar; cevaplara göre tedavi önerir.
             </Text>
 
             <TextInput
@@ -237,17 +309,10 @@ export default function VetScreen() {
             <FotografYukle fotograflar={fotograflar} onChange={setFotograflar} />
 
             <AnaButon title="Analiz Et" onPress={analizEt} />
-
-            {result && (
-              <TedaviSonucKarti
-                result={result}
-                colors={colors}
-                onVetGonder={() => setAlt('gonder')}
-              />
-            )}
+            {analizPaneli}
 
             <Text style={[styles.examples, { color: colors.textSecondary }]}>
-              Örnek: ishal, topallama, düşük, öksürük, kuzu emmeme + yara/ayak fotoğrafı
+              Örnek: ishal, topallama, kuzu emmeme + yara/ayak fotoğrafı
             </Text>
           </>
         )}

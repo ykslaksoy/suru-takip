@@ -1,4 +1,6 @@
-export { analyzeSymptoms, analyzeVaka, VET_DISCLAIMER } from './analiz';
+export { analyzeSymptoms, analyzeVaka, analyzeVakaTam, VET_DISCLAIMER } from './analiz';
+export type { VetAnalizSonuc, VetCevaplar, VetSoru, VetSoruSecenek } from './netlestirme';
+export { baglamMetniOlustur, netlestirmeSorulari, tespitTema } from './netlestirme';
 export {
   fotografAnalizi,
   formatAiOzet,

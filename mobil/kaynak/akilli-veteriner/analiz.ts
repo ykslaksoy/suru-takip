@@ -1,5 +1,14 @@
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
 import { fotografAnalizi, type FotoTur } from './fotograf';
+import {
+  baglamMetniOlustur,
+  netlestirmeSorulari,
+  type VetAnalizSonuc,
+  type VetCevaplar,
+} from './netlestirme';
+
+export type { VetAnalizSonuc, VetCevaplar, VetSoru, VetSoruSecenek } from './netlestirme';
+export { baglamMetniOlustur, netlestirmeSorulari, tespitTema } from './netlestirme';
 
 const RULES: { keywords: string[]; suggestion: Omit<VetSuggestion, 'fotoGozlemleri'> & { tedaviOnerileri: string[] } }[] = [
   {
@@ -142,16 +151,97 @@ export function analyzeSymptoms(input: string): VetSuggestion {
   };
 }
 
+/** Cevaplara göre aciliyet ve öneriyi netleştir */
+function cevaplaIyilestir(oneri: VetSuggestion, cevaplar: VetCevaplar): VetSuggestion {
+  let { urgency, seeVet, tedaviOnerileri, advice, conditions } = oneri;
+  const ekle = (t: string) => {
+    if (!tedaviOnerileri.includes(t)) tedaviOnerileri = [...tedaviOnerileri, t];
+  };
+
+  if (cevaplar['ishal-kan'] === 'evet') {
+    urgency = 'high';
+    seeVet = true;
+    ekle('Kanlı ishal — acil veteriner çağırın');
+    advice = 'Kanlı veya siyah dışkı ciddi tablo olabilir. Hayvanı ayırın, su verin, veterineri hemen arayın.';
+  }
+  if (cevaplar['ishal-sure'] === '3gun+') {
+    urgency = birlestirUrgency(urgency, 'high');
+    seeVet = true;
+    ekle('3 günden uzun ishal — dışkı numunesi için vet');
+  }
+  if (cevaplar['ishal-yayilim'] === 'suru') {
+    urgency = 'high';
+    seeVet = true;
+    conditions = benzersiz([...conditions, 'Sürü salgını şüphesi']);
+    advice = 'Sürü genelinde ishal bulaşıcı olabilir. Veterineri bilgilendirin, hasta hayvanları ayırın.';
+  }
+
+  if (cevaplar['topallama-sure'] === '2gun+') {
+    seeVet = true;
+    urgency = birlestirUrgency(urgency, 'medium');
+    ekle('2 günden uzun topallık — ayak muayenesi için vet');
+  }
+  if (cevaplar['topallama-sis'] === 'evet') {
+    urgency = birlestirUrgency(urgency, 'medium');
+    ekle('Şiş/yara var — ayak fotoğrafı veterinere gönderin');
+  }
+
+  if (cevaplar['kuzu-yas'] === '24saat' && cevaplar['kuzu-emme'] === 'hic') {
+    urgency = 'high';
+    seeVet = true;
+    advice = 'Yeni doğan kuzu emmiyorsa kolostrum acil. 2 saat içinde 250 ml kolostrum veya veteriner.';
+    ekle('2 saat içinde kolostrum (250 ml) — emmezse vet');
+  }
+  if (cevaplar['kuzu-gobek'] === 'koku' || cevaplar['kuzu-gobek'] === 'sis') {
+    urgency = 'high';
+    seeVet = true;
+    conditions = benzersiz([...conditions, 'Göbek enfeksiyonu (omphalitis)']);
+    ekle('Göbek bölgesini temiz tutun, veteriner antibiyotik değerlendirmesi');
+  }
+
+  if (cevaplar['solunum-nefes'] === 'hizli' || cevaplar['solunum-ates'] === 'evet') {
+    urgency = 'high';
+    seeVet = true;
+    ekle('Solunum sıkıntısı — acil veteriner');
+  }
+
+  if (cevaplar['istah-sure'] === '3gun+' || cevaplar['istah-kilo'] === 'evet') {
+    seeVet = true;
+    urgency = birlestirUrgency(urgency, 'medium');
+    ekle('Uzun süreli iştahsızlık — muayene gerekir');
+  }
+
+  if (cevaplar['genel-sikayet']) {
+    const etiket: Record<string, string> = {
+      yem: 'iştahsızlık',
+      topallama: 'topallama',
+      diski: 'ishal',
+      solunum: 'solunum sorunu',
+      halsiz: 'halsizlik',
+    };
+    const ek = etiket[cevaplar['genel-sikayet']];
+    if (ek && !conditions.some((c) => c.toLowerCase().includes(ek.slice(0, 4)))) {
+      conditions = benzersiz([...conditions, `Bildirilen: ${ek}`]);
+    }
+  }
+
+  return { ...oneri, urgency, seeVet, tedaviOnerileri, advice, conditions };
+}
+
 /** Semptom + fotoğraf türleri birleşik Akıllı Veteriner analizi */
 export function analyzeVaka(input: {
   symptoms: string;
   fotoTurleri?: FotoTur[];
+  cevaplar?: VetCevaplar;
 }): VetSuggestion {
-  const semptom = analyzeSymptoms(input.symptoms);
+  const baglam = input.cevaplar
+    ? baglamMetniOlustur(input.symptoms, input.cevaplar)
+    : input.symptoms;
+  const semptom = analyzeSymptoms(baglam);
   const turler = input.fotoTurleri ?? [];
 
   if (turler.length === 0) {
-    return semptom;
+    return input.cevaplar ? cevaplaIyilestir(semptom, input.cevaplar) : semptom;
   }
 
   let urgency = semptom.urgency;
@@ -178,13 +268,53 @@ export function analyzeVaka(input: {
       ? `${semptom.advice} Fotoğraf gözlemleri analize eklendi — kesin teşhis için veteriner muayenesi gerekir.`
       : semptom.advice;
 
-  return {
+  const temel: VetSuggestion = {
     conditions: benzersiz(conditions),
     advice,
     tedaviOnerileri: benzersiz(tedaviOnerileri),
     fotoGozlemleri: benzersiz(fotoGozlemleri),
     urgency,
     seeVet: seeVet || urgency !== 'low',
+  };
+
+  return input.cevaplar ? cevaplaIyilestir(temel, input.cevaplar) : temel;
+}
+
+/**
+ * Tam akış: bilgi yetersizse netleştirme soruları,
+ * cevaplar tamamlanınca tedavi önerisi.
+ */
+export function analyzeVakaTam(input: {
+  symptoms: string;
+  fotoTurleri?: FotoTur[];
+  cevaplar?: VetCevaplar;
+}): VetAnalizSonuc {
+  const cevaplar = input.cevaplar ?? {};
+  const baglamMetni = baglamMetniOlustur(input.symptoms, cevaplar);
+  const sorular = netlestirmeSorulari({
+    symptoms: input.symptoms,
+    fotoTurleri: input.fotoTurleri,
+    cevaplar,
+  });
+
+  if (sorular.length > 0) {
+    return {
+      oneri: null,
+      sorular,
+      netlestirmeGerekli: true,
+      baglamMetni,
+    };
+  }
+
+  return {
+    oneri: analyzeVaka({
+      symptoms: input.symptoms,
+      fotoTurleri: input.fotoTurleri,
+      cevaplar,
+    }),
+    sorular: [],
+    netlestirmeGerekli: false,
+    baglamMetni,
   };
 }
 
