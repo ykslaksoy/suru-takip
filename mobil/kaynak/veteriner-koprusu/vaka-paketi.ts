@@ -7,6 +7,16 @@ import {
   getWeightRecords,
 } from '@/kaynak/cekirdek/veritabani';
 
+export type VakaPaketiOpts = {
+  aiOzet?: string;
+  fotograflar?: VakaFotografi[];
+  /** Teşhis satırı — İshal (Enterit) · Başlangıç */
+  teshisOzet?: string;
+  /** Ml doz satırları — Florfenikol · Şırıngaya 0,8 ml çek · … */
+  dozSatirlari?: string[];
+  kg?: number;
+};
+
 export type VakaPaketi = {
   id: string;
   createdAt: string;
@@ -28,17 +38,18 @@ export type VakaPaketi = {
     recordedAt: string;
   }[];
   weights: { weightKg: number; recordedAt: string }[];
-  /** Akıllı veteriner özeti (varsa) */
   aiOzet?: string;
-  /** Vaka fotoğrafları (URI yerel; vet mesajında tür bilgisi) */
   fotograflar: VakaFotografi[];
+  teshisOzet?: string;
+  dozSatirlari?: string[];
+  kg?: number;
   not: string;
 };
 
 export async function olusturVakaPaketi(
   kupeArama: string,
   symptoms: string,
-  opts?: { aiOzet?: string; fotograflar?: VakaFotografi[] }
+  opts?: VakaPaketiOpts
 ): Promise<VakaPaketi | null> {
   const term = kupeArama.trim().toLowerCase();
   if (!term) return null;
@@ -85,15 +96,19 @@ export async function olusturVakaPaketi(
     weights,
     aiOzet: opts?.aiOzet?.trim() || undefined,
     fotograflar: opts?.fotograflar ?? [],
+    teshisOzet: opts?.teshisOzet?.trim() || undefined,
+    dozSatirlari: opts?.dozSatirlari?.filter(Boolean),
+    kg: opts?.kg && opts.kg > 0 ? opts.kg : undefined,
     not: '',
   };
 }
 
 export async function olusturVakaPaketiHayvanId(
   animalId: string,
-  symptoms: string
+  symptoms: string,
+  opts?: VakaPaketiOpts
 ): Promise<VakaPaketi | null> {
   const animal = await getAnimal(animalId);
   if (!animal) return null;
-  return olusturVakaPaketi(animal.earTag, symptoms);
+  return olusturVakaPaketi(animal.earTag, symptoms, opts);
 }

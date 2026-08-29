@@ -13,21 +13,30 @@ function ilacMetni(ilac: IlacDoz): string {
 }
 
 /** Hayvanı karantina padokuna taşı */
-export async function hayvaniKarantinayaAl(animalId: string): Promise<{ ok: boolean; padok: string; message: string }> {
+export async function hayvaniKarantinayaAl(
+  animalId: string
+): Promise<{ ok: boolean; padok: string; oncekiPadok: string; message: string }> {
   const animal = await getAnimal(animalId);
-  if (!animal) return { ok: false, padok: '', message: 'Hayvan bulunamadı' };
+  if (!animal) return { ok: false, padok: '', oncekiPadok: '', message: 'Hayvan bulunamadı' };
 
   const padoklar = await getPadoklar();
   const karantina = padoklar.find((p) => p.karantina) ?? padoklar[0];
-  if (!karantina) return { ok: false, padok: '', message: 'Karantina padoku tanımlı değil' };
+  if (!karantina) return { ok: false, padok: '', oncekiPadok: animal.paddock, message: 'Karantina padoku tanımlı değil' };
 
+  const oncekiPadok = animal.paddock;
   await upsertAnimal({
     ...animal,
     paddock: karantina.ad,
+    status: animal.status === 'healthy' ? 'sick' : animal.status,
     notes: `${animal.notes}\n[${new Date().toISOString().slice(0, 10)}] Akıllı Vet karantina`.trim(),
   });
 
-  return { ok: true, padok: karantina.ad, message: `${animal.earTag} → ${karantina.ad} padokuna alındı` };
+  return {
+    ok: true,
+    padok: karantina.ad,
+    oncekiPadok,
+    message: `${animal.earTag} → ${karantina.ad} padokuna alındı`,
+  };
 }
 
 /** Tek hayvana tedavi kaydı */
@@ -71,7 +80,7 @@ export async function uygulaTedaviVeTakip(
     await tedaviKaydet(takip.animalId, takip.teshis, ilaclar);
     if (takip.teshis.karantinaGerekli && !takip.karantinaYapildi) {
       const k = await hayvaniKarantinayaAl(takip.animalId);
-      if (k.ok) await karantinaYapildiIsaretle(takipId, k.padok);
+      if (k.ok) await karantinaYapildiIsaretle(takipId, k.padok, k.oncekiPadok);
     }
   }
 

@@ -7,6 +7,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { VakaFotografi } from '@/kaynak/akilli-veteriner/fotograf';
 import {
   asamaEtiket,
+  kontrolFotoGerekli,
   kontrolGuncelle,
   kontrolZamaniGeldi,
   getAktifTakipler,
@@ -15,6 +16,7 @@ import {
 } from '@/kaynak/akilli-veteriner/takip';
 import { hayvaniKarantinayaAl } from '@/kaynak/akilli-veteriner/tedavi-uygula';
 import { upsertAnimal, getAnimal } from '@/kaynak/cekirdek/veritabani';
+import { karantinaYapildiIsaretle } from '@/kaynak/akilli-veteriner/takip';
 
 export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
   const scheme = useColorScheme() ?? 'light';
@@ -33,31 +35,50 @@ export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
   }, [load, refreshKey]);
 
   const aktif = liste.find((t) => t.id === secili) ?? liste[0] ?? null;
+  const fotoZorunlu = aktif ? kontrolFotoGerekli(aktif) : false;
 
   const durumGuncelle = async (durum: 'iyilesiyor' | 'ayni' | 'kotulesti') => {
     if (!aktif) return;
-    await kontrolGuncelle(aktif.id, { not: not.trim() || durum, durum, fotoSayisi: fotograflar.length });
+    if (fotoZorunlu && fotograflar.length === 0) {
+      Alert.alert('Fotoğraf gerekli', 'Kontrol zamanı — en az 1 fotoğraf ekleyin.');
+      return;
+    }
+    const r = await kontrolGuncelle(aktif.id, {
+      not: not.trim() || durum,
+      durum,
+      fotoSayisi: fotograflar.length,
+      fotograflar,
+    });
+    if (!r.ok) {
+      Alert.alert('Eksik', r.message);
+      return;
+    }
     setNot('');
     setFotograflar([]);
     await load();
-    Alert.alert('Güncellendi', 'Durum kaydedildi.');
+    Alert.alert('Güncellendi', r.message);
   };
 
   const taburcu = async () => {
     if (!aktif) return;
-    Alert.alert('Taburcu', `${aktif.earTag} iyileşti mi?`, [
+    Alert.alert('Taburcu', `${aktif.earTag} iyileşti mi? Sağlıklı işaretlenir${aktif.oncekiPadok ? ', eski padoka döner' : ''}.`, [
       { text: 'İptal', style: 'cancel' },
       {
         text: 'Taburcu et',
         onPress: async () => {
           if (aktif.animalId) {
             const a = await getAnimal(aktif.animalId);
-            if (a && a.status === 'sick') {
-              await upsertAnimal({ ...a, status: 'healthy' });
+            if (a) {
+              await upsertAnimal({
+                ...a,
+                status: a.status === 'sick' ? 'healthy' : a.status,
+                paddock: aktif.oncekiPadok?.trim() || a.paddock,
+              });
             }
           }
-          await taburcuEt(aktif.id);
+          const r = await taburcuEt(aktif.id);
           await load();
+          Alert.alert(r.ok ? 'Taburcu' : 'Hata', r.message);
         },
       },
     ]);
@@ -80,7 +101,11 @@ export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
       {liste.map((t) => (
         <Pressable
           key={t.id}
-          onPress={() => setSecili(t.id)}
+          onPress={() => {
+            setSecili(t.id);
+            setFotograflar([]);
+            setNot('');
+          }}
           style={[
             styles.kart,
             {
@@ -94,9 +119,9 @@ export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
             {asamaEtiket(t.asama)}
           </Text>
-          {kontrolZamaniGeldi(t) && t.asama === 'kontrol_bekliyor' ? (
+          {kontrolZamaniGeldi(t) && (t.asama === 'kontrol_bekliyor' || t.asama === 'takip') ? (
             <Text style={{ color: colors.warning, fontWeight: '700', marginTop: 4, fontSize: 12 }}>
-              ⏰ Kontrol zamanı — yeni fotoğraf ve durum güncellemesi
+              Kontrol zamanı — fotoğraf zorunlu
             </Text>
           ) : null}
         </Pressable>
@@ -109,12 +134,22 @@ export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
             {aktif.teshis.dereceEtiket} · Etki bitiş:{' '}
             {new Date(aktif.etkiBitis).toLocaleDateString('tr-TR')}
           </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+            Sonraki kontrol: {new Date(aktif.sonrakiKontrol).toLocaleDateString('tr-TR')} · Foto:{' '}
+            {aktif.fotograflar.length}
+          </Text>
 
-          {(kontrolZamaniGeldi(aktif) || aktif.asama === 'takip') && (
+          {(kontrolZamaniGeldi(aktif) || aktif.asama === 'takip' || aktif.asama === 'kontrol_bekliyor') && (
             <>
               <Text style={{ color: colors.text, fontWeight: '700', marginTop: 12 }}>
-                Durum güncellemesi + fotoğraf
+                Durum güncellemesi + kontrol fotoğrafı
+                {fotoZorunlu ? ' (zorunlu)' : ''}
               </Text>
+              {fotoZorunlu ? (
+                <Text style={{ color: colors.warning, fontSize: 12, marginTop: 4 }}>
+                  En az 1 fotoğraf eklemeden durum kaydedilemez.
+                </Text>
+              ) : null}
               <TextInput
                 placeholder="Nasıl? (iyileşme, aynı, kötüleşme…)"
                 value={not}
@@ -125,13 +160,13 @@ export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
               <FotografYukle fotograflar={fotograflar} onChange={setFotograflar} max={3} />
               <View style={styles.btnRow}>
                 <View style={styles.btnHalf}>
-                  <AnaButon title="İyileşiyor" variant="secondary" onPress={() => durumGuncelle('iyilesiyor')} />
+                  <AnaButon title="İyileşiyor" variant="secondary" onPress={() => void durumGuncelle('iyilesiyor')} />
                 </View>
                 <View style={styles.btnHalf}>
-                  <AnaButon title="Aynı" variant="secondary" onPress={() => durumGuncelle('ayni')} />
+                  <AnaButon title="Aynı" variant="secondary" onPress={() => void durumGuncelle('ayni')} />
                 </View>
               </View>
-              <AnaButon title="Kötüleşti — vet gerek" variant="danger" onPress={() => durumGuncelle('kotulesti')} />
+              <AnaButon title="Kötüleşti — vet gerek" variant="danger" onPress={() => void durumGuncelle('kotulesti')} />
             </>
           )}
 
@@ -140,17 +175,23 @@ export function TakipModuPaneli({ refreshKey = 0 }: { refreshKey?: number }) {
               title="Karantina padokuna al"
               variant="secondary"
               onPress={async () => {
+                const a = await getAnimal(aktif.animalId!);
+                const onceki = a?.paddock ?? aktif.paddock;
                 const r = await hayvaniKarantinayaAl(aktif.animalId!);
+                if (r.ok) await karantinaYapildiIsaretle(aktif.id, r.padok, onceki);
                 Alert.alert(r.ok ? 'Tamam' : 'Hata', r.message);
                 await load();
               }}
             />
           ) : aktif.karantinaPadok ? (
-            <Text style={{ color: colors.success, marginTop: 8 }}>✓ Karantina: {aktif.karantinaPadok}</Text>
+            <Text style={{ color: colors.success, marginTop: 8 }}>
+              ✓ Karantina: {aktif.karantinaPadok}
+              {aktif.oncekiPadok ? ` · eski: ${aktif.oncekiPadok}` : ''}
+            </Text>
           ) : null}
 
           {aktif.asama !== 'taburcu' ? (
-            <AnaButon title="Taburcu et" onPress={taburcu} />
+            <AnaButon title="Taburcu et" onPress={() => void taburcu()} />
           ) : (
             <Text style={{ color: colors.success, fontWeight: '700' }}>✓ Taburcu</Text>
           )}

@@ -254,7 +254,7 @@ export function analyzeVaka(input: {
   const fotoGozlemleri: string[] = [];
 
   for (const tur of turler) {
-    const fa = fotografAnalizi(tur);
+    const fa = fotografAnalizi(tur, { cevaplar: input.cevaplar, symptoms: baglam });
     fotoGozlemleri.push(...fa.fotoGozlemleri);
     conditions.push(...(fa.conditions ?? []));
     tedaviOnerileri.push(...fa.tedaviOnerileri);
@@ -342,15 +342,26 @@ export function analyzeVakaTam(input: {
 
   const teshis = olusturTeshis({ symptoms: input.symptoms, cevaplar, oneri });
 
+  // Offline güven: semptom + cevap + foto + teşhis derecesi
+  let guven = 35;
+  if (input.symptoms.trim().length > 8) guven += 15;
+  if (Object.keys(cevaplar).length >= 2) guven += 20;
+  if (fotograflar.length > 0) guven += 15;
+  if (fotograflar.length >= 2) guven += 5;
+  if (oneri.urgency === 'high') guven += 5;
+  if (teshis.derece === 'ileri') guven += 5;
+  guven = Math.min(95, guven);
+
   return {
     oneri,
     teshis,
     sorular: [],
-    fotoIstekleri: fotoIstekleri.filter((i) => i.zorunlu),
+    fotoIstekleri,
     netlestirmeGerekli: false,
-    fotoBekleniyor: fotoIstekleri.some((i) => i.zorunlu),
+    fotoBekleniyor: false,
     hazir: true,
     baglamMetni,
+    guven,
   };
 }
 

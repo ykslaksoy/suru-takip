@@ -116,6 +116,13 @@ function cevapFotoIstekleri(tema: VetTema, cevaplar: VetCevaplar): FotoIstek[] {
 
 function turKapsandi(istek: FotoIstek, fotograflar: VakaFotografi[], karsilananIdler: Set<string>): boolean {
   if (karsilananIdler.has(istek.id)) return true;
+  if (fotograflar.some((f) => f.istekId === istek.id)) return true;
+  // Kanlı dışkı isteği — genel diski foto yetmez (etikette kan geçmeli veya istekId)
+  if (istek.id === 'diski-kan') {
+    return fotograflar.some(
+      (f) => f.tur === 'diski' && /kan/i.test(`${f.etiket} ${f.istekId ?? ''}`)
+    );
+  }
   return fotograflar.some((f) => f.tur === istek.tur);
 }
 
@@ -141,4 +148,16 @@ export function eksikFotoIstekleri(input: {
 
 export function zorunluFotoEksik(istekler: FotoIstek[]): boolean {
   return istekler.some((i) => i.zorunlu);
+}
+
+/** Takip kontrolü için teşhise göre önerilen kontrol foto açıları */
+export function kontrolFotoIstekleri(temaVeyaSemptom: string): FotoIstek[] {
+  const tema = tespitTema(temaVeyaSemptom.toLowerCase(), [], {});
+  const banka = FOTO_ISTEK_BANKASI[tema] ?? FOTO_ISTEK_BANKASI.genel;
+  return banka.map((i) => ({
+    ...i,
+    id: `kontrol-${i.id}`,
+    zorunlu: true,
+    talimat: `Kontrol: ${i.talimat}`,
+  }));
 }

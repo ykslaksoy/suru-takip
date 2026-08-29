@@ -1,4 +1,5 @@
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
+import type { VetCevaplar } from './netlestirme';
 
 /** Kullanıcının seçtiği fotoğraf türü — görüntü analizi ipucu kaynağı */
 export type FotoTur = 'yara' | 'ayak' | 'diski' | 'agiz' | 'genel';
@@ -9,6 +10,8 @@ export type VakaFotografi = {
   tur: FotoTur;
   etiket: string;
   createdAt: string;
+  /** İsteğe bağlı — hangi foto isteğini karşıladı */
+  istekId?: string;
 };
 
 export const FOTO_TURLER: { id: FotoTur; label: string; ipucu: string }[] = [
@@ -84,14 +87,47 @@ const FOTO_KURALLARI: FotoKural[] = [
   },
 ];
 
-/** Fotoğraf türüne göre gözlem + tedavi ipuçları (yerel kural; ileride görüntü AI). */
-export function fotografAnalizi(tur: FotoTur): Pick<VetSuggestion, 'fotoGozlemleri' | 'tedaviOnerileri' | 'conditions' | 'urgency'> {
+/**
+ * Fotoğraf türüne göre gözlem + tedavi (yerel kural; görüntü AI yok).
+ * Cevap bağlamı varsa aciliyet yükseltilir.
+ */
+export function fotografAnalizi(
+  tur: FotoTur,
+  ctx?: { cevaplar?: VetCevaplar; symptoms?: string }
+): Pick<VetSuggestion, 'fotoGozlemleri' | 'tedaviOnerileri' | 'conditions' | 'urgency'> {
   const kural = FOTO_KURALLARI.find((k) => k.tur === tur) ?? FOTO_KURALLARI[FOTO_KURALLARI.length - 1];
+  const gozlemler = [...kural.gozlemler];
+  const tedavi = [...kural.tedavi];
+  const conditions = kural.conditions ? [...kural.conditions] : [];
+  let urgency = kural.urgency ?? 'low';
+  const cevaplar = ctx?.cevaplar ?? {};
+  const symptoms = (ctx?.symptoms ?? '').toLowerCase();
+
+  if (tur === 'diski' && (cevaplar['ishal-kan'] === 'evet' || /kanlı|kanli/.test(symptoms))) {
+    urgency = 'high';
+    gozlemler.push('Kanlı dışkı bağlamı — acil değerlendirme');
+    tedavi.unshift('Kanlı ishal — hayvanı ayırın, veterineri arayın');
+    conditions.push('Kanlı enterit şüphesi');
+  }
+  if (tur === 'ayak' && cevaplar['topallama-sis'] === 'evet') {
+    urgency = urgency === 'low' ? 'medium' : urgency;
+    gozlemler.push('Şiş ayak bildirimi — yay/travma ihtimali yüksek');
+  }
+  if (tur === 'agiz' && (cevaplar['kuzu-gobek'] === 'koku' || cevaplar['kuzu-gobek'] === 'sis')) {
+    urgency = 'high';
+    gozlemler.push('Göbek şiş/koku — omphalitis şüphesi');
+    conditions.push('Göbek enfeksiyonu');
+  }
+  if (tur === 'genel' && (cevaplar['solunum-nefes'] === 'hizli' || cevaplar['solunum-ates'] === 'evet')) {
+    urgency = 'high';
+    gozlemler.push('Hızlı solunum / ateş bağlamı');
+  }
+
   return {
-    fotoGozlemleri: [...kural.gozlemler],
-    tedaviOnerileri: [...kural.tedavi],
-    conditions: kural.conditions ? [...kural.conditions] : [],
-    urgency: kural.urgency ?? 'low',
+    fotoGozlemleri: gozlemler,
+    tedaviOnerileri: tedavi,
+    conditions,
+    urgency,
   };
 }
 

@@ -7,8 +7,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
-import type { Animal, AnimalModId } from '@/kaynak/cekirdek/tipler';
-import { addHealthRecord, getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import type { Animal, AnimalModId, StockItem } from '@/kaynak/cekirdek/tipler';
+import { addHealthRecord, adjustStock, getAnimals, getStockItems, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
 
@@ -297,13 +298,94 @@ export async function planaYeniHayvanlariEkle(planId: string): Promise<{ eklenen
   return { eklenen: yeniler.length, plan: guncel };
 }
 
-/** Tek hayvan × tek kalem — yapıldı işaretle + sağlık kaydı */
+function normalize(s: string): string {
+  return s
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i');
+}
+
+function eslesir(metin: string, anahtarlar: string[]): boolean {
+  const n = normalize(metin);
+  return anahtarlar.some((k) => n.includes(normalize(k)));
+}
+
+async function stokDusTakviye(opts: {
+  tip: TakviyeTip;
+  programId: string;
+  earTag: string;
+}): Promise<{ dusum: number; uyari: string | null; ad: string | null }> {
+  const stock = await getStockItems();
+  let item: StockItem | null = null;
+  let doz = 1;
+  let ad = opts.programId;
+
+  if (opts.tip === 'asi' || opts.tip === 'parazit') {
+    const program = ASI_PROGRAMI.find((p) => p.id === opts.programId);
+    if (!program) return { dusum: 0, uyari: 'Program yok — stok düşülmedi', ad: null };
+    ad = program.koruma;
+    doz = program.dozHayvan;
+    const anahtarlar = [program.koruma, program.ad, ...program.stokAnahtarlar];
+    if (asiKategori(program) === 'parazit') {
+      const medicines = stock.filter((s) => s.type === 'medicine');
+      item =
+        medicines.find((s) => eslesir(s.name, anahtarlar)) ??
+        stock.find((s) => eslesir(s.name, anahtarlar)) ??
+        null;
+    } else {
+      const vaccines = stock.filter((s) => s.type === 'vaccine');
+      item =
+        vaccines.find((s) => eslesir(s.name, anahtarlar)) ??
+        stock.find((s) => eslesir(s.name, anahtarlar)) ??
+        null;
+    }
+  } else {
+    const vit = VITAMIN_PROGRAMI.find((v) => v.id === opts.programId);
+    if (!vit) return { dusum: 0, uyari: 'Vitamin yok — stok düşülmedi', ad: null };
+    ad = vit.ad;
+    doz = 1;
+    const anahtarlar = [vit.ad, vit.detay, ...vit.stokAnahtarlar];
+    const supplements = stock.filter((s) => s.type === 'supplement' || s.type === 'medicine');
+    item =
+      supplements.find((s) => eslesir(s.name, anahtarlar)) ??
+      stock.find((s) => eslesir(s.name, anahtarlar)) ??
+      null;
+  }
+
+  if (!item) {
+    return { dusum: 0, uyari: `Stokta "${ad}" yok — kayıt yazıldı`, ad: null };
+  }
+  if (item.quantity < doz) {
+    const dusulecek = Math.max(0, item.quantity);
+    if (dusulecek > 0) {
+      await adjustStock(item.id, 'out', dusulecek, `Mod plan · ${opts.earTag} · ${ad}`);
+      await kaydetKatalogKullanim(opts.programId, dusulecek);
+    }
+    return {
+      dusum: dusulecek,
+      uyari: `Stok yetersiz (${item.name}: ${item.quantity}) — ${dusulecek} düşüldü`,
+      ad: item.name,
+    };
+  }
+  await adjustStock(item.id, 'out', doz, `Mod plan · ${opts.earTag} · ${ad}`);
+  await kaydetKatalogKullanim(opts.programId, doz);
+  return { dusum: doz, uyari: null, ad: item.name };
+}
+
+/** Tek hayvan × tek kalem — yapıldı işaretle + sağlık kaydı + stok */
 export async function isaretleYapildi(opts: {
   planId: string;
   animalId: string;
   tip: TakviyeTip;
   programId: string;
-}): Promise<{ ok: boolean; message: string; plan?: ModTakviyePlani }> {
+}): Promise<{
+  ok: boolean;
+  message: string;
+  plan?: ModTakviyePlani;
+  stokDusum?: number;
+  stokUyari?: string | null;
+}> {
   const list = await planlariOku();
   const plan = list.find((p) => p.id === opts.planId);
   if (!plan) return { ok: false, message: 'Plan bulunamadı' };
@@ -346,6 +428,12 @@ export async function isaretleYapildi(opts: {
     ].join(' · '),
   });
 
+  const stok = await stokDusTakviye({
+    tip: opts.tip,
+    programId: opts.programId,
+    earTag: hayvan.earTag,
+  });
+
   const durumlar = [...plan.durumlar];
   durumlar[idx] = {
     ...durumlar[idx],
@@ -358,8 +446,10 @@ export async function isaretleYapildi(opts: {
 
   return {
     ok: true,
-    message: `${hayvan.earTag} · ${kalem.ad} yapıldı`,
+    message: `${hayvan.earTag} · ${kalem.ad} yapıldı${stok.uyari ? ` · ${stok.uyari}` : stok.dusum ? ` · stok −${stok.dusum}` : ''}`,
     plan: guncel,
+    stokDusum: stok.dusum,
+    stokUyari: stok.uyari,
   };
 }
 
@@ -377,6 +467,8 @@ export async function kalemiTumuneUygula(opts: {
     (d) => d.tip === opts.tip && d.programId === opts.programId && !d.yapildi,
   );
   let sayi = 0;
+  let stokToplam = 0;
+  const uyarilar: string[] = [];
   for (const d of bekleyen) {
     const r = await isaretleYapildi({
       planId: opts.planId,
@@ -387,12 +479,14 @@ export async function kalemiTumuneUygula(opts: {
     if (r.ok && r.plan) {
       plan = r.plan;
       sayi += 1;
+      stokToplam += r.stokDusum ?? 0;
+      if (r.stokUyari && !uyarilar.includes(r.stokUyari)) uyarilar.push(r.stokUyari);
     }
   }
   return {
     ok: true,
     sayi,
-    message: `${sayi} hayvana uygulandı`,
+    message: `${sayi} hayvana uygulandı · stok −${stokToplam}${uyarilar.length ? ` · ${uyarilar[0]}` : ''}`,
     plan: plan ?? undefined,
   };
 }
@@ -400,3 +494,4 @@ export async function kalemiTumuneUygula(opts: {
 export function bekleyenSatirlar(plan: ModTakviyePlani): HayvanKalemDurum[] {
   return plan.durumlar.filter((d) => !d.yapildi);
 }
+

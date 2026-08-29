@@ -9,7 +9,7 @@ export {
   type FotoTur,
   type VakaFotografi,
 } from './fotograf';
-export { eksikFotoIstekleri, zorunluFotoEksik, type FotoIstek } from './foto-istek';
+export { eksikFotoIstekleri, zorunluFotoEksik, kontrolFotoIstekleri, type FotoIstek } from './foto-istek';
 export { vakaDosOlustur, vakaDosMetni, type VakaDos } from './dos';
 export {
   olusturAsiOnerileri,
@@ -92,6 +92,8 @@ export {
   getTakip,
   vetDanisildiIsaretle,
   kontrolZamaniGeldi,
+  kontrolFotoGerekli,
+  kontrolGuncelle,
   asamaEtiket,
   taburcuEt,
   type HastalikTakip,

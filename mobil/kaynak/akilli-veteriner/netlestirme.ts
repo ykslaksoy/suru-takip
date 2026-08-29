@@ -19,6 +19,8 @@ export type VetAnalizSonuc = {
   fotoBekleniyor: boolean;
   hazir: boolean;
   baglamMetni: string;
+  /** Offline güven skoru 0–100 */
+  guven?: number;
 };
 
 export type VetTema = 'ishal' | 'topallama' | 'kuzu' | 'solunum' | 'istahsiz' | 'genel';

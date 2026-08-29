@@ -19,6 +19,7 @@ export type TakipGuncelleme = {
   not: string;
   durum: 'iyilesiyor' | 'ayni' | 'kotulesti';
   fotoSayisi: number;
+  fotograflar?: VakaFotografi[];
 };
 
 export type HastalikTakip = {
@@ -37,6 +38,8 @@ export type HastalikTakip = {
   tedaviUygulandi: boolean;
   karantinaYapildi: boolean;
   karantinaPadok: string | null;
+  /** Karantina öncesi padok — taburcuda geri */
+  oncekiPadok: string | null;
   suruTedaviYapildi: boolean;
   suruTedaviHedef: 'ayni_padok' | 'tum_kuzular' | null;
   guncellemeler: TakipGuncelleme[];
@@ -47,7 +50,11 @@ async function oku(): Promise<HastalikTakip[]> {
   const raw = await AsyncStorage.getItem(KEY);
   if (!raw) return [];
   try {
-    return JSON.parse(raw) as HastalikTakip[];
+    const list = JSON.parse(raw) as HastalikTakip[];
+    return list.map((t) => ({
+      ...t,
+      oncekiPadok: t.oncekiPadok ?? null,
+    }));
   } catch {
     return [];
   }
@@ -94,6 +101,7 @@ export async function baslatTakip(input: {
     tedaviUygulandi: false,
     karantinaYapildi: false,
     karantinaPadok: null,
+    oncekiPadok: null,
     suruTedaviYapildi: false,
     suruTedaviHedef: null,
     guncellemeler: [],
@@ -131,10 +139,15 @@ export async function tedaviUygulandiIsaretle(id: string): Promise<void> {
   });
 }
 
-export async function karantinaYapildiIsaretle(id: string, padokAd: string): Promise<void> {
+export async function karantinaYapildiIsaretle(
+  id: string,
+  padokAd: string,
+  oncekiPadok?: string | null
+): Promise<void> {
   await takipGuncelle(id, {
     karantinaYapildi: true,
     karantinaPadok: padokAd,
+    oncekiPadok: oncekiPadok ?? null,
     asama: 'takip',
   });
 }
@@ -146,28 +159,75 @@ export async function suruTedaviIsaretle(
   await takipGuncelle(id, { suruTedaviYapildi: true, suruTedaviHedef: hedef });
 }
 
+export function kontrolZamaniGeldi(t: HastalikTakip): boolean {
+  return Date.now() >= new Date(t.sonrakiKontrol).getTime();
+}
+
+/** Kontrol zamanı geldiyse en az 1 foto zorunlu */
+export function kontrolFotoGerekli(t: HastalikTakip): boolean {
+  return (
+    (t.asama === 'kontrol_bekliyor' || t.asama === 'takip') &&
+    kontrolZamaniGeldi(t)
+  );
+}
+
 export async function kontrolGuncelle(
   id: string,
-  guncelleme: Omit<TakipGuncelleme, 'tarih'> & { tarih?: string }
-): Promise<void> {
+  guncelleme: Omit<TakipGuncelleme, 'tarih'> & {
+    tarih?: string;
+    fotograflar?: VakaFotografi[];
+  }
+): Promise<{ ok: boolean; message: string; takip?: HastalikTakip }> {
   const t = await getTakip(id);
-  if (!t) return;
+  if (!t) return { ok: false, message: 'Takip yok' };
+
+  const fotolar = guncelleme.fotograflar ?? [];
+  if (kontrolFotoGerekli(t) && fotolar.length === 0 && (guncelleme.fotoSayisi ?? 0) === 0) {
+    return { ok: false, message: 'Kontrol fotoğrafı zorunlu — en az 1 foto ekleyin.' };
+  }
+
   const kayit: TakipGuncelleme = {
-    ...guncelleme,
+    not: guncelleme.not,
+    durum: guncelleme.durum,
+    fotoSayisi: fotolar.length || guncelleme.fotoSayisi || 0,
+    fotograflar: fotolar.length ? fotolar : undefined,
     tarih: guncelleme.tarih ?? new Date().toISOString(),
   };
   const guncellemeler = [...t.guncellemeler, kayit];
-  let asama: TakipAsama = 'takip';
-  if (kayit.durum === 'iyilesiyor' && guncellemeler.length >= 2) {
-    asama = 'taburcu';
-  } else if (kayit.durum === 'kotulesti') {
-    asama = 'vet_bekliyor';
-  }
-  await takipGuncelle(id, { guncellemeler, asama });
-}
+  const tumFotolar = fotolar.length ? [...t.fotograflar, ...fotolar] : t.fotograflar;
 
-export function kontrolZamaniGeldi(t: HastalikTakip): boolean {
-  return Date.now() >= new Date(t.sonrakiKontrol).getTime();
+  let asama: TakipAsama = 'takip';
+  let sonrakiKontrol = t.sonrakiKontrol;
+  const iyilesen = guncellemeler.filter((g) => g.durum === 'iyilesiyor').length;
+
+  if (kayit.durum === 'kotulesti') {
+    asama = 'vet_bekliyor';
+  } else if (kayit.durum === 'iyilesiyor' && iyilesen >= 2) {
+    asama = 'taburcu';
+  } else if (kayit.durum === 'ayni') {
+    asama = 'takip';
+    sonrakiKontrol = new Date(Date.now() + 2 * 86400000).toISOString();
+  } else if (kayit.durum === 'iyilesiyor') {
+    asama = 'takip';
+    sonrakiKontrol = new Date(Date.now() + 3 * 86400000).toISOString();
+  }
+
+  const guncel = await takipGuncelle(id, {
+    guncellemeler,
+    asama,
+    sonrakiKontrol,
+    fotograflar: tumFotolar,
+  });
+  return {
+    ok: true,
+    message:
+      asama === 'taburcu'
+        ? 'İyileşme onaylandı — taburcu.'
+        : asama === 'vet_bekliyor'
+          ? 'Kötüleşme — veteriner danışması gerekli.'
+          : 'Durum kaydedildi.',
+    takip: guncel ?? undefined,
+  };
 }
 
 export function asamaEtiket(a: TakipAsama): string {
@@ -182,6 +242,17 @@ export function asamaEtiket(a: TakipAsama): string {
   return map[a];
 }
 
-export async function taburcuEt(id: string): Promise<void> {
+export async function taburcuEt(id: string): Promise<{
+  ok: boolean;
+  message: string;
+  oncekiPadok: string | null;
+}> {
+  const t = await getTakip(id);
+  if (!t) return { ok: false, message: 'Takip yok', oncekiPadok: null };
   await takipGuncelle(id, { asama: 'taburcu' });
+  return {
+    ok: true,
+    message: `${t.earTag} taburcu edildi`,
+    oncekiPadok: t.oncekiPadok,
+  };
 }

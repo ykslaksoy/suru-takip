@@ -11,7 +11,7 @@ import {
 export function vakaPaketiToJson(paket: VakaPaketi): string {
   return JSON.stringify(
     {
-      suruyonVaka: '1.0',
+      suruyonVaka: '1.1',
       exportedAt: paket.createdAt,
       paket,
     },
@@ -23,41 +23,69 @@ export function vakaPaketiToJson(paket: VakaPaketi): string {
 export function vakaPaketiPaylasimMetni(paket: VakaPaketi, vetAd?: string): string {
   const a = paket.animal;
   const hayvan = a ? `${a.earTag} · ${a.breed} · ${a.paddock}` : 'Hayvan eşleşmedi';
-  const fotoSatir =
+  const fotoEtiketler =
     paket.fotograflar.length > 0
-      ? `Fotoğraf: ${paket.fotograflar.length} adet (${paket.fotograflar.map((f) => f.etiket || fotoTurEtiketi(f.tur)).join(', ')})`
+      ? paket.fotograflar.map((f) => f.etiket || fotoTurEtiketi(f.tur)).join(', ')
       : null;
-  const satirlar = [
+
+  const satirlar: (string | null)[] = [
     'SürüYön — Veteriner vaka paketi',
     vetAd ? `Veteriner: ${vetAd}` : null,
     `Tarih: ${new Date(paket.createdAt).toLocaleString('tr-TR')}`,
     `Hayvan: ${hayvan}`,
     `Semptom: ${paket.symptoms || '—'}`,
-    fotoSatir,
-    `Son sağlık kaydı: ${paket.healthHistory[0]?.diagnosis || '—'}`,
+    '',
+  ];
+
+  if (paket.teshisOzet) {
+    satirlar.push('── Teşhis ──', paket.teshisOzet, '');
+  }
+  if (paket.aiOzet) {
+    satirlar.push(`AI özeti: ${paket.aiOzet}`, '');
+  }
+  if (paket.dozSatirlari && paket.dozSatirlari.length > 0) {
+    satirlar.push(
+      `── Önerilen doz${paket.kg != null ? ` (${paket.kg} kg)` : ''} ──`,
+      ...paket.dozSatirlari.map((d) => `• ${d}`),
+      '',
+    );
+  }
+  if (fotoEtiketler) {
+    satirlar.push(
+      '── Fotoğraf ──',
+      `${paket.fotograflar.length} adet: ${fotoEtiketler}`,
+      'Not: Fotoğrafları mesaja ekleyin (ataç) veya uygulamadan “Fotoğraf paylaş”.',
+      '',
+    );
+  }
+
+  satirlar.push(
+    `Son sağlık: ${paket.healthHistory[0]?.diagnosis || '—'}`,
     `Son tartım: ${paket.weights[0]?.weightKg != null ? `${paket.weights[0].weightKg} kg` : '—'}`,
-    paket.aiOzet ? `AI özeti: ${paket.aiOzet}` : null,
-    fotoSatir ? 'Not: Fotoğrafları mesaja ekleyin (ataç simgesi).' : null,
     '',
     'Lütfen talimatınızı paylaşın.',
-  ].filter(Boolean) as string[];
-  return satirlar.join('\n');
+  );
+
+  return satirlar.filter((s) => s !== null).join('\n');
 }
 
-/** WhatsApp sonrası fotoğrafları sistem paylaşımı ile ilet (mobil). */
+/** WhatsApp sonrası fotoğrafları sistem paylaşımı ile ilet (mobil) — sırayla. */
 export async function fotograflariPaylas(paket: VakaPaketi): Promise<boolean> {
   if (paket.fotograflar.length === 0 || Platform.OS === 'web') return false;
-  const ilk = paket.fotograflar[0];
-  try {
-    await Share.share(
-      Platform.OS === 'ios'
-        ? { url: ilk.uri, message: `SürüYön vaka fotoğrafı — ${ilk.etiket}` }
-        : { message: `SürüYön vaka fotoğrafı — ${ilk.etiket}`, url: ilk.uri }
-    );
-    return true;
-  } catch {
-    return false;
+  let ok = false;
+  for (const f of paket.fotograflar) {
+    try {
+      await Share.share(
+        Platform.OS === 'ios'
+          ? { url: f.uri, message: `SürüYön · ${f.etiket || fotoTurEtiketi(f.tur)}` }
+          : { message: `SürüYön · ${f.etiket || fotoTurEtiketi(f.tur)}`, url: f.uri }
+      );
+      ok = true;
+    } catch {
+      /* devam */
+    }
   }
+  return ok;
 }
 
 export type VakaGonderSonuc = {
@@ -123,7 +151,7 @@ export async function gonderVakaPaketi(paket: VakaPaketi): Promise<VakaGonderSon
     whatsappUrl: url,
     message:
       paket.fotograflar.length > 0
-        ? `${vetLabel} WhatsApp ile açıldı. Mesajı gönderin; ardından fotoğrafları ekleyin.`
+        ? `${vetLabel} WhatsApp açıldı (teşhis + doz metni hazır). Mesajı gönderin; ardından fotoğrafları paylaşın.`
         : `${vetLabel} WhatsApp ile açıldı. Mesajı gönderin.`,
   };
 }

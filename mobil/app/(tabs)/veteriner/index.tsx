@@ -23,10 +23,10 @@ import {
   formatAiOzet,
   hayvanBulKupe,
   hayvaniKarantinayaAl,
+  ilaclariKgIleHesapla,
   teshisOzeti,
   uygulaSuruTedavisi,
   uygulaTedaviVeTakip,
-  vakaDosMetni,
   vakaDosOlustur,
   vetDanisildiIsaretle,
   VET_DISCLAIMER,
@@ -34,6 +34,7 @@ import {
   type VetCevaplar,
   type VakaDos,
 } from '@/kaynak/akilli-veteriner';
+import { karantinaYapildiIsaretle } from '@/kaynak/akilli-veteriner/takip';
 import type { VakaFotografi } from '@/kaynak/akilli-veteriner/fotograf';
 import { olusturVakaPaketi } from '@/kaynak/veteriner-koprusu/vaka-paketi';
 import { fotograflariPaylas, gonderVakaPaketi } from '@/kaynak/veteriner-koprusu/gonder';
@@ -211,10 +212,31 @@ export default function VetScreen() {
       ? `${teshisOzeti(sonucAnaliz.teshis)} · ${formatAiOzet(sonucAnaliz.oneri)}`
       : formatAiOzet(sonucAnaliz.oneri);
 
-    const paket = await olusturVakaPaketi(kupe, dos.baglamMetni, { aiOzet, fotograflar: vaka.fotograflar });
+    const dozlu =
+      sonucAnaliz.teshis && onayliKg && onayliKg > 0
+        ? ilaclariKgIleHesapla(sonucAnaliz.teshis.ilaclar, onayliKg)
+        : sonucAnaliz.teshis?.ilaclar ?? [];
+    const dozSatirlari = dozlu.map((i) => {
+      const formul = i.dozFormul ? ` ${i.dozFormul}` : '';
+      return `${i.ilacAdi} · ${i.doz || 'doz vet'}${formul} · ${i.uygulama} · ${i.siklik}`;
+    });
+
+    const paket = await olusturVakaPaketi(kupe, dos.baglamMetni, {
+      aiOzet,
+      fotograflar: vaka.fotograflar,
+      teshisOzet: sonucAnaliz.teshis ? teshisOzeti(sonucAnaliz.teshis) : undefined,
+      dozSatirlari: dozSatirlari.length ? dozSatirlari : undefined,
+      kg: onayliKg && onayliKg > 0 ? onayliKg : undefined,
+    });
     if (!paket) {
       Alert.alert('Eksik', 'Kulak küpe numarası gerekli');
       return;
+    }
+    if (sonucAnaliz.teshis && (!onayliKg || onayliKg <= 0) && sonucAnaliz.teshis.ilaclar.some((i) => i.mgPerKg != null)) {
+      Alert.alert(
+        'Kilo yok',
+        'Doz satırları tam hesaplanamadı — yine de gönderiliyor. Daha doğru ml için kiloyu onaylayın.',
+      );
     }
     const sonuc = await gonderVakaPaketi(paket);
     if (!sonuc.ok) {
@@ -260,6 +282,10 @@ export default function VetScreen() {
               return;
             }
             const r = await hayvaniKarantinayaAl(hayvan.id);
+            if (r.ok && aktifTakipId) {
+              await karantinaYapildiIsaretle(aktifTakipId, r.padok, r.oncekiPadok);
+              setTakipKey((k) => k + 1);
+            }
             Alert.alert(r.ok ? 'Karantina' : 'Hata', r.message);
           }}
           onSuruPadok={() => {
