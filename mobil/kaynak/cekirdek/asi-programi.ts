@@ -36,8 +36,8 @@ export function asiDozEtiketi(p: AsiProgramKalemi): string {
 export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   {
     id: 'karma',
-    koruma: 'Klostridiyal + pastörella',
-    ad: 'Karma aşı',
+    koruma: 'Karma aşı',
+    ad: 'Klostridiyal + pastörella',
     stokAnahtarlar: ['karma', 'heptavac', 'kombine', 'çok bileşen'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -45,8 +45,18 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     mlHayvan: 2,
   },
   {
+    id: 'pasteurella',
+    koruma: 'Solunum',
+    ad: 'Pastörella aşısı',
+    stokAnahtarlar: ['pasteurella', 'pastörella', 'pastorella', 'solunum'],
+    tekrarGun: 365,
+    hatirlatmaGun: 30,
+    dozHayvan: 1,
+    mlHayvan: 2,
+  },
+  {
     id: 'clostridial',
-    koruma: 'Klostridiyal hastalıklar',
+    koruma: 'Klostridiyal',
     ad: 'Clostridial aşı',
     stokAnahtarlar: ['clostridial', 'klostridial'],
     tekrarGun: 365,
@@ -56,23 +66,13 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'enterotoksemi',
-    koruma: 'Enterotoksemi / çelertme',
-    ad: 'Enterotoksemi aşısı',
+    koruma: 'Enterotoksemi',
+    ad: 'Çelertme aşısı',
     stokAnahtarlar: ['enterotoksemi', 'enterotoxemia', 'çelertme'],
     tekrarGun: 180,
     hatirlatmaGun: 21,
     dozHayvan: 1,
     mlHayvan: 1,
-  },
-  {
-    id: 'pasteurella',
-    koruma: 'Pastörella / solunum',
-    ad: 'Pastörella aşısı',
-    stokAnahtarlar: ['pasteurella', 'pastörella', 'pastorella'],
-    tekrarGun: 365,
-    hatirlatmaGun: 30,
-    dozHayvan: 1,
-    mlHayvan: 2,
   },
   {
     id: 'septisemi',
@@ -86,8 +86,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'ektima',
-    koruma: 'Ektima / ağız yarası',
-    ad: 'Ektima (ORF) aşısı',
+    koruma: 'Ektima',
+    ad: 'ORF aşısı',
     stokAnahtarlar: ['ektima', 'ectima', 'orf'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -107,7 +107,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'ppr',
-    koruma: 'Koyun-keçi vebası',
+    koruma: 'Veba',
     ad: 'PPR aşısı',
     stokAnahtarlar: ['ppr', 'veba', 'koyun-keçi vebası'],
     tekrarGun: 365,
@@ -117,7 +117,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'cicek',
-    koruma: 'Çiçek hastalığı',
+    koruma: 'Çiçek',
     ad: 'Çiçek aşısı',
     stokAnahtarlar: ['çiçek', 'cicek', 'carbon', 'sheep pox'],
     tekrarGun: 365,
@@ -127,7 +127,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'sap',
-    koruma: 'Şap hastalığı',
+    koruma: 'Şap',
     ad: 'Şap aşısı',
     stokAnahtarlar: ['şap', 'sap', 'fmd'],
     tekrarGun: 180,
@@ -157,7 +157,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'agalaksi',
-    koruma: 'Süt kesen hastalık',
+    koruma: 'Süt kesen',
     ad: 'Agalaksi aşısı',
     stokAnahtarlar: ['agalaksi', 'agalactia', 'süt kesen'],
     tekrarGun: 365,
@@ -167,8 +167,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'topallik',
-    koruma: 'Topallık / ayak',
-    ad: 'Topallık aşısı',
+    koruma: 'Topallık',
+    ad: 'Ayak aşısı',
     stokAnahtarlar: ['topallık', 'topallik', 'ayak', 'footrot'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -177,7 +177,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'parazit',
-    koruma: 'İç-dış parazit',
+    koruma: 'Parazit',
     ad: 'Parazit programı',
     stokAnahtarlar: ['parazit', 'antiparasit', 'ivermektin'],
     tekrarGun: 180,
