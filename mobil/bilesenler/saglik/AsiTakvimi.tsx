@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { AsiBaslikSatir } from '@/bilesenler/veteriner/AsiBaslikSatir';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
+import { getAnimal } from '@/kaynak/cekirdek/veritabani';
 import { getAsiTakvimiDurumu, type AsiStokDurum } from '@/kaynak/saglik';
 import {
   asiBildirimIzinIste,
@@ -12,6 +13,7 @@ import {
   asiHatirlatmalariYenile,
   type AsiBuHaftaSatir,
 } from '@/kaynak/saglik/asi-hatirlatma';
+import { uygulaAsiHayvana } from '@/kaynak/akilli-veteriner/asi-uygula';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 
 export function AsiTakvimi() {
@@ -40,6 +42,35 @@ export function AsiTakvimi() {
     if (ready) load();
   }, [ready, refreshKey, load]);
 
+  const tekHayvanUygula = (s: AsiBuHaftaSatir) => {
+    Alert.alert(
+      'Aşıyı uygula',
+      `${s.earTag || 'Hayvan'}\n${s.koruma} (${s.asiAdi}) ${s.mlEtiket}\n\nSağlık kaydı yazılır, stok düşülür.`,
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Uygula',
+          onPress: () => {
+            void (async () => {
+              const animal = await getAnimal(s.animalId);
+              if (!animal) {
+                Alert.alert('Hata', 'Hayvan bulunamadı');
+                return;
+              }
+              const r = await uygulaAsiHayvana({ animal, programId: s.programId });
+              Alert.alert(r.ok ? 'Tamam' : 'Hata', r.message);
+              await load();
+            })();
+          },
+        },
+        {
+          text: 'Kayıt aç',
+          onPress: () => router.push(`/hayvan/${s.animalId}/saglik` as never),
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return <ActivityIndicator color={colors.tint} style={{ marginTop: 24 }} />;
   }
@@ -64,14 +95,14 @@ export function AsiTakvimi() {
           {hafta.slice(0, 12).map((s) => (
             <Pressable
               key={`${s.programId}-${s.animalId}`}
-              onPress={() => router.push(`/hayvan/${s.animalId}/saglik` as never)}
+              onPress={() => tekHayvanUygula(s)}
               style={styles.weekRow}>
               <Text style={{ color: colors.text, flex: 1, fontWeight: '600' }}>
                 {s.earTag || '—'} · {s.koruma} ({s.asiAdi}) {s.mlEtiket}
               </Text>
               <Text style={{ color: s.durum === 'yapilacak' ? colors.danger : colors.warning, fontWeight: '800', fontSize: 12 }}>
                 {s.durum === 'yapilacak'
-                  ? 'Yapılacak'
+                  ? 'Uygula'
                   : s.kalanGun != null
                     ? `${s.kalanGun}g`
                     : 'Yaklaşıyor'}

@@ -28,6 +28,7 @@ import {
   type BolgeTipi,
   type HayvanGrubu,
 } from '@/kaynak/akilli-veteriner/asi-modu';
+import { uygulaAsiPlani } from '@/kaynak/akilli-veteriner/asi-uygula';
 import { v4 as uuidv4 } from 'uuid';
 
 function Secici<T extends string>({
@@ -194,6 +195,39 @@ export function AsiModuPaneli() {
     Alert.alert('Planlandı', `${kuzular.length} kuzu · ${tarih} · ${aktif.length} aşı`);
   };
 
+  const planUygula = (plan: AsiPlani) => {
+    if (plan.uygulandi) {
+      Alert.alert('Uygulandı', 'Bu plan zaten sağlık kaydına işlenmiş.');
+      return;
+    }
+    Alert.alert(
+      'Aşıyı uygula',
+      `${plan.asiAdi}\n${plan.tarih} · ${plan.hayvanSayisi} kuzu\n\nHer kuzuya aşı kaydı yazılır, stoktan doz düşülür.`,
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Uygula',
+          onPress: () => {
+            void (async () => {
+              const r = await uygulaAsiPlani(plan);
+              setPlanlar(await planOku());
+              if (!r.ok) {
+                Alert.alert('Uygulanamadı', r.message);
+                return;
+              }
+              Alert.alert(
+                'Tamam',
+                `${r.kayitSayisi} sağlık kaydı yazıldı` +
+                  (r.stokDusum > 0 ? `\nStok −${r.stokDusum} doz${r.stokAdi ? ` (${r.stokAdi})` : ''}` : '') +
+                  (r.stokUyari ? `\n\n⚠ ${r.stokUyari}` : '')
+              );
+            })();
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View>
       <Text style={[styles.title, { color: colors.text }]}>Hastalık önleyici aşı modu</Text>
@@ -318,10 +352,21 @@ export function AsiModuPaneli() {
       {planlar.length > 0 && (
         <View style={{ marginTop: 16 }}>
           <Text style={{ color: colors.textSecondary, fontWeight: '700', marginBottom: 8 }}>Kayıtlı planlar</Text>
-          {planlar.slice(0, 5).map((p) => (
-            <Text key={p.id} style={{ color: colors.text, fontSize: 13, marginBottom: 4 }}>
-              {p.tarih} · {p.asiAdi} · {p.hayvanSayisi} kuzu
-            </Text>
+          {planlar.slice(0, 8).map((p) => (
+            <View
+              key={p.id}
+              style={[styles.planKart, { borderColor: colors.border, backgroundColor: colors.card }]}>
+              <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13 }}>
+                {p.tarih} · {p.asiAdi}
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                {p.hayvanSayisi} kuzu
+                {p.uygulandi ? ` · ✓ uygulandı${p.uygulandiAt ? ` (${p.uygulandiAt.slice(0, 10)})` : ''}` : ' · bekliyor'}
+              </Text>
+              {!p.uygulandi ? (
+                <AnaButon title="Uygula — kayıt + stok" variant="secondary" onPress={() => planUygula(p)} />
+              ) : null}
+            </View>
           ))}
         </View>
       )}
@@ -345,4 +390,5 @@ const styles = StyleSheet.create({
   uyari: { borderWidth: 1, borderRadius: 12, padding: 12, marginTop: 10 },
   eksik: { borderWidth: 1, borderRadius: 10, padding: 12, marginTop: 12 },
   bilgi: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 14 },
+  planKart: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10 },
 });

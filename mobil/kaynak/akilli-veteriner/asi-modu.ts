@@ -59,6 +59,9 @@ export type AsiPlani = {
   hedef: 'tum_kuzular';
   hayvanSayisi: number;
   olusturuldu: string;
+  /** Uygulandıysa sağlık + stok yazılmış */
+  uygulandi?: boolean;
+  uygulandiAt?: string;
 };
 
 export const VARSAYILAN_PROFIL: AsiOrtamProfili = {
@@ -286,6 +289,15 @@ export async function tercihOku(): Promise<AsiTercih[]> {
 export async function planKaydet(plan: AsiPlani): Promise<void> {
   const list = await planOku();
   list.unshift(plan);
+  await AsyncStorage.setItem(PLAN_KEY, JSON.stringify(list.slice(0, 20)));
+}
+
+/** Mevcut planı güncelle (uygulandı işareti vb.) */
+export async function planGuncelle(plan: AsiPlani): Promise<void> {
+  const list = await planOku();
+  const idx = list.findIndex((p) => p.id === plan.id);
+  if (idx >= 0) list[idx] = plan;
+  else list.unshift(plan);
   await AsyncStorage.setItem(PLAN_KEY, JSON.stringify(list.slice(0, 20)));
 }
 

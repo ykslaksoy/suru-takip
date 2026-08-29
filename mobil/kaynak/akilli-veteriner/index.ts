@@ -20,6 +20,7 @@ export {
   tercihKaydet,
   tercihOku,
   planKaydet,
+  planGuncelle,
   planOku,
   getKuzular,
   VARSAYILAN_PROFIL,
@@ -32,6 +33,7 @@ export {
   type AsiUyari,
   type AsiPlani,
 } from './asi-modu';
+export { uygulaAsiPlani, uygulaAsiHayvana, type AsiUygulaSonuc } from './asi-uygula';
 export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
 export {
   hesaplaDozMetni,
