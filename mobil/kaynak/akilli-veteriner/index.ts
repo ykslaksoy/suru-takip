@@ -64,6 +64,13 @@ export {
   type HastalikMalzemeSatir,
 } from './hastalik-liste';
 export {
+  VITAMIN_PROGRAMI,
+  vitaminDozEtiketi,
+  vitaminTipEtiket,
+  type VitaminKalemi,
+  type VitaminUygulama,
+} from './vitamin-programi';
+export {
   baslatTakip,
   getAktifTakipler,
   getTakip,
