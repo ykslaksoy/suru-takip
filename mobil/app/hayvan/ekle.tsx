@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { TurSecici } from '@/bilesenler/suru/TurSecici';
 import { PadokSecici } from '@/bilesenler/suru/PadokSecici';
+import { OkuyucuDurumu } from '@/bilesenler/rfid/OkuyucuDurumu';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -12,6 +13,8 @@ import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { useMod } from '@/baglam/ModBaglami';
 import { countAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet/dogrula';
+import { rfidOku } from '@/kaynak/rfid';
+import { ocrKupeFotodan, ocrKupeNormalize } from '@/kaynak/ocr';
 import type { AnimalSex, AnimalSpecies, AnimalStatus } from '@/kaynak/cekirdek/tipler';
 
 export default function AddAnimalScreen() {
@@ -34,6 +37,31 @@ export default function AddAnimalScreen() {
     motherId: '',
     notes: '',
   });
+  const [ocrMetin, setOcrMetin] = useState('');
+
+  const rfidOkut = async () => {
+    const r = await rfidOku();
+    if (!r.ok) {
+      Alert.alert('RFID', r.message);
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      earTag: r.earTagOneri || f.earTag,
+      gehisId: r.gehisIdOneri || f.gehisId,
+    }));
+    Alert.alert('RFID', r.message);
+  };
+
+  const ocrUygula = async () => {
+    const r = ocrMetin.trim() ? ocrKupeNormalize(ocrMetin) : await ocrKupeFotodan({});
+    if (!r.ok) {
+      Alert.alert('OCR', r.message);
+      return;
+    }
+    setForm((f) => ({ ...f, earTag: r.earTag || f.earTag }));
+    Alert.alert('OCR', r.message);
+  };
 
   const save = async () => {
     const count = await countAnimals();
@@ -82,7 +110,7 @@ export default function AddAnimalScreen() {
   const fields: { key: keyof typeof form; label: string; placeholder: string }[] = [
     { key: 'earTag', label: 'Kulak Küpe No *', placeholder: 'TR-34-001234' },
     { key: 'turkvetNo', label: 'TÜRKVET Kimlik No', placeholder: 'TR340012345678901' },
-    { key: 'gehisId', label: 'GEKİS Elektronik Kimlik', placeholder: 'Gelecek entegrasyon' },
+    { key: 'gehisId', label: 'GEKİS Elektronik Kimlik', placeholder: 'RFID / elektronik etiket' },
     { key: 'name', label: 'İsim', placeholder: 'Koyun adı (opsiyonel)' },
     { key: 'breed', label: 'Irk', placeholder: 'Merinos, İvesi, Sakız...' },
     { key: 'birthDate', label: 'Doğum Tarihi', placeholder: 'YYYY-MM-DD' },
@@ -96,6 +124,24 @@ export default function AddAnimalScreen() {
         TÜRKVET ve GEKİS alanları resmi kayıt uyumu için hazırlanmıştır. Kayıt otomatik olarak aktif moda
         eklenir: {aktifMod.icon} {aktifMod.baslik}.
       </Text>
+
+      <View style={styles.field}>
+        <OkuyucuDurumu />
+        <AnaButon title="RFID / GEKİS okut (simülasyon)" variant="secondary" onPress={() => void rfidOkut()} />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={[styles.label, { color: colors.text }]}>OCR — küpe metni (yapıştır / oku)</Text>
+        <TextInput
+          value={ocrMetin}
+          onChangeText={setOcrMetin}
+          placeholder="Etiketten okunan veya yapıştırılan metin"
+          placeholderTextColor={colors.textSecondary}
+          style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
+        />
+        <AnaButon title="OCR ile küpe doldur" variant="secondary" onPress={() => void ocrUygula()} />
+      </View>
+
       {fields.map((f) => (
         <View key={f.key} style={styles.field}>
           <Text style={[styles.label, { color: colors.text }]}>{f.label}</Text>
@@ -128,7 +174,7 @@ export default function AddAnimalScreen() {
         </View>
       </View>
       <View style={{ padding: 16 }}>
-        <AnaButon title="Kaydet" onPress={save} />
+        <AnaButon title="Kaydet" onPress={() => void save()} />
       </View>
     </ScrollView>
   );

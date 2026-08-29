@@ -1,5 +1,5 @@
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
-import { fotografAnalizi, type FotoTur } from './fotograf';
+import { type FotoTur } from './fotograf';
 import {
   baglamMetniOlustur,
   netlestirmeSorulari,
@@ -9,6 +9,8 @@ import {
 import { eksikFotoIstekleri, zorunluFotoEksik } from './foto-istek';
 import type { VakaFotografi } from './fotograf';
 import { olusturTeshis } from './teshis';
+import { visionOfflineAnaliz } from './vision';
+import { birlestirAciliyet } from './aciliyet';
 
 export type { VetAnalizSonuc, VetCevaplar, VetSoru, VetSoruSecenek } from './netlestirme';
 export { baglamMetniOlustur, netlestirmeSorulari, tespitTema } from './netlestirme';
@@ -124,7 +126,7 @@ function bosSonuc(mesaj: string): VetSuggestion {
 }
 
 function birlestirUrgency(a: VetSuggestion['urgency'], b: VetSuggestion['urgency']): VetSuggestion['urgency'] {
-  return URGENCY_RANK[a] >= URGENCY_RANK[b] ? a : b;
+  return birlestirAciliyet(a, b);
 }
 
 function benzersiz(list: string[]): string[] {
@@ -253,14 +255,23 @@ export function analyzeVaka(input: {
   const tedaviOnerileri = [...semptom.tedaviOnerileri];
   const fotoGozlemleri: string[] = [];
 
-  for (const tur of turler) {
-    const fa = fotografAnalizi(tur, { cevaplar: input.cevaplar, symptoms: baglam });
-    fotoGozlemleri.push(...fa.fotoGozlemleri);
-    conditions.push(...(fa.conditions ?? []));
-    tedaviOnerileri.push(...fa.tedaviOnerileri);
-    urgency = birlestirUrgency(urgency, fa.urgency ?? 'low');
-    if (fa.urgency === 'high') seeVet = true;
-  }
+  // Vision katmanı (offline kural; uzak URL varsa visionAnalizEt)
+  const vis = visionOfflineAnaliz({
+    fotograflar: turler.map((tur, i) => ({
+      id: `t-${i}`,
+      uri: '',
+      tur,
+      etiket: tur,
+      createdAt: '',
+    })),
+    symptoms: baglam,
+    cevaplar: input.cevaplar,
+  });
+  fotoGozlemleri.push(...vis.fotoGozlemleri);
+  conditions.push(...vis.conditions);
+  tedaviOnerileri.push(...vis.tedaviOnerileri);
+  urgency = birlestirUrgency(urgency, vis.urgency);
+  if (vis.urgency === 'high') seeVet = true;
 
   if (turler.length > 0 && semptom.conditions.length === 0) {
     seeVet = true;

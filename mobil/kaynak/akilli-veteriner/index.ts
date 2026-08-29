@@ -9,6 +9,24 @@ export {
   type FotoTur,
   type VakaFotografi,
 } from './fotograf';
+export {
+  visionAnalizEt,
+  visionOfflineAnaliz,
+  visionKaynakAciklama,
+  type VisionAnalizSonuc,
+} from './vision';
+export {
+  aciliyetEtiket,
+  teshisAciliyet,
+  birlestirAciliyet,
+  type AciliyetSeviye,
+} from './aciliyet';
+export {
+  geriBildirimKaydet,
+  geriBildirimListele,
+  geriBildirimOzet,
+  type VetGeriBildirim,
+} from './geri-bildirim';
 export { eksikFotoIstekleri, zorunluFotoEksik, kontrolFotoIstekleri, type FotoIstek } from './foto-istek';
 export { vakaDosOlustur, vakaDosMetni, type VakaDos } from './dos';
 export {

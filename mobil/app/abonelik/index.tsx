@@ -11,7 +11,7 @@ const TIERS: SubscriptionTier[] = ['free', 'farmer', 'professional', 'enterprise
 export default function AbonelikEkrani() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { tier, purchase } = useSubscription();
+  const { tier, purchase, restore, iapAciklama } = useSubscription();
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   const buy = async (t: SubscriptionTier) => {
@@ -26,7 +26,7 @@ export default function AbonelikEkrani() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.intro, { color: colors.textSecondary }]}>
-        Ücretsiz paket — 30 hayvana kadar. App Store / Play Store abonelik entegrasyonu canlı sürümde etkinleştirilecek.
+        Ücretsiz paket — 30 hayvana kadar. {iapAciklama}
       </Text>
 
       <View style={styles.billingRow}>
@@ -74,9 +74,16 @@ export default function AbonelikEkrani() {
         );
       })}
 
+      <AnaButon
+        title="Satın alımları geri yükle"
+        variant="secondary"
+        onPress={() => {
+          void restore().then((r) => Alert.alert(r.success ? 'Geri yükleme' : 'Hata', r.message));
+        }}
+      />
+
       <Text style={[styles.note, { color: colors.textSecondary }]}>
-        Canlı sürümde uygulama içi satın alma (App Store / Play Store) etkinleştirilecek. Şu anki satın alma yalnızca
-        geliştirme ve test içindir.
+        Canlı sürümde App Store / Play Store (RevenueCat) EXPO_PUBLIC_REVENUECAT_KEY ile açılır. Şu an simülasyon.
       </Text>
     </ScrollView>
   );
