@@ -3,7 +3,7 @@
  *
  * Padok A: ~2–2,5 ay · 17–24 kg · 9–12 bin ₺
  * Padok B: ~3,5 ay · giriş 1 ay önce · kilo artmış
- * Padok C: giriş 2 ay önce · giriş kilosundan 2 aylık artış
+ * Padok C: ~4,5 ay · giriş 2 ay önce · giriş kilosundan 2 aylık artış
  */
 
 import { addWeightRecord, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
@@ -183,8 +183,8 @@ export function padokCGrupKimlik(sira: number) {
   if (sira < 1 || sira > PADOK_C_KUZU_ADET) throw new Error(`Sıra 1–${PADOK_C_KUZU_ADET}`);
   const t = oran(sira, PADOK_C_KUZU_ADET);
   const girisGunOnce = 60; // 2 ay önce
-  // Girişte ~2–2,5 aylıktılar → şimdi ~4–4,5 ay
-  const yasGun = Math.round(120 + t * 15);
+  // Şu an ~4,5 aylık (132–138 gün); girişte ~2,5 ay
+  const yasGun = Math.round(132 + t * 6);
   const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
   const artisKg = Math.round((6.5 + t * 1.5) * 10) / 10; // ~2 aylık artış 6,5–8 kg
   const weightKg = Math.round((girisKg + artisKg) * 10) / 10;
@@ -206,7 +206,7 @@ export function padokCGrupKimlik(sira: number) {
 }
 
 /**
- * Padok C: 20 kuzu · giriş 2 ay önce · güncel kilo = giriş + ~2 aylık artış.
+ * Padok C: 20 kuzu · ~4,5 aylık · giriş 2 ay önce · güncel kilo = giriş + ~2 aylık artış.
  */
 export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: string }> {
   await ensureVarsayilanPadoklar();
