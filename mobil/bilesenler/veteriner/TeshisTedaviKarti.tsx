@@ -1,16 +1,18 @@
-import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { KiloOnayPaneli } from '@/bilesenler/veteriner/KiloOnayPaneli';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { DozSatir } from '@/bilesenler/veteriner/DozSatir';
 import { ilaclariKgIleHesapla } from '@/kaynak/akilli-veteriner/doz-hesap';
+import { geriBildirimKaydet } from '@/kaynak/akilli-veteriner/geri-bildirim';
 import type { HastalikTeshis } from '@/kaynak/akilli-veteriner/teshis';
 import type { VetKanal } from '@/kaynak/veteriner-koprusu/vet-iletisim';
 
 type Props = {
   teshis: HastalikTeshis;
+  guven?: number;
   vetKanal: VetKanal;
   vetAd?: string;
   earTag?: string;
@@ -27,6 +29,7 @@ type Props = {
 
 export function TeshisTedaviKarti({
   teshis,
+  guven,
   vetKanal,
   vetAd,
   earTag,
@@ -43,6 +46,7 @@ export function TeshisTedaviKarti({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const dereceRenk = teshis.derece === 'ileri' ? colors.danger : colors.warning;
+  const [geriBildirim, setGeriBildirim] = useState<'faydali' | 'faydasiz' | null>(null);
 
   const ilaclar = useMemo(() => {
     if (onayliKg == null || onayliKg <= 0) return teshis.ilaclar;
@@ -56,6 +60,29 @@ export function TeshisTedaviKarti({
 
   const dozHazir = onayliKg != null && onayliKg > 0;
 
+  const guvenRenk =
+    guven == null
+      ? colors.textSecondary
+      : guven >= 70
+        ? colors.tint
+        : guven >= 50
+          ? colors.warning
+          : colors.danger;
+
+  const geriBildirimGonder = async (faydalı: boolean) => {
+    if (geriBildirim) return;
+    await geriBildirimKaydet({
+      teshisId: teshis.hastalikId,
+      teshisAdi: teshis.hastalikAdiTr,
+      faydalı,
+    });
+    setGeriBildirim(faydalı ? 'faydali' : 'faydasiz');
+    Alert.alert(
+      'Teşekkürler',
+      faydalı ? 'Öneri faydalı olarak kaydedildi.' : 'Geri bildirim kaydedildi — önerileri iyileştirmede kullanılır.'
+    );
+  };
+
   return (
     <View style={[styles.wrap, { borderColor: colors.tint, backgroundColor: colors.card }]}>
       <Text style={[styles.baslik, { color: colors.tint }]}>Teşhis</Text>
@@ -68,6 +95,11 @@ export function TeshisTedaviKarti({
         {teshis.bulasici ? (
           <Text style={[styles.etiket, { backgroundColor: colors.danger + '33', color: colors.danger }]}>
             Bulaşıcı
+          </Text>
+        ) : null}
+        {guven != null ? (
+          <Text style={[styles.etiket, { backgroundColor: guvenRenk + '33', color: guvenRenk }]}>
+            Güven %{guven}
           </Text>
         ) : null}
       </View>
@@ -149,6 +181,22 @@ export function TeshisTedaviKarti({
               <AnaButon title="Tüm kuzulara uygula" variant="secondary" onPress={onSuruTum} />
             </>
           ) : null}
+
+          <Text style={[styles.section, { color: colors.tint }]}>Bu teşhis işe yaradı mı?</Text>
+          {geriBildirim ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+              {geriBildirim === 'faydali' ? 'Faydalı olarak kaydedildi.' : 'Faydasız olarak kaydedildi.'}
+            </Text>
+          ) : (
+            <View style={styles.geriRow}>
+              <View style={styles.geriBtn}>
+                <AnaButon title="İşe yaradı" variant="secondary" onPress={() => void geriBildirimGonder(true)} />
+              </View>
+              <View style={styles.geriBtn}>
+                <AnaButon title="Yaramadı" variant="danger" onPress={() => void geriBildirimGonder(false)} />
+              </View>
+            </View>
+          )}
         </>
       ) : null}
     </View>
@@ -163,4 +211,6 @@ const styles = StyleSheet.create({
   section: { fontWeight: '800', marginTop: 14, marginBottom: 8 },
   ilac: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 8 },
   vetKutu: { marginTop: 12, padding: 12, borderRadius: 10 },
+  geriRow: { flexDirection: 'row', gap: 8 },
+  geriBtn: { flex: 1 },
 });

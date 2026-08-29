@@ -1,11 +1,25 @@
-import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { sesKomutOturumuOlustur } from '@/kaynak/ses';
+import {
+  dinlemeyiBaslat,
+  konusmaDurumu,
+  metniSeslendir,
+  sesKomutOturumuOlustur,
+  seslendirmeyiDurdur,
+  type DinlemeKontrol,
+} from '@/kaynak/ses';
+
+const ORNEKLER = [
+  'küpe 1234, 68 kilo',
+  'küpe TR-34-001235 aşı çiçek',
+  'stok giriş yem 50 kg',
+  'tamam',
+];
 
 export default function SesKomutScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -13,31 +27,76 @@ export default function SesKomutScreen() {
   const { refresh } = useDatabase();
   const [oturum] = useState(() => sesKomutOturumuOlustur());
   const [metin, setMetin] = useState('');
-  const [okuma, setOkuma] = useState('Komut yazın veya konuşma metnini yapıştırın. Örn: küpe 1234, 68 kilo');
+  const [okuma, setOkuma] = useState('Komut yazın veya dinlemeyi başlatın. Örn: küpe 1234, 68 kilo');
   const [asama, setAsama] = useState('hazir');
+  const [dinliyor, setDinliyor] = useState(false);
+  const dinlemeRef = useRef<DinlemeKontrol | null>(null);
+  const durum = useMemo(() => konusmaDurumu(), []);
+
+  const isle = useCallback(
+    async (girdi: string) => {
+      const sonuc = await oturum.metinAl(girdi);
+      setOkuma(sonuc.okumaMetni);
+      setAsama(sonuc.asama);
+      metniSeslendir(sonuc.okumaMetni);
+      if (sonuc.asama === 'uygulandi') {
+        refresh();
+        setMetin('');
+      }
+    },
+    [oturum, refresh]
+  );
 
   const gonder = async () => {
-    const sonuc = await oturum.metinAl(metin);
-    setOkuma(sonuc.okumaMetni);
-    setAsama(sonuc.asama);
-    if (sonuc.asama === 'uygulandi') {
-      refresh();
-      setMetin('');
+    await isle(metin);
+  };
+
+  const dinle = () => {
+    if (dinliyor) {
+      dinlemeRef.current?.durdur();
+      setDinliyor(false);
+      return;
     }
+    seslendirmeyiDurdur();
+    const ctrl = dinlemeyiBaslat({
+      onBasladi: () => setDinliyor(true),
+      onSonuc: (t) => {
+        setDinliyor(false);
+        setMetin(t);
+        void isle(t);
+      },
+      onHata: (mesaj) => {
+        setDinliyor(false);
+        Alert.alert('Dinleme', mesaj);
+      },
+    });
+    dinlemeRef.current = ctrl;
+    if (!ctrl) setDinliyor(false);
   };
 
   return (
     <>
       <Stack.Screen options={{ title: 'Sesli komut' }} />
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.pad}>
-        <Text style={[styles.intro, { color: colors.textSecondary }]}>
-          Geri okuma → &quot;tamam&quot; onayı → kayıt. Mikrofon sonra; şimdilik metin ile test edin.
-        </Text>
+        <Text style={[styles.intro, { color: colors.textSecondary }]}>{durum.aciklama}</Text>
         <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>Sistem</Text>
           <Text style={{ color: colors.text, lineHeight: 22 }}>{okuma}</Text>
           <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 12 }}>Aşama: {asama}</Text>
         </View>
+
+        <Text style={{ color: colors.textSecondary, marginBottom: 8, fontSize: 13 }}>Hızlı örnek</Text>
+        <View style={styles.ornekRow}>
+          {ORNEKLER.map((o) => (
+            <Pressable
+              key={o}
+              onPress={() => setMetin(o)}
+              style={[styles.ornek, { borderColor: colors.border, backgroundColor: colors.card }]}>
+              <Text style={{ color: colors.text, fontSize: 12 }}>{o}</Text>
+            </Pressable>
+          ))}
+        </View>
+
         <TextInput
           placeholder='Örn: "küpe TR-34-001235, 52 kilo" sonra "tamam"'
           placeholderTextColor={colors.textSecondary}
@@ -45,14 +104,17 @@ export default function SesKomutScreen() {
           onChangeText={setMetin}
           style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
         />
-        <AnaButon title="Gönder" onPress={gonder} />
+        <AnaButon title={dinliyor ? 'Dinlemeyi durdur' : 'Dinle'} variant="secondary" onPress={dinle} />
+        <AnaButon title="Gönder" onPress={() => void gonder()} />
         <AnaButon
           title="İptal"
           variant="secondary"
           onPress={() => {
+            seslendirmeyiDurdur();
             const r = oturum.iptalEt();
             setOkuma(r.okumaMetni);
             setAsama(r.asama);
+            metniSeslendir(r.okumaMetni);
           }}
         />
       </ScrollView>
@@ -65,4 +127,6 @@ const styles = StyleSheet.create({
   intro: { lineHeight: 20, marginBottom: 16 },
   box: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 16 },
   input: { borderWidth: 1, borderRadius: 10, padding: 12, minHeight: 48, marginBottom: 12 },
+  ornekRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  ornek: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
 });

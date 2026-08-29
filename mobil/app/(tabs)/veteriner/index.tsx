@@ -266,6 +266,7 @@ export default function VetScreen() {
       {vaka.analiz?.hazir && vaka.analiz.teshis ? (
         <TeshisTedaviKarti
           teshis={vaka.analiz.teshis}
+          guven={vaka.analiz.guven}
           vetKanal={vetKanal}
           vetAd={vetAd}
           earTag={hayvanEtiket || kupe}
