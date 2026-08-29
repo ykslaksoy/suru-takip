@@ -40,7 +40,7 @@ export {
   type AsiMalzemeListesi,
   type AsiMalzemeSatiri,
 } from './asi-malzeme';
-export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
+export { olusturTeshis, teshisOzeti, PROTOKOLLER, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
 export {
   hesaplaDozMetni,
   hesaplaDozFormul,
@@ -52,6 +52,17 @@ export {
   hastalikTamAd,
   PRAKTIK_KILO_SECENEKLERI,
 } from './doz-hesap';
+export {
+  listeleHastaliklar,
+  olusturHastalikMalzemeListesi,
+  hastalikMalzemeMetni,
+  tipEtiket,
+  HASTALIK_REF_KG,
+  type HastalikListeOgesi,
+  type HastalikIlacSatir,
+  type HastalikMalzemeListe,
+  type HastalikMalzemeSatir,
+} from './hastalik-liste';
 export {
   baslatTakip,
   getAktifTakipler,

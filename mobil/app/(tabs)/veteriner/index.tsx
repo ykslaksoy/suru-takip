@@ -6,6 +6,7 @@ import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import { AsiModuPaneli } from '@/bilesenler/veteriner/AsiModuPaneli';
 import { FotografYukle } from '@/bilesenler/veteriner/FotografYukle';
 import { FotoIstekKarti } from '@/bilesenler/veteriner/FotoIstekKarti';
+import { HastalikIlacPaneli } from '@/bilesenler/veteriner/HastalikIlacPaneli';
 import { NetlestirmeSorulari } from '@/bilesenler/veteriner/NetlestirmeSorulari';
 import { TakipModuPaneli } from '@/bilesenler/veteriner/TakipModuPaneli';
 import { TeshisTedaviKarti } from '@/bilesenler/veteriner/TeshisTedaviKarti';
@@ -364,6 +365,7 @@ export default function VetScreen() {
             <FotografYukle fotograflar={vaka.fotograflar} onChange={vaka.setFotograflar} />
             <AnaButon title="Teşhis koy" onPress={vaka.analizEt} />
             {analizPaneli}
+            <HastalikIlacPaneli refreshKey={takipKey} />
           </>
         )}
       </ScrollView>

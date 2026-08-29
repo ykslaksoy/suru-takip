@@ -63,7 +63,10 @@ type Protokol = {
   aciklama: string;
 };
 
-const PROTOKOLLER: Record<VetTema, Protokol> = {
+/** Katalog listesi için dışa açık özet */
+export type ProtokolOzet = Protokol;
+
+export const PROTOKOLLER: Record<VetTema, Protokol> = {
   ishal: {
     id: 'enterit',
     adTr: 'İshal',
