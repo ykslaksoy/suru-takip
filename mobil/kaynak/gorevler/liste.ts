@@ -192,7 +192,7 @@ export async function getGorevler(): Promise<Gorev[]> {
       id: `asi-hayvan-${s.programId}-${s.animalId}`,
       seviye: s.durum === 'yapilacak' ? 'uyari' : 'sira',
       kaynak: 'asi',
-      baslik: `${s.asiAdi}`,
+      baslik: `${s.koruma} (${s.asiAdi}) ${s.mlEtiket}`,
       aciklama:
         s.durum === 'yapilacak'
           ? `${s.earTag || 'Hayvan'} · aşı zamanı geldi`
