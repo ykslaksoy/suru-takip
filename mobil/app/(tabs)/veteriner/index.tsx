@@ -290,7 +290,7 @@ export default function VetScreen() {
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
       <AltButonlar
         items={[
-          { key: 'asi', label: 'Aşı' },
+          { key: 'asi', label: 'Aşı/Parazit' },
           { key: 'hastalik', label: 'Hastalık' },
           { key: 'vitamin', label: 'Vitamin' },
           { key: 'plan', label: 'Mod plan' },

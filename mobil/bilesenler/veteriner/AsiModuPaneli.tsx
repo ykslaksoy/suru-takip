@@ -159,7 +159,7 @@ export function AsiModuPaneli() {
 
   const tumKuzularaPlanla = () => {
     Alert.alert(
-      'Tüm kuzulara aşı planla',
+      'Tüm kuzulara aşı / parazit planla',
       'Seçtiğiniz aktif aşılar için tüm kuzulara toplu plan oluşturulsun mu?',
       [
         { text: 'İptal', style: 'cancel' },
@@ -246,15 +246,15 @@ export function AsiModuPaneli() {
 
   return (
     <View>
-      <Text style={[styles.title, { color: colors.text }]}>Hastalık önleyici aşı modu</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Aşı ve parazit koruma</Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 14, lineHeight: 20 }}>
-        Yer, cinse, besi şekline göre öneri alın; istemediklerinizi kapatın — uyarıları onaylayın.
+        Yer, cinse, besi şekline göre aşı ve parazit hapı önerisi; istemediklerinizi kapatın — uyarıları onaylayın.
       </Text>
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
-        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Her aşı sabit ml</Text>
+        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Aşı sabit ml · parazit hap/kg</Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          Aşılar kiloya göre hesaplanmaz — hayvan başına şişe etiketi (genelde 1–2 ml). Liste: karma,
-          clostridial, enterotoksemi, pastörella, PPR, çiçek, şap ve diğerleri.
+          Aşılar hayvan başına sabit ml (1–2 ml). Parazit hapları etiket dozu (ör. Albendazol 1 hap / 10 kg);
+          iğne parazitler kg’ye göre ml.
         </Text>
       </View>
 
@@ -301,7 +301,7 @@ export function AsiModuPaneli() {
         style={[styles.input, { borderColor: colors.border, color: colors.text }]}
       />
 
-      <Text style={[styles.section, { color: colors.tint }]}>Önerilen aşılar — tercihiniz</Text>
+      <Text style={[styles.section, { color: colors.tint }]}>Önerilen aşı ve parazitler</Text>
       {oneriler.map((o) => {
         const t = tercihler.find((x) => x.programId === o.programId);
         const aktif = t?.aktif ?? o.varsayilan;
@@ -365,7 +365,7 @@ export function AsiModuPaneli() {
         />
       ) : null}
 
-      <Text style={[styles.section, { color: colors.tint, marginTop: 16 }]}>Tüm kuzulara aşı planla</Text>
+      <Text style={[styles.section, { color: colors.tint, marginTop: 16 }]}>Tüm kuzulara aşı / parazit planla</Text>
       <TextInput
         placeholder="Aşı tarihi (YYYY-MM-DD)"
         value={planTarih}

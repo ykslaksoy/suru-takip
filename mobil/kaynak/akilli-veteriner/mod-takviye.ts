@@ -6,7 +6,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
-import { ASI_PROGRAMI, asiDozEtiketi } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal, AnimalModId } from '@/kaynak/cekirdek/tipler';
 import { addHealthRecord, getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
@@ -14,7 +14,7 @@ import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
 
-export type TakviyeTip = 'asi' | 'vitamin';
+export type TakviyeTip = 'asi' | 'vitamin' | 'parazit';
 
 export type ModTakviyeKalemi = {
   tip: TakviyeTip;
@@ -66,8 +66,9 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
   const asi = (id: string): ModTakviyeKalemi | null => {
     const p = ASI_PROGRAMI.find((x) => x.id === id);
     if (!p) return null;
+    const kat = asiKategori(p);
     return {
-      tip: 'asi',
+      tip: kat === 'parazit' ? 'parazit' : 'asi',
       programId: p.id,
       ad: p.koruma,
       detay: p.ad,
@@ -88,19 +89,19 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
 
   const ids: Record<UrunModId, { asilar: string[]; vitaminler: string[] }> = {
     mod1: {
-      asilar: ['karma', 'pasteurella', 'clostridial', 'enterotoksemi', 'tetanos'],
+      asilar: ['karma', 'pasteurella', 'clostridial', 'enterotoksemi', 'tetanos', 'albendazol', 'ivermektin'],
       vitaminler: ['ad3e', 'b-kompleks', 'selen-e', 'elektrolit'],
     },
     mod2: {
-      asilar: ['karma', 'pasteurella', 'clostridial', 'ppr', 'cicek'],
+      asilar: ['karma', 'pasteurella', 'clostridial', 'ppr', 'cicek', 'albendazol', 'ivermektin'],
       vitaminler: ['ad3e', 'b-kompleks', 'kolostrum', 'selen-e'],
     },
     mod3: {
-      asilar: ['karma', 'brusella', 'tetanos', 'pasteurella', 'clostridial'],
+      asilar: ['karma', 'brusella', 'tetanos', 'pasteurella', 'clostridial', 'albendazol'],
       vitaminler: ['ad3e', 'b-kompleks', 'premiks', 'selen-e'],
     },
     mod4: {
-      asilar: ['agalaksi', 'karma', 'pasteurella', 'clostridial'],
+      asilar: ['agalaksi', 'karma', 'pasteurella', 'clostridial', 'albendazol', 'triklabendazol'],
       vitaminler: ['ad3e', 'kalsiyum', 'b-kompleks', 'mineral-yalama', 'premiks'],
     },
   };
@@ -238,7 +239,7 @@ export async function olusturModTakviyePlani(opts?: {
     const plan: ModTakviyePlani = {
       id: uuidv4(),
       modId,
-      baslik: `${mod.baslik} — aşı & vitamin`,
+      baslik: `${mod.baslik} — aşı, parazit & vitamin`,
       tarih,
       kalemler,
       hayvanIds: [],
@@ -256,7 +257,7 @@ export async function olusturModTakviyePlani(opts?: {
   const plan: ModTakviyePlani = {
     id: uuidv4(),
     modId,
-    baslik: `${mod.baslik} — aşı & vitamin`,
+    baslik: `${mod.baslik} — aşı, parazit & vitamin`,
     tarih,
     kalemler,
     hayvanIds: hayvanlar.map((h) => h.id),

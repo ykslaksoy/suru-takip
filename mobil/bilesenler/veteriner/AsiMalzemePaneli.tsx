@@ -62,7 +62,7 @@ export function AsiMalzemePaneli({ liste, onPaylas }: Props) {
         Şırınga tahmini: {liste.siringaAdedi} adet
       </Text>
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
-        (Her enjeksiyon için 1 — çizik / parazit hariç)
+        (Her enjeksiyon için 1 — çizik / hap / oral parazit hariç)
       </Text>
 
       {onPaylas ? <AnaButon title="Listeyi kopyala / paylaş" variant="secondary" onPress={onPaylas} /> : null}

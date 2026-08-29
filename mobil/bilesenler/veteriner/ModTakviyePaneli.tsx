@@ -108,10 +108,10 @@ export function ModTakviyePaneli() {
 
   return (
     <View style={styles.kok}>
-      <Text style={[styles.title, { color: colors.text }]}>Mod aşı & vitamin planı</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Mod aşı, parazit & vitamin planı</Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
-        {aktifMod.icon} {aktifMod.baslik} — bu moda kayıtlı hayvanlar plana alınır; her aşı/vitamin için
-        yapıldı denetimi tutulur.
+        {aktifMod.icon} {aktifMod.baslik} — bu moda kayıtlı hayvanlar plana alınır; aşı, parazit hapı ve vitamin
+        için yapıldı denetimi tutulur.
       </Text>
 
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
@@ -129,7 +129,7 @@ export function ModTakviyePaneli() {
         <View key={`${k.tip}-${k.programId}`} style={[styles.kart, { borderColor: colors.border }]}>
           <AsiBaslikSatir
             koruma={k.ad}
-            asiAdi={`${k.detay} · ${k.tip === 'asi' ? 'aşı' : 'vitamin'}`}
+            asiAdi={`${k.detay} · ${k.tip === 'asi' ? 'aşı' : k.tip === 'parazit' ? 'parazit' : 'vitamin'}`}
             mlEtiket={k.mlEtiket}
           />
         </View>
@@ -212,7 +212,8 @@ export function ModTakviyePaneli() {
                     <Text style={{ color: colors.text, fontWeight: '700' }}>
                       {d.earTag}{' '}
                       <Text style={{ fontWeight: '400', color: colors.textSecondary, fontSize: 12 }}>
-                        · {k?.ad ?? d.programId} ({d.tip === 'asi' ? 'aşı' : 'vitamin'})
+                        · {k?.ad ?? d.programId} (
+                        {d.tip === 'asi' ? 'aşı' : d.tip === 'parazit' ? 'parazit' : 'vitamin'})
                       </Text>
                     </Text>
                     <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 2 }}>

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { ASI_PROGRAMI, asiDozEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, asiKategori, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal, StockItem } from '@/kaynak/cekirdek/tipler';
 import { addHealthRecord, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
@@ -23,10 +23,19 @@ function programBul(id: string): AsiProgramKalemi | undefined {
 }
 
 function stokBul(program: AsiProgramKalemi, stock: StockItem[]): StockItem | null {
+  const anahtarlar = [program.koruma, program.ad, ...program.stokAnahtarlar];
+  if (asiKategori(program) === 'parazit') {
+    const medicines = stock.filter((s) => s.type === 'medicine');
+    return (
+      medicines.find((s) => eslesir(s.name, anahtarlar)) ??
+      stock.find((s) => eslesir(s.name, anahtarlar)) ??
+      null
+    );
+  }
   const vaccines = stock.filter((s) => s.type === 'vaccine');
   return (
-    vaccines.find((s) => eslesir(s.name, [program.koruma, program.ad, ...program.stokAnahtarlar])) ??
-    stock.find((s) => eslesir(s.name, [program.koruma, program.ad, ...program.stokAnahtarlar])) ??
+    vaccines.find((s) => eslesir(s.name, anahtarlar)) ??
+    stock.find((s) => eslesir(s.name, anahtarlar)) ??
     null
   );
 }
@@ -87,19 +96,21 @@ export async function uygulaAsiPlani(plan: AsiPlani): Promise<AsiUygulaSonuc> {
   const mlEtiket = asiDozEtiketi(program);
   const medicine = `${program.koruma} (${program.ad})`;
   const recordedAt = plan.tarih.includes('T') ? plan.tarih : `${plan.tarih}T12:00:00.000Z`;
+  const kayitTipi = asiKategori(program) === 'parazit' ? 'treatment' : 'vaccine';
+  const etiket = asiKategori(program) === 'parazit' ? 'parazit' : 'aşı';
 
   let kayitSayisi = 0;
   for (const hayvan of kuzular) {
     await addHealthRecord({
       id: uuidv4(),
       animalId: hayvan.id,
-      recordType: 'vaccine',
+      recordType: kayitTipi,
       symptoms: '',
       diagnosis: program.koruma,
       treatment: `${program.ad} · ${mlEtiket}`,
       medicine,
       withdrawalDays: 0,
-      vetName: 'Aşı planı',
+      vetName: 'Aşı / parazit planı',
       recordedAt,
       notes: [
         `Plan: ${plan.id.slice(0, 8)}`,
@@ -120,19 +131,19 @@ export async function uygulaAsiPlani(plan: AsiPlani): Promise<AsiUygulaSonuc> {
   let stokAdi: string | null = null;
 
   if (!item) {
-    stokUyari = `Stokta "${program.koruma}" aşısı bulunamadı — sağlık kaydı yazıldı, stok düşülmedi.`;
+    stokUyari = `Stokta "${program.koruma}" bulunamadı — sağlık kaydı yazıldı, stok düşülmedi.`;
   } else if (item.quantity < gerekenDoz) {
     stokAdi = item.name;
     const dusulecek = Math.max(0, item.quantity);
     if (dusulecek > 0) {
-      await adjustStock(item.id, 'out', dusulecek, `Aşı planı · ${plan.tarih} · ${kuzular.length} kuzu`);
+      await adjustStock(item.id, 'out', dusulecek, `${etiket} planı · ${plan.tarih} · ${kuzular.length} hayvan`);
       await kaydetKatalogKullanim(program.id, dusulecek);
       stokDusum = dusulecek;
     }
     stokUyari = `Stok yetersiz: ${gerekenDoz} doz gerekli, ${item.quantity} vardı — ${dusulecek} düşüldü.`;
   } else {
     stokAdi = item.name;
-    await adjustStock(item.id, 'out', gerekenDoz, `Aşı planı · ${plan.tarih} · ${kuzular.length} kuzu`);
+    await adjustStock(item.id, 'out', gerekenDoz, `${etiket} planı · ${plan.tarih} · ${kuzular.length} hayvan`);
     await kaydetKatalogKullanim(program.id, gerekenDoz);
     stokDusum = gerekenDoz;
   }
@@ -152,7 +163,7 @@ export async function uygulaAsiPlani(plan: AsiPlani): Promise<AsiUygulaSonuc> {
     stokDusum,
     stokAdi,
     stokUyari,
-    message: `${kayitSayisi} aşı kaydı · ${stokDusum} doz stok${stokUyari ? ` · ${stokUyari}` : ''}`,
+    message: `${kayitSayisi} ${etiket} kaydı · ${stokDusum} doz stok${stokUyari ? ` · ${stokUyari}` : ''}`,
   };
 }
 
@@ -163,22 +174,23 @@ export async function uygulaAsiHayvana(opts: {
   tarih?: string;
 }): Promise<{ ok: boolean; message: string }> {
   const program = programBul(opts.programId);
-  if (!program) return { ok: false, message: 'Aşı programı yok' };
+  if (!program) return { ok: false, message: 'Program yok' };
 
   const mlEtiket = asiDozEtiketi(program);
   const medicine = `${program.koruma} (${program.ad})`;
   const recordedAt = opts.tarih ?? new Date().toISOString();
+  const kayitTipi = asiKategori(program) === 'parazit' ? 'treatment' : 'vaccine';
 
   await addHealthRecord({
     id: uuidv4(),
     animalId: opts.animal.id,
-    recordType: 'vaccine',
+    recordType: kayitTipi,
     symptoms: '',
     diagnosis: program.koruma,
     treatment: `${program.ad} · ${mlEtiket}`,
     medicine,
     withdrawalDays: 0,
-    vetName: 'Aşı uygulaması',
+    vetName: 'Aşı / parazit uygulaması',
     recordedAt,
     notes: program.devletNotu ?? '',
   });

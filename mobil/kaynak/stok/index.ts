@@ -6,6 +6,7 @@ export {
   TAKVIYE_KATALOGU,
   ILAC_KATALOGU,
   ASI_KATALOGU,
+  PARAZIT_KATALOGU,
   katalogByType,
   katalogEsles,
   type StokKatalogKalemi,

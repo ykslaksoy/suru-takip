@@ -123,7 +123,7 @@ export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise
         ? Math.round(program.mlHayvan * eksikDoz * 100) / 100
         : null;
 
-    // Çizik / parazit hariç şırınga
+    // Çizik / hap / oral parazit hariç şırınga
     if (program.mlHayvan != null) {
       siringaAdedi += hayvanSayisi;
     }

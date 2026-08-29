@@ -128,11 +128,14 @@ export function olusturAsiOnerileri(profil: AsiOrtamProfili): AsiOneriKalemi[] {
     ekle('pasteurella', 'onerilen', 'Kapalı ahır — solunum riski');
   }
   if (profil.besiSekli === 'dis' || profil.besiSekli === 'karisik') {
-    ekle('parazit', 'onerilen', 'Açık alan / mera — parazit maruziyeti');
+    ekle('albendazol', 'onerilen', 'Açık alan / mera — iç parazit hapı');
+    ekle('ivermektin', 'onerilen', 'Mera — iç-dış parazit iğnesi');
     ekle('ektima', 'onerilen', 'Mera / açık alan — ektima riski');
   }
   if (profil.bolge === 'sicak' || profil.nemliAlan) {
-    ekle('parazit', 'zorunlu', 'Sıcak/nemli ortam — parazit programı gerekli');
+    ekle('albendazol', 'zorunlu', 'Sıcak/nemli — iç parazit hapı gerekli');
+    ekle('ivermektin', 'zorunlu', 'Sıcak/nemli — iç-dış parazit programı');
+    ekle('triklabendazol', 'onerilen', 'Nemli mera — karaciğer kelebeği riski');
     ekle('topallik', 'onerilen', 'Nemli zemin — ayak / topallık riski');
   }
   if (profil.bolge === 'soguk' || profil.bolge === 'daglik') {
@@ -203,7 +206,12 @@ export function asiUyarilari(
       sarbon: 'Şarbon — bölgesel ani ölüm riski.',
       agalaksi: 'Süt kesen hastalık — süt verimi düşer.',
       topallik: 'Topallık / ayak sorunları artabilir.',
-      parazit: 'Parazit yükü artar; kilo kaybı ve ishal riski yükselir.',
+      albendazol: 'İç parazit yükü artar; kilo kaybı ve ishal riski yükselir.',
+      levamizol: 'Yuvarlak kurt / akciğer kurdu yükü artabilir.',
+      triklabendazol: 'Karaciğer kelebeği kayıpları riski.',
+      oksiklozanid: 'Kelebek enfeksiyonu riski artar.',
+      ivermektin: 'İç-dış parazit yükü artar; kilo ve yün kalitesi düşer.',
+      doramektin: 'Parazit yükü ve deri sorunları artabilir.',
     };
 
     out.push({

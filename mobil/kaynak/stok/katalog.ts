@@ -70,12 +70,12 @@ export const TAKVIYE_KATALOGU: StokKatalogKalemi[] = [
 
 /** İlaçlar — yaygın kullanım (reçete / vet önerisiyle) */
 export const ILAC_KATALOGU: StokKatalogKalemi[] = [
-  k('albendazol', 'Albendazol', 'medicine', 'flakon', 5, 'İç parazit'),
-  k('ivermectin', 'İvermektin', 'medicine', 'ml', 100, 'İç-dış parazit'),
-  k('doramectin', 'Doramektin', 'medicine', 'ml', 50, 'Parazit'),
-  k('levamizol', 'Levamizol', 'medicine', 'ml', 50, 'İç parazit'),
+  k('albendazol', 'Albendazol hap', 'medicine', 'adet', 50, 'İç parazit · 1 hap / 10 kg'),
+  k('ivermectin', 'İvermektin', 'medicine', 'ml', 100, 'İç-dış parazit iğne · kg ml'),
+  k('doramectin', 'Doramektin', 'medicine', 'ml', 50, 'Parazit iğne · kg ml'),
+  k('levamizol', 'Levamizol', 'medicine', 'ml', 50, 'İç parazit · hap/ml'),
   k('oksiklozanid', 'Oksiklozanid', 'medicine', 'ml', 50, 'Karaciğer kelebeği'),
-  k('triklabendazol', 'Triklabendazol', 'medicine', 'ml', 50, 'Kelebek'),
+  k('triklabendazol', 'Triklabendazol', 'medicine', 'ml', 50, 'Kelebek hapı / solüsyon'),
   k('oksiteirasiklin', 'Oksitetrasiklin', 'medicine', 'ml', 50, 'Antibiyotik'),
   k('penisilin', 'Penisilin', 'medicine', 'flakon', 10, 'Antibiyotik'),
   k('enrofloksasin', 'Enrofloksasin', 'medicine', 'ml', 50, 'Antibiyotik'),
@@ -108,8 +108,12 @@ export const ASI_KATALOGU: StokKatalogKalemi[] = [
   k('sarbon', 'Şarbon', 'vaccine', 'doz', 10, 'Devlet · bölgesel'),
   k('agalaksi', 'Süt kesen (Agalaksi)', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
   k('topallik', 'Topallık (Ayak)', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
-  k('parazit', 'Parazit', 'vaccine', 'doz', 10, "kg'ye göre ml"),
 ];
+
+/** Parazit kalemleri — ILAC içinden (ASI_PROGRAMI ile aynı id/ad) */
+export const PARAZIT_KATALOGU: StokKatalogKalemi[] = ILAC_KATALOGU.filter((x) =>
+  ['albendazol', 'ivermectin', 'doramectin', 'levamizol', 'oksiklozanid', 'triklabendazol'].includes(x.id)
+);
 
 export const STOK_KATALOGU: StokKatalogKalemi[] = [
   ...YEM_KATALOGU,
