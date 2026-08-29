@@ -44,7 +44,7 @@ export function AsiTakvimi() {
 
   const tekHayvanUygula = (s: AsiBuHaftaSatir) => {
     Alert.alert(
-      'Aşıyı uygula',
+      'Aşı / parazit uygula',
       `${s.earTag || 'Hayvan'}\n${s.koruma} (${s.asiAdi}) ${s.mlEtiket}\n\nSağlık kaydı yazılır, stok düşülür.`,
       [
         { text: 'İptal', style: 'cancel' },

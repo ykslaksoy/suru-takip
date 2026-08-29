@@ -5,6 +5,7 @@ export {
   asiStokUyarilari,
   type AsiStokDurum,
 } from './asi-takvimi';
+export { asiKategori, asiDozEtiketi, type AsiProgramKategori } from '@/kaynak/cekirdek/asi-programi';
 export {
   asiBildirimIzinIste,
   asiBuHaftaListesi,
