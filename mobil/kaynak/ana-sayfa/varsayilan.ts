@@ -15,6 +15,8 @@ export const VARSAYILAN_ANA_SAYFA = {
     'gorevler',
     'ayarlar',
     'besi',
+    'ses',
+    'seri-ahir',
     'abonelik',
     'beta',
     'bekletme',

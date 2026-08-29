@@ -26,7 +26,10 @@ Konuş → Ayıkla → Sesle oku → "tamam" bekle → Uygula
 | `geri-okuma.ts` | TTS özet metni |
 | `oturum.ts` | SesKomutOturumu |
 | `uygula.ts` | Onay sonrası DB |
+| `konusma.ts` | TTS / STT adaptörü (web Speech API) |
 | `index.ts` | Public API |
+| ekran | `mobil/app/ses/index.tsx` — ahır modu + dinle |
+| seri ahır | `mobil/kaynak/seri-giris/` — toplu satır → aynı komut motoru |
 
 ## Kullanım
 

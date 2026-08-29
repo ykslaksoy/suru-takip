@@ -1,2 +1,2 @@
-/** Seri Ahır Modu — plan; henüz uygulanmadı */
-export {};
+/** Seri tartım — satır ayıklama `uygula.ts` üzerinden */
+export { seriSatirAyikla, seriKayitlariUygula, seriKayitOzeti } from './uygula';

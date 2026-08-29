@@ -27,6 +27,8 @@ export const MENU_KATALOGU: MenuOgesi[] = [
   { id: 'besi', label: 'Aktif mod', icon: '🛤️', href: '/(tabs)/yolculuk' },
   { id: 'gorevler', label: 'Görevler', icon: '✅', href: '/gorevler' },
   { id: 'hayvan-ara', label: 'Hayvan ara', icon: '🔍', href: '/(tabs)/suru' },
+  { id: 'ses', label: 'Sesli komut', icon: '🎤', href: '/ses' },
+  { id: 'seri-ahir', label: 'Seri ahır', icon: '🔁', href: '/seri-giris' },
 ];
 
 export const MENU_KATALOGU_HARITASI = Object.fromEntries(MENU_KATALOGU.map((m) => [m.id, m])) as Record<
