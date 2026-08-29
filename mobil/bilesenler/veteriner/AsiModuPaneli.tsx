@@ -85,7 +85,15 @@ export function AsiModuPaneli() {
     setIrk(p.irk);
     const oneriler = olusturAsiOnerileri(p);
     const kayitli = await tercihOku();
-    setTercihler(kayitli.length ? kayitli : varsayilanTercihler(oneriler));
+    const varsayilan = varsayilanTercihler(oneriler);
+    if (kayitli.length === 0) {
+      setTercihler(varsayilan);
+    } else {
+      const map = new Map(kayitli.map((t) => [t.programId, t]));
+      setTercihler(
+        varsayilan.map((v) => map.get(v.programId) ?? v)
+      );
+    }
     setPlanlar(await planOku());
   }, []);
 
@@ -192,10 +200,10 @@ export function AsiModuPaneli() {
         Yer, cinse, besi şekline göre öneri alın; istemediklerinizi kapatın — uyarıları onaylayın.
       </Text>
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
-        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Her doz ml ile</Text>
+        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Her aşı sabit ml</Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          Aşı, iğne, oral ve topikal — hepsi ml olarak söylenir. İğnede kilo onaylandıktan sonra
-          toplam ml hesaplanır.
+          Aşılar kiloya göre hesaplanmaz — hayvan başına şişe etiketi (genelde 1–2 ml). Liste: karma,
+          clostridial, enterotoksemi, pastörella, PPR, çiçek, şap ve diğerleri.
         </Text>
       </View>
 

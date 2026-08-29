@@ -106,34 +106,49 @@ export function olusturAsiOnerileri(profil: AsiOrtamProfili): AsiOneriKalemi[] {
     if (rank[oncelik] > rank[s.oncelik]) s.oncelik = oncelik;
   };
 
-  ekle('clostridial', 'zorunlu', 'Temel koruma — tüm besi sistemlerinde önerilir');
+  ekle('karma', 'zorunlu', 'Tek iğne — klostridiyal + pastörella temel koruma');
   ekle('enterotoksemi', 'onerilen', 'Genel sürü koruması');
+  ekle('ppr', 'zorunlu', 'Resmi / destek şartı — VETBİS kaydı');
+  ekle('cicek', 'zorunlu', 'Resmi / destek şartı — VETBİS kaydı');
+  ekle('sap', 'onerilen', 'Şap — genelde 6 ayda bir');
 
   if (profil.besiSekli === 'ic') {
     ekle('enterotoksemi', 'zorunlu', 'İç mekân beside yem değişimi riski yüksek');
-    ekle('clostridial', 'zorunlu', 'Ahırda sıkışık besi — klostridiyal risk');
+    ekle('karma', 'zorunlu', 'Ahırda sıkışık besi — karma koruma');
+    ekle('pasteurella', 'onerilen', 'Kapalı ahır — solunum riski');
   }
   if (profil.besiSekli === 'dis' || profil.besiSekli === 'karisik') {
     ekle('parazit', 'onerilen', 'Açık alan / mera — parazit maruziyeti');
+    ekle('ektima', 'onerilen', 'Mera / açık alan — ektima riski');
   }
   if (profil.bolge === 'sicak' || profil.nemliAlan) {
     ekle('parazit', 'zorunlu', 'Sıcak/nemli ortam — parazit programı gerekli');
+    ekle('topallik', 'onerilen', 'Nemli zemin — ayak / topallık riski');
   }
   if (profil.bolge === 'soguk' || profil.bolge === 'daglik') {
     ekle('enterotoksemi', 'zorunlu', 'Soğuk/dağlık — enterotoksemi riski artar');
   }
   if (profil.hayvanGrubu === 'kuzu') {
-    ekle('clostridial', 'zorunlu', 'Kuzu gelişimi için temel aşı');
+    ekle('karma', 'zorunlu', 'Kuzu gelişimi için temel karma aşı');
     ekle('enterotoksemi', 'zorunlu', 'Kuzuda enterotoksemi kayıpları sık görülür');
+    ekle('septisemi', 'onerilen', 'Yeni doğan / genç kuzu — septisemi');
   }
-  if (profil.hayvanGrubu === 'gebe' || profil.hayvanGrubu === 'sut') {
-    ekle('clostridial', 'zorunlu', 'Damızlık/süt grubu — sürü koruması');
+  if (profil.hayvanGrubu === 'gebe') {
+    ekle('karma', 'zorunlu', 'Gebe koyun — kolostrum antikorları için');
+    ekle('septisemi', 'onerilen', 'Doğuma 1–1,5 ay kala septisemi');
+    ekle('brusella', 'onerilen', 'Damızlık — resmi brusella programı');
   }
-  if (profil.yogunSuru) {
-    ekle('enterotoksemi', 'zorunlu', 'Yoğun sürü — bulaşı hızlı yayılır');
+  if (profil.hayvanGrubu === 'sut') {
+    ekle('karma', 'zorunlu', 'Süt sürüsü — temel koruma');
+    ekle('agalaksi', 'zorunlu', 'Süt kesen hastalığı — sütçü sürü');
+  }
+  if (profil.hayvanGrubu === 'besi' || profil.yogunSuru) {
+    ekle('enterotoksemi', 'zorunlu', 'Yoğun / besi sürüsü — bulaşı hızlı yayılır');
+    ekle('pasteurella', 'onerilen', 'Yoğun sürü — solunum enfeksiyonu');
   }
   if (profil.tur === 'goat') {
-    ekle('clostridial', 'zorunlu', 'Keçi sürüsü — klostridiyal koruma');
+    ekle('karma', 'zorunlu', 'Keçi sürüsü — temel koruma');
+    ekle('ppr', 'zorunlu', 'Keçi — PPR (veba) kritik');
   }
 
   return ASI_PROGRAMI.map((p) => {
@@ -161,8 +176,20 @@ export function asiUyarilari(
     if (o.oncelik === 'opsiyonel') continue;
 
     const riskler: Record<string, string> = {
+      karma: 'Klostridiyal ve pastörella hastalıkları için temel koruma kaybı.',
       clostridial: 'Kuzu gelişimi zayıf kalabilir, ani ölüm (overeating) riski artar.',
-      enterotoksemi: 'Enterotoksemi kayıpları ve sürüde hızlı yayılma riski.',
+      enterotoksemi: 'Enterotoksemi (çelertme) kayıpları ve sürüde hızlı yayılma riski.',
+      pasteurella: 'Solunum enfeksiyonu ve pastörella salgını riski artar.',
+      septisemi: 'Genç kuzuda septisemi kaynaklı ani ölüm riski.',
+      ektima: 'Ağız/meme yaraları (ORF) sürüye yayılabilir.',
+      tetanos: 'Yara sonrası tetanoz riski.',
+      ppr: 'Koyun-keçi vebası — resmi program ve destek şartı kaçabilir.',
+      cicek: 'Çiçek hastalığı — resmi program ve destek şartı kaçabilir.',
+      sap: 'Şap hastalığı — üretim ve hareket kısıtı riski.',
+      brusella: 'Brusella — damızlık ve halk sağlığı riski.',
+      sarbon: 'Şarbon — bölgesel ani ölüm riski.',
+      agalaksi: 'Süt kesen hastalık — süt verimi düşer.',
+      topallik: 'Topallık / ayak sorunları artabilir.',
       parazit: 'Parazit yükü artar; kilo kaybı ve ishal riski yükselir.',
     };
 
