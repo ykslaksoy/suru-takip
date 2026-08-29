@@ -29,6 +29,9 @@ export type AsiTercih = {
 
 export type AsiOneriKalemi = {
   programId: string;
+  /** Ne için — hastalık / koruma */
+  koruma: string;
+  /** Aşı adı — parantez içinde */
   ad: string;
   /** "sabit 2 ml" — çoban satırı */
   mlEtiket: string;
@@ -157,6 +160,7 @@ export function olusturAsiOnerileri(profil: AsiOrtamProfili): AsiOneriKalemi[] {
     const s = skor[p.id];
     return {
       programId: p.id,
+      koruma: p.koruma,
       ad: p.ad,
       mlEtiket: asiDozEtiketi(p),
       oncelik: s.oncelik,
@@ -199,7 +203,7 @@ export function asiUyarilari(
     out.push({
       id: `uyari-${o.programId}`,
       programId: o.programId,
-      baslik: `${o.ad} yapılmazsa`,
+      baslik: `${o.koruma} yapılmazsa`,
       mesaj: o.neden,
       risk: riskler[o.programId] ?? 'Hastalık riski artar.',
       onayMetni: 'Riski anladım, yine de yapmayacağım',
@@ -232,10 +236,10 @@ export function eksikAsiMesajlari(
   for (const o of oneriler) {
     const t = tercihler.find((x) => x.programId === o.programId);
     if (t?.aktif && o.oncelik !== 'opsiyonel') {
-      mesajlar.push(`✓ ${o.ad} — planınıza dahil (önerilen)`);
+      mesajlar.push(`✓ ${o.koruma} (${o.ad}) ${o.mlEtiket} — planınıza dahil`);
     }
     if (!t?.aktif && o.oncelik === 'zorunlu' && !t?.riskOnaylandi) {
-      mesajlar.push(`⚠ ${o.ad} — kullanmanız gerekli (zorunlu öneri)`);
+      mesajlar.push(`⚠ ${o.koruma} (${o.ad}) ${o.mlEtiket} — kullanmanız gerekli`);
     }
   }
   return mesajlar;
@@ -304,7 +308,9 @@ export async function getKuzular(): Promise<Animal[]> {
 }
 
 export function programAdi(id: string): string {
-  return programBul(id)?.ad ?? id;
+  const p = programBul(id);
+  if (!p) return id;
+  return `${p.koruma} (${p.ad})`;
 }
 
 export function gecerliTarih(str: string): boolean {

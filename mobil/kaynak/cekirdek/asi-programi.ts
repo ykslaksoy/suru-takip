@@ -3,6 +3,9 @@ import type { Animal, HealthRecord, StockItem } from './tipler';
 /** Standart aşı programı — 1 doz / hayvan · sabit ml */
 export type AsiProgramKalemi = {
   id: string;
+  /** Ne için — hastalık / koruma (büyük gösterim) */
+  koruma: string;
+  /** Aşının kendi adı — parantez içinde küçük */
   ad: string;
   /** Stok adıyla eşleşme için anahtar kelimeler */
   stokAnahtarlar: string[];
@@ -33,7 +36,8 @@ export function asiDozEtiketi(p: AsiProgramKalemi): string {
 export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   {
     id: 'karma',
-    ad: 'Karma aşı (klostridiyal + pastörella)',
+    koruma: 'Klostridiyal + pastörella',
+    ad: 'Karma aşı',
     stokAnahtarlar: ['karma', 'heptavac', 'kombine', 'çok bileşen'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -42,6 +46,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'clostridial',
+    koruma: 'Klostridiyal hastalıklar',
     ad: 'Clostridial aşı',
     stokAnahtarlar: ['clostridial', 'klostridial'],
     tekrarGun: 365,
@@ -51,6 +56,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'enterotoksemi',
+    koruma: 'Enterotoksemi / çelertme',
     ad: 'Enterotoksemi aşısı',
     stokAnahtarlar: ['enterotoksemi', 'enterotoxemia', 'çelertme'],
     tekrarGun: 180,
@@ -60,6 +66,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'pasteurella',
+    koruma: 'Pastörella / solunum',
     ad: 'Pastörella aşısı',
     stokAnahtarlar: ['pasteurella', 'pastörella', 'pastorella'],
     tekrarGun: 365,
@@ -69,6 +76,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'septisemi',
+    koruma: 'Septisemi',
     ad: 'Septisemi aşısı',
     stokAnahtarlar: ['septisemi', 'septicaemia'],
     tekrarGun: 180,
@@ -78,6 +86,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'ektima',
+    koruma: 'Ektima / ağız yarası',
     ad: 'Ektima (ORF) aşısı',
     stokAnahtarlar: ['ektima', 'ectima', 'orf'],
     tekrarGun: 365,
@@ -88,6 +97,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'tetanos',
+    koruma: 'Tetanoz',
     ad: 'Tetanoz toksoidi',
     stokAnahtarlar: ['tetanos', 'tetanoz', 'tetanus'],
     tekrarGun: 365,
@@ -97,7 +107,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'ppr',
-    ad: 'PPR (koyun-keçi vebası)',
+    koruma: 'Koyun-keçi vebası',
+    ad: 'PPR aşısı',
     stokAnahtarlar: ['ppr', 'veba', 'koyun-keçi vebası'],
     tekrarGun: 365,
     hatirlatmaGun: 45,
@@ -106,6 +117,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'cicek',
+    koruma: 'Çiçek hastalığı',
     ad: 'Çiçek aşısı',
     stokAnahtarlar: ['çiçek', 'cicek', 'carbon', 'sheep pox'],
     tekrarGun: 365,
@@ -115,6 +127,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'sap',
+    koruma: 'Şap hastalığı',
     ad: 'Şap aşısı',
     stokAnahtarlar: ['şap', 'sap', 'fmd'],
     tekrarGun: 180,
@@ -124,6 +137,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'brusella',
+    koruma: 'Brusella',
     ad: 'Brusella aşısı',
     stokAnahtarlar: ['brusella', 'brucella'],
     tekrarGun: 365,
@@ -133,6 +147,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'sarbon',
+    koruma: 'Şarbon',
     ad: 'Şarbon aşısı',
     stokAnahtarlar: ['şarbon', 'sarbon', 'anthrax', 'syanemberg'],
     tekrarGun: 365,
@@ -142,7 +157,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'agalaksi',
-    ad: 'Agalaksi (süt kesen) aşısı',
+    koruma: 'Süt kesen hastalık',
+    ad: 'Agalaksi aşısı',
     stokAnahtarlar: ['agalaksi', 'agalactia', 'süt kesen'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -151,7 +167,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'topallik',
-    ad: 'Topallık / ayak aşısı',
+    koruma: 'Topallık / ayak',
+    ad: 'Topallık aşısı',
     stokAnahtarlar: ['topallık', 'topallik', 'ayak', 'footrot'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -160,13 +177,14 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'parazit',
+    koruma: 'İç-dış parazit',
     ad: 'Parazit programı',
     stokAnahtarlar: ['parazit', 'antiparasit', 'ivermektin'],
     tekrarGun: 180,
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: 'kg\'ye göre ml',
+    dozNotu: "kg'ye göre ml",
   },
 ];
 
@@ -180,6 +198,9 @@ export type AsiHayvanDurum = {
 
 export type AsiStokDurum = {
   programId: string;
+  /** Ne için — hastalık / koruma */
+  koruma: string;
+  /** Aşı adı */
   asiAdi: string;
   /** "sabit 2 ml" */
   mlEtiket: string;
@@ -219,7 +240,7 @@ function sonAsiKaydi(
 ): HealthRecord | null {
   const related = health
     .filter((h) => h.animalId === animalId && h.recordType === 'vaccine')
-    .filter((h) => eslesir(`${h.medicine} ${h.treatment} ${h.diagnosis}`, [program.ad, ...program.stokAnahtarlar]))
+    .filter((h) => eslesir(`${h.medicine} ${h.treatment} ${h.diagnosis}`, [program.koruma, program.ad, ...program.stokAnahtarlar]))
     .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
   return related[0] ?? null;
 }
@@ -227,8 +248,8 @@ function sonAsiKaydi(
 function stokBul(program: AsiProgramKalemi, stock: StockItem[]): StockItem | null {
   const vaccines = stock.filter((s) => s.type === 'vaccine');
   return (
-    vaccines.find((s) => eslesir(s.name, [program.ad, ...program.stokAnahtarlar])) ??
-    stock.find((s) => eslesir(s.name, [program.ad, ...program.stokAnahtarlar])) ??
+    vaccines.find((s) => eslesir(s.name, [program.koruma, program.ad, ...program.stokAnahtarlar])) ??
+    stock.find((s) => eslesir(s.name, [program.koruma, program.ad, ...program.stokAnahtarlar])) ??
     null
   );
 }
@@ -286,6 +307,7 @@ export function hesaplaAsiStokDurumu(
 
     return {
       programId: program.id,
+      koruma: program.koruma,
       asiAdi: program.ad,
       mlEtiket: asiDozEtiketi(program),
       yapilacakSayisi,
@@ -316,21 +338,21 @@ export function asiStokUyarilari(durumlar: AsiStokDurum[]): {
       out.push({
         id: `asi-stok-${d.programId}`,
         baslik: 'Aşı stoğu yetersiz',
-        aciklama: `${d.asiAdi} · ${d.gerekenDoz} doz gerekli, stokta ${d.stokMiktar} ${d.stokBirim} (eksik ${d.eksikDoz})`,
+        aciklama: `${d.koruma} (${d.asiAdi}) ${d.mlEtiket} · ${d.gerekenDoz} doz gerekli, stokta ${d.stokMiktar} ${d.stokBirim} (eksik ${d.eksikDoz})`,
         seviye: 'uyari',
       });
     } else if (d.yapilacakSayisi > 0) {
       out.push({
         id: `asi-yap-${d.programId}`,
         baslik: 'Aşı yapılacak',
-        aciklama: `${d.asiAdi} · ${d.yapilacakSayisi} hayvan · stok ${d.stokMiktar} ${d.stokBirim}`,
+        aciklama: `${d.koruma} (${d.asiAdi}) ${d.mlEtiket} · ${d.yapilacakSayisi} hayvan · stok ${d.stokMiktar} ${d.stokBirim}`,
         seviye: 'sira',
       });
     } else if (d.yaklasanSayisi > 0) {
       out.push({
         id: `asi-yaklas-${d.programId}`,
         baslik: 'Aşı yaklaşıyor',
-        aciklama: `${d.asiAdi} · ${d.yaklasanSayisi} hayvan · stok ${d.stokMiktar} ${d.stokBirim}`,
+        aciklama: `${d.koruma} (${d.asiAdi}) ${d.mlEtiket} · ${d.yaklasanSayisi} hayvan · stok ${d.stokMiktar} ${d.stokBirim}`,
         seviye: 'sira',
       });
     }
@@ -339,7 +361,7 @@ export function asiStokUyarilari(durumlar: AsiStokDurum[]): {
       out.push({
         id: `asi-skt-${d.programId}`,
         baslik: 'Aşı SKT yakın',
-        aciklama: `${d.stokAdi ?? d.asiAdi} · kullanılacak doz var, son kullanma yaklaşıyor`,
+        aciklama: `${d.stokAdi ?? `${d.koruma} (${d.asiAdi})`} · kullanılacak doz var, son kullanma yaklaşıyor`,
         seviye: 'uyari',
       });
     }

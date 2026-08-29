@@ -6,7 +6,9 @@ const KEY = 'sy_asi_hatirlatma_son';
 
 export type AsiBuHaftaSatir = {
   programId: string;
+  koruma: string;
   asiAdi: string;
+  mlEtiket: string;
   animalId: string;
   earTag: string;
   durum: 'yapilacak' | 'yaklasiyor';
@@ -23,7 +25,9 @@ export function asiBuHaftaListesi(durumlar: AsiStokDurum[]): AsiBuHaftaSatir[] {
       if (h.durum === 'yaklasiyor' && h.kalanGun != null && h.kalanGun > 7) continue;
       out.push({
         programId: d.programId,
+        koruma: d.koruma,
         asiAdi: d.asiAdi,
+        mlEtiket: d.mlEtiket,
         animalId: h.animalId,
         earTag: h.earTag,
         durum: h.durum,
@@ -93,7 +97,7 @@ export async function asiHatirlatmalariYenile(
     await Notifications.scheduleNotificationAsync({
       content: {
         title: s.durum === 'yapilacak' ? 'Aşı yapılacak' : 'Aşı yaklaşıyor',
-        body: `${s.asiAdi} · ${s.earTag || 'hayvan'}`,
+        body: `${s.koruma} (${s.asiAdi}) ${s.mlEtiket} · ${s.earTag || 'hayvan'}`,
         data: { animalId: s.animalId, programId: s.programId },
       },
       trigger: {

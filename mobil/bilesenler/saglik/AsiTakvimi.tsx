@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { AsiBaslikSatir } from '@/bilesenler/veteriner/AsiBaslikSatir';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -66,7 +67,7 @@ export function AsiTakvimi() {
               onPress={() => router.push(`/hayvan/${s.animalId}/saglik` as never)}
               style={styles.weekRow}>
               <Text style={{ color: colors.text, flex: 1, fontWeight: '600' }}>
-                {s.earTag || '—'} · {s.asiAdi}
+                {s.earTag || '—'} · {s.koruma} ({s.asiAdi}) {s.mlEtiket}
               </Text>
               <Text style={{ color: s.durum === 'yapilacak' ? colors.danger : colors.warning, fontWeight: '800', fontSize: 12 }}>
                 {s.durum === 'yapilacak'
@@ -108,8 +109,7 @@ export function AsiTakvimi() {
                 borderColor: uyari ? colors.danger : colors.border,
               },
             ]}>
-            <Text style={[styles.title, { color: colors.text }]}>{d.asiAdi}</Text>
-            <Text style={{ color: colors.tint, fontWeight: '700', marginTop: 2 }}>{d.mlEtiket}</Text>
+            <AsiBaslikSatir koruma={d.koruma} asiAdi={d.asiAdi} mlEtiket={d.mlEtiket} />
             <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 20 }}>
               Yapılacak: {d.yapilacakSayisi} · Yaklaşan: {d.yaklasanSayisi}
               {'\n'}

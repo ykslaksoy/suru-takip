@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AsiBaslikSatir } from '@/bilesenler/veteriner/AsiBaslikSatir';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -182,7 +183,7 @@ export function AsiModuPaneli() {
       await planKaydet({
         id: uuidv4(),
         programId: t.programId,
-        asiAdi: o?.ad ?? t.programId,
+        asiAdi: o ? `${o.koruma} (${o.ad}) ${o.mlEtiket}` : t.programId,
         tarih,
         hedef: 'tum_kuzular',
         hayvanSayisi: kuzular.length,
@@ -258,10 +259,7 @@ export function AsiModuPaneli() {
           <View key={o.programId} style={[styles.oneriKart, { borderColor: colors.border, backgroundColor: colors.card }]}>
             <View style={styles.oneriUst}>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.text, fontWeight: '800' }}>{o.ad}</Text>
-                <Text style={{ color: colors.tint, fontSize: 13, fontWeight: '700', marginTop: 2 }}>
-                  {o.mlEtiket}
-                </Text>
+                <AsiBaslikSatir koruma={o.koruma} asiAdi={o.ad} mlEtiket={o.mlEtiket} />
               </View>
               <Text style={{ color: o.oncelik === 'zorunlu' ? colors.danger : colors.textSecondary, fontSize: 11, fontWeight: '700' }}>
                 {o.oncelik.toUpperCase()}
