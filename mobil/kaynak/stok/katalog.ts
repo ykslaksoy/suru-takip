@@ -92,23 +92,23 @@ export const ILAC_KATALOGU: StokKatalogKalemi[] = [
   k('diyare', 'İshal destek (elektrolit)', 'medicine', 'paket', 10, 'Sıvı-elektrolit'),
 ];
 
-/** Aşılar — ASI_PROGRAMI ile uyumlu; doz hayvan başına sabit */
+/** Aşılar — ASI_PROGRAMI ile uyumlu; doz hayvan başına sabit ml */
 export const ASI_KATALOGU: StokKatalogKalemi[] = [
-  k('karma', 'Karma aşı (klostridiyal + pastörella)', 'vaccine', 'doz', 20, 'Tek iğne — çok hastalık'),
-  k('clostridial', 'Clostridial aşı', 'vaccine', 'doz', 20, 'Klostridiyal grup'),
-  k('enterotoksemi', 'Enterotoksemi aşısı', 'vaccine', 'doz', 10, 'Çelertme'),
-  k('pasteurella', 'Pastörella aşısı', 'vaccine', 'doz', 10, 'Solunum'),
-  k('septisemi', 'Septisemi aşısı', 'vaccine', 'doz', 10, 'Kuzu / gebe'),
-  k('ektima', 'Ektima (ORF) aşısı', 'vaccine', 'doz', 10, 'Ağız yarası'),
-  k('tetanos', 'Tetanoz toksoidi', 'vaccine', 'doz', 10, 'Yara riski'),
-  k('ppr', 'PPR (koyun-keçi vebası)', 'vaccine', 'doz', 10, 'Resmi / destek'),
-  k('cicek', 'Çiçek aşısı', 'vaccine', 'doz', 10, 'Resmi / destek'),
-  k('sap', 'Şap aşısı', 'vaccine', 'doz', 10, '6 ayda bir'),
-  k('brusella', 'Brusella aşısı', 'vaccine', 'doz', 10, 'Resmi program'),
-  k('sarbon', 'Şarbon aşısı', 'vaccine', 'doz', 10, 'Bölgesel risk'),
-  k('agalaksi', 'Agalaksi (süt kesen) aşısı', 'vaccine', 'doz', 10, 'Süt sürüsü'),
-  k('topallik', 'Topallık / ayak aşısı', 'vaccine', 'doz', 10, 'Nemli mera'),
-  k('parazit', 'Parazit programı', 'vaccine', 'doz', 10, 'İç-dış parazit'),
+  k('karma', 'Karma aşı (klostridiyal + pastörella)', 'vaccine', 'doz', 20, 'Sabit 2 ml'),
+  k('clostridial', 'Clostridial aşı', 'vaccine', 'doz', 20, 'Sabit 2 ml'),
+  k('enterotoksemi', 'Enterotoksemi aşısı', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('pasteurella', 'Pastörella aşısı', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
+  k('septisemi', 'Septisemi aşısı', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
+  k('ektima', 'Ektima (ORF) aşısı', 'vaccine', 'doz', 10, 'Çizik (etiket)'),
+  k('tetanos', 'Tetanoz toksoidi', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('ppr', 'PPR (koyun-keçi vebası)', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('cicek', 'Çiçek aşısı', 'vaccine', 'doz', 10, 'Sabit 0,5 ml'),
+  k('sap', 'Şap aşısı', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('brusella', 'Brusella aşısı', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('sarbon', 'Şarbon aşısı', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('agalaksi', 'Agalaksi (süt kesen) aşısı', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('topallik', 'Topallık / ayak aşısı', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
+  k('parazit', 'Parazit programı', 'vaccine', 'doz', 10, "kg'ye göre ml"),
 ];
 
 export const STOK_KATALOGU: StokKatalogKalemi[] = [

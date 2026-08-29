@@ -1,6 +1,6 @@
 import type { Animal, HealthRecord, StockItem } from './tipler';
 
-/** Standart aşı programı — 1 doz / hayvan */
+/** Standart aşı programı — 1 doz / hayvan · sabit ml */
 export type AsiProgramKalemi = {
   id: string;
   ad: string;
@@ -11,7 +11,23 @@ export type AsiProgramKalemi = {
   /** Bu kadar gün kala “yaklaşan” sayılır */
   hatirlatmaGun: number;
   dozHayvan: number;
+  /**
+   * Hayvan başına sabit ml (şişe etiketi — tipik ürün).
+   * null = çizik / damla / kg'ye göre (parazit)
+   */
+  mlHayvan: number | null;
+  /** mlHayvan null iken gösterilecek kısa not */
+  dozNotu?: string;
 };
+
+/** Ekranda "sabit 2 ml" / "çizik (etiket)" */
+export function asiDozEtiketi(p: AsiProgramKalemi): string {
+  if (p.mlHayvan != null) {
+    const ml = String(p.mlHayvan).replace('.', ',');
+    return `sabit ${ml} ml`;
+  }
+  return p.dozNotu ?? 'etikete bak';
+}
 
 /** Tüm koyun/kuzu aşıları — doz hayvan başına sabit ml (etiket) */
 export const ASI_PROGRAMI: AsiProgramKalemi[] = [
@@ -22,6 +38,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 2,
   },
   {
     id: 'clostridial',
@@ -30,6 +47,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 2,
   },
   {
     id: 'enterotoksemi',
@@ -38,6 +56,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 180,
     hatirlatmaGun: 21,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'pasteurella',
@@ -46,6 +65,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 2,
   },
   {
     id: 'septisemi',
@@ -54,6 +74,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 180,
     hatirlatmaGun: 21,
     dozHayvan: 1,
+    mlHayvan: 2,
   },
   {
     id: 'ektima',
@@ -62,6 +83,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: null,
+    dozNotu: 'çizik (etiket)',
   },
   {
     id: 'tetanos',
@@ -70,6 +93,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'ppr',
@@ -78,6 +102,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 45,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'cicek',
@@ -86,6 +111,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 45,
     dozHayvan: 1,
+    mlHayvan: 0.5,
   },
   {
     id: 'sap',
@@ -94,6 +120,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 180,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'brusella',
@@ -102,6 +129,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 45,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'sarbon',
@@ -110,6 +138,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'agalaksi',
@@ -118,6 +147,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 1,
   },
   {
     id: 'topallik',
@@ -126,6 +156,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,
+    mlHayvan: 2,
   },
   {
     id: 'parazit',
@@ -134,6 +165,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     tekrarGun: 180,
     hatirlatmaGun: 14,
     dozHayvan: 1,
+    mlHayvan: null,
+    dozNotu: 'kg\'ye göre ml',
   },
 ];
 
@@ -148,6 +181,8 @@ export type AsiHayvanDurum = {
 export type AsiStokDurum = {
   programId: string;
   asiAdi: string;
+  /** "sabit 2 ml" */
+  mlEtiket: string;
   yapilacakSayisi: number;
   yaklasanSayisi: number;
   gerekenDoz: number;
@@ -252,6 +287,7 @@ export function hesaplaAsiStokDurumu(
     return {
       programId: program.id,
       asiAdi: program.ad,
+      mlEtiket: asiDozEtiketi(program),
       yapilacakSayisi,
       yaklasanSayisi,
       gerekenDoz,

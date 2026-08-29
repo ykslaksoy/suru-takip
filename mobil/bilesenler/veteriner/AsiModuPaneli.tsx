@@ -257,7 +257,12 @@ export function AsiModuPaneli() {
         return (
           <View key={o.programId} style={[styles.oneriKart, { borderColor: colors.border, backgroundColor: colors.card }]}>
             <View style={styles.oneriUst}>
-              <Text style={{ color: colors.text, fontWeight: '800', flex: 1 }}>{o.ad}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.text, fontWeight: '800' }}>{o.ad}</Text>
+                <Text style={{ color: colors.tint, fontSize: 13, fontWeight: '700', marginTop: 2 }}>
+                  {o.mlEtiket}
+                </Text>
+              </View>
               <Text style={{ color: o.oncelik === 'zorunlu' ? colors.danger : colors.textSecondary, fontSize: 11, fontWeight: '700' }}>
                 {o.oncelik.toUpperCase()}
               </Text>

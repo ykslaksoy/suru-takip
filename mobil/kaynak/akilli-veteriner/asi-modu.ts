@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ASI_PROGRAMI, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 
@@ -30,6 +30,8 @@ export type AsiTercih = {
 export type AsiOneriKalemi = {
   programId: string;
   ad: string;
+  /** "sabit 2 ml" — çoban satırı */
+  mlEtiket: string;
   oncelik: 'zorunlu' | 'onerilen' | 'opsiyonel';
   neden: string;
   varsayilan: boolean;
@@ -156,6 +158,7 @@ export function olusturAsiOnerileri(profil: AsiOrtamProfili): AsiOneriKalemi[] {
     return {
       programId: p.id,
       ad: p.ad,
+      mlEtiket: asiDozEtiketi(p),
       oncelik: s.oncelik,
       neden: s.nedenler.join(' · ') || 'Genel program',
       varsayilan: s.oncelik !== 'opsiyonel',

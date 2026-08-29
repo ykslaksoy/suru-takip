@@ -109,6 +109,7 @@ export function AsiTakvimi() {
               },
             ]}>
             <Text style={[styles.title, { color: colors.text }]}>{d.asiAdi}</Text>
+            <Text style={{ color: colors.tint, fontWeight: '700', marginTop: 2 }}>{d.mlEtiket}</Text>
             <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 20 }}>
               Yapılacak: {d.yapilacakSayisi} · Yaklaşan: {d.yaklasanSayisi}
               {'\n'}
