@@ -13,7 +13,6 @@ import { useMod } from '@/baglam/ModBaglami';
 import { countAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet/dogrula';
 import type { AnimalSex, AnimalSpecies, AnimalStatus } from '@/kaynak/cekirdek/tipler';
-import { URUN_MODLARI, type UrunModId } from '@/sabitler/Modlar';
 
 export default function AddAnimalScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -34,7 +33,6 @@ export default function AddAnimalScreen() {
     status: 'healthy' as AnimalStatus,
     motherId: '',
     notes: '',
-    modId: aktifId as UrunModId,
   });
 
   const save = async () => {
@@ -74,7 +72,7 @@ export default function AddAnimalScreen() {
       paddock: form.paddock.trim(),
       status: form.status,
       motherId: form.motherId.trim() || null,
-      modId: form.modId,
+      modId: aktifId,
       notes: form.notes.trim(),
     });
     refresh();
@@ -95,8 +93,8 @@ export default function AddAnimalScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.hint, { color: colors.textSecondary }]}>
-        TÜRKVET ve GEKİS alanları resmi kayıt uyumu için hazırlanmıştır. Hayvan{' '}
-        {aktifMod.icon} {aktifMod.baslik} moduna kaydedilir (aşı/vitamin planına dahil).
+        TÜRKVET ve GEKİS alanları resmi kayıt uyumu için hazırlanmıştır. Kayıt otomatik olarak aktif moda
+        eklenir: {aktifMod.icon} {aktifMod.baslik}.
       </Text>
       {fields.map((f) => (
         <View key={f.key} style={styles.field}>
@@ -110,19 +108,6 @@ export default function AddAnimalScreen() {
           />
         </View>
       ))}
-      <View style={styles.field}>
-        <Text style={[styles.label, { color: colors.text }]}>Ürün modu</Text>
-        <View style={{ gap: 8 }}>
-          {URUN_MODLARI.map((m) => (
-            <AnaButon
-              key={m.id}
-              title={`${m.icon} ${m.baslik}`}
-              variant={form.modId === m.id ? 'primary' : 'secondary'}
-              onPress={() => setForm({ ...form, modId: m.id })}
-            />
-          ))}
-        </View>
-      </View>
       <View style={styles.field}>
         <TurSecici value={form.species} onChange={(species) => setForm({ ...form, species })} />
       </View>
