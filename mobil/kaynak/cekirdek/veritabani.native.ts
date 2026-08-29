@@ -238,7 +238,10 @@ export async function getWeightRecords(animalId: string): Promise<WeightRecord[]
 export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: string }): Promise<WeightRecord> {
   const database = await getDatabase();
   const full: WeightRecord = { ...record, id: record.id ?? uuidv4() };
-  await database.runAsync('INSERT INTO weight_records (id, animal_id, weight_kg, recorded_at, notes) VALUES (?, ?, ?, ?, ?)', [full.id, full.animalId, full.weightKg, full.recordedAt, full.notes]);
+  await database.runAsync(
+    'INSERT OR REPLACE INTO weight_records (id, animal_id, weight_kg, recorded_at, notes) VALUES (?, ?, ?, ?, ?)',
+    [full.id, full.animalId, full.weightKg, full.recordedAt, full.notes]
+  );
   return full;
 }
 

@@ -101,7 +101,10 @@ export async function getWeightRecords(animalId: string): Promise<WeightRecord[]
 export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: string }): Promise<WeightRecord> {
   const full: WeightRecord = { ...record, id: record.id ?? uuidv4() };
   const weights = await read<WeightRecord>(KEYS.weights);
-  await write(KEYS.weights, [...weights, full]);
+  const next = weights.some((w) => w.id === full.id)
+    ? weights.map((w) => (w.id === full.id ? full : w))
+    : [...weights, full];
+  await write(KEYS.weights, next);
   return full;
 }
 
