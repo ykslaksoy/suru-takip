@@ -34,6 +34,12 @@ export {
   type AsiPlani,
 } from './asi-modu';
 export { uygulaAsiPlani, uygulaAsiHayvana, type AsiUygulaSonuc } from './asi-uygula';
+export {
+  olusturAsiMalzemeListesi,
+  asiMalzemeMetni,
+  type AsiMalzemeListesi,
+  type AsiMalzemeSatiri,
+} from './asi-malzeme';
 export { olusturTeshis, teshisOzeti, type HastalikTeshis, type HastalikDerece, type IlacDoz } from './teshis';
 export {
   hesaplaDozMetni,

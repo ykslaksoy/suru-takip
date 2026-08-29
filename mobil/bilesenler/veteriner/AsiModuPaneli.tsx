@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AsiBaslikSatir } from '@/bilesenler/veteriner/AsiBaslikSatir';
+import { AsiMalzemePaneli } from '@/bilesenler/veteriner/AsiMalzemePaneli';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -29,6 +30,11 @@ import {
   type HayvanGrubu,
 } from '@/kaynak/akilli-veteriner/asi-modu';
 import { uygulaAsiPlani } from '@/kaynak/akilli-veteriner/asi-uygula';
+import {
+  asiMalzemeMetni,
+  olusturAsiMalzemeListesi,
+  type AsiMalzemeListesi,
+} from '@/kaynak/akilli-veteriner/asi-malzeme';
 import { v4 as uuidv4 } from 'uuid';
 
 function Secici<T extends string>({
@@ -80,6 +86,11 @@ export function AsiModuPaneli() {
   const [planlar, setPlanlar] = useState<AsiPlani[]>([]);
   const [planTarih, setPlanTarih] = useState('');
   const [irk, setIrk] = useState('');
+  const [malzeme, setMalzeme] = useState<AsiMalzemeListesi | null>(null);
+
+  const malzemeYenile = useCallback(async (t: AsiTercih[]) => {
+    setMalzeme(await olusturAsiMalzemeListesi(t));
+  }, []);
 
   const yukle = useCallback(async () => {
     const p = await profilOku();
@@ -88,16 +99,17 @@ export function AsiModuPaneli() {
     const oneriler = olusturAsiOnerileri(p);
     const kayitli = await tercihOku();
     const varsayilan = varsayilanTercihler(oneriler);
+    let t: AsiTercih[];
     if (kayitli.length === 0) {
-      setTercihler(varsayilan);
+      t = varsayilan;
     } else {
-      const map = new Map(kayitli.map((t) => [t.programId, t]));
-      setTercihler(
-        varsayilan.map((v) => map.get(v.programId) ?? v)
-      );
+      const map = new Map(kayitli.map((x) => [x.programId, x]));
+      t = varsayilan.map((v) => map.get(v.programId) ?? v);
     }
+    setTercihler(t);
     setPlanlar(await planOku());
-  }, []);
+    await malzemeYenile(t);
+  }, [malzemeYenile]);
 
   useEffect(() => {
     void yukle();
@@ -116,6 +128,7 @@ export function AsiModuPaneli() {
     const yeniTercih = varsayilanTercihler(yeniOneriler);
     setTercihler(yeniTercih);
     await tercihKaydet(yeniTercih);
+    await malzemeYenile(yeniTercih);
   };
 
   const tercihToggle = async (programId: string, aktif: boolean) => {
@@ -124,6 +137,7 @@ export function AsiModuPaneli() {
     );
     setTercihler(next);
     await tercihKaydet(next);
+    await malzemeYenile(next);
   };
 
   const uyariOnayla = async (uyari: AsiUyari) => {
@@ -192,6 +206,7 @@ export function AsiModuPaneli() {
       });
     }
     setPlanlar(await planOku());
+    await malzemeYenile(tercihler);
     Alert.alert('Planlandı', `${kuzular.length} kuzu · ${tarih} · ${aktif.length} aşı`);
   };
 
@@ -211,6 +226,7 @@ export function AsiModuPaneli() {
             void (async () => {
               const r = await uygulaAsiPlani(plan);
               setPlanlar(await planOku());
+              await malzemeYenile(tercihler);
               if (!r.ok) {
                 Alert.alert('Uygulanamadı', r.message);
                 return;
@@ -339,6 +355,15 @@ export function AsiModuPaneli() {
           ))}
         </View>
       )}
+
+      {malzeme ? (
+        <AsiMalzemePaneli
+          liste={malzeme}
+          onPaylas={() => {
+            void Share.share({ message: asiMalzemeMetni(malzeme) });
+          }}
+        />
+      ) : null}
 
       <Text style={[styles.section, { color: colors.tint, marginTop: 16 }]}>Tüm kuzulara aşı planla</Text>
       <TextInput
