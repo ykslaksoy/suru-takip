@@ -35,6 +35,8 @@ export type AsiOneriKalemi = {
   ad: string;
   /** "sabit 2 ml" — çoban satırı */
   mlEtiket: string;
+  /** Devlet / resmi program notu */
+  devletNotu?: string;
   oncelik: 'zorunlu' | 'onerilen' | 'opsiyonel';
   neden: string;
   varsayilan: boolean;
@@ -163,6 +165,7 @@ export function olusturAsiOnerileri(profil: AsiOrtamProfili): AsiOneriKalemi[] {
       koruma: p.koruma,
       ad: p.ad,
       mlEtiket: asiDozEtiketi(p),
+      devletNotu: p.devletNotu,
       oncelik: s.oncelik,
       neden: s.nedenler.join(' · ') || 'Genel program',
       varsayilan: s.oncelik !== 'opsiyonel',

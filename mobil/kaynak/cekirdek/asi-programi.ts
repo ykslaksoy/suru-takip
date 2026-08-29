@@ -21,6 +21,8 @@ export type AsiProgramKalemi = {
   mlHayvan: number | null;
   /** mlHayvan null iken gösterilecek kısa not */
   dozNotu?: string;
+  /** Devlet / resmi program notu */
+  devletNotu?: string;
 };
 
 /** Ekranda "sabit 2 ml" / "çizik (etiket)" */
@@ -114,6 +116,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 45,
     dozHayvan: 1,
     mlHayvan: 1,
+    devletNotu: 'Devlet — kuzu/oğlak destek şartı · VETBİS kaydı (Trakya muaf)',
   },
   {
     id: 'cicek',
@@ -124,6 +127,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 45,
     dozHayvan: 1,
     mlHayvan: 0.5,
+    devletNotu: 'Devlet — kuzu/oğlak destek şartı · VETBİS kaydı',
   },
   {
     id: 'sap',
@@ -134,6 +138,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 1,
+    devletNotu: 'Devlet programı — il/ilçe müdürlüğü takvimi',
   },
   {
     id: 'brusella',
@@ -144,6 +149,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 45,
     dozHayvan: 1,
     mlHayvan: 1,
+    devletNotu: 'Devlet programı — resmi brusella (Rev1)',
   },
   {
     id: 'sarbon',
@@ -154,6 +160,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 1,
+    devletNotu: 'Devlet — bölgesel risk programı',
   },
   {
     id: 'agalaksi',
@@ -204,6 +211,8 @@ export type AsiStokDurum = {
   asiAdi: string;
   /** "sabit 2 ml" */
   mlEtiket: string;
+  /** Devlet / resmi program notu */
+  devletNotu?: string;
   yapilacakSayisi: number;
   yaklasanSayisi: number;
   gerekenDoz: number;
@@ -310,6 +319,7 @@ export function hesaplaAsiStokDurumu(
       koruma: program.koruma,
       asiAdi: program.ad,
       mlEtiket: asiDozEtiketi(program),
+      devletNotu: program.devletNotu,
       yapilacakSayisi,
       yaklasanSayisi,
       gerekenDoz,

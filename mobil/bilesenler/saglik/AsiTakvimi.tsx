@@ -109,7 +109,12 @@ export function AsiTakvimi() {
                 borderColor: uyari ? colors.danger : colors.border,
               },
             ]}>
-            <AsiBaslikSatir koruma={d.koruma} asiAdi={d.asiAdi} mlEtiket={d.mlEtiket} />
+            <AsiBaslikSatir
+              koruma={d.koruma}
+              asiAdi={d.asiAdi}
+              mlEtiket={d.mlEtiket}
+              devletNotu={d.devletNotu}
+            />
             <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 20 }}>
               Yapılacak: {d.yapilacakSayisi} · Yaklaşan: {d.yaklasanSayisi}
               {'\n'}
