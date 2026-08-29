@@ -38,6 +38,7 @@ export async function getAnimals(filter?: { sex?: string; status?: string; searc
   let list = (await read<Animal>(KEYS.animals)).map((a) => ({
     ...a,
     species: a.species ?? 'sheep',
+    modId: a.modId ?? null,
   }));
   if (filter?.sex) list = list.filter((a) => a.sex === filter.sex);
   if (filter?.status) list = list.filter((a) => a.status === filter.status);
@@ -66,6 +67,7 @@ export async function upsertAnimal(
   const record: Animal = {
     ...animal,
     species: animal.species ?? existing?.species ?? 'sheep',
+    modId: animal.modId !== undefined ? animal.modId : existing?.modId ?? null,
     createdAt: existing?.createdAt ?? animal.createdAt ?? now,
     updatedAt: now,
     syncStatus: 'pending',

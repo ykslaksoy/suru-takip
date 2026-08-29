@@ -7,6 +7,7 @@ import { AsiModuPaneli } from '@/bilesenler/veteriner/AsiModuPaneli';
 import { FotografYukle } from '@/bilesenler/veteriner/FotografYukle';
 import { FotoIstekKarti } from '@/bilesenler/veteriner/FotoIstekKarti';
 import { HastalikIlacPaneli } from '@/bilesenler/veteriner/HastalikIlacPaneli';
+import { ModTakviyePaneli } from '@/bilesenler/veteriner/ModTakviyePaneli';
 import { NetlestirmeSorulari } from '@/bilesenler/veteriner/NetlestirmeSorulari';
 import { TakipModuPaneli } from '@/bilesenler/veteriner/TakipModuPaneli';
 import { TeshisTedaviKarti } from '@/bilesenler/veteriner/TeshisTedaviKarti';
@@ -38,7 +39,7 @@ import { olusturVakaPaketi } from '@/kaynak/veteriner-koprusu/vaka-paketi';
 import { fotograflariPaylas, gonderVakaPaketi } from '@/kaynak/veteriner-koprusu/gonder';
 import { vetGonderimKanali, type VetKanal } from '@/kaynak/veteriner-koprusu/vet-iletisim';
 
-type Alt = 'asi' | 'hastalik' | 'vitamin' | 'takip' | 'gonder' | 'vakalar' | 'vet-ayar';
+type Alt = 'asi' | 'hastalik' | 'vitamin' | 'plan' | 'takip' | 'gonder' | 'vakalar' | 'vet-ayar';
 
 function useVakaAnalizi() {
   const [symptoms, setSymptomsRaw] = useState('');
@@ -292,6 +293,7 @@ export default function VetScreen() {
           { key: 'asi', label: 'Aşı' },
           { key: 'hastalik', label: 'Hastalık' },
           { key: 'vitamin', label: 'Vitamin' },
+          { key: 'plan', label: 'Mod plan' },
           { key: 'takip', label: 'Takip' },
           { key: 'gonder', label: 'Vet' },
           { key: 'vakalar', label: 'Vakalar' },
@@ -324,6 +326,8 @@ export default function VetScreen() {
           <AsiModuPaneli />
         ) : alt === 'vitamin' ? (
           <VitaminListePaneli />
+        ) : alt === 'plan' ? (
+          <ModTakviyePaneli />
         ) : alt === 'gonder' ? (
           <>
             <Text style={[styles.title, { color: colors.text }]}>Veterinere danış / gönder</Text>

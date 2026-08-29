@@ -116,9 +116,17 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
   } catch {
     /* sütun zaten var */
   }
+  try {
+    await database.execAsync(`ALTER TABLE animals ADD COLUMN mod_id TEXT`);
+  } catch {
+    /* sütun zaten var */
+  }
 }
 
 function rowToAnimal(row: Record<string, unknown>): Animal {
+  const rawMod = row.mod_id as string | null | undefined;
+  const modId =
+    rawMod === 'mod1' || rawMod === 'mod2' || rawMod === 'mod3' || rawMod === 'mod4' ? rawMod : null;
   return {
     id: row.id as string,
     earTag: row.ear_tag as string,
@@ -132,6 +140,7 @@ function rowToAnimal(row: Record<string, unknown>): Animal {
     status: row.status as Animal['status'],
     motherId: (row.mother_id as string) || null,
     gehisId: (row.gehis_id as string) || null,
+    modId,
     notes: row.notes as string,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -171,10 +180,17 @@ export async function upsertAnimal(animal: Omit<Animal, 'createdAt' | 'updatedAt
   const database = await getDatabase();
   const now = new Date().toISOString();
   const existing = await getAnimal(animal.id);
-  const record: Animal = { ...animal, species: animal.species ?? existing?.species ?? 'sheep', createdAt: existing?.createdAt ?? animal.createdAt ?? now, updatedAt: now, syncStatus: 'pending' };
+  const record: Animal = {
+    ...animal,
+    species: animal.species ?? existing?.species ?? 'sheep',
+    modId: animal.modId !== undefined ? animal.modId : existing?.modId ?? null,
+    createdAt: existing?.createdAt ?? animal.createdAt ?? now,
+    updatedAt: now,
+    syncStatus: 'pending',
+  };
   await database.runAsync(
-    `INSERT OR REPLACE INTO animals (id, ear_tag, turkvet_no, name, breed, species, sex, birth_date, paddock, status, mother_id, gehis_id, notes, created_at, updated_at, sync_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [record.id, record.earTag, record.turkvetNo, record.name, record.breed, record.species ?? 'sheep', record.sex, record.birthDate, record.paddock, record.status, record.motherId, record.gehisId, record.notes, record.createdAt, record.updatedAt, record.syncStatus]
+    `INSERT OR REPLACE INTO animals (id, ear_tag, turkvet_no, name, breed, species, sex, birth_date, paddock, status, mother_id, gehis_id, notes, created_at, updated_at, sync_status, mod_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [record.id, record.earTag, record.turkvetNo, record.name, record.breed, record.species ?? 'sheep', record.sex, record.birthDate, record.paddock, record.status, record.motherId, record.gehisId, record.notes, record.createdAt, record.updatedAt, record.syncStatus, record.modId]
   );
   await enqueueSync('animals', record.id, existing ? 'update' : 'create', record);
   return record;

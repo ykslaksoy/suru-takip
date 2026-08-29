@@ -71,6 +71,22 @@ export {
   type VitaminUygulama,
 } from './vitamin-programi';
 export {
+  modTakviyeSablonu,
+  getHayvanlarByMod,
+  olusturModTakviyePlani,
+  aktifPlanOku,
+  planOzeti,
+  isaretleYapildi,
+  kalemiTumuneUygula,
+  planaYeniHayvanlariEkle,
+  atanmamisHayvanlariModaBagla,
+  type ModTakviyePlani,
+  type ModTakviyeKalemi,
+  type ModTakviyeOzet,
+  type HayvanKalemDurum,
+  type TakviyeTip,
+} from './mod-takviye';
+export {
   baslatTakip,
   getAktifTakipler,
   getTakip,

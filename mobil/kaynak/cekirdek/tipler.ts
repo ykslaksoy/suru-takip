@@ -6,6 +6,9 @@ export type SubscriptionTier = 'free' | 'farmer' | 'professional' | 'enterprise'
 export type SyncStatus = 'synced' | 'pending' | 'error';
 export type RationPhase = 'maintenance' | 'pregnant' | 'lactating' | 'lamb_fattening' | 'dry';
 
+/** Ürün modu — hangi işletme hattına kayıtlı (mod1–mod4) */
+export type AnimalModId = 'mod1' | 'mod2' | 'mod3' | 'mod4';
+
 export interface Animal {
   id: string;
   earTag: string;
@@ -19,6 +22,8 @@ export interface Animal {
   status: AnimalStatus;
   motherId: string | null;
   gehisId: string | null;
+  /** Kayıt sırasında seçilen ürün modu */
+  modId: AnimalModId | null;
   notes: string;
   createdAt: string;
   updatedAt: string;
