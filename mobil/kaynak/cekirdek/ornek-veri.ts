@@ -11,10 +11,17 @@ import {
 import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
 import { kaydetYemSayim, clearAllYemSayim } from '@/kaynak/stok/sayim';
 import { kaydetKatalogKullanim, clearKatalogKullanim } from '@/kaynak/stok/kullanim';
+import { seedPadokBEslesikKuzular } from './padok-b-kuzular';
+
+export { seedPadokBEslesikKuzular, padokBKuzuKimlik, PADOK_B_KUZU_ADET } from './padok-b-kuzular';
 
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
-  if (count > 0) return false;
+  if (count > 0) {
+    // Mevcut kurulumda da Padok B eşleşik 20 kuzu garantile
+    await seedPadokBEslesikKuzular();
+    return false;
+  }
 
   const now = new Date();
   const daysAgo = (d: number) => {
@@ -38,6 +45,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       status: 'lactating' as const,
       motherId: null,
       gehisId: null,
+      sirtNo: null,
       modId: 'mod3' as const,
       notes: 'Damızlık aday',
       createdAt: isoDaysAgo(20),
@@ -55,6 +63,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       status: 'healthy' as const,
       motherId: null,
       gehisId: null,
+      sirtNo: null,
       modId: 'mod1' as const,
       notes: 'Besi grubu · karantina tamam',
       createdAt: isoDaysAgo(12),
@@ -72,6 +81,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       status: 'healthy' as const,
       motherId: null,
       gehisId: null,
+      sirtNo: null,
       modId: 'mod1' as const,
       notes: 'Kuzu · alım sonrası karantina',
       createdAt: isoDaysAgo(8),
@@ -204,6 +214,8 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
   await kaydetKatalogKullanim('mineral-yalama', 15);
   await kaydetKatalogKullanim('premiks', 12);
   await kaydetKatalogKullanim('clostridial', 10);
+
+  await seedPadokBEslesikKuzular();
 
   return true;
 }

@@ -39,6 +39,8 @@ export async function getAnimals(filter?: { sex?: string; status?: string; searc
     ...a,
     species: a.species ?? 'sheep',
     modId: a.modId ?? null,
+    sirtNo: a.sirtNo ?? null,
+    gehisId: a.gehisId ?? null,
   }));
   if (filter?.sex) list = list.filter((a) => a.sex === filter.sex);
   if (filter?.status) list = list.filter((a) => a.status === filter.status);
@@ -48,7 +50,9 @@ export async function getAnimals(filter?: { sex?: string; status?: string; searc
       (a) =>
         a.earTag.toLowerCase().includes(term) ||
         a.name.toLowerCase().includes(term) ||
-        a.turkvetNo.toLowerCase().includes(term)
+        a.turkvetNo.toLowerCase().includes(term) ||
+        (a.gehisId ?? '').toLowerCase().includes(term) ||
+        (a.sirtNo ?? '').toLowerCase().includes(term)
     );
   }
   return list.sort((a, b) => a.earTag.localeCompare(b.earTag));
@@ -68,6 +72,8 @@ export async function upsertAnimal(
     ...animal,
     species: animal.species ?? existing?.species ?? 'sheep',
     modId: animal.modId !== undefined ? animal.modId : existing?.modId ?? null,
+    sirtNo: animal.sirtNo !== undefined ? animal.sirtNo : existing?.sirtNo ?? null,
+    gehisId: animal.gehisId !== undefined ? animal.gehisId : existing?.gehisId ?? null,
     createdAt: existing?.createdAt ?? animal.createdAt ?? now,
     updatedAt: now,
     syncStatus: 'pending',

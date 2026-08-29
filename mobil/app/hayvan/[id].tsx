@@ -110,7 +110,9 @@ export default function AnimalDetailScreen() {
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.tint }]}>Resmi Kayıt (TÜRKVET / GEKİS)</Text>
         <InfoRow label={TURKVET_FIELD_LABELS.turkvetNo} value={animal.turkvetNo || '—'} colors={colors} />
-        <InfoRow label={TURKVET_FIELD_LABELS.gehisId} value={animal.gehisId || '—'} colors={colors} />
+        <InfoRow label="Kulak küpe" value={animal.earTag || '—'} colors={colors} />
+        <InfoRow label="Sırt no" value={animal.sirtNo || '—'} colors={colors} />
+        <InfoRow label="Aref / GEKİS ID" value={animal.gehisId || '—'} colors={colors} />
         <InfoRow label={TURKVET_FIELD_LABELS.birthDate} value={animal.birthDate || '—'} colors={colors} />
         <InfoRow label={TURKVET_FIELD_LABELS.motherId} value={animal.motherId || '—'} colors={colors} />
       </View>

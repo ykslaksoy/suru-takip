@@ -14,7 +14,7 @@ import { useMod } from '@/baglam/ModBaglami';
 import { countAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet/dogrula';
 import { rfidOku } from '@/kaynak/rfid';
-import { ocrKupeFotodan, ocrKupeNormalize } from '@/kaynak/ocr';
+import { ocrKupeFotodan, ocrKupeNormalize, ocrSirtNormalize } from '@/kaynak/ocr';
 import type { AnimalSex, AnimalSpecies, AnimalStatus } from '@/kaynak/cekirdek/tipler';
 
 export default function AddAnimalScreen() {
@@ -27,6 +27,7 @@ export default function AddAnimalScreen() {
     earTag: '',
     turkvetNo: '',
     gehisId: '',
+    sirtNo: '',
     name: '',
     breed: 'Merinos',
     species: 'sheep' as AnimalSpecies,
@@ -38,6 +39,7 @@ export default function AddAnimalScreen() {
     notes: '',
   });
   const [ocrMetin, setOcrMetin] = useState('');
+  const [ocrSirtMetin, setOcrSirtMetin] = useState('');
 
   const rfidOkut = async () => {
     const r = await rfidOku();
@@ -60,6 +62,16 @@ export default function AddAnimalScreen() {
       return;
     }
     setForm((f) => ({ ...f, earTag: r.earTag || f.earTag }));
+    Alert.alert('OCR', r.message);
+  };
+
+  const ocrSirtUygula = () => {
+    const r = ocrSirtNormalize(ocrSirtMetin);
+    if (!r.ok) {
+      Alert.alert('OCR', r.message);
+      return;
+    }
+    setForm((f) => ({ ...f, sirtNo: r.sirtNo || f.sirtNo }));
     Alert.alert('OCR', r.message);
   };
 
@@ -92,6 +104,7 @@ export default function AddAnimalScreen() {
       earTag: form.earTag.trim(),
       turkvetNo: form.turkvetNo.replace(/\s/g, '').toUpperCase(),
       gehisId: form.gehisId.replace(/\s/g, '') || null,
+      sirtNo: form.sirtNo.trim() || null,
       name: form.name.trim(),
       breed: form.breed.trim(),
       species: form.species,
@@ -109,8 +122,9 @@ export default function AddAnimalScreen() {
 
   const fields: { key: keyof typeof form; label: string; placeholder: string }[] = [
     { key: 'earTag', label: 'Kulak Küpe No *', placeholder: 'TR-34-001234' },
+    { key: 'sirtNo', label: 'Sırt No', placeholder: '87' },
     { key: 'turkvetNo', label: 'TÜRKVET Kimlik No', placeholder: 'TR340012345678901' },
-    { key: 'gehisId', label: 'GEKİS Elektronik Kimlik', placeholder: 'RFID / elektronik etiket' },
+    { key: 'gehisId', label: 'Aref / GEKİS Elektronik Kimlik', placeholder: 'AREF000000000001' },
     { key: 'name', label: 'İsim', placeholder: 'Koyun adı (opsiyonel)' },
     { key: 'breed', label: 'Irk', placeholder: 'Merinos, İvesi, Sakız...' },
     { key: 'birthDate', label: 'Doğum Tarihi', placeholder: 'YYYY-MM-DD' },
@@ -140,6 +154,15 @@ export default function AddAnimalScreen() {
           style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
         />
         <AnaButon title="OCR ile küpe doldur" variant="secondary" onPress={() => void ocrUygula()} />
+        <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>OCR — sırt no</Text>
+        <TextInput
+          value={ocrSirtMetin}
+          onChangeText={setOcrSirtMetin}
+          placeholder="Sırt boyasından okunan / yapıştırılan"
+          placeholderTextColor={colors.textSecondary}
+          style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
+        />
+        <AnaButon title="OCR ile sırt doldur" variant="secondary" onPress={ocrSirtUygula} />
       </View>
 
       {fields.map((f) => (

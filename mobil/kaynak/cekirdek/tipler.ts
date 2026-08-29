@@ -21,7 +21,10 @@ export interface Animal {
   paddock: string;
   status: AnimalStatus;
   motherId: string | null;
+  /** GEKİS / Aref elektronik kimlik (RFID) */
   gehisId: string | null;
+  /** Sırt boya / padok numarası — küpe ve Aref ile eşleşir */
+  sirtNo: string | null;
   /** Kayıt sırasında seçilen ürün modu */
   modId: AnimalModId | null;
   notes: string;
