@@ -35,7 +35,7 @@ export function padokBKuzuKimlik(sira: number): {
     throw new Error(`Sıra 1–${PADOK_B_KUZU_ADET} olmalı`);
   }
   const pad = String(sira).padStart(2, '0');
-  const t = PADOK_B_KUZU_ADET === 1 ? 0 : (sira - 1) / (PADOK_B_KUZU_ADET - 1);
+  const t = (sira - 1) / Math.max(1, PADOK_B_KUZU_ADET - 1);
   const yasGun = Math.round(YAS_GUN_MIN + t * (YAS_GUN_MAX - YAS_GUN_MIN));
   const weightKg = Math.round((KG_MIN + t * (KG_MAX - KG_MIN)) * 10) / 10;
   const alimFiyat = Math.round((FIYAT_MIN + t * (FIYAT_MAX - FIYAT_MIN)) / 50) * 50;
