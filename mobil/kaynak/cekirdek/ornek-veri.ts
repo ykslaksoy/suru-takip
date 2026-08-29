@@ -11,15 +11,25 @@ import {
 import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
 import { kaydetYemSayim, clearAllYemSayim } from '@/kaynak/stok/sayim';
 import { kaydetKatalogKullanim, clearKatalogKullanim } from '@/kaynak/stok/kullanim';
-import { seedPadokBEslesikKuzular } from './padok-b-kuzular';
+import { seedTumEslesikKuzular } from './padok-b-kuzular';
 
-export { seedPadokBEslesikKuzular, padokBKuzuKimlik, PADOK_B_KUZU_ADET } from './padok-b-kuzular';
+export {
+  seedTumEslesikKuzular,
+  seedPadokAEslesikKuzular,
+  seedPadokBEslesikKuzular,
+  seedPadokBGrupKuzular,
+  seedPadokCGrupKuzular,
+  padokBKuzuKimlik,
+  padokAKuzuKimlik,
+  PADOK_A_KUZU_ADET,
+  PADOK_B_KUZU_ADET,
+  PADOK_C_KUZU_ADET,
+} from './padok-b-kuzular';
 
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
   if (count > 0) {
-    // Mevcut kurulumda da Padok B eşleşik 20 kuzu garantile
-    await seedPadokBEslesikKuzular();
+    await seedTumEslesikKuzular();
     return false;
   }
 
@@ -215,7 +225,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
   await kaydetKatalogKullanim('premiks', 12);
   await kaydetKatalogKullanim('clostridial', 10);
 
-  await seedPadokBEslesikKuzular();
+  await seedTumEslesikKuzular();
 
   return true;
 }

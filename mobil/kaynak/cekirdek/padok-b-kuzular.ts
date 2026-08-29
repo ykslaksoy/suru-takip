@@ -1,77 +1,73 @@
 /**
- * Eşleşik 20 kuzu — Padok A.
- * Her kuzuda aynı sıra: sırt no · kulak küpe · Aref (GEKİS) ID.
- * Yaş 2–2,5 ay · canlı ağırlık 17–24 kg · alım fiyatı 9.000–12.000 ₺ (kilo ile).
+ * Eşleşik kuzu seed’leri — Padok A + B + C.
+ *
+ * Padok A: ~2–2,5 ay · 17–24 kg · 9–12 bin ₺
+ * Padok B: ~3,5 ay · giriş 1 ay önce · kilo artmış
+ * Padok C: giriş 2 ay önce · giriş kilosundan 2 aylık artış
  */
 
 import { addWeightRecord, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 
+export const PADOK_A_KUZU_ADET = 20;
 export const PADOK_B_KUZU_ADET = 20;
-/** Bu grup Padok A'da; Padok B'ye sonra başka kuzular eklenecek */
-export const PADOK_B_AD = 'Padok A';
-export const ESLESIK_KUZU_PADOK = 'Padok A';
+export const PADOK_C_KUZU_ADET = 20;
+export const ESLESIK_KUZU_PADOK_A = 'Padok A';
+export const ESLESIK_KUZU_PADOK_B = 'Padok B';
+export const ESLESIK_KUZU_PADOK_C = 'Padok C';
 
-const YAS_GUN_MIN = 60; // ~2 ay
-const YAS_GUN_MAX = 75; // ~2,5 ay
-const KG_MIN = 17;
-const KG_MAX = 24;
-const FIYAT_MIN = 9000;
-const FIYAT_MAX = 12000;
+/** @deprecated Eski ad — Padok A */
+export const PADOK_B_AD = ESLESIK_KUZU_PADOK_A;
+/** @deprecated */
+export const ESLESIK_KUZU_PADOK = ESLESIK_KUZU_PADOK_A;
 
-/** Sıra → eşleşik kimlikler (aynı kuzu) */
-export function padokBKuzuKimlik(sira: number): {
-  id: string;
-  sirtNo: string;
-  earTag: string;
-  arefId: string;
-  turkvetNo: string;
-  yasGun: number;
-  weightKg: number;
-  alimFiyat: number;
-} {
-  if (sira < 1 || sira > PADOK_B_KUZU_ADET) {
-    throw new Error(`Sıra 1–${PADOK_B_KUZU_ADET} olmalı`);
-  }
+function oran(sira: number, adet: number): number {
+  return (sira - 1) / Math.max(1, adet - 1);
+}
+
+function gunOnce(now: Date, gun: number): string {
+  const d = new Date(now);
+  d.setDate(d.getDate() - gun);
+  return d.toISOString().split('T')[0];
+}
+
+function isoOnce(now: Date, gun: number): string {
+  return new Date(now.getTime() - gun * 86400000).toISOString();
+}
+
+// ——— Padok A ———
+
+export function padokAKuzuKimlik(sira: number) {
+  if (sira < 1 || sira > PADOK_A_KUZU_ADET) throw new Error(`Sıra 1–${PADOK_A_KUZU_ADET}`);
+  const t = oran(sira, PADOK_A_KUZU_ADET);
+  const yasGun = Math.round(60 + t * 15);
+  const weightKg = Math.round((17 + t * 7) * 10) / 10;
+  const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
   const pad = String(sira).padStart(2, '0');
-  const t = (sira - 1) / Math.max(1, PADOK_B_KUZU_ADET - 1);
-  const yasGun = Math.round(YAS_GUN_MIN + t * (YAS_GUN_MAX - YAS_GUN_MIN));
-  const weightKg = Math.round((KG_MIN + t * (KG_MAX - KG_MIN)) * 10) / 10;
-  const alimFiyat = Math.round((FIYAT_MIN + t * (FIYAT_MAX - FIYAT_MIN)) / 50) * 50;
-  const sirtNo = String(sira);
-  const earTag = `TR-34-${String(200000 + sira)}`;
-  const arefId = `AREF${String(sira).padStart(12, '0')}`;
-  const turkvetNo = `TR34${String(9000000000000 + sira)}`;
   return {
-    id: `padok-b-kuzu-${pad}`,
-    sirtNo,
-    earTag,
-    arefId,
-    turkvetNo,
+    id: `padok-a-kuzu-${pad}`,
+    sirtNo: String(sira),
+    earTag: `TR-34-${String(200000 + sira)}`,
+    arefId: `AREF${String(sira).padStart(12, '0')}`,
+    turkvetNo: `TR34${String(9000000000000 + sira)}`,
     yasGun,
     weightKg,
     alimFiyat,
   };
 }
 
-/**
- * 20 eşleşik kuzuyu Padok A'ya yazar (idempotent).
- * Yaş, tartım ve alım fiyatı kilo bandına göre atanır.
- */
-export async function seedPadokBEslesikKuzular(): Promise<{ adet: number; padok: string }> {
+/** @deprecated */
+export const padokBKuzuKimlik = padokAKuzuKimlik;
+
+export async function seedPadokAEslesikKuzular(): Promise<{ adet: number; padok: string }> {
   await ensureVarsayilanPadoklar();
   const now = new Date();
-  const daysAgo = (d: number) => {
-    const date = new Date(now);
-    date.setDate(date.getDate() - d);
-    return date.toISOString().split('T')[0];
-  };
 
-  for (let sira = 1; sira <= PADOK_B_KUZU_ADET; sira++) {
-    const k = padokBKuzuKimlik(sira);
+  for (let sira = 1; sira <= PADOK_A_KUZU_ADET; sira++) {
+    const k = padokAKuzuKimlik(sira);
     const sex = sira % 2 === 0 ? 'male' : 'female';
-    const animal: Omit<Animal, 'createdAt' | 'updatedAt' | 'syncStatus'> = {
+    await upsertAnimal({
       id: k.id,
       earTag: k.earTag,
       turkvetNo: k.turkvetNo,
@@ -79,8 +75,8 @@ export async function seedPadokBEslesikKuzular(): Promise<{ adet: number; padok:
       breed: 'Merinos',
       species: 'sheep',
       sex,
-      birthDate: daysAgo(k.yasGun),
-      paddock: ESLESIK_KUZU_PADOK,
+      birthDate: gunOnce(now, k.yasGun),
+      paddock: ESLESIK_KUZU_PADOK_A,
       status: 'healthy',
       motherId: null,
       gehisId: k.arefId,
@@ -89,8 +85,7 @@ export async function seedPadokBEslesikKuzular(): Promise<{ adet: number; padok:
       notes:
         `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
         `${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~${(k.yasGun / 30).toFixed(1)} ay`,
-    };
-    await upsertAnimal(animal);
+    });
     await addWeightRecord({
       id: `${k.id}-alim-tartim`,
       animalId: k.id,
@@ -100,5 +95,173 @@ export async function seedPadokBEslesikKuzular(): Promise<{ adet: number; padok:
     });
   }
 
-  return { adet: PADOK_B_KUZU_ADET, padok: ESLESIK_KUZU_PADOK };
+  return { adet: PADOK_A_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_A };
+}
+
+/** @deprecated Eski ad — Padok A */
+export const seedPadokBEslesikKuzular = seedPadokAEslesikKuzular;
+
+// ——— Padok B (3,5 ay · giriş 1 ay önce) ———
+
+export function padokBGrupKimlik(sira: number) {
+  if (sira < 1 || sira > PADOK_B_KUZU_ADET) throw new Error(`Sıra 1–${PADOK_B_KUZU_ADET}`);
+  const t = oran(sira, PADOK_B_KUZU_ADET);
+  const yasGun = Math.round(100 + t * 10);
+  const girisGunOnce = 30;
+  const weightKg = Math.round((24 + t * 8) * 10) / 10;
+  const girisKg = Math.round((weightKg - 3.5 - t * 0.5) * 10) / 10;
+  const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
+  const pad = String(sira).padStart(2, '0');
+  return {
+    id: `padok-b-grup-${pad}`,
+    sirtNo: String(20 + sira),
+    earTag: `TR-34-${String(300000 + sira)}`,
+    arefId: `AREF${String(100 + sira).padStart(12, '0')}`,
+    turkvetNo: `TR34${String(9100000000000 + sira)}`,
+    yasGun,
+    girisGunOnce,
+    weightKg,
+    girisKg,
+    alimFiyat,
+  };
+}
+
+export async function seedPadokBGrupKuzular(): Promise<{ adet: number; padok: string }> {
+  await ensureVarsayilanPadoklar();
+  const now = new Date();
+  const girisIso = isoOnce(now, 30);
+  const girisTarih = gunOnce(now, 30);
+
+  for (let sira = 1; sira <= PADOK_B_KUZU_ADET; sira++) {
+    const k = padokBGrupKimlik(sira);
+    const sex = sira % 3 === 0 ? 'male' : 'female';
+    const animal: Omit<Animal, 'createdAt' | 'updatedAt' | 'syncStatus'> &
+      Partial<Pick<Animal, 'createdAt'>> = {
+      id: k.id,
+      earTag: k.earTag,
+      turkvetNo: k.turkvetNo,
+      name: `Kuzu Sırt-${k.sirtNo}`,
+      breed: 'Merinos',
+      species: 'sheep',
+      sex,
+      birthDate: gunOnce(now, k.yasGun),
+      paddock: ESLESIK_KUZU_PADOK_B,
+      status: 'healthy',
+      motherId: null,
+      gehisId: k.arefId,
+      sirtNo: k.sirtNo,
+      modId: 'mod1',
+      createdAt: girisIso,
+      notes:
+        `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
+        `Giriş ${girisTarih} (1 aydır bakılıyor) · Giriş ${k.girisKg} kg → Şimdi ${k.weightKg} kg · ` +
+        `Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~3,5 ay`,
+    };
+    await upsertAnimal(animal);
+    await addWeightRecord({
+      id: `${k.id}-giris-tartim`,
+      animalId: k.id,
+      weightKg: k.girisKg,
+      recordedAt: girisIso,
+      notes: `Giriş tartımı · ${k.alimFiyat} ₺ · ${girisTarih}`,
+    });
+    await addWeightRecord({
+      id: `${k.id}-guncel-tartim`,
+      animalId: k.id,
+      weightKg: k.weightKg,
+      recordedAt: now.toISOString(),
+      notes: `Güncel tartım · 1 aylık bakım sonrası`,
+    });
+  }
+
+  return { adet: PADOK_B_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_B };
+}
+
+// ——— Padok C (giriş 2 ay önce · kilo 2 ay artmış) ———
+
+export function padokCGrupKimlik(sira: number) {
+  if (sira < 1 || sira > PADOK_C_KUZU_ADET) throw new Error(`Sıra 1–${PADOK_C_KUZU_ADET}`);
+  const t = oran(sira, PADOK_C_KUZU_ADET);
+  const girisGunOnce = 60; // 2 ay önce
+  // Girişte ~2–2,5 aylıktılar → şimdi ~4–4,5 ay
+  const yasGun = Math.round(120 + t * 15);
+  const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
+  const artisKg = Math.round((6.5 + t * 1.5) * 10) / 10; // ~2 aylık artış 6,5–8 kg
+  const weightKg = Math.round((girisKg + artisKg) * 10) / 10;
+  const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
+  const pad = String(sira).padStart(2, '0');
+  return {
+    id: `padok-c-grup-${pad}`,
+    sirtNo: String(40 + sira), // 41–60
+    earTag: `TR-34-${String(400000 + sira)}`,
+    arefId: `AREF${String(200 + sira).padStart(12, '0')}`,
+    turkvetNo: `TR34${String(9200000000000 + sira)}`,
+    yasGun,
+    girisGunOnce,
+    girisKg,
+    artisKg,
+    weightKg,
+    alimFiyat,
+  };
+}
+
+/**
+ * Padok C: 20 kuzu · giriş 2 ay önce · güncel kilo = giriş + ~2 aylık artış.
+ */
+export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: string }> {
+  await ensureVarsayilanPadoklar();
+  const now = new Date();
+  const girisIso = isoOnce(now, 60);
+  const girisTarih = gunOnce(now, 60);
+
+  for (let sira = 1; sira <= PADOK_C_KUZU_ADET; sira++) {
+    const k = padokCGrupKimlik(sira);
+    const sex = sira % 2 === 1 ? 'male' : 'female';
+    const animal: Omit<Animal, 'createdAt' | 'updatedAt' | 'syncStatus'> &
+      Partial<Pick<Animal, 'createdAt'>> = {
+      id: k.id,
+      earTag: k.earTag,
+      turkvetNo: k.turkvetNo,
+      name: `Kuzu Sırt-${k.sirtNo}`,
+      breed: 'Merinos',
+      species: 'sheep',
+      sex,
+      birthDate: gunOnce(now, k.yasGun),
+      paddock: ESLESIK_KUZU_PADOK_C,
+      status: 'healthy',
+      motherId: null,
+      gehisId: k.arefId,
+      sirtNo: k.sirtNo,
+      modId: 'mod1',
+      createdAt: girisIso,
+      notes:
+        `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
+        `Giriş ${girisTarih} (2 aydır bakılıyor) · Giriş ${k.girisKg} kg → +${k.artisKg} kg → ` +
+        `Şimdi ${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~4–4,5 ay`,
+    };
+    await upsertAnimal(animal);
+    await addWeightRecord({
+      id: `${k.id}-giris-tartim`,
+      animalId: k.id,
+      weightKg: k.girisKg,
+      recordedAt: girisIso,
+      notes: `Giriş tartımı · ${k.alimFiyat} ₺ · ${girisTarih}`,
+    });
+    await addWeightRecord({
+      id: `${k.id}-guncel-tartim`,
+      animalId: k.id,
+      weightKg: k.weightKg,
+      recordedAt: now.toISOString(),
+      notes: `Güncel tartım · 2 aylık artış +${k.artisKg} kg`,
+    });
+  }
+
+  return { adet: PADOK_C_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_C };
+}
+
+/** Padok A + B + C */
+export async function seedTumEslesikKuzular(): Promise<void> {
+  await seedPadokAEslesikKuzular();
+  await seedPadokBGrupKuzular();
+  await seedPadokCGrupKuzular();
 }

@@ -15,6 +15,7 @@ export type Padok = {
 const VARSAYILAN: Omit<Padok, 'id'>[] = [
   { ad: 'Padok A', kapasite: 50, karantina: false, not: '' },
   { ad: 'Padok B', kapasite: 50, karantina: false, not: '' },
+  { ad: 'Padok C', kapasite: 50, karantina: false, not: '' },
   { ad: 'Karantina', kapasite: 20, karantina: true, not: 'Yeni gelenler · yonca + su' },
 ];
 
@@ -38,7 +39,17 @@ export async function ensureVarsayilanPadoklar(): Promise<Padok[]> {
   if (list.length === 0) {
     list = VARSAYILAN.map((p) => ({ ...p, id: uuidv4() }));
     await yaz(list);
+    return list;
   }
+  // Eksik varsayılan padokları ekle (ör. Padok C)
+  let degisti = false;
+  for (const v of VARSAYILAN) {
+    if (!list.some((p) => p.ad.toLocaleLowerCase('tr-TR') === v.ad.toLocaleLowerCase('tr-TR'))) {
+      list.push({ ...v, id: uuidv4() });
+      degisti = true;
+    }
+  }
+  if (degisti) await yaz(list);
   return list;
 }
 
