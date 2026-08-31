@@ -7,8 +7,10 @@
  */
 
 import { addWeightRecord, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
+import { seedPadokHayvanKayitlari } from './padok-kuzu-kayitlar';
 
 export const PADOK_A_KUZU_ADET = 20;
 export const PADOK_B_KUZU_ADET = 20;
@@ -71,7 +73,7 @@ export async function seedPadokAEslesikKuzular(): Promise<{ adet: number; padok:
       id: k.id,
       earTag: k.earTag,
       turkvetNo: k.turkvetNo,
-      name: `Kuzu Sırt-${k.sirtNo}`,
+      name: hayvanKayitAdi({ earTag: k.earTag, sirtNo: k.sirtNo }),
       breed: 'Merinos',
       species: 'sheep',
       sex,
@@ -142,7 +144,7 @@ export async function seedPadokBGrupKuzular(): Promise<{ adet: number; padok: st
       id: k.id,
       earTag: k.earTag,
       turkvetNo: k.turkvetNo,
-      name: `Kuzu Sırt-${k.sirtNo}`,
+      name: hayvanKayitAdi({ earTag: k.earTag, sirtNo: k.sirtNo }),
       breed: 'Merinos',
       species: 'sheep',
       sex,
@@ -224,7 +226,7 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
       id: k.id,
       earTag: k.earTag,
       turkvetNo: k.turkvetNo,
-      name: `Kuzu Sırt-${k.sirtNo}`,
+      name: hayvanKayitAdi({ earTag: k.earTag, sirtNo: k.sirtNo }),
       breed: 'Merinos',
       species: 'sheep',
       sex,
@@ -261,9 +263,10 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
   return { adet: PADOK_C_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_C };
 }
 
-/** Padok A + B + C */
+/** Padok A + B + C + aşı/tartım/FCR kayıtları */
 export async function seedTumEslesikKuzular(): Promise<void> {
   await seedPadokAEslesikKuzular();
   await seedPadokBGrupKuzular();
   await seedPadokCGrupKuzular();
+  await seedPadokHayvanKayitlari();
 }

@@ -6,15 +6,18 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { calculateADG, deleteAnimal, getAnimal, getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
 import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { turEtiketi, turEmoji } from '@/kaynak/suru/tur';
 import { terim, adgDeger, fcrDeger } from '@/sabitler/Metinler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
+import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,6 +30,7 @@ export default function AnimalDetailScreen() {
   const [grade, setGrade] = useState<KuzuGrade | null>(null);
   const [fcrValue, setFcrValue] = useState<number | null>(null);
   const [dailyRation, setDailyRation] = useState<number | null>(null);
+  const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -39,6 +43,7 @@ export default function AnimalDetailScreen() {
         const records = await getWeightRecords(a.id);
         const fcr = await hesaplaFcr(a, records);
         const plan = await ensureRationPlan(a, w);
+        setWeightRecords(records);
         setWeight(w);
         setAdg(g);
         setFcrValue(fcr?.fcr ?? null);
@@ -68,6 +73,8 @@ export default function AnimalDetailScreen() {
   const ageBand = bandForAge(ageMonths);
   const ageLabel =
     ageMonths != null ? `~${ageMonths} ay · ${ageBand.label}` : ageBand.label;
+  const anaEtiket = hayvanAnaEtiket(animal);
+  const altEtiket = hayvanAltEtiket(animal);
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -86,9 +93,13 @@ export default function AnimalDetailScreen() {
             <DereceRozeti grade={grade} />
           </View>
         ) : null}
-        <Text style={[styles.tag, { color: colors.tint }]}>{animal.earTag}</Text>
-        <Text style={[styles.name, { color: colors.text }]}>{animal.name || 'İsimsiz'}</Text>
-        <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+        <Text style={[styles.tag, { color: colors.tint }]}>{anaEtiket}</Text>
+        {altEtiket ? (
+          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 14 }}>
+            {altEtiket}
+          </Text>
+        ) : null}
+        <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 6 }}>
           {turEtiketi(animal.species ?? 'sheep')} · {animal.breed} · {sexLabel} · {ANIMAL_STATUS_LABELS[animal.status]}
         </Text>
         <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 13 }}>
@@ -130,6 +141,13 @@ export default function AnimalDetailScreen() {
         />
         <InfoRow label={terim('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
       </View>
+
+      {weightRecords.length >= 2 ? (
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.tint }]}>Kilo Grafiği</Text>
+          <KiloGrafigi records={weightRecords} />
+        </View>
+      ) : null}
 
       <View style={styles.actions}>
         <Link href={`/hayvan/${animal.id}/kilo`} asChild>

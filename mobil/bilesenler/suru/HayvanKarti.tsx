@@ -6,6 +6,7 @@ import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
 import { turEmoji } from '@/kaynak/suru/tur';
+import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 
 export function HayvanKarti({
@@ -21,6 +22,8 @@ export function HayvanKarti({
   const colors = Colors[scheme];
   const sexIcon = animal.sex === 'female' ? '♀' : '♂';
   const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
+  const anaEtiket = hayvanAnaEtiket(animal);
+  const altEtiket = hayvanAltEtiket(animal);
 
   return (
     <Link href={`/hayvan/${animal.id}`} asChild>
@@ -37,14 +40,16 @@ export function HayvanKarti({
           ])
         }>
         <View style={styles.row}>
-          <Text style={[styles.tag, { color: colors.tint }]}>{animal.earTag}</Text>
+          <Text style={[styles.tag, { color: colors.tint }]}>{anaEtiket}</Text>
           {grade ? <DereceRozeti grade={grade} /> : null}
         </View>
         <View style={styles.nameRow}>
           <Text style={styles.avatar}>{avatar}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.name, { color: colors.text }]}>{animal.name || 'İsimsiz'}</Text>
-            <Text style={[styles.meta, { color: colors.textSecondary }]}>
+            {altEtiket ? (
+              <Text style={[styles.meta, { color: colors.textSecondary }]}>{altEtiket}</Text>
+            ) : null}
+            <Text style={[styles.meta, { color: colors.textSecondary, marginTop: altEtiket ? 2 : 0 }]}>
               {sexIcon} {animal.breed}
               {grade && grade.id !== 'bilinmiyor' ? ` · ${grade.short}` : ''}
             </Text>

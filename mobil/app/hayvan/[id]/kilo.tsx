@@ -8,6 +8,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 
@@ -18,7 +19,8 @@ export default function WeightScreen() {
   const { refreshKey, refresh } = useDatabase();
   const [records, setRecords] = useState<WeightRecord[]>([]);
   const [adg, setAdg] = useState<number | null>(null);
-  const [earTag, setEarTag] = useState('');
+  const [baslik, setBaslik] = useState('');
+  const [altBaslik, setAltBaslik] = useState('');
   const [modal, setModal] = useState(false);
   const [weight, setWeight] = useState('');
   const [notes, setNotes] = useState('');
@@ -26,7 +28,10 @@ export default function WeightScreen() {
   const load = useCallback(async () => {
     if (!id) return;
     const animal = await getAnimal(id);
-    setEarTag(animal?.earTag ?? '');
+    if (animal) {
+      setBaslik(hayvanAnaEtiket(animal));
+      setAltBaslik(hayvanAltEtiket(animal));
+    }
     const list = await getWeightRecords(id);
     setRecords(list);
     setAdg(await calculateADG(id));
@@ -59,7 +64,10 @@ export default function WeightScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.sub, { color: colors.textSecondary, paddingHorizontal: 16 }]}>{earTag}</Text>
+      <Text style={[styles.sub, { color: colors.text, paddingHorizontal: 16, fontWeight: '700' }]}>{baslik}</Text>
+      {altBaslik ? (
+        <Text style={[styles.sub, { color: colors.textSecondary, paddingHorizontal: 16 }]}>{altBaslik}</Text>
+      ) : null}
       {id ? <PerformansMetrikleri animalId={id} adg={adg} records={records} /> : null}
       <KiloGrafigi records={records} />
       <FlatList
