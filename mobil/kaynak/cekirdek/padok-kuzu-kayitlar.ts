@@ -1,6 +1,6 @@
 /**
  * Padok A/B/C kuzuları — tartım, aşı, rasyon, mod plan seed.
- * A: aşı yapılacak · B/C: girişte aşı+parazit yapılmış.
+ * A: aşı yapılacak · B/C: geçmişe yönelik tam plan (giriş + 7g selen + 21g karma rapel).
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -30,9 +30,11 @@ import {
   HIZLI_BESI_GIRIS_VITAMIN,
   HIZLI_BESI_PLAN_BASLIK,
   HIZLI_BESI_PLAN_SURUM,
+  KARMA_RAPEL_PROGRAM_ID,
   rapelMi,
   hizliBesiPlanGun,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
+import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
   ESLESIK_KUZU_PADOK_A,
   ESLESIK_KUZU_PADOK_B,
@@ -68,8 +70,11 @@ async function asiKaydiYaz(opts: {
   programId: string;
   recordedAt: string;
   padok: string;
+  /** Kayıt id eki — rapel için ayrı id */
+  kayitEk?: string;
+  not?: string;
 }): Promise<void> {
-  const kayitId = `${opts.animalId}-${opts.programId}-seed`;
+  const kayitId = `${opts.animalId}-${opts.kayitEk ?? opts.programId}-seed`;
   const mevcut = await getHealthRecords(opts.animalId);
   if (mevcut.some((r) => r.id === kayitId)) return;
 
@@ -87,13 +92,45 @@ async function asiKaydiYaz(opts: {
     treatment: `${program.ad} · ${mlEtiket}`,
     medicine,
     withdrawalDays: 0,
-    vetName: 'Giriş aşı programı',
+    vetName: 'Hızlı besi planı',
     recordedAt: opts.recordedAt,
-    notes: `${opts.padok} · Küpe ${opts.earTag} · giriş`,
+    notes: `${opts.padok} · Küpe ${opts.earTag} · ${opts.not ?? 'giriş'}`,
   });
 }
 
-/** Padok B/C: girişte mod1 aşı+parazit kayıtları */
+async function vitaminKaydiYaz(opts: {
+  animalId: string;
+  earTag: string;
+  programId: string;
+  recordedAt: string;
+  padok: string;
+  not?: string;
+}): Promise<void> {
+  const kayitId = `${opts.animalId}-${opts.programId}-seed`;
+  const mevcut = await getHealthRecords(opts.animalId);
+  if (mevcut.some((r) => r.id === kayitId)) return;
+
+  const v = VITAMIN_PROGRAMI.find((x) => x.id === opts.programId);
+  if (!v) return;
+  await addHealthRecord({
+    id: kayitId,
+    animalId: opts.animalId,
+    recordType: 'treatment',
+    symptoms: '',
+    diagnosis: v.detay,
+    treatment: `${v.ad} · ${vitaminDozEtiketi(v)}`,
+    medicine: `${v.detay} (${v.ad})`,
+    withdrawalDays: 0,
+    vetName: 'Hızlı besi planı',
+    recordedAt: opts.recordedAt,
+    notes: `${opts.padok} · Küpe ${opts.earTag} · ${opts.not ?? 'vitamin'}`,
+  });
+}
+
+/**
+ * Padok B/C: geçmişe yönelik tam takvim.
+ * Giriş (0) · selen (7) · karma rapel (21) — tarihler giriş gününe göre.
+ */
 export async function seedPadokGirisAsilari(): Promise<{ yazilan: number; padok: string[] }> {
   const animals = await getAnimals();
   const hedef = animals.filter(
@@ -104,18 +141,52 @@ export async function seedPadokGirisAsilari(): Promise<{ yazilan: number; padok:
   const now = new Date();
   let yazilan = 0;
   for (const a of hedef) {
-    const gun = a.paddock === ESLESIK_KUZU_PADOK_B ? 30 : 60;
-    const tarih = isoOnce(now, gun);
+    const girisGunOnce = a.paddock === ESLESIK_KUZU_PADOK_B ? 30 : 60;
+    const gun0 = isoOnce(now, girisGunOnce);
+    const gun7 = isoOnce(now, girisGunOnce - 7);
+    const gun21 = isoOnce(now, girisGunOnce - 21);
+
     for (const programId of HIZLI_BESI_GIRIS_ASI_PARAZIT) {
       await asiKaydiYaz({
         animalId: a.id,
         earTag: a.earTag,
         programId,
-        recordedAt: tarih,
+        recordedAt: gun0,
         padok: a.paddock,
+        not: 'giriş · gün 0',
       });
       yazilan += 1;
     }
+    for (const programId of HIZLI_BESI_GIRIS_VITAMIN) {
+      await vitaminKaydiYaz({
+        animalId: a.id,
+        earTag: a.earTag,
+        programId,
+        recordedAt: gun0,
+        padok: a.paddock,
+        not: 'giriş · gün 0',
+      });
+      yazilan += 1;
+    }
+    await vitaminKaydiYaz({
+      animalId: a.id,
+      earTag: a.earTag,
+      programId: 'selen-e',
+      recordedAt: gun7,
+      padok: a.paddock,
+      not: '7. gün · selenyum',
+    });
+    yazilan += 1;
+    await asiKaydiYaz({
+      animalId: a.id,
+      earTag: a.earTag,
+      programId: 'karma',
+      recordedAt: gun21,
+      padok: a.paddock,
+      kayitEk: KARMA_RAPEL_PROGRAM_ID,
+      not: '21. gün · karma rapel',
+    });
+    yazilan += 1;
   }
   return {
     yazilan,
@@ -165,7 +236,7 @@ export async function seedPadokRasyonPlanlari(): Promise<number> {
   return seedPadokHayvanRasyonPlanlari();
 }
 
-/** Mod1 hızlı besi: A planlı · B tüm kalemler yapılmış · C giriş yapılmış, selenyum/rapel bekleyebilir */
+/** Mod1 hızlı besi: A planlı · B/C tüm kalemler geçmiş tarihlerle yapılmış */
 export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const modId = 'mod1' as const;
   const kalemler = modTakviyeSablonu(modId);
@@ -183,8 +254,9 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const girisB = isoOnce(now, 30);
   const girisC = isoOnce(now, 60);
   const asi21 = gunSonraTarih(ASI_PLAN_GUN, now);
-  const selenB = isoOnce(now, 30 - 7); // giriş + 7. gün
-  const rapelB = isoOnce(now, 30 - 21); // giriş + 21. gün
+  // Giriş + N. gün → geçmiş ISO
+  const tarihB = (gun: number) => isoOnce(now, 30 - gun);
+  const tarihC = (gun: number) => isoOnce(now, 60 - gun);
 
   const durumlar: HayvanKalemDurum[] = [];
   const oncekiMap = new Map<string, HayvanKalemDurum>(
@@ -196,9 +268,11 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   for (const h of hayvanlar) {
     const padokB = h.paddock === ESLESIK_KUZU_PADOK_B;
     const padokC = h.paddock === ESLESIK_KUZU_PADOK_C;
-    const girisYapildi = padokB || padokC;
+    const padokTamam = padokB || padokC;
+    const girisYapildi = padokTamam;
     const yapildiAt = padokB ? girisB : padokC ? girisC : undefined;
     const padokA = h.paddock === ESLESIK_KUZU_PADOK_A;
+    const gecmisTarih = padokB ? tarihB : padokC ? tarihC : null;
 
     const wr = await getWeightRecords(h.id);
     const tartimGirisYapildi = wr.length >= 1;
@@ -229,17 +303,12 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartim15Yapildi;
       const tartimKalemi = tartimGirisKalemi || tartim15Kalemi;
 
-      // Padok B: tüm hızlı besi kalemleri yapılmış (selenyum + rapel dahil)
-      const padokBTamam = padokB;
-      const selenBYapildi = padokB && k.tip === 'vitamin' && k.programId === 'selen-e';
-      const rapelBYapildi = padokB && rapelMi(k.programId);
-
       const yapildi =
         onceki?.yapildi ||
         asiParazitYapildi ||
         vitaminYapildi ||
         tartimKalemi ||
-        padokBTamam;
+        padokTamam;
 
       let planlananAt = onceki?.planlananAt;
       if (!yapildi) {
@@ -260,10 +329,10 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
             : tartim15Kalemi
               ? sonTartim
               : undefined);
-      if (!yapildiAtKayit && padokB) {
-        if (selenBYapildi) yapildiAtKayit = selenB;
-        else if (rapelBYapildi) yapildiAtKayit = rapelB;
-        else yapildiAtKayit = girisB;
+
+      if (!yapildiAtKayit && padokTamam && gecmisTarih) {
+        const gun = hizliBesiPlanGun(k.tip, k.programId);
+        yapildiAtKayit = gecmisTarih(gun);
       }
 
       durumlar.push({
