@@ -1,5 +1,5 @@
 import type { Gorev, GorevKaynak } from '@/kaynak/gorevler/liste';
-import { getGorevler } from '@/kaynak/gorevler/liste';
+import { getGorevler, gorevleriSirala } from '@/kaynak/gorevler/liste';
 
 /** Öncelik sırası — üstten alta */
 export type GorevKategoriId = 'asi' | 'tartim' | 'stok' | 'saglik';
@@ -67,8 +67,8 @@ export async function getGorevGruplari(): Promise<GorevGruplarSonuc> {
   for (const meta of GOREV_KATEGORI_SIRASI) {
     const gorevler = buckets[meta.id];
     if (gorevler.length === 0) continue;
-    gruplar.push({ ...meta, adet: gorevler.length, gorevler });
+    gruplar.push({ ...meta, adet: gorevler.length, gorevler: gorevleriSirala(gorevler) });
   }
 
-  return { gruplar, diger };
+  return { gruplar, diger: gorevleriSirala(diger) };
 }

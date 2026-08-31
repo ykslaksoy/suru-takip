@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,9 +17,12 @@ import {
   getGorevGruplari,
   setPlanlananTamam,
   setIsPlaniTamam,
+  gorevSeviyeEtiket,
+  gorevTarihMetni,
   type Gorev,
   type GorevGrup,
   type GorevKategoriId,
+  type GorevSeviye,
 } from '@/kaynak/gorevler';
 
 type Sekme = 'gunluk' | 'is-plani';
@@ -33,6 +35,13 @@ async function gorevTamamla(id: string): Promise<void> {
   }
 }
 
+function seviyeRenk(seviye: GorevSeviye, colors: (typeof Colors)['light']): string {
+  if (seviye === 'uyari') return colors.danger;
+  if (seviye === 'sira') return colors.warning;
+  if (seviye === 'plan') return colors.tint;
+  return colors.textSecondary;
+}
+
 function GorevSatiri({
   g,
   colors,
@@ -42,10 +51,21 @@ function GorevSatiri({
   colors: (typeof Colors)['light'];
   onTamamla?: () => void;
 }) {
+  const renk = seviyeRenk(g.seviye, colors);
   return (
     <View style={styles.madde}>
       <Pressable onPress={() => router.push(g.href as never)}>
-        <Text style={{ color: colors.text, fontWeight: '700' }}>{g.baslik}</Text>
+        <View style={styles.metaRow}>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600' }}>
+            📅 {gorevTarihMetni(g.tarih)}
+          </Text>
+          <View style={[styles.seviyeBadge, { backgroundColor: renk + '22' }]}>
+            <Text style={{ color: renk, fontSize: 11, fontWeight: '800' }}>
+              {gorevSeviyeEtiket(g.seviye)}
+            </Text>
+          </View>
+        </View>
+        <Text style={{ color: colors.text, fontWeight: '700', marginTop: 6 }}>{g.baslik}</Text>
         <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>{g.aciklama}</Text>
         <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12, marginTop: 6 }}>{g.cta} →</Text>
       </Pressable>
@@ -113,8 +133,8 @@ export default function GorevlerScreen() {
           ) : (
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
-                Öncelik: aşı → tartım → stok → sağlık. Kategoriye dokunun; planlanan işler günü gelince
-                burada görünür.
+                Sıralama: Acil → Sırada → Planlı; aynı öncelikte en yakın tarih önce. Kategoriye
+                dokunun.
               </Text>
 
               {loading ? (
@@ -256,6 +276,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detayTitle: { fontSize: 17, fontWeight: '800' },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  seviyeBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
   madde: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,

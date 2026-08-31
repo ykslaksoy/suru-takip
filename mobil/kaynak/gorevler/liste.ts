@@ -50,6 +50,44 @@ export type Gorev = {
   tamam?: boolean;
 };
 
+const SEVIYE_SIRASI: Record<GorevSeviye, number> = { uyari: 0, sira: 1, plan: 2, bilgi: 3 };
+
+export function bugunTarih(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Öncelik (acil → sırada → planlı) · aynı seviyede en yakın tarih önce */
+export function gorevleriSirala(gorevler: Gorev[]): Gorev[] {
+  const bugun = bugunTarih();
+  return [...gorevler].sort((a, b) => {
+    const ds = SEVIYE_SIRASI[a.seviye] - SEVIYE_SIRASI[b.seviye];
+    if (ds !== 0) return ds;
+    return (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
+  });
+}
+
+export function gorevTarihMetni(tarih?: string): string {
+  if (!tarih) return '—';
+  return new Date(`${tarih}T12:00:00`).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+export function gorevSeviyeEtiket(seviye: GorevSeviye): string {
+  if (seviye === 'uyari') return 'Acil';
+  if (seviye === 'sira') return 'Sırada';
+  if (seviye === 'plan') return 'Planlı';
+  return 'Bilgi';
+}
+
+function tarihGunSonra(gun: number, from = new Date()): string {
+  const d = new Date(from);
+  d.setDate(d.getDate() + gun);
+  return d.toISOString().slice(0, 10);
+}
+
 function kalanGun(recordedAt: string, withdrawalDays: number): number {
   const bitis = new Date(recordedAt).getTime() + withdrawalDays * 86400000;
   return Math.max(0, Math.ceil((bitis - Date.now()) / 86400000));
@@ -202,8 +240,10 @@ export async function getGorevler(): Promise<Gorev[]> {
   const out: Gorev[] = [];
 
   const withdrawals = await getActiveWithdrawals();
+  const bugun = bugunTarih();
   for (const w of withdrawals) {
     const gun = kalanGun(w.recordedAt, w.withdrawalDays);
+    const bitis = tarihGunSonra(w.withdrawalDays, new Date(w.recordedAt));
     out.push({
       id: `bekletme-${w.animalId}`,
       seviye: 'uyari',
@@ -212,6 +252,7 @@ export async function getGorevler(): Promise<Gorev[]> {
       aciklama: `${hayvanAnaEtiket({ earTag: w.earTag ?? '', sirtNo: (w as { sirtNo?: string | null }).sirtNo ?? null, gehisId: null, name: '' })} · ${w.medicine} · ${gun} gün kaldı`,
       href: `/hayvan/${w.animalId}/saglik`,
       cta: 'Kayıt aç',
+      tarih: bitis,
     });
   }
 
@@ -230,6 +271,7 @@ export async function getGorevler(): Promise<Gorev[]> {
       aciklama: u.aciklama,
       href: stokMu ? '/(tabs)/stok' : '/(tabs)/saglik',
       cta: stokMu ? 'Stoka git' : 'Aşıya bak',
+      tarih: bugun,
     });
   }
 
@@ -247,6 +289,7 @@ export async function getGorevler(): Promise<Gorev[]> {
         aciklama: `${item.name} · ${item.quantity} ${item.unit} (min ${item.minQuantity})`,
         href: '/(tabs)/stok',
         cta: 'Stoka git',
+        tarih: bugun,
       });
     }
   } else if (sktTakviye.length > 0) {
@@ -259,6 +302,7 @@ export async function getGorevler(): Promise<Gorev[]> {
         aciklama: `${item.name} · son kullanma yaklaşıyor`,
         href: '/(tabs)/stok',
         cta: 'Stoka git',
+        tarih: item.expiryDate ?? bugun,
       });
     }
   }
@@ -281,6 +325,7 @@ export async function getGorevler(): Promise<Gorev[]> {
       aciklama: `${item.name} · ${item.quantity} ${item.unit} (min ${item.minQuantity})`,
       href: '/(tabs)/stok',
       cta: 'Stoka git',
+      tarih: bugun,
     });
   }
 
@@ -294,6 +339,7 @@ export async function getGorevler(): Promise<Gorev[]> {
       aciklama: `${hayvanAnaEtiket(h)} hasta — tedavi / kontrol`,
       href: `/hayvan/${h.id}/saglik`,
       cta: 'Kayıt aç',
+      tarih: bugun,
     });
   }
 
@@ -309,16 +355,16 @@ export async function getGorevler(): Promise<Gorev[]> {
         aciklama: `${hayvanAnaEtiket(a)} · henüz tartım kaydı yok`,
         href: `/hayvan/${a.id}/kilo`,
         cta: 'Tartım gir',
+        tarih: bugun,
       });
     }
   }
 
   const yol = await yolculukGorevi();
-  if (yol) out.push(yol);
+  if (yol) out.push({ ...yol, tarih: yol.tarih ?? bugun });
 
   out.push(...(await modPlanGorevleri()));
 
-  const bugun = new Date().toISOString().slice(0, 10);
   for (const ip of await getIsPlaniKayitlari()) {
     const meta = IS_PLANI_META[ip.tur];
     const kalan = isPlaniKalanGun(ip.tarih, bugun);
@@ -362,15 +408,7 @@ export async function getGorevler(): Promise<Gorev[]> {
     });
   }
 
-  // Öncelik: uyari → sira → plan → bilgi; aynı seviyede tarih
-  const sira: Record<GorevSeviye, number> = { uyari: 0, sira: 1, plan: 2, bilgi: 3 };
-  out.sort((a, b) => {
-    const ds = sira[a.seviye] - sira[b.seviye];
-    if (ds !== 0) return ds;
-    return (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
-  });
-
-  return out;
+  return gorevleriSirala(out);
 }
 
 const BUGUN_DISLA = (id: string) =>
@@ -462,12 +500,6 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
   });
 
   const birlesik = [...ozetler, ...filtered];
-  const sira: Record<GorevSeviye, number> = { uyari: 0, sira: 1, plan: 2, bilgi: 3 };
-  birlesik.sort((a, b) => {
-    const ds = sira[a.seviye] - sira[b.seviye];
-    if (ds !== 0) return ds;
-    return (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
-  });
 
   if (birlesik.length === 0) {
     return [
@@ -479,11 +511,12 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
         aciklama: 'Planlanan görev ekleyebilir veya tüm listeye bakabilirsiniz.',
         href: '/gorevler',
         cta: 'Görevlere git',
+        tarih: bugun,
       },
     ];
   }
 
-  return birlesik.slice(0, limit);
+  return gorevleriSirala(birlesik).slice(0, limit);
 }
 
 /** Ana sayfa özeti — en fazla 3 görev (eski ad; Bugün ile aynı) */

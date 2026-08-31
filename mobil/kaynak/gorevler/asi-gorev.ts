@@ -64,16 +64,20 @@ function seviyeBelirle(kalan: number | null, planliMi: boolean): GorevSeviye {
   return 'plan';
 }
 
-function zamanMetni(kalan: number | null, tarih?: string): string {
-  if (tarih && kalan != null) {
-    if (kalan <= 0) return `zamanı geldi · ${tarih}`;
-    if (kalan === 1) return `yarın · ${tarih}`;
-    return `${kalan} gün sonra · ${tarih}`;
-  }
+function zamanMetni(kalan: number | null): string {
   if (kalan == null) return 'aşı zamanı geldi';
   if (kalan <= 0) return 'aşı zamanı geldi';
+  if (kalan === 1) return 'yarın';
   if (kalan <= 7) return `${kalan} gün içinde`;
   return `${kalan} gün sonra`;
+}
+
+function hesaplaPlanTarihi(kalan: number | null, mevcut?: string): string {
+  if (mevcut) return mevcut;
+  const bugun = new Date();
+  if (kalan == null || kalan <= 0) return bugun.toISOString().slice(0, 10);
+  bugun.setDate(bugun.getDate() + kalan);
+  return bugun.toISOString().slice(0, 10);
 }
 
 /** Mod plan + takvim — program bazında bekleyen hayvanlar (hayvan görevi değil). */
@@ -193,16 +197,17 @@ export async function asiTopluGorevleri(): Promise<Gorev[]> {
       .map((h) => h.planlananAt)
       .filter((t): t is string => !!t)
       .sort();
-    const enYakinTarih = tarihler[0] ?? o.enYakinTarih;
+    const hamTarih = tarihler[0] ?? o.enYakinTarih;
     const kalan =
-      enYakinTarih != null
-        ? kalanGunTarih(enYakinTarih)
+      hamTarih != null
+        ? kalanGunTarih(hamTarih)
         : hayvanlar.reduce<number | null>((min, h) => {
             if (h.kalanGun == null) return min;
             if (min == null) return h.kalanGun;
             return Math.min(min, h.kalanGun);
           }, null);
 
+    const enYakinTarih = hesaplaPlanTarihi(kalan, hamTarih);
     const n = hayvanlar.length;
     const seviye = seviyeBelirle(kalan, !!planli);
 
@@ -211,19 +216,12 @@ export async function asiTopluGorevleri(): Promise<Gorev[]> {
       seviye,
       kaynak: 'asi',
       baslik: `${o.koruma} (${o.asiAdi}) ${o.mlEtiket}`,
-      aciklama: `${n} kuzu · ${zamanMetni(kalan, enYakinTarih)} · ${takviyeTipEtiket(o.tip)}`,
+      aciklama: `${n} kuzu · ${zamanMetni(kalan)} · ${takviyeTipEtiket(o.tip)}`,
       href: `/gorevler/asi/${o.programId}`,
       cta: 'Kuzuları gör',
       tarih: enYakinTarih,
     });
   }
-
-  const sira: Record<GorevSeviye, number> = { uyari: 0, sira: 1, plan: 2, bilgi: 3 };
-  out.sort((a, b) => {
-    const ds = sira[a.seviye] - sira[b.seviye];
-    if (ds !== 0) return ds;
-    return (a.tarih ?? '9999').localeCompare(b.tarih ?? '9999');
-  });
 
   return out;
 }
