@@ -3,7 +3,7 @@ import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etike
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
 import { getAktifModId } from '@/sabitler/Modlar';
-import { aktifPlanOku, takviyeTipEtiket, type HayvanKalemDurum } from '@/kaynak/akilli-veteriner/mod-takviye';
+import { aktifPlanOku, type HayvanKalemDurum } from '@/kaynak/akilli-veteriner/mod-takviye';
 import type { Gorev, GorevSeviye } from '@/kaynak/gorevler/liste';
 
 export type AsiGorevHayvan = {
@@ -62,14 +62,6 @@ function seviyeBelirle(kalan: number | null, planliMi: boolean): GorevSeviye {
   if (kalan == null || kalan <= 0) return 'uyari';
   if (kalan <= 7) return 'sira';
   return 'plan';
-}
-
-function zamanMetni(kalan: number | null): string {
-  if (kalan == null) return 'aşı zamanı geldi';
-  if (kalan <= 0) return 'aşı zamanı geldi';
-  if (kalan === 1) return 'yarın';
-  if (kalan <= 7) return `${kalan} gün içinde`;
-  return `${kalan} gün sonra`;
 }
 
 function hesaplaPlanTarihi(kalan: number | null, mevcut?: string): string {
