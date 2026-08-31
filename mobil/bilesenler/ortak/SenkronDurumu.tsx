@@ -38,7 +38,7 @@ export function SenkronDurumu() {
 
   return (
     <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Çevrimdışı senkron</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Veri ve senkron</Text>
       <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>{ozet}</Text>
       <Text style={{ color: colors.text, marginTop: 8, fontWeight: '700' }}>
         Bekleyen: {bekleyen}

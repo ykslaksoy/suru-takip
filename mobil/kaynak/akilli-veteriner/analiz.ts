@@ -376,5 +376,5 @@ export function analyzeVakaTam(input: {
   };
 }
 
-export const VET_DISCLAIMER =
-  'Bu bilgiler yalnızca genel bilgilendirme amaçlıdır; teşhis ve tedavi yerine geçmez. Acil durumlarda mutlaka lisanslı bir veteriner hekime başvurun.';
+import { VET_DISCLAIMER } from '@/sabitler/YasalMetinler';
+export { VET_DISCLAIMER };

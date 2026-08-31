@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';
-import { seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
+import { ensurePadokKuzuVerisi, seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
+import { demoSeedOtomatik } from '@/sabitler/Ortam';
 
 interface DatabaseContextValue {
   ready: boolean;
@@ -23,7 +24,11 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      await seedDemoDataIfEmpty();
+      if (demoSeedOtomatik()) {
+        await seedDemoDataIfEmpty();
+      } else {
+        await ensurePadokKuzuVerisi();
+      }
       const count = await getPendingSyncCount();
       setPendingSync(count);
       setReady(true);

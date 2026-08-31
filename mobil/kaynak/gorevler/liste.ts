@@ -8,7 +8,7 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
-import { takviyeTopluGorevleri, gorevTakviyeOncelikSira } from '@/kaynak/gorevler/asi-gorev';
+import { takviyeTopluGorevleri } from '@/kaynak/gorevler/asi-gorev';
 import { getAktifModId, getMod } from '@/sabitler/Modlar';
 import { getMod1BirlesikIlerleme, sonrakiAcikAdim } from '@/kaynak/besi-ortak';
 import { getMod2BirlesikIlerleme, sonrakiAcikAdimMod2 } from '@/kaynak/besi-koc-kat';
@@ -23,53 +23,17 @@ import {
   type IsPlaniTur,
 } from '@/kaynak/gorevler/is-plani';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
+import {
+  bugunTarih,
+  gorevleriSirala,
+  gorevTakviyeOncelikSira,
+  type Gorev,
+  type GorevKaynak,
+  type GorevSeviye,
+} from '@/kaynak/gorevler/siralama';
 
-export type GorevSeviye = 'uyari' | 'sira' | 'plan' | 'bilgi';
-export type GorevKaynak =
-  | 'bekletme'
-  | 'asi'
-  | 'stok'
-  | 'saglik'
-  | 'tartim'
-  | 'yolculuk'
-  | 'planlanan'
-  | 'is-plani';
-
-export type Gorev = {
-  id: string;
-  seviye: GorevSeviye;
-  kaynak: GorevKaynak;
-  baslik: string;
-  aciklama: string;
-  href: string;
-  cta: string;
-  /** YYYY-MM-DD — planlı gün (yoksa bugün/acil) */
-  tarih?: string;
-  /** İğne / ürün adı — parantez içinde küçük gösterilir */
-  baslikIgne?: string;
-  /** Doz etiketi (sabit 2 ml…) — başlık yanında */
-  baslikMl?: string;
-  tamamlanabilir?: boolean;
-  tamam?: boolean;
-};
-
-const SEVIYE_SIRASI: Record<GorevSeviye, number> = { uyari: 0, sira: 1, plan: 2, bilgi: 3 };
-
-export function bugunTarih(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-/** En yakın tarih önce · aynı günde sağlık önceliği · sonra acil→sırada→planlı */
-export function gorevleriSirala(gorevler: Gorev[]): Gorev[] {
-  const bugun = bugunTarih();
-  return [...gorevler].sort((a, b) => {
-    const dt = (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
-    if (dt !== 0) return dt;
-    const po = gorevTakviyeOncelikSira(a.id) - gorevTakviyeOncelikSira(b.id);
-    if (po !== 0) return po;
-    return SEVIYE_SIRASI[a.seviye] - SEVIYE_SIRASI[b.seviye];
-  });
-}
+export type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/siralama';
+export { bugunTarih, gorevleriSirala, gorevTakviyeOncelikSira } from '@/kaynak/gorevler/siralama';
 
 /** Liste: "21 Eylül" — yıl yok. Detay için `yil: true`. */
 export function gorevTarihMetni(tarih?: string, opts?: { yil?: boolean }): string {

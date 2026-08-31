@@ -54,6 +54,10 @@ export default function RootLayout() {
                 <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
                 <Stack.Screen name="ayarlar/index" options={{ headerShown: false }} />
                 <Stack.Screen name="besi/index" options={{ headerShown: false }} />
+                <Stack.Screen name="sistem-kontrol/index" options={{ title: 'Sistem kontrolü' }} />
+                <Stack.Screen name="isletme-profil/index" options={{ title: 'İşletme profili' }} />
+                <Stack.Screen name="yasal/gizlilik" options={{ title: 'KVKK' }} />
+                <Stack.Screen name="yasal/kullanim" options={{ title: 'Kullanım koşulları' }} />
               </Stack>
             </ModProvider>
           </AnaSayfaProvider>

@@ -22,26 +22,21 @@ import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
 import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, rapelAnaProgramId } from './hizli-besi-plani';
+import {
+  TARTIM_GIRIS_PROGRAM_ID,
+  TARTIM_15_PROGRAM_ID,
+  type ModTakviyeKalemi,
+  type TakviyeTip,
+} from './takviye-tipler';
+
+export {
+  TARTIM_GIRIS_PROGRAM_ID,
+  TARTIM_15_PROGRAM_ID,
+  type ModTakviyeKalemi,
+  type TakviyeTip,
+} from './takviye-tipler';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
-
-/** Alım / giriş tartımı (1–2. gün) */
-export const TARTIM_GIRIS_PROGRAM_ID = 'tartim-giris';
-
-/** 15 günde bir kontrol tartımı */
-export const TARTIM_15_PROGRAM_ID = 'tartim-15';
-
-export type TakviyeTip = 'asi' | 'vitamin' | 'parazit' | 'tartim';
-
-export type ModTakviyeKalemi = {
-  tip: TakviyeTip;
-  programId: string;
-  /** Ana ad */
-  ad: string;
-  /** Parantez detay */
-  detay: string;
-  mlEtiket: string;
-};
 
 export type HayvanKalemDurum = {
   animalId: string;

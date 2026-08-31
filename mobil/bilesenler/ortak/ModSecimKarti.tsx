@@ -38,6 +38,10 @@ export function ModSecimKarti({ mod, secili, onPress }: Props) {
           <Text style={[styles.badge, { color: colors.tint }]}>Aktif</Text>
         ) : !mod.hazir ? (
           <Text style={[styles.badge, { color: colors.textSecondary }]}>Yakında</Text>
+        ) : mod.seviye === 'pilot' ? (
+          <Text style={[styles.badge, { color: colors.warning }]}>Pilot</Text>
+        ) : mod.seviye === 'tam' ? (
+          <Text style={[styles.badge, { color: colors.tint }]}>Hazır</Text>
         ) : null}
       </View>
       <Text style={[styles.desc, { color: colors.textSecondary }]}>{mod.aciklama}</Text>

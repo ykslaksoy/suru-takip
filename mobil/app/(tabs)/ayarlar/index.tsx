@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Link, router, useNavigation } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -10,6 +10,9 @@ import { useMod } from '@/baglam/ModBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import type { UrunModId } from '@/sabitler/Modlar';
 import { hayvanListesiCsv } from '@/kaynak/excel/disa-aktar';
+import { suruyonYedekJson } from '@/kaynak/cekirdek/yedek';
+import { appOrtamEtiketi } from '@/sabitler/Ortam';
+import { OZELLIK_BAYRAKLARI, ozellikDurumEtiketi } from '@/sabitler/OzellikBayraklari';
 
 export default function AyarlarScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -37,7 +40,7 @@ export default function AyarlarScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
       <Text style={[styles.h1, { color: colors.text }]}>Ayarlar</Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 8 }}>
-        Paket: {tierLabel} · {limit} hayvan
+        Paket: {tierLabel} · {limit} hayvan · Ortam: {appOrtamEtiketi()}
       </Text>
       <Text style={[styles.aktifSatir, { color: colors.tint }]}>
         Şu an: {aktifMod.icon} {aktifMod.baslik}
@@ -59,6 +62,18 @@ export default function AyarlarScreen() {
       </Pressable>
 
       <Text style={[styles.section, { color: colors.text, marginTop: 20 }]}>Diğer</Text>
+      <Link href="/isletme-profil" asChild>
+        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>İşletme profili</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
+      </Link>
+      <Link href="/sistem-kontrol" asChild>
+        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>Sistem kontrolü (testler)</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
+      </Link>
       <SenkronDurumu />
       <VetIletisimFormu />
       <Link href="/ses" asChild>
@@ -99,6 +114,38 @@ export default function AyarlarScreen() {
       </Link>
       <Pressable
         onPress={async () => {
+          const json = await suruyonYedekJson();
+          await Share.share({ message: json, title: 'suruyon-yedek.json' });
+        }}
+        style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <Text style={{ color: colors.text, fontWeight: '700' }}>JSON yedek (tam veri)</Text>
+        <Text style={{ color: colors.tint }}>↗</Text>
+      </Pressable>
+      <Link href="/yasal/gizlilik" asChild>
+        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>KVKK / gizlilik</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
+      </Link>
+      <Link href="/yasal/kullanim" asChild>
+        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>Kullanım koşulları</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
+      </Link>
+      <Text style={[styles.section, { color: colors.text, marginTop: 16 }]}>Özellik durumu</Text>
+      {OZELLIK_BAYRAKLARI.map((o) => (
+        <View
+          key={o.id}
+          style={[styles.ozellikSatir, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.text, fontWeight: '700', flex: 1 }}>{o.ad}</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+            {ozellikDurumEtiketi(o.durum)}
+          </Text>
+        </View>
+      ))}
+      <Pressable
+        onPress={async () => {
           const csv = await hayvanListesiCsv();
           await Share.share({ message: csv, title: 'suruyon-hayvanlar.csv' });
         }}
@@ -131,5 +178,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
+  },
+  ozellikSatir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 6,
+    gap: 8,
   },
 });

@@ -36,7 +36,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "tsx test/index.ts",
+    "test:padok": "tsx scripts/padok-kontrol.ts"
   },
   "private": true
 }

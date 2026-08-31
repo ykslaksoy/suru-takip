@@ -8,9 +8,13 @@
     "scheme": "suruyon",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.suruyon.mobile",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "app.suruyon.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./varliklar/images/android-icon-foreground.png",

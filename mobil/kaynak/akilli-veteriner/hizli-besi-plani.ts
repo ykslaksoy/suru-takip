@@ -14,7 +14,7 @@ import {
   TARTIM_GIRIS_PROGRAM_ID,
   type ModTakviyeKalemi,
   type TakviyeTip,
-} from '@/kaynak/akilli-veteriner/mod-takviye';
+} from '@/kaynak/akilli-veteriner/takviye-tipler';
 
 /** Plan kimliği — şablon değişince seed yeniler */
 export const HIZLI_BESI_PLAN_SURUM = 'v11';
@@ -87,6 +87,7 @@ export const HIZLI_BESI_TAKVIM: {
 /** Görev listesi sırası — düşük = önce (tartım / rapel en sonda) */
 export function takviyeGorevOncelikSira(tip: TakviyeTip, programId: string): number {
   if (programId === TARTIM_GIRIS_PROGRAM_ID) return 20;
+  if (programId === TARTIM_15_PROGRAM_ID) return 93;
   if (tip === 'tartim') return 100;
   if (programId === KARMA_RAPEL_PROGRAM_ID) return 94;
   const sira: Record<string, number> = {
