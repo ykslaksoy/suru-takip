@@ -99,6 +99,7 @@ export {
   planaYeniHayvanlariEkle,
   atanmamisHayvanlariModaBagla,
   TARTIM_15_PROGRAM_ID,
+  TARTIM_GIRIS_PROGRAM_ID,
   ASI_PLAN_GUN,
   gunSonraTarih,
   takviyeTipEtiket,

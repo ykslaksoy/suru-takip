@@ -21,6 +21,7 @@ import {
   planKaydet,
   planlariOku,
   TARTIM_15_PROGRAM_ID,
+  TARTIM_GIRIS_PROGRAM_ID,
   type HayvanKalemDurum,
   type ModTakviyePlani,
 } from '@/kaynak/akilli-veteriner/mod-takviye';
@@ -198,9 +199,13 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
     const padokA = h.paddock === ESLESIK_KUZU_PADOK_A;
 
     const wr = await getWeightRecords(h.id);
-    const tartimYapildi = wr.length >= 2;
+    const tartimGirisYapildi = wr.length >= 1;
+    const tartim15Yapildi = wr.length >= 2;
     const sonTartim = [...wr].sort(
       (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
+    )[0]?.recordedAt;
+    const ilkTartim = [...wr].sort(
+      (a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime(),
     )[0]?.recordedAt;
 
     for (const k of kalemler) {
@@ -216,8 +221,11 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         girisYapildi &&
         k.tip === 'vitamin' &&
         (HIZLI_BESI_GIRIS_VITAMIN as readonly string[]).includes(k.programId);
-      const tartimKalemi =
-        k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartimYapildi;
+      const tartimGirisKalemi =
+        k.tip === 'tartim' && k.programId === TARTIM_GIRIS_PROGRAM_ID && tartimGirisYapildi;
+      const tartim15Kalemi =
+        k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartim15Yapildi;
+      const tartimKalemi = tartimGirisKalemi || tartim15Kalemi;
 
       const yapildi =
         onceki?.yapildi || asiParazitYapildi || vitaminYapildi || tartimKalemi;
@@ -242,9 +250,11 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
           onceki?.yapildiAt ??
           (asiParazitYapildi || vitaminYapildi
             ? yapildiAt
-            : tartimKalemi
-              ? sonTartim
-              : undefined),
+            : tartimGirisKalemi
+              ? ilkTartim
+              : tartim15Kalemi
+                ? sonTartim
+                : undefined),
         planlananAt: yapildi ? onceki?.planlananAt : planlananAt,
       });
     }
@@ -282,9 +292,13 @@ export async function seedPadokHayvanKayitlari(opts?: {
   await seedPadokAraTartimlari();
   await seedPadokRasyonPlanlari();
   const mevcut = (await planlariOku()).find((p) => p.id === PLAN_ID);
-  const tartimEksik = !mevcut?.kalemler.some(
-    (k) => k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID,
-  );
+  const tartimEksik =
+    !mevcut?.kalemler.some(
+      (k) => k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID,
+    ) ||
+    !mevcut?.kalemler.some(
+      (k) => k.tip === 'tartim' && k.programId === TARTIM_GIRIS_PROGRAM_ID,
+    );
   const sablon = modTakviyeSablonu('mod1');
   const sablonEksik =
     !mevcut ||

@@ -11,6 +11,7 @@ import { getAktifModId } from '@/sabitler/Modlar';
 import {
   aktifPlanOku,
   TARTIM_15_PROGRAM_ID,
+  TARTIM_GIRIS_PROGRAM_ID,
   type HayvanKalemDurum,
   type TakviyeTip,
 } from '@/kaynak/akilli-veteriner/mod-takviye';
@@ -22,8 +23,6 @@ import {
 import {
   ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
   KARMA_RAPEL_PROGRAM_ID,
-  rapelAnaProgramId,
-  rapelMi,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
@@ -86,8 +85,8 @@ function seviyeBelirle(
   programId?: string,
   tip?: TakviyeTip,
 ): GorevSeviye {
-  // Tartım: sağlık işleri bitene kadar rozette öne çıkmasın
-  if (tip === 'tartim') return 'plan';
+  // 15g tartım rozette öne çıkmasın; alım tartımı (1–2. gün) normal öncelik
+  if (tip === 'tartim' && programId !== TARTIM_GIRIS_PROGRAM_ID) return 'plan';
   if (programId && tip && !takviyeGorevOncelikliMi(programId, tip)) return 'plan';
   if (planliMi && kalan != null && kalan > 7) return 'plan';
   if (kalan == null || kalan <= 0) return 'uyari';
@@ -250,9 +249,10 @@ export async function takviyeGorevProgramHaritasi(): Promise<Map<string, Program
     if (tip === 'tartim') {
       o = {
         programId,
-        koruma: '15 günde bir tartım',
-        asiAdi: 'Kontrol tartımı',
-        mlEtiket: '15 gün',
+        koruma:
+          programId === TARTIM_GIRIS_PROGRAM_ID ? 'Alım tartımı' : '15 günde bir tartım',
+        asiAdi: programId === TARTIM_GIRIS_PROGRAM_ID ? 'T0 · 1–2. gün' : 'Kontrol tartımı',
+        mlEtiket: programId === TARTIM_GIRIS_PROGRAM_ID ? '1–2. gün' : '15 gün',
         tip: 'tartim',
         hayvanlar: new Map(),
       };

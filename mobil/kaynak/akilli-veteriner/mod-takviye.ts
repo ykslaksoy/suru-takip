@@ -21,9 +21,12 @@ import {
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
-import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, rapelAnaProgramId, rapelMi } from './hizli-besi-plani';
+import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, rapelAnaProgramId } from './hizli-besi-plani';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
+
+/** Alım / giriş tartımı (1–2. gün) */
+export const TARTIM_GIRIS_PROGRAM_ID = 'tartim-giris';
 
 /** 15 günde bir kontrol tartımı */
 export const TARTIM_15_PROGRAM_ID = 'tartim-15';
@@ -320,8 +323,9 @@ async function durumlariKayitlarlaBirlestir(
         info = { adet: wr.length, sonAt: sorted[0]?.recordedAt ?? null };
         tartimCache.set(d.animalId, info);
       }
-      // ≥2 tartım = 15 günlük kontrol yapıldı (A’da tek alım → bekliyor)
-      if (info.adet >= 2) {
+      // Giriş tartımı: ≥1 kayıt · 15g kontrol: ≥2 kayıt
+      const esik = d.programId === TARTIM_GIRIS_PROGRAM_ID ? 1 : 2;
+      if (info.adet >= esik) {
         out.push({ ...d, yapildi: true, yapildiAt: info.sonAt ?? undefined });
       } else {
         out.push(d);
