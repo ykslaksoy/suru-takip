@@ -5,11 +5,12 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { getAsiGorevDetay, type AsiGorevDetay } from '@/kaynak/gorevler/asi-gorev';
+import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
 import { takviyeTipEtiket } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 function durumEtiket(h: AsiGorevDetay['hayvanlar'][0]): string {
   if (h.planlananAt && h.kalanGun != null && h.kalanGun > 0) {
-    return `Plan: ${h.kalanGun} gün · ${h.planlananAt}`;
+    return `Plan: ${h.kalanGun} gün · ${gorevTarihMetni(h.planlananAt, { yil: true })}`;
   }
   if (h.durum === 'yaklasiyor' && h.kalanGun != null) return `${h.kalanGun} gün içinde`;
   return 'Yapılacak';
@@ -61,7 +62,7 @@ export default function AsiGorevDetayScreen() {
               </Text>
               {detay.planlananAt ? (
                 <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>
-                  Planlanan: {detay.planlananAt}
+                  Planlanan: {gorevTarihMetni(detay.planlananAt, { yil: true })}
                 </Text>
               ) : null}
             </View>

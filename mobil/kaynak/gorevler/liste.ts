@@ -66,12 +66,13 @@ export function gorevleriSirala(gorevler: Gorev[]): Gorev[] {
   });
 }
 
-export function gorevTarihMetni(tarih?: string): string {
+/** Liste: "21 Eylül" — yıl yok. Detay için `yil: true`. */
+export function gorevTarihMetni(tarih?: string, opts?: { yil?: boolean }): string {
   if (!tarih) return '—';
   return new Date(`${tarih}T12:00:00`).toLocaleDateString('tr-TR', {
     day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+    month: 'long',
+    ...(opts?.yil ? { year: 'numeric' as const } : {}),
   });
 }
 
