@@ -209,7 +209,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: '1 hap / 10 kg (etiket)',
+    dozNotu: '1 hap / 10 kg (etiket · tablet gücüne bak)',
     kategori: 'parazit',
   },
   {
@@ -257,7 +257,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: "kg'ye göre ml (iğne)",
+    dozNotu: '0,2 ml / 10 kg (%1 iğne · etiket)',
     kategori: 'parazit',
   },
   {
