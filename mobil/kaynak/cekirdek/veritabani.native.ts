@@ -267,6 +267,8 @@ export async function calculateADG(animalId: string, days = 30): Promise<number 
 export type HealthRecordsOpts = {
   /** Yoksa hayvan bazında limitsiz; genel listede varsayılan 50. `null` = limitsiz. */
   limit?: number | null;
+  /** Genel listede sayfalama — LIMIT ile birlikte */
+  offset?: number;
 };
 
 export async function getHealthRecords(
@@ -282,12 +284,25 @@ export async function getHealthRecords(
     return rows.map(mapHealthRow);
   }
   const limit = opts?.limit === null ? null : opts?.limit ?? 50;
-  const sql =
-    limit == null
-      ? `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC`
-      : `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC LIMIT ?`;
-  const rows = await database.getAllAsync<Record<string, unknown>>(sql, limit == null ? [] : [limit]);
+  const offset = Math.max(0, opts?.offset ?? 0);
+  if (limit == null) {
+    const rows = await database.getAllAsync<Record<string, unknown>>(
+      `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC`,
+    );
+    return rows.map(mapHealthRow);
+  }
+  const rows = await database.getAllAsync<Record<string, unknown>>(
+    `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC LIMIT ? OFFSET ?`,
+    [limit, offset],
+  );
   return rows.map(mapHealthRow);
+}
+
+/** Toplam sağlık kayıt sayısı (genel liste sayfalama) */
+export async function countHealthRecords(): Promise<number> {
+  const database = await getDatabase();
+  const row = await database.getFirstAsync<{ n: number }>('SELECT COUNT(*) as n FROM health_records');
+  return row?.n ?? 0;
 }
 
 /** Program geneli aşı/sağlık hesabı — LIMIT yok */

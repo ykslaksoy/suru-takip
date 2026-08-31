@@ -129,6 +129,8 @@ export async function calculateADG(animalId: string, days = 30): Promise<number 
 export type HealthRecordsOpts = {
   /** Yoksa hayvan bazında limitsiz; genel listede varsayılan 50. `null` = limitsiz. */
   limit?: number | null;
+  /** Genel listede sayfalama — LIMIT ile birlikte */
+  offset?: number;
 };
 
 export async function getHealthRecords(
@@ -151,7 +153,14 @@ export async function getHealthRecords(
   );
   if (animalId) return sorted;
   const limit = opts?.limit === null ? null : opts?.limit ?? 50;
-  return limit == null ? sorted : sorted.slice(0, limit);
+  const offset = Math.max(0, opts?.offset ?? 0);
+  if (limit == null) return sorted.slice(offset);
+  return sorted.slice(offset, offset + limit);
+}
+
+/** Toplam sağlık kayıt sayısı (genel liste sayfalama) */
+export async function countHealthRecords(): Promise<number> {
+  return (await read<HealthRecord>(KEYS.health)).length;
 }
 
 /** Program geneli aşı/sağlık hesabı — LIMIT yok */
