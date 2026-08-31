@@ -30,12 +30,16 @@ export const PADOK_RASYON_BILESENLER = [
 ] as const;
 
 /** Bu karışım için hedef yem dönüşümü (kg yem / kg canlı ağırlık artışı) */
-export const PADOK_HEDEF_FCR = 4.8;
+export const PADOK_HEDEF_FCR = 5.5;
 
-/** Canlı ağırlığın ~%3,8’i + taban (kg/gün as-fed) */
+/**
+ * Günlük as-fed rasyon (kg/hayvan).
+ * Hazır+arpa+yonca+saman karışımında kaba yem hacmiyle ~%6 CA;
+ * 17 kg kuzuya 0,8 yetmez — taban 1,3 kg.
+ */
 export function padokGunlukRasyonKg(canliAgirlikKg: number): number {
-  const ham = canliAgirlikKg * 0.038 + 0.12;
-  return Math.round(Math.min(1.4, Math.max(0.75, ham)) * 10) / 10;
+  const ham = canliAgirlikKg * 0.06 + 0.25;
+  return Math.round(Math.min(2.4, Math.max(1.3, ham)) * 10) / 10;
 }
 
 /** Beklenen dönem artışı (kg) — rasyon × gün / FCR */
