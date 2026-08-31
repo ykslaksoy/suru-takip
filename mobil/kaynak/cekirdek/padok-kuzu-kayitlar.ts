@@ -104,13 +104,15 @@ export async function seedPadokGirisAsilari(): Promise<{ yazilan: number; padok:
   };
 }
 
-/** Ara tartım (grafik + ADG/FCR için) */
+/**
+ * Padok B ara tartım (15. gün) — C’nin 15 günde bir serisi ana seed’de yazılıyor.
+ */
 export async function seedPadokAraTartimlari(): Promise<number> {
   const animals = await getAnimals();
   const now = new Date();
   let n = 0;
   for (const a of animals) {
-    if (a.paddock !== ESLESIK_KUZU_PADOK_B && a.paddock !== ESLESIK_KUZU_PADOK_C) continue;
+    if (a.paddock !== ESLESIK_KUZU_PADOK_B) continue;
     const records = await import('@/kaynak/cekirdek/veritabani').then((m) => m.getWeightRecords(a.id));
     const sorted = [...records].sort(
       (x, y) => new Date(x.recordedAt).getTime() - new Date(y.recordedAt).getTime(),
@@ -119,13 +121,12 @@ export async function seedPadokAraTartimlari(): Promise<number> {
     const giris = sorted[0];
     const guncel = sorted[sorted.length - 1];
     const araKg = Math.round(((giris.weightKg + guncel.weightKg) / 2) * 10) / 10;
-    const araGun = a.paddock === ESLESIK_KUZU_PADOK_B ? 15 : 30;
     await addWeightRecord({
       id: `${a.id}-ara-tartim`,
       animalId: a.id,
       weightKg: araKg,
-      recordedAt: isoOnce(now, araGun),
-      notes: `Ara tartım · ${a.paddock}`,
+      recordedAt: isoOnce(now, 15),
+      notes: `Ara tartım · 15. gün · ${a.paddock}`,
     });
     n += 1;
   }

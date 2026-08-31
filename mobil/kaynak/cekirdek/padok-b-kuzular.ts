@@ -3,7 +3,7 @@
  *
  * Padok A: ~2–2,5 ay · 17–24 kg · 9–12 bin ₺
  * Padok B: ~3,5 ay · giriş 1 ay önce · ~5,5–7,5 kg artış (~180–250 g/gün)
- * Padok C: 4,5 ay · giriş 2 ay önce · ~11–14 kg artış (~180–230 g/gün)
+ * Padok C: 4,5 ay · giriş 2 ay önce · 15 günde bir tartım (5 nokta) · ~11–14 kg artış
  */
 
 import { addWeightRecord, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
@@ -181,12 +181,16 @@ export async function seedPadokBGrupKuzular(): Promise<{ adet: number; padok: st
   return { adet: PADOK_B_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_B };
 }
 
-// ——— Padok C (4,5 aylık · giriş 2 ay önce · kilo 2 ay artmış) ———
+// ——— Padok C (4,5 aylık · giriş 2 ay önce · 15 günde bir tartım) ———
+
+/** Padok C: 60 günde 15 günde bir tartım (giriş → +15 → +30 → +45 → güncel) */
+export const PADOK_C_TARTIM_ARALIK_GUN = 15;
+export const PADOK_C_TARTIM_DONEM_GUN = 60;
 
 export function padokCGrupKimlik(sira: number) {
   if (sira < 1 || sira > PADOK_C_KUZU_ADET) throw new Error(`Sıra 1–${PADOK_C_KUZU_ADET}`);
   const t = oran(sira, PADOK_C_KUZU_ADET);
-  const girisGunOnce = 60; // 2 ay önce
+  const girisGunOnce = PADOK_C_TARTIM_DONEM_GUN; // 2 ay önce
   // Şu an 4,5 aylık (~135 gün); giriş 2 ay önce → girişte ~2,5 ay
   const yasGun = 135;
   const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
@@ -209,14 +213,47 @@ export function padokCGrupKimlik(sira: number) {
   };
 }
 
+/** Dönem içi tartım noktaları: gün 0, 15, 30, 45, 60 — lineer tutarlı artış */
+export function padokCTartimSerisi(girisKg: number, artisKg: number): {
+  gunOnce: number;
+  weightKg: number;
+  adim: number;
+  etiket: string;
+}[] {
+  const adimSayisi = PADOK_C_TARTIM_DONEM_GUN / PADOK_C_TARTIM_ARALIK_GUN; // 4 aralık → 5 nokta
+  const seri: {
+    gunOnce: number;
+    weightKg: number;
+    adim: number;
+    etiket: string;
+  }[] = [];
+  for (let adim = 0; adim <= adimSayisi; adim++) {
+    const gunGecen = adim * PADOK_C_TARTIM_ARALIK_GUN;
+    const kg = Math.round((girisKg + (artisKg * adim) / adimSayisi) * 10) / 10;
+    const etiket =
+      adim === 0
+        ? 'Giriş tartımı'
+        : adim === adimSayisi
+          ? 'Güncel tartım'
+          : `Ara tartım · ${gunGecen}. gün`;
+    seri.push({
+      gunOnce: PADOK_C_TARTIM_DONEM_GUN - gunGecen,
+      weightKg: kg,
+      adim,
+      etiket,
+    });
+  }
+  return seri;
+}
+
 /**
- * Padok C: 20 kuzu · 4,5 aylık · giriş 2 ay önce · güncel = giriş + 11–14 kg artış.
+ * Padok C: 20 kuzu · 4,5 aylık · giriş 2 ay önce · 15 günde bir tutarlı tartım.
  */
 export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: string }> {
   await ensureVarsayilanPadoklar();
   const now = new Date();
-  const girisIso = isoOnce(now, 60);
-  const girisTarih = gunOnce(now, 60);
+  const girisIso = isoOnce(now, PADOK_C_TARTIM_DONEM_GUN);
+  const girisTarih = gunOnce(now, PADOK_C_TARTIM_DONEM_GUN);
 
   for (let sira = 1; sira <= PADOK_C_KUZU_ADET; sira++) {
     const k = padokCGrupKimlik(sira);
@@ -240,24 +277,35 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
       createdAt: girisIso,
       notes:
         `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
-        `Giriş ${girisTarih} (2 aydır bakılıyor) · Giriş ${k.girisKg} kg → +${k.artisKg} kg → ` +
-        `Şimdi ${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · 4,5 aylık`,
+        `Giriş ${girisTarih} (2 aydır bakılıyor) · 15 günde bir tartım · ` +
+        `Giriş ${k.girisKg} kg → +${k.artisKg} kg → Şimdi ${k.weightKg} kg · ` +
+        `Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · 4,5 aylık`,
     };
     await upsertAnimal(animal);
-    await addWeightRecord({
-      id: `${k.id}-giris-tartim`,
-      animalId: k.id,
-      weightKg: k.girisKg,
-      recordedAt: girisIso,
-      notes: `Giriş tartımı · ${k.alimFiyat} ₺ · ${girisTarih}`,
-    });
-    await addWeightRecord({
-      id: `${k.id}-guncel-tartim`,
-      animalId: k.id,
-      weightKg: k.weightKg,
-      recordedAt: now.toISOString(),
-      notes: `Güncel tartım · 2 aylık artış +${k.artisKg} kg`,
-    });
+
+    const seri = padokCTartimSerisi(k.girisKg, k.artisKg);
+    for (const nokta of seri) {
+      const gunGecen = nokta.adim * PADOK_C_TARTIM_ARALIK_GUN;
+      // 30. gün: eski `-ara-tartim` id’sini üzerine yaz (çift kayıt olmasın)
+      const idSuffix =
+        nokta.adim === 0
+          ? 'giris-tartim'
+          : nokta.adim === seri.length - 1
+            ? 'guncel-tartim'
+            : gunGecen === 30
+              ? 'ara-tartim'
+              : `tartim-gun-${gunGecen}`;
+      await addWeightRecord({
+        id: `${k.id}-${idSuffix}`,
+        animalId: k.id,
+        weightKg: nokta.weightKg,
+        recordedAt: isoOnce(now, nokta.gunOnce),
+        notes:
+          nokta.adim === 0
+            ? `${nokta.etiket} · ${k.alimFiyat} ₺ · ${girisTarih}`
+            : `${nokta.etiket} · ${nokta.weightKg} kg · +${Math.round((nokta.weightKg - k.girisKg) * 10) / 10} kg`,
+      });
+    }
   }
 
   return { adet: PADOK_C_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_C };
