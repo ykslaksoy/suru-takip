@@ -12,7 +12,7 @@ export type BetaKategori = keyof typeof BETA_KATEGORILER;
 export const TERIMLER = {
   ADG: { kisa: 'ADG', aciklama: 'günlük kilo alım miktarı' },
   FCR: { kisa: 'FCR', aciklama: '1 kg et için kaç kg yem gerekir' },
-  T0: { kisa: 'T0', aciklama: 'ilk tartım' },
+  T1: { kisa: 'T1', aciklama: 'ilk tartım' },
   BCS: { kisa: 'BCS', aciklama: 'vücut kondisyon skoru' },
   SKT: { kisa: 'SKT', aciklama: 'son kullanma tarihi' },
   GEKIS: { kisa: 'GEKİS', aciklama: 'elektronik hayvan kimlik sistemi' },
@@ -99,4 +99,4 @@ export function yemAdgPerformansTablosu(opts: {
 }
 
 export const UI_KURAL =
-  'Tüm ekran metinleri Türkçe olmalıdır. Kısa terimler (ADG, FCR, T0, SKT vb.) kısaltma + parantez içinde açıklama ile gösterilir.';
+  'Tüm ekran metinleri Türkçe olmalıdır. Kısa terimler (ADG, FCR, T1, SKT vb.) kısaltma + parantez içinde açıklama ile gösterilir.';

@@ -43,8 +43,8 @@ export const MOD1_ADIMLAR: BesiAdim[] = [
   {
     id: 't0',
     sira: 3,
-    baslik: 'İlk tartım (T0)',
-    aciklama: 'Besi başlamadan T0 kilosunu kaydet.',
+    baslik: 'İlk tartım (T1)',
+    aciklama: 'Besi başlamadan T1 kilosunu kaydet.',
     href: '/(tabs)/suru',
   },
   {

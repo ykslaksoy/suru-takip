@@ -130,7 +130,7 @@ export async function tespitMod1VeriDurumu(): Promise<Mod1VeriDurum> {
     id: 't0',
     tamam: t0Tamam,
     kanit: t0Tamam
-      ? `${t0}/${n} hayvanda tartım (T0)`
+      ? `${t0}/${n} hayvanda tartım (T1)`
       : n === 0
         ? 'Önce alım'
         : `Tartım ${t0}/${esik}`,

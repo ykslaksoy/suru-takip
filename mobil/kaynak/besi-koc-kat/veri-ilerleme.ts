@@ -159,7 +159,7 @@ export async function tespitMod2VeriDurumu(): Promise<Mod2VeriDurum> {
   kanitlar.push({
     id: 't0',
     tamam: t0Tamam,
-    kanit: t0Tamam ? `${t0} hayvanda T0 tartım` : 'T0 tartım yok',
+    kanit: t0Tamam ? `${t0} hayvanda T1 tartım` : 'T1 tartım yok',
   });
 
   const rasyonTamam = rasyonN >= 1;

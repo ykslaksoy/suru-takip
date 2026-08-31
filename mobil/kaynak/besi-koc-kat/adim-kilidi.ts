@@ -74,7 +74,7 @@ export const MOD2_ADIMLAR: Mod2Adim[] = [
   {
     id: 't0',
     sira: 7,
-    baslik: 'İlk tartım (T0)',
+    baslik: 'İlk tartım (T1)',
     aciklama: 'Besi başı kilosu.',
     href: '/(tabs)/suru',
   },

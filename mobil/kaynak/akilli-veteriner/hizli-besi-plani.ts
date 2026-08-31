@@ -4,7 +4,7 @@
  *
  * Öncelik (Yasin Eymen Çelik + satın alım beside pratik):
  * iç-dış parazit → karma → selenyum → tartım → 21 gün rapel (karma + çelertme).
- * Tartım: 1–2. gün alım (T0) + 15 günde bir kontrol.
+ * Tartım: 1–2. gün alım (T1) + 15 günde bir kontrol.
  */
 
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
@@ -17,7 +17,7 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v6';
+export const HIZLI_BESI_PLAN_SURUM = 'v7';
 
 /** 21. gün çelertme rapel — ayrı plan kalemi */
 export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
@@ -76,7 +76,7 @@ export const HIZLI_BESI_TAKVIM: {
   { tip: 'vitamin', programId: 'b-kompleks', gun: 0, not: 'İştah · stres' },
   { tip: 'vitamin', programId: 'probiyotik', gun: 0, not: 'Rumen / yem değişimi' },
   { tip: 'vitamin', programId: 'premiks', gun: 0, not: 'Rasyona vitamin-mineral premiks' },
-  { tip: 'tartim', programId: TARTIM_GIRIS_PROGRAM_ID, gun: 1, not: 'Alım tartımı (T0) · 1–2. gün' },
+  { tip: 'tartim', programId: TARTIM_GIRIS_PROGRAM_ID, gun: 1, not: 'Alım tartımı (T1) · 1–2. gün' },
   { tip: 'vitamin', programId: 'selen-e', gun: 7, not: 'Kas · beyaz kas riski' },
   { tip: 'tartim', programId: TARTIM_15_PROGRAM_ID, gun: 15, not: 'Kontrol tartımı — sağlık sonrası' },
   { tip: 'asi', programId: KARMA_RAPEL_PROGRAM_ID, gun: 21, not: 'Karma rapel (2. doz · 21 gün)' },
@@ -133,7 +133,7 @@ function kalemOlustur(
       tip: 'tartim',
       programId: TARTIM_GIRIS_PROGRAM_ID,
       ad: 'Alım tartımı',
-      detay: 'T0 · 1–2. gün',
+      detay: 'T1 · 1–2. gün',
       mlEtiket: '1–2. gün',
     };
   }

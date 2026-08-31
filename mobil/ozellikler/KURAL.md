@@ -39,5 +39,5 @@ python3 islemler/scripts/kilit.py tamamla islemler/XX-.../YY-dosya.md
 ## 6) Arayüz dili
 
 - Kullanıcıya görünen **tüm** metinler Türkçe olmalı (buton, uyarı, yer tutucu, sekme, başlık).
-- Kısa terimler (ADG, FCR, T0, SKT, GEKİS, JSON vb.) **kısaltma + parantez içinde açıklama** ile gösterilir — `mobil/sabitler/Metinler.ts` → `terim()`.
+- Kısa terimler (ADG, FCR, T1, SKT, GEKİS, JSON vb.) **kısaltma + parantez içinde açıklama** ile gösterilir — `mobil/sabitler/Metinler.ts` → `terim()`.
 - Marka dereceleri Fit / Sportmen de aynı kurala tabidir.

@@ -251,7 +251,7 @@ export async function takviyeGorevProgramHaritasi(): Promise<Map<string, Program
         programId,
         koruma:
           programId === TARTIM_GIRIS_PROGRAM_ID ? 'Alım tartımı' : '15 günde bir tartım',
-        asiAdi: programId === TARTIM_GIRIS_PROGRAM_ID ? 'T0 · 1–2. gün' : 'Kontrol tartımı',
+        asiAdi: programId === TARTIM_GIRIS_PROGRAM_ID ? 'T1 · 1–2. gün' : 'Kontrol tartımı',
         mlEtiket: programId === TARTIM_GIRIS_PROGRAM_ID ? '1–2. gün' : '15 gün',
         tip: 'tartim',
         hayvanlar: new Map(),

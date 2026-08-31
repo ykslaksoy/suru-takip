@@ -79,9 +79,9 @@ export function getSmartSuggestions(ctx?: {
   if (ctx?.needsWeigh) {
     out.push({
       id: 'w0',
-      title: `${terim('T0')}`,
-      body: `${terim('T0')} kilosu olmadan ${terim('ADG')} hesaplanmaz.`,
-      voice: `Besi başlamadan bir tartım alalım — buna ${terim('T0')} diyoruz. Sonraki tartımlarda “günde kaç gram aldık”ı ben hesaplarım.`,
+      title: `${terim('T1')}`,
+      body: `${terim('T1')} kilosu olmadan ${terim('ADG')} hesaplanmaz.`,
+      voice: `Besi başlamadan bir tartım alalım — buna ${terim('T1')} diyoruz. Sonraki tartımlarda “günde kaç gram aldık”ı ben hesaplarım.`,
       urgency: 'action',
       source: 'tartim',
       cta: 'Tartım',
@@ -117,7 +117,7 @@ export function getSmartSuggestions(ctx?: {
       id: 'welcome',
       title: 'Sıra önemli',
       body: 'Karantina → aşı → tartım → rasyon.',
-      voice: `Kuzu alınca acele etme. Önce karantina (yonca + su), sonra aşı, sonra ${terim('T0')}, sonra rasyon. Bu sırayı bozma — ben hatırlatırım. En üstte Süper Kuzu seni bekliyor.`,
+      voice: `Kuzu alınca acele etme. Önce karantina (yonca + su), sonra aşı, sonra ${terim('T1')}, sonra rasyon. Bu sırayı bozma — ben hatırlatırım. En üstte Süper Kuzu seni bekliyor.`,
       urgency: 'info',
       source: 'genel',
     });

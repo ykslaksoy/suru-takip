@@ -159,7 +159,7 @@ export default function YolculukScreen() {
           <Text style={[styles.ozetTitle, { color: colors.text }]}>Veri özeti</Text>
           <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
             {m2.ozet.disi} dişi · {m2.ozet.koc} koç · {m2.ozet.gebe} gebe · {m2.ozet.kuzu} kuzu ·{' '}
-            {m2.ozet.katim} katım · aşı {m2.ozet.asi} · T0 {m2.ozet.t0}
+            {m2.ozet.katim} katım · aşı {m2.ozet.asi} · T1 {m2.ozet.t0}
           </Text>
         </View>
 
@@ -544,7 +544,7 @@ export default function YolculukScreen() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.ozetTitle, { color: colors.text }]}>Veri özeti</Text>
         <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
-          {m1.ozet.hayvan} hayvan · aşı {m1.ozet.asi} · T0 {m1.ozet.t0} · rasyon {m1.ozet.rasyon} · ara
+          {m1.ozet.hayvan} hayvan · aşı {m1.ozet.asi} · T1 {m1.ozet.t0} · rasyon {m1.ozet.rasyon} · ara
           tartım {m1.ozet.araTartim}
           {m1.ozet.karantinaGun != null ? ` · karantina gün ${m1.ozet.karantinaGun}` : ''}
         </Text>
