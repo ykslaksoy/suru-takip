@@ -21,6 +21,9 @@ import {
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
   ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
+  KARMA_RAPEL_PROGRAM_ID,
+  rapelAnaProgramId,
+  rapelMi,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
@@ -101,6 +104,17 @@ function hesaplaPlanTarihi(kalan: number | null, mevcut?: string): string {
 }
 
 function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTarih'> | null {
+  if (programId === KARMA_RAPEL_PROGRAM_ID) {
+    const p = ASI_PROGRAMI.find((x) => x.id === 'karma');
+    if (!p) return null;
+    return {
+      programId,
+      koruma: 'Klostridiyal + pastörella pekiştirme',
+      asiAdi: 'Karma aşı 2. doz',
+      mlEtiket: asiDozEtiketi(p),
+      tip: 'asi',
+    };
+  }
   if (programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID) {
     const p = ASI_PROGRAMI.find((x) => x.id === 'enterotoksemi');
     if (!p) return null;

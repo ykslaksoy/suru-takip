@@ -29,7 +29,7 @@ import {
   HIZLI_BESI_GIRIS_VITAMIN,
   HIZLI_BESI_PLAN_BASLIK,
   HIZLI_BESI_PLAN_SURUM,
-  ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
+  rapelMi,
   hizliBesiPlanGun,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import {
@@ -210,7 +210,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
       const asiParazitYapildi =
         girisYapildi &&
         asiParazit &&
-        k.programId !== ENTEROTOKSEMI_RAPEL_PROGRAM_ID &&
+        !rapelMi(k.programId) &&
         (HIZLI_BESI_GIRIS_ASI_PARAZIT as readonly string[]).includes(k.programId);
       const vitaminYapildi =
         girisYapildi &&

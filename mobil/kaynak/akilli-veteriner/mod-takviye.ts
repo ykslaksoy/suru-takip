@@ -21,7 +21,7 @@ import {
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
-import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, ENTEROTOKSEMI_RAPEL_PROGRAM_ID } from './hizli-besi-plani';
+import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, rapelAnaProgramId, rapelMi } from './hizli-besi-plani';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
 
@@ -336,8 +336,8 @@ async function durumlariKayitlarlaBirlestir(
 
     const program = ASI_PROGRAMI.find((p) => p.id === d.programId);
     if (!program) {
-      const rapel = d.programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID;
-      const base = rapel ? ASI_PROGRAMI.find((p) => p.id === 'enterotoksemi') : null;
+      const anaId = rapelAnaProgramId(d.programId);
+      const base = anaId ? ASI_PROGRAMI.find((p) => p.id === anaId) : null;
       if (!base) {
         out.push(d);
         continue;
@@ -491,8 +491,7 @@ async function stokDusTakviye(opts: {
   let ad = opts.programId;
 
   if (opts.tip === 'asi' || opts.tip === 'parazit') {
-    const asiId =
-      opts.programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID ? 'enterotoksemi' : opts.programId;
+    const asiId = rapelAnaProgramId(opts.programId) ?? opts.programId;
     const program = ASI_PROGRAMI.find((p) => p.id === asiId);
     if (!program) return { dusum: 0, uyari: 'Program yok — stok düşülmedi', ad: null };
     ad = program.koruma;

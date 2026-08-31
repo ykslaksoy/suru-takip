@@ -116,6 +116,9 @@ export {
   HIZLI_BESI_PLAN_SURUM,
   HIZLI_BESI_TAKVIM,
   ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
+  KARMA_RAPEL_PROGRAM_ID,
+  rapelMi,
+  rapelAnaProgramId,
   takviyeGorevOncelikSira,
 } from './hizli-besi-plani';
 export {

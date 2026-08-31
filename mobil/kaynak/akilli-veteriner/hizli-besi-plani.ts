@@ -3,7 +3,7 @@
  * Giriş koruma + yem dönüşümü desteği; damızlık / süt programından ayrı.
  *
  * Öncelik (Yasin Eymen Çelik + satın alım beside pratik):
- * iç-dış parazit → karma → selenyum → tartım → 21 gün rapel (çelertme).
+ * iç-dış parazit → karma → selenyum → tartım → 21 gün rapel (karma + çelertme).
  */
 
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
@@ -15,14 +15,31 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v4';
+export const HIZLI_BESI_PLAN_SURUM = 'v5';
 
 /** 21. gün çelertme rapel — ayrı plan kalemi */
 export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
 
+/** 21. gün karma rapel — ayrı plan kalemi */
+export const KARMA_RAPEL_PROGRAM_ID = 'karma-rapel';
+
+/** Rapel kalemleri → ana aşı programı */
+export const RAPEL_ANA_PROGRAM: Record<string, string> = {
+  [ENTEROTOKSEMI_RAPEL_PROGRAM_ID]: 'enterotoksemi',
+  [KARMA_RAPEL_PROGRAM_ID]: 'karma',
+};
+
+export function rapelMi(programId: string): boolean {
+  return programId in RAPEL_ANA_PROGRAM;
+}
+
+export function rapelAnaProgramId(programId: string): string | null {
+  return RAPEL_ANA_PROGRAM[programId] ?? null;
+}
+
 /**
  * Girişte yapılan / yapılacak koruma (Padok B/C seed’de yapıldı sayılır).
- * Karma = klostridiyal + pastörella; enterotoksemi rapel ayrı kalemdir.
+ * Karma = klostridiyal + pastörella; rapeller ayrı kalemdir.
  */
 export const HIZLI_BESI_GIRIS_ASI_PARAZIT = [
   'karma',
@@ -59,12 +76,14 @@ export const HIZLI_BESI_TAKVIM: {
   { tip: 'vitamin', programId: 'premiks', gun: 0, not: 'Rasyona vitamin-mineral premiks' },
   { tip: 'vitamin', programId: 'selen-e', gun: 7, not: 'Kas · beyaz kas riski' },
   { tip: 'tartim', programId: TARTIM_15_PROGRAM_ID, gun: 15, not: 'Kontrol tartımı — sağlık sonrası' },
+  { tip: 'asi', programId: KARMA_RAPEL_PROGRAM_ID, gun: 21, not: 'Karma rapel (2. doz · 21 gün)' },
   { tip: 'asi', programId: ENTEROTOKSEMI_RAPEL_PROGRAM_ID, gun: 21, not: 'Çelertme rapel (2. doz · 21 gün)' },
 ];
 
 /** Görev listesi sırası — düşük = önce (tartım / rapel en sonda) */
 export function takviyeGorevOncelikSira(tip: TakviyeTip, programId: string): number {
   if (tip === 'tartim') return 100;
+  if (programId === KARMA_RAPEL_PROGRAM_ID) return 94;
   if (programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID) return 95;
   const sira: Record<string, number> = {
     ivermektin: 1,
@@ -84,9 +103,19 @@ function kalemOlustur(
   tip: ModTakviyeKalemi['tip'],
   programId: string,
 ): ModTakviyeKalemi | null {
-  if (programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID) {
-    const p = ASI_PROGRAMI.find((x) => x.id === 'enterotoksemi');
+  const anaId = rapelAnaProgramId(programId);
+  if (anaId) {
+    const p = ASI_PROGRAMI.find((x) => x.id === anaId);
     if (!p) return null;
+    if (programId === KARMA_RAPEL_PROGRAM_ID) {
+      return {
+        tip: 'asi',
+        programId: KARMA_RAPEL_PROGRAM_ID,
+        ad: 'Klostridiyal + pastörella pekiştirme',
+        detay: 'Karma aşı 2. doz',
+        mlEtiket: asiDozEtiketi(p),
+      };
+    }
     return {
       tip: 'asi',
       programId: ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
@@ -145,6 +174,7 @@ export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
     { tip: 'vitamin', id: 'premiks' },
     { tip: 'vitamin', id: 'selen-e' },
     { tip: 'tartim', id: TARTIM_15_PROGRAM_ID },
+    { tip: 'asi', id: KARMA_RAPEL_PROGRAM_ID },
     { tip: 'asi', id: ENTEROTOKSEMI_RAPEL_PROGRAM_ID },
   ];
 
@@ -161,9 +191,7 @@ export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
 
 /** Padok A (yeni alım): HIZLI_BESI_TAKVIM’den plan günü */
 export function hizliBesiPlanGun(tip: string, programId: string): number {
-  const pid =
-    programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID ? ENTEROTOKSEMI_RAPEL_PROGRAM_ID : programId;
-  const satir = HIZLI_BESI_TAKVIM.find((e) => e.programId === pid);
+  const satir = HIZLI_BESI_TAKVIM.find((e) => e.programId === programId);
   if (satir) return satir.gun;
   if (tip === 'tartim') return 15;
   if (programId === 'selen-e') return 7;
