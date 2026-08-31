@@ -8,7 +8,8 @@ import { hesaplaFcr, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { sonYemSayimMiktari } from '@/kaynak/stok/yem-tuketim';
 import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
-import { adgDeger, fcrDeger, terim } from '@/sabitler/Metinler';
+import { fcrDeger, terim } from '@/sabitler/Metinler';
+import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 
 const KAYNAK_ETIKET: Record<FcrHesap['kaynak'], string> = {
   gunluk_rasyon: 'günlük verilen rasyon × gün',
@@ -55,30 +56,17 @@ export function PerformansMetrikleri({
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <Text style={[styles.title, { color: colors.tint }]}>Performans</Text>
 
-      <View style={styles.row}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{terim('ADG')} · 30 gün</Text>
-        <Text style={[styles.value, { color: colors.text }]}>
-          {adg != null ? adgDeger(adg) : '— (en az 2 tartım)'}
-        </Text>
-      </View>
+      <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
+        kg/gün iki anlama gelir: günlük yem veya günlük kilo artışı (ADG). Tabloda ikisi de notlu gösterilir.
+      </Text>
 
-      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+      <YemAdgTablosu gunlukYemKg={dailyGivenKg} adgGram={adg} />
 
-      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 4 }]}>Günlük verilen rasyon</Text>
       {dailyGivenKg != null ? (
-        <>
-          <Text style={[styles.value, { color: colors.text }]}>
-            {dailyGivenKg.toLocaleString('tr-TR')} kg yem / gün / hayvan
-          </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
-            Son tartıma göre · {phaseLabel || '—'}
-          </Text>
-        </>
-      ) : (
-        <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-          Tartım kaydı olunca günlük rasyon otomatik hesaplanır.
+        <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 8 }}>
+          Son tartıma göre rasyon · {phaseLabel || '—'}
         </Text>
-      )}
+      ) : null}
       {sonSayim != null ? (
         <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
           Son yem sayımı: {sonSayim.toLocaleString('tr-TR')} kg (stokta)
@@ -132,7 +120,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   title: { fontWeight: '800', fontSize: 16, marginBottom: 12 },
-  row: { gap: 4 },
   label: { fontSize: 12, fontWeight: '600' },
   value: { fontSize: 16, fontWeight: '700' },
   divider: { height: 1, marginVertical: 12 },

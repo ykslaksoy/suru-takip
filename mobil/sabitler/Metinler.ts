@@ -46,5 +46,57 @@ export function fcrDeger(orani: number): string {
   return `${orani.toLocaleString('tr-TR')} kg yem / 1 kg artış`;
 }
 
+/** Yem (kg/gün) ile ADG (g/gün) karışmasın diye tablo satırı */
+export type YemAdgTabloSatiri = {
+  gosterge: string;
+  deger: string;
+  birim: string;
+  not: string;
+  vurgu?: boolean;
+};
+
+/** Performans ekranı — günlük yem + ADG + karşılaştırmalı örnekler (notlu). */
+export function yemAdgPerformansTablosu(opts: {
+  gunlukYemKg?: number | null;
+  adgGram?: number | null;
+}): YemAdgTabloSatiri[] {
+  const satirlar: YemAdgTabloSatiri[] = [];
+
+  satirlar.push({
+    gosterge: 'Günlük yem',
+    deger: opts.gunlukYemKg != null ? opts.gunlukYemKg.toLocaleString('tr-TR') : '—',
+    birim: 'kg/gün',
+    not: 'Günde verilen yem miktarı. Canlı ağırlık artışı (ADG) değildir.',
+    vurgu: opts.gunlukYemKg != null,
+  });
+
+  satirlar.push({
+    gosterge: terim('ADG'),
+    deger:
+      opts.adgGram != null
+        ? `+${opts.adgGram} g/gün · ${(opts.adgGram / 1000).toLocaleString('tr-TR')} kg/gün`
+        : '—',
+    birim: '30 gün ort.',
+    not: 'Tartımlardan: günde alınan canlı ağırlık artışı. Yem kg/gün ile karıştırılmaz.',
+    vurgu: opts.adgGram != null,
+  });
+
+  satirlar.push({
+    gosterge: 'Örnek · yem',
+    deger: '0,8',
+    birim: 'kg/gün yem',
+    not: 'FCR 5,5 ile → ~145 g/gün ADG · 3 ayda (~90 gün) ~13 kg canlı artış',
+  });
+
+  satirlar.push({
+    gosterge: 'Örnek · ADG',
+    deger: '0,8',
+    birim: 'kg/gün artış',
+    not: '3 ayda ~72 kg artış — kuzu besisi için gerçekçi değil (yem sanılmasın)',
+  });
+
+  return satirlar;
+}
+
 export const UI_KURAL =
   'Tüm ekran metinleri Türkçe olmalıdır. Kısa terimler (ADG, FCR, T0, SKT vb.) kısaltma + parantez içinde açıklama ile gösterilir.';

@@ -14,8 +14,9 @@ import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
+import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 import { turEtiketi, turEmoji } from '@/kaynak/suru/tur';
-import { terim, adgDeger, fcrDeger } from '@/sabitler/Metinler';
+import { terim, fcrDeger } from '@/sabitler/Metinler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
@@ -133,12 +134,9 @@ export default function AnimalDetailScreen() {
         <InfoRow label="Yaş bandı" value={ageLabel} colors={colors} />
         <InfoRow label="Derece" value={grade ? dereceEtiket(grade) : '—'} colors={colors} />
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
-        <InfoRow label={`${terim('ADG')} · 30 gün`} value={adg != null ? adgDeger(adg) : '—'} colors={colors} />
-        <InfoRow
-          label="Günlük verilen rasyon"
-          value={dailyRation != null ? `${dailyRation.toLocaleString('tr-TR')} kg/gün` : '—'}
-          colors={colors}
-        />
+        <View style={{ marginTop: 8 }}>
+          <YemAdgTablosu gunlukYemKg={dailyRation} adgGram={adg} />
+        </View>
         <InfoRow label={terim('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
       </View>
 
