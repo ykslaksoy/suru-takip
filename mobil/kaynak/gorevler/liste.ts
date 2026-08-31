@@ -8,9 +8,9 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
-import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
+import { asiTopluGorevleri } from '@/kaynak/gorevler/asi-gorev';
 import { getAktifModId, getMod } from '@/sabitler/Modlar';
-import { aktifPlanOku, takviyeTipEtiket } from '@/kaynak/akilli-veteriner/mod-takviye';
+import { aktifPlanOku } from '@/kaynak/akilli-veteriner/mod-takviye';
 import { getMod1BirlesikIlerleme, sonrakiAcikAdim } from '@/kaynak/besi-ortak';
 import { getMod2BirlesikIlerleme, sonrakiAcikAdimMod2 } from '@/kaynak/besi-koc-kat';
 import { getMod3BirlesikIlerleme, sonrakiAcikAdimMod3 } from '@/kaynak/damizlik';
@@ -102,28 +102,14 @@ async function modPlanGorevleri(): Promise<Gorev[]> {
         seviye: gecikti || yakin ? 'sira' : 'plan',
         kaynak: 'tartim',
         baslik: k.ad,
-        aciklama: `${bekleyen.length} hayvan · ${
+        aciklama: `${bekleyen.length} kuzu · ${
           gecikti ? 'tartım zamanı' : `${kalan} gün sonra · ${tarih}`
         }`,
         href: '/(tabs)/veteriner',
         cta: 'Plana bak',
         tarih,
       });
-      continue;
     }
-
-    out.push({
-      id: `mod-plan-asi-${k.programId}`,
-      seviye: gecikti ? 'uyari' : yakin ? 'sira' : 'plan',
-      kaynak: 'asi',
-      baslik: `${k.ad} (${k.detay})`,
-      aciklama: `${bekleyen.length} hayvan · ${takviyeTipEtiket(k.tip)} · ${
-        gecikti ? `zamanı geldi · ${tarih}` : `${kalan} gün sonra · ${tarih}`
-      }`,
-      href: '/(tabs)/veteriner',
-      cta: 'Plana bak',
-      tarih,
-    });
   }
 
   return out;
@@ -247,21 +233,7 @@ export async function getGorevler(): Promise<Gorev[]> {
     });
   }
 
-  for (const s of asiBuHaftaListesi(asiDurum).slice(0, 30)) {
-    // Özet uyarılar zaten var; hayvan satırlarını ayrı görev olarak ekle
-    out.push({
-      id: `asi-hayvan-${s.programId}-${s.animalId}`,
-      seviye: s.durum === 'yapilacak' ? 'uyari' : 'sira',
-      kaynak: 'asi',
-      baslik: `${s.koruma} (${s.asiAdi}) ${s.mlEtiket}`,
-      aciklama:
-        s.durum === 'yapilacak'
-          ? `${s.etiket || s.earTag || 'Hayvan'} · aşı zamanı geldi`
-          : `${s.etiket || s.earTag || 'Hayvan'} · ${s.kalanGun ?? '?'} gün içinde`,
-      href: `/hayvan/${s.animalId}/saglik`,
-      cta: 'Kayıt aç',
-    });
-  }
+  out.push(...(await asiTopluGorevleri()));
 
   const dusukTakviye = dusukTakviyeler(stock);
   const sktTakviye = sktYakinTakviyeler(stock);
@@ -402,10 +374,9 @@ export async function getGorevler(): Promise<Gorev[]> {
 }
 
 const BUGUN_DISLA = (id: string) =>
-  id.startsWith('asi-hayvan-') ||
+  id.startsWith('asi-ozet-') ||
   id.startsWith('tartim-hayvan-') ||
   id.startsWith('bekletme-') ||
-  id.startsWith('mod-plan-asi-') ||
   id.startsWith('mod-plan-tartim-');
 
 /** Bugün kartı — günlük görevler (gelecek planlar hariç) */
@@ -417,10 +388,7 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
 
   const ozetler: Gorev[] = [];
   const asiN = ham.filter(
-    (g) =>
-      g.kaynak === 'asi' &&
-      (g.id.startsWith('asi-hayvan-') || g.id.startsWith('mod-plan-asi-')) &&
-      gunluk(g),
+    (g) => g.kaynak === 'asi' && g.id.startsWith('asi-ozet-') && gunluk(g),
   ).length;
   if (asiN) {
     ozetler.push({
@@ -428,7 +396,7 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       seviye: 'uyari',
       kaynak: 'asi',
       baslik: 'Aşı',
-      aciklama: `${asiN} kalem · yapılacak veya yaklaşan`,
+      aciklama: `${asiN} aşı · bekleyen kuzu grupları`,
       href: '/gorevler',
       cta: 'Görevlere bak',
     });

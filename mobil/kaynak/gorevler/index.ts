@@ -23,6 +23,12 @@ export {
   type PlanlananGorev,
 } from './planlanan';
 export {
+  getAsiGorevDetay,
+  asiTopluGorevleri,
+  type AsiGorevDetay,
+  type AsiGorevHayvan,
+} from './asi-gorev';
+export {
   IS_PLANI_META,
   IS_PLANI_TURLER,
   addIsPlaniKaydi,
