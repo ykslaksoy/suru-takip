@@ -75,11 +75,11 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
   {
     id: 'selen-e',
     ad: 'Selenyum + E',
-    detay: 'Kas · beyaz kas hastalığı',
+    detay: 'Kas · beyaz kas · kilo alımı',
     uygulama: 'igne',
     mlHayvan: 1,
     dozNotu: 'Ürüne göre kg hesabı olabilir — etikete bak',
-    neZaman: 'Eksiklik bölgesi, zayıf kuzu, kas titremesi şüphesi',
+    neZaman: 'Kapalı besi, eksiklik bölgesi, zayıf kuzu, kas / büyüme desteği',
     stokAnahtarlar: ['selen', 'selenyum', 'e vitamin'],
   },
   {

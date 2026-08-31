@@ -79,7 +79,7 @@ export const HIZLI_BESI_TAKVIM: {
   { tip: 'vitamin', programId: 'probiyotik', gun: 0, not: 'Rumen / yem değişimi' },
   { tip: 'vitamin', programId: 'premiks', gun: 0, not: 'Rasyona vitamin-mineral premiks' },
   { tip: 'tartim', programId: TARTIM_GIRIS_PROGRAM_ID, gun: 1, not: 'Alım tartımı (T1) · 1–2. gün' },
-  { tip: 'vitamin', programId: 'selen-e', gun: 7, not: 'Kas · beyaz kas riski' },
+  { tip: 'vitamin', programId: 'selen-e', gun: 7, not: 'Kas · beyaz kas · kilo alımı' },
   { tip: 'tartim', programId: TARTIM_15_PROGRAM_ID, gun: 15, not: 'Kontrol tartımı — sağlık sonrası' },
   { tip: 'asi', programId: KARMA_RAPEL_PROGRAM_ID, gun: 21, not: 'Karma rapel (2. doz · 21 gün)' },
 ];

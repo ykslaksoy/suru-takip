@@ -3,7 +3,6 @@
  * A: aşı yapılacak · B/C: geçmişe yönelik tam plan (giriş + 7g selen + 21g karma rapel).
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import {
