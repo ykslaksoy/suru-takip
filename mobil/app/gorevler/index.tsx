@@ -53,6 +53,13 @@ function GorevSatiri({
 }) {
   const renk = seviyeRenk(g.seviye, colors);
   const tarih = gorevTarihMetni(g.tarih);
+  // "20 kuzu" veya "20 kuzu · …" → satırda kaç kuzu net görünsün
+  const kuzuEslesme = g.aciklama.match(/^(\d+)\s*kuzu\b/i);
+  const kuzuMetin = kuzuEslesme ? `${kuzuEslesme[1]} kuzu` : null;
+  const kalanAciklama = kuzuEslesme
+    ? g.aciklama.replace(/^\d+\s*kuzu\s*[·•-]?\s*/i, '').trim()
+    : g.aciklama;
+
   return (
     <View style={styles.madde}>
       <Pressable onPress={() => router.push(g.href as never)}>
@@ -61,6 +68,12 @@ function GorevSatiri({
             <Text style={{ color: colors.tint }}>{tarih}</Text>
             <Text style={{ color: colors.textSecondary }}> · </Text>
             {g.baslik}
+            {kuzuMetin ? (
+              <>
+                <Text style={{ color: colors.textSecondary }}> · </Text>
+                <Text style={{ color: colors.text }}>{kuzuMetin}</Text>
+              </>
+            ) : null}
           </Text>
           <View style={[styles.seviyeBadge, { backgroundColor: renk + '22' }]}>
             <Text style={{ color: renk, fontSize: 11, fontWeight: '800' }}>
@@ -68,7 +81,11 @@ function GorevSatiri({
             </Text>
           </View>
         </View>
-        <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>{g.aciklama}</Text>
+        {kalanAciklama ? (
+          <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>
+            {kalanAciklama}
+          </Text>
+        ) : null}
         <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12, marginTop: 6 }}>{g.cta} →</Text>
       </Pressable>
       {g.tamamlanabilir && onTamamla ? (

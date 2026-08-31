@@ -40,6 +40,13 @@ export default function AsiGorevDetayScreen() {
     }, [ready, load, refreshKey]),
   );
 
+  const tarihTam = detay?.planlananAt
+    ? gorevTarihMetni(detay.planlananAt, { yil: true })
+    : null;
+  const neYapilacak = detay
+    ? `${detay.koruma} (${detay.asiAdi}) ${detay.mlEtiket}`
+    : '';
+
   return (
     <>
       <Stack.Screen options={{ title: 'Aşı görevi' }} />
@@ -54,20 +61,20 @@ export default function AsiGorevDetayScreen() {
           <>
             <View style={[styles.hero, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.baslik, { color: colors.text }]}>
-                {detay.koruma} ({detay.asiAdi})
+                <Text style={{ color: colors.tint }}>{tarihTam ?? 'Tarih yok'}</Text>
+                <Text style={{ color: colors.textSecondary }}> · </Text>
+                {neYapilacak}
+                <Text style={{ color: colors.textSecondary }}> · </Text>
+                {detay.hayvanSayisi} kuzu
               </Text>
-              <Text style={{ color: colors.textSecondary, marginTop: 4 }}>{detay.mlEtiket}</Text>
-              <Text style={[styles.sayi, { color: colors.tint }]}>
-                {detay.hayvanSayisi} kuzu · {takviyeTipEtiket(detay.tip)}
+              <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 14 }}>
+                {takviyeTipEtiket(detay.tip)} · {detay.mlEtiket}
               </Text>
-              {detay.planlananAt ? (
-                <Text style={{ color: colors.textSecondary, marginTop: 6, fontSize: 13 }}>
-                  Planlanan: {gorevTarihMetni(detay.planlananAt, { yil: true })}
-                </Text>
-              ) : null}
             </View>
 
-            <Text style={[styles.bolum, { color: colors.textSecondary }]}>Yapılacak kuzular</Text>
+            <Text style={[styles.bolum, { color: colors.textSecondary }]}>
+              Yapılacak kuzular ({detay.hayvanSayisi})
+            </Text>
 
             {detay.hayvanlar.map((h) => (
               <Pressable
@@ -104,8 +111,7 @@ export default function AsiGorevDetayScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   hero: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 16 },
-  baslik: { fontSize: 18, fontWeight: '800' },
-  sayi: { fontSize: 22, fontWeight: '800', marginTop: 12 },
+  baslik: { fontSize: 17, fontWeight: '800', lineHeight: 24 },
   bolum: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
   satir: {
     flexDirection: 'row',

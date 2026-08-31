@@ -141,9 +141,7 @@ async function modPlanGorevleri(): Promise<Gorev[]> {
         seviye: gecikti || yakin ? 'sira' : 'plan',
         kaynak: 'tartim',
         baslik: k.ad,
-        aciklama: `${bekleyen.length} kuzu · ${
-          gecikti ? 'tartım zamanı' : `${kalan} gün sonra · ${tarih}`
-        }`,
+        aciklama: `${bekleyen.length} kuzu`,
         href: '/(tabs)/veteriner',
         cta: 'Plana bak',
         tarih,

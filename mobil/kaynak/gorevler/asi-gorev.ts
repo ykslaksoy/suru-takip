@@ -216,7 +216,7 @@ export async function asiTopluGorevleri(): Promise<Gorev[]> {
       seviye,
       kaynak: 'asi',
       baslik: `${o.koruma} (${o.asiAdi}) ${o.mlEtiket}`,
-      aciklama: `${n} kuzu · ${zamanMetni(kalan)} · ${takviyeTipEtiket(o.tip)}`,
+      aciklama: `${n} kuzu`,
       href: `/gorevler/asi/${o.programId}`,
       cta: 'Kuzuları gör',
       tarih: enYakinTarih,
