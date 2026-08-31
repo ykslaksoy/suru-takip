@@ -1,4 +1,4 @@
-import { getAnimals, getHealthRecords, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { getAnimals, getAllHealthRecordsForAsi, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import type { Mod3AdimId } from './adim-kilidi';
 
 export type Mod3AdimKanit = { id: Mod3AdimId; tamam: boolean; kanit: string };
@@ -17,7 +17,7 @@ export async function tespitMod3VeriDurumu(): Promise<Mod3VeriDurum> {
   const animals = aktif(await getAnimals());
   const adaylar = animals.filter((a) => /damızlık|damizlik|aday/i.test(a.notes));
   const turkvet = animals.filter((a) => a.turkvetNo.trim().length >= 8).length;
-  const health = await getHealthRecords();
+  const health = await getAllHealthRecordsForAsi();
   const asiIds = new Set(health.filter((h) => h.recordType === 'vaccine').map((h) => h.animalId));
 
   let tartimli = 0;

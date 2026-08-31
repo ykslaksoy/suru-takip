@@ -1,4 +1,4 @@
-import { getAnimals, getHealthRecords, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import {
   ASI_PROGRAMI,
   asiStokUyarilari,
@@ -9,11 +9,11 @@ import {
 export { ASI_PROGRAMI, hesaplaAsiStokDurumu, asiStokUyarilari };
 export type { AsiStokDurum };
 
-/** Canlı veriden aşı + stok durumu (tüm sağlık kayıtları — limit yok) */
+/** Canlı veriden aşı + stok durumu (tüm sağlık kayıtları) */
 export async function getAsiTakvimiDurumu(): Promise<AsiStokDurum[]> {
   const [animals, health, stock] = await Promise.all([
     getAnimals(),
-    getHealthRecords(undefined, { limit: null }),
+    getAllHealthRecordsForAsi(),
     getStockItems(),
   ]);
   return hesaplaAsiStokDurumu(animals, health, stock);

@@ -6,7 +6,7 @@
  * Padok C: 4,5 ay · giriş 2 ay önce · 15 günde bir tartım (5 nokta) · ~11–14 kg artış
  */
 
-import { addWeightRecord, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { addWeightRecord, getAnimals, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
@@ -325,10 +325,33 @@ export async function seedTumEslesikKuzular(): Promise<void> {
   await seedPadokAEslesikKuzular();
   await seedPadokBGrupKuzular();
   await seedPadokCGrupKuzular();
-  await seedPadokHayvanKayitlari();
+  await seedPadokHayvanKayitlari({ forcePlan: true });
 }
 
-/** Mevcut kurulumda padok verisini tamamla (tartım tarihlerini bozmaz) */
+/**
+ * Mevcut kurulum: sadece eksik padok grubunu ekle / eksik tartım noktalarını merge et.
+ * Her refresh’te hayvanları yeniden seed etmez; tartım tarihlerini bozmaz.
+ */
 export async function ensurePadokKuzuVerisi(): Promise<void> {
-  await seedTumEslesikKuzular();
+  const animals = await getAnimals();
+  const ids = new Set(animals.map((a) => a.id));
+  const eksik = (prefix: string, adet: number) => {
+    for (let i = 1; i <= adet; i++) {
+      if (!ids.has(`${prefix}${String(i).padStart(2, '0')}`)) return true;
+    }
+    return false;
+  };
+
+  if (eksik('padok-a-kuzu-', PADOK_A_KUZU_ADET)) await seedPadokAEslesikKuzular();
+  if (eksik('padok-b-grup-', PADOK_B_KUZU_ADET)) await seedPadokBGrupKuzular();
+  if (eksik('padok-c-grup-', PADOK_C_KUZU_ADET)) {
+    await seedPadokCGrupKuzular();
+  } else if (ids.has('padok-c-grup-01')) {
+    const wr = await getWeightRecords('padok-c-grup-01');
+    // Eski 2–3 noktalı seed → 15 günde bir 5 nokta tamamla (mevcut kayıtlar dokunulmaz)
+    if (wr.length < 5) await seedPadokCGrupKuzular();
+  }
+
+  // Aşı/ara tartım/rasyon: idempotent; mod planı yoksa oluştur (mevcut planı ezme)
+  await seedPadokHayvanKayitlari();
 }

@@ -154,6 +154,13 @@ export async function getHealthRecords(
   return limit == null ? sorted : sorted.slice(0, limit);
 }
 
+/** Program geneli aşı/sağlık hesabı — LIMIT yok */
+export async function getAllHealthRecordsForAsi(): Promise<
+  (HealthRecord & { earTag?: string; sirtNo?: string | null })[]
+> {
+  return getHealthRecords(undefined, { limit: null });
+}
+
 export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: string }): Promise<HealthRecord> {
   const full: HealthRecord = { ...record, id: record.id ?? uuidv4() };
   await write(KEYS.health, [...(await read<HealthRecord>(KEYS.health)), full]);
@@ -165,7 +172,7 @@ export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: 
 }
 
 export async function getActiveWithdrawals(): Promise<(HealthRecord & { earTag: string })[]> {
-  const records = await getHealthRecords(undefined, { limit: null });
+  const records = await getAllHealthRecordsForAsi();
   const now = Date.now();
   return records.filter((r) => {
     if (!r.withdrawalDays || !r.medicine) return false;

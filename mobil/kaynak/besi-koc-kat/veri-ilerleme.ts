@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getAnimals,
-  getHealthRecords,
+  getAllHealthRecordsForAsi,
   getStockItems,
   getStockMovements,
   getWeightRecords,
@@ -62,7 +62,7 @@ export async function tespitMod2VeriDurumu(): Promise<Mod2VeriDurum> {
   });
   const anneBagli = kuzular.filter((a) => !!a.motherId);
   const katimlar = await getKatimKayitlari();
-  const health = await getHealthRecords();
+  const health = await getAllHealthRecordsForAsi();
   const asiIds = new Set(health.filter((h) => h.recordType === 'vaccine').map((h) => h.animalId));
   const rasyon = await rasyonIds();
   const feedIds = new Set((await getStockItems('feed')).map((s) => s.id));

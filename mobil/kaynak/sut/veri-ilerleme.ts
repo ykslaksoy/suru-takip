@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getAnimals,
-  getHealthRecords,
+  getAllHealthRecordsForAsi,
   getWeightRecords,
 } from '@/kaynak/cekirdek/veritabani';
 import type { Mod4AdimId } from './adim-kilidi';
@@ -63,7 +63,7 @@ export async function tespitMod4VeriDurumu(): Promise<Mod4VeriDurum> {
   const sagimlar = await getSagimKayitlari();
   const laktasyonlar = await getLaktasyonKayitlari();
   const yon = await getSutYonlendirme();
-  const health = await getHealthRecords();
+  const health = await getAllHealthRecordsForAsi();
   const asiIds = new Set(health.filter((h) => h.recordType === 'vaccine').map((h) => h.animalId));
   const memeSaglik = health.some((h) =>
     /meme|mastit|sağım|sagim|süt|sut/i.test(`${h.notes} ${h.diagnosis} ${h.treatment}`)

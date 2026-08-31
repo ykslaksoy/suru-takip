@@ -1,7 +1,7 @@
 import {
   getActiveWithdrawals,
   getAnimals,
-  getHealthRecords,
+  getAllHealthRecordsForAsi,
   getLatestWeight,
   getLowStockItems,
   getStockItems,
@@ -170,7 +170,7 @@ export async function getGorevler(): Promise<Gorev[]> {
   }
 
   const animals = await getAnimals();
-  const health = await getHealthRecords(undefined, { limit: null });
+  const health = await getAllHealthRecordsForAsi();
   const stock = await getStockItems();
   const asiDurum = hesaplaAsiStokDurumu(animals, health, stock);
 

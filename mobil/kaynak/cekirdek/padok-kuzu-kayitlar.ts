@@ -171,6 +171,12 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const girisC = isoOnce(now, 60);
 
   const durumlar: HayvanKalemDurum[] = [];
+  const oncekiMap = new Map<string, HayvanKalemDurum>(
+    ((await planlariOku()).find((p) => p.id === PLAN_ID)?.durumlar ?? []).map(
+      (d) => [`${d.animalId}|${d.tip}:${d.programId}`, d],
+    ),
+  );
+
   for (const h of hayvanlar) {
     const girisYapildi =
       h.paddock === ESLESIK_KUZU_PADOK_B || h.paddock === ESLESIK_KUZU_PADOK_C;
@@ -178,6 +184,8 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
       h.paddock === ESLESIK_KUZU_PADOK_B ? girisB : h.paddock === ESLESIK_KUZU_PADOK_C ? girisC : undefined;
 
     for (const k of kalemler) {
+      const key = `${h.id}|${k.tip}:${k.programId}`;
+      const onceki = oncekiMap.get(key);
       const asiParazitYapildi =
         girisYapildi &&
         (k.tip === 'asi' || k.tip === 'parazit') &&
@@ -188,8 +196,8 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         earTag: hayvanAnaEtiket(h),
         tip: k.tip,
         programId: k.programId,
-        yapildi: asiParazitYapildi,
-        yapildiAt: asiParazitYapildi ? yapildiAt : undefined,
+        yapildi: onceki?.yapildi || asiParazitYapildi,
+        yapildiAt: onceki?.yapildiAt ?? (asiParazitYapildi ? yapildiAt : undefined),
       });
     }
   }
@@ -213,9 +221,15 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
 }
 
 /** Padok A/B/C tam seed sonrası kayıtlar */
-export async function seedPadokHayvanKayitlari(): Promise<void> {
+export async function seedPadokHayvanKayitlari(opts?: {
+  /** true: mod planı yoksa oluştur / zorla yenile */
+  forcePlan?: boolean;
+}): Promise<void> {
   await seedPadokGirisAsilari();
   await seedPadokAraTartimlari();
   await seedPadokRasyonPlanlari();
-  await seedMod1PadokTakviyePlani();
+  const mevcut = (await planlariOku()).find((p) => p.id === PLAN_ID);
+  if (!mevcut || opts?.forcePlan) {
+    await seedMod1PadokTakviyePlani();
+  }
 }

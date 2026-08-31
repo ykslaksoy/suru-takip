@@ -13,7 +13,7 @@ import {
   addHealthRecord,
   adjustStock,
   getAnimals,
-  getHealthRecords,
+  getAllHealthRecordsForAsi,
   getStockItems,
   upsertAnimal,
 } from '@/kaynak/cekirdek/veritabani';
@@ -292,7 +292,7 @@ export async function olusturModTakviyePlani(opts?: {
   const mod = getMod(modId);
   const tarih = opts?.tarih ?? new Date().toISOString().slice(0, 10);
   const mevcut = await aktifPlanOku(modId);
-  const health = await getHealthRecords(undefined, { limit: null });
+  const health = await getAllHealthRecordsForAsi();
 
   if (hayvanlar.length === 0) {
     const plan: ModTakviyePlani = {

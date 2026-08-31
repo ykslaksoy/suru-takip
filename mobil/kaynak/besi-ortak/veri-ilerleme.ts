@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getAnimals,
-  getHealthRecords,
+  getAllHealthRecordsForAsi,
   getStockMovements,
   getStockItems,
   getWeightRecords,
@@ -56,7 +56,7 @@ async function rasyonPlanliIds(): Promise<Set<string>> {
 export async function tespitMod1VeriDurumu(): Promise<Mod1VeriDurum> {
   const animals = aktifHayvanlar(await getAnimals());
   const n = animals.length;
-  const health = await getHealthRecords();
+  const health = await getAllHealthRecordsForAsi();
   const stock = await getStockItems('feed');
   const feedIds = new Set(stock.map((s) => s.id));
   const movements = await getStockMovements();

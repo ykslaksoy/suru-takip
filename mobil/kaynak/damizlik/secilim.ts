@@ -1,5 +1,5 @@
 import type { Animal } from '@/kaynak/cekirdek/tipler';
-import { calculateADG, getAnimals, getHealthRecords, getLatestWeight, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { calculateADG, getAnimals, getAllHealthRecordsForAsi, getLatestWeight, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 
 const ADAY_ETIKET = 'damızlık aday';
 
@@ -21,7 +21,7 @@ function adayMi(a: Animal): boolean {
 /** Büyüme + kimlik + sağlık ile seleksiyon sıralaması */
 export async function secilimSirala(): Promise<DamizlikSkor[]> {
   const animals = (await getAnimals()).filter((a) => a.status !== 'sold' && a.status !== 'dead');
-  const health = await getHealthRecords();
+  const health = await getAllHealthRecordsForAsi();
   const out: DamizlikSkor[] = [];
 
   for (const animal of animals) {

@@ -290,6 +290,13 @@ export async function getHealthRecords(
   return rows.map(mapHealthRow);
 }
 
+/** Program geneli aşı/sağlık hesabı — LIMIT yok */
+export async function getAllHealthRecordsForAsi(): Promise<
+  (HealthRecord & { earTag?: string; sirtNo?: string | null })[]
+> {
+  return getHealthRecords(undefined, { limit: null });
+}
+
 function mapHealthRow(row: Record<string, unknown>): HealthRecord & { earTag?: string; sirtNo?: string | null } {
   return {
     id: row.id as string,
@@ -323,7 +330,7 @@ export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: 
 }
 
 export async function getActiveWithdrawals(): Promise<(HealthRecord & { earTag: string })[]> {
-  const records = await getHealthRecords(undefined, { limit: null });
+  const records = await getAllHealthRecordsForAsi();
   const now = Date.now();
   return records.filter((r) => r.withdrawalDays && r.medicine && new Date(r.recordedAt).getTime() + r.withdrawalDays * 86400000 > now) as (HealthRecord & { earTag: string })[];
 }
