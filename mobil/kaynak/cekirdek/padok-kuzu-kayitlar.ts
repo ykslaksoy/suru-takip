@@ -165,7 +165,7 @@ export async function seedPadokRasyonPlanlari(): Promise<number> {
   return seedPadokHayvanRasyonPlanlari();
 }
 
-/** Mod1 hızlı besi: A planlı · B/C giriş aşı+hap+vitamin yapıldı · tartım 15g */
+/** Mod1 hızlı besi: A planlı · B tüm kalemler yapılmış · C giriş yapılmış, selenyum/rapel bekleyebilir */
 export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const modId = 'mod1' as const;
   const kalemler = modTakviyeSablonu(modId);
@@ -183,6 +183,8 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const girisB = isoOnce(now, 30);
   const girisC = isoOnce(now, 60);
   const asi21 = gunSonraTarih(ASI_PLAN_GUN, now);
+  const selenB = isoOnce(now, 30 - 7); // giriş + 7. gün
+  const rapelB = isoOnce(now, 30 - 21); // giriş + 21. gün
 
   const durumlar: HayvanKalemDurum[] = [];
   const oncekiMap = new Map<string, HayvanKalemDurum>(
@@ -192,10 +194,10 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   );
 
   for (const h of hayvanlar) {
-    const girisYapildi =
-      h.paddock === ESLESIK_KUZU_PADOK_B || h.paddock === ESLESIK_KUZU_PADOK_C;
-    const yapildiAt =
-      h.paddock === ESLESIK_KUZU_PADOK_B ? girisB : h.paddock === ESLESIK_KUZU_PADOK_C ? girisC : undefined;
+    const padokB = h.paddock === ESLESIK_KUZU_PADOK_B;
+    const padokC = h.paddock === ESLESIK_KUZU_PADOK_C;
+    const girisYapildi = padokB || padokC;
+    const yapildiAt = padokB ? girisB : padokC ? girisC : undefined;
     const padokA = h.paddock === ESLESIK_KUZU_PADOK_A;
 
     const wr = await getWeightRecords(h.id);
@@ -227,8 +229,17 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartim15Yapildi;
       const tartimKalemi = tartimGirisKalemi || tartim15Kalemi;
 
+      // Padok B: tüm hızlı besi kalemleri yapılmış (selenyum + rapel dahil)
+      const padokBTamam = padokB;
+      const selenBYapildi = padokB && k.tip === 'vitamin' && k.programId === 'selen-e';
+      const rapelBYapildi = padokB && rapelMi(k.programId);
+
       const yapildi =
-        onceki?.yapildi || asiParazitYapildi || vitaminYapildi || tartimKalemi;
+        onceki?.yapildi ||
+        asiParazitYapildi ||
+        vitaminYapildi ||
+        tartimKalemi ||
+        padokBTamam;
 
       let planlananAt = onceki?.planlananAt;
       if (!yapildi) {
@@ -240,21 +251,28 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         }
       }
 
+      let yapildiAtKayit =
+        onceki?.yapildiAt ??
+        (asiParazitYapildi || vitaminYapildi
+          ? yapildiAt
+          : tartimGirisKalemi
+            ? ilkTartim
+            : tartim15Kalemi
+              ? sonTartim
+              : undefined);
+      if (!yapildiAtKayit && padokB) {
+        if (selenBYapildi) yapildiAtKayit = selenB;
+        else if (rapelBYapildi) yapildiAtKayit = rapelB;
+        else yapildiAtKayit = girisB;
+      }
+
       durumlar.push({
         animalId: h.id,
         earTag: hayvanAnaEtiket(h),
         tip: k.tip,
         programId: k.programId,
         yapildi,
-        yapildiAt:
-          onceki?.yapildiAt ??
-          (asiParazitYapildi || vitaminYapildi
-            ? yapildiAt
-            : tartimGirisKalemi
-              ? ilkTartim
-              : tartim15Kalemi
-                ? sonTartim
-                : undefined),
+        yapildiAt: yapildiAtKayit,
         planlananAt: yapildi ? onceki?.planlananAt : planlananAt,
       });
     }

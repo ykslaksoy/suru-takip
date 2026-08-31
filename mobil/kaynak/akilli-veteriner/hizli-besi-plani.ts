@@ -17,7 +17,7 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v7';
+export const HIZLI_BESI_PLAN_SURUM = 'v8';
 
 /** 21. gün çelertme rapel — ayrı plan kalemi */
 export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
