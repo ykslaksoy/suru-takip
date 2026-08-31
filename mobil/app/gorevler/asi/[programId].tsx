@@ -49,7 +49,7 @@ export default function AsiGorevDetayScreen() {
   const neYapilacak = detay
     ? detay.tip === 'tartim'
       ? detay.koruma
-      : `${detay.koruma} (${detay.asiAdi}) ${detay.mlEtiket}`
+      : detay.koruma
     : '';
 
   const ekranBaslik =
@@ -76,6 +76,18 @@ export default function AsiGorevDetayScreen() {
                 <Text style={{ color: colors.tint }}>{tarihTam ?? 'Tarih yok'}</Text>
                 <Text style={{ color: colors.textSecondary }}> · </Text>
                 {neYapilacak}
+                {detay.tip !== 'tartim' && detay.asiAdi ? (
+                  <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '400' }}>
+                    {' '}
+                    ({detay.asiAdi})
+                  </Text>
+                ) : null}
+                {detay.tip !== 'tartim' && detay.mlEtiket ? (
+                  <Text style={{ color: colors.tint, fontSize: 13, fontWeight: '700' }}>
+                    {' '}
+                    {detay.mlEtiket}
+                  </Text>
+                ) : null}
                 <Text style={{ color: colors.textSecondary }}> · </Text>
                 {detay.hayvanSayisi} kuzu
               </Text>

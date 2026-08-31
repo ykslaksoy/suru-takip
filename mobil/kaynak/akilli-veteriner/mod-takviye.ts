@@ -114,8 +114,8 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
     return {
       tip: 'vitamin',
       programId: v.id,
-      ad: v.ad,
-      detay: v.detay,
+      ad: v.detay,
+      detay: v.ad,
       mlEtiket: vitaminDozEtiketi(v),
     };
   };

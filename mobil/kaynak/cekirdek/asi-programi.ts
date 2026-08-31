@@ -6,9 +6,9 @@ export type AsiProgramKategori = 'asi' | 'parazit';
 
 export type AsiProgramKalemi = {
   id: string;
-  /** Ne için — hastalık / koruma (büyük gösterim) */
+  /** Ne için — açıklama (büyük gösterim) */
   koruma: string;
-  /** Aşının / ilacın kendi adı — parantez içinde küçük */
+  /** İğne / ürün adı — parantez içinde küçük */
   ad: string;
   /** Stok adıyla eşleşme için anahtar kelimeler */
   stokAnahtarlar: string[];
@@ -55,8 +55,8 @@ export function asiKategori(p: AsiProgramKalemi): AsiProgramKategori {
 export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   {
     id: 'karma',
-    koruma: 'Karma aşı',
-    ad: 'Klostridiyal + pastörella',
+    koruma: 'Klostridiyal + pastörella',
+    ad: 'Karma aşı',
     stokAnahtarlar: ['karma', 'heptavac', 'kombine', 'çok bileşen'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
@@ -85,8 +85,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
   },
   {
     id: 'enterotoksemi',
-    koruma: 'Enterotoksemi',
-    ad: 'Çelertme aşısı',
+    koruma: 'Çelertme',
+    ad: 'Enterotoksemi aşısı',
     stokAnahtarlar: ['enterotoksemi', 'enterotoxemia', 'çelertme'],
     tekrarGun: 180,
     hatirlatmaGun: 21,

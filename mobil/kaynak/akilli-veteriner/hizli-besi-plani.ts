@@ -15,7 +15,7 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v3';
+export const HIZLI_BESI_PLAN_SURUM = 'v4';
 
 /** 21. gün çelertme rapel — ayrı plan kalemi */
 export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
@@ -90,8 +90,8 @@ function kalemOlustur(
     return {
       tip: 'asi',
       programId: ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
-      ad: 'Enterotoksemi rapel',
-      detay: 'Çelertme 2. doz · 21 gün sonra',
+      ad: 'Çelertme pekiştirme',
+      detay: 'Enterotoksemi 2. doz',
       mlEtiket: asiDozEtiketi(p),
     };
   }
@@ -100,7 +100,7 @@ function kalemOlustur(
       tip: 'tartim',
       programId: TARTIM_15_PROGRAM_ID,
       ad: '15 günde bir tartım',
-      detay: 'Hızlı besi kontrol tartımı',
+      detay: 'Kontrol tartımı',
       mlEtiket: '15 gün',
     };
   }
@@ -110,8 +110,8 @@ function kalemOlustur(
     return {
       tip: 'vitamin',
       programId: v.id,
-      ad: v.ad,
-      detay: v.detay,
+      ad: v.detay,
+      detay: v.ad,
       mlEtiket: vitaminDozEtiketi(v),
     };
   }

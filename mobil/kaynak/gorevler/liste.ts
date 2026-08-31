@@ -45,6 +45,10 @@ export type Gorev = {
   cta: string;
   /** YYYY-MM-DD — planlı gün (yoksa bugün/acil) */
   tarih?: string;
+  /** İğne / ürün adı — parantez içinde küçük gösterilir */
+  baslikIgne?: string;
+  /** Doz etiketi (sabit 2 ml…) — başlık yanında */
+  baslikMl?: string;
   tamamlanabilir?: boolean;
   tamam?: boolean;
 };

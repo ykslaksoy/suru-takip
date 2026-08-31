@@ -106,8 +106,8 @@ function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTar
     if (!p) return null;
     return {
       programId,
-      koruma: 'Enterotoksemi rapel',
-      asiAdi: 'Çelertme 2. doz · 21 gün',
+      koruma: 'Çelertme pekiştirme',
+      asiAdi: 'Enterotoksemi 2. doz',
       mlEtiket: asiDozEtiketi(p),
       tip: 'asi',
     };
@@ -128,8 +128,8 @@ function vitaminMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYaki
   if (!v) return null;
   return {
     programId,
-    koruma: v.ad,
-    asiAdi: v.detay,
+    koruma: v.detay,
+    asiAdi: v.ad,
     mlEtiket: vitaminDozEtiketi(v),
     tip: 'vitamin',
   };
@@ -160,16 +160,15 @@ function ozettenGorev(o: ProgramOzet): Gorev | null {
         }, null);
   const enYakinTarih = hesaplaPlanTarihi(kalan, hamTarih);
   const n = hayvanlar.length;
-  const baslik =
-    o.tip === 'tartim'
-      ? o.koruma
-      : `${o.koruma} (${o.asiAdi}) ${o.mlEtiket}`;
+  const baslik = o.tip === 'tartim' ? o.koruma : o.koruma;
 
   return {
     id: `takviye-ozet-${o.tip}-${o.programId}`,
     seviye: seviyeBelirle(kalan, !!planli, o.programId, o.tip),
     kaynak: kaynakIcin(o.tip),
     baslik,
+    baslikIgne: o.tip === 'tartim' ? undefined : o.asiAdi,
+    baslikMl: o.tip === 'tartim' ? undefined : o.mlEtiket,
     aciklama: `${n} kuzu`,
     href: `/gorevler/asi/${o.programId}`,
     cta: 'Kuzuları gör',

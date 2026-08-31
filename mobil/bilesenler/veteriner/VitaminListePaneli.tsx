@@ -1,6 +1,6 @@
 /**
- * Vitamin listesi — aşı başlık formatı:
- * B kompleks (iştah · stres) sabit 2 ml
+ * Vitamin listesi — açıklama önde, ürün/iğne parantezde küçük:
+ * Kas · beyaz kas hastalığı (Selenyum + E) sabit 1 ml
  */
 
 import { StyleSheet, Text, View } from 'react-native';
@@ -38,8 +38,8 @@ export function VitaminListePaneli() {
           <View style={styles.ust}>
             <View style={{ flex: 1 }}>
               <AsiBaslikSatir
-                koruma={v.ad}
-                asiAdi={`${v.detay} · ${vitaminTipEtiket(v.uygulama)}`}
+                koruma={v.detay}
+                asiAdi={`${v.ad} · ${vitaminTipEtiket(v.uygulama)}`}
                 mlEtiket={vitaminDozEtiketi(v)}
               />
             </View>

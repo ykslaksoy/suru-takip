@@ -1,18 +1,14 @@
 /**
- * Vitamin / destek listesi — aşı ve ilaç ile aynı mantık:
- * ana ad (küçük detay) + sabit ml notu.
- *
- * Dozlar tipik şişe etiketine göre pratik örnektir; ürün etiketine ve
- * veteriner talimatına uyulmalıdır.
+ * Vitamin / destek listesi — açıklama önde, ürün adı parantezde küçük.
  */
 
 export type VitaminUygulama = 'igne' | 'oral' | 'yem';
 
 export type VitaminKalemi = {
   id: string;
-  /** Başa — kısa ad (B kompleks, A-D3-E…) */
+  /** İğne / ürün adı — parantez içinde küçük */
   ad: string;
-  /** Parantez içinde küçük — ne işe yarar */
+  /** Açıklama — ne işe yarar (büyük gösterim) */
   detay: string;
   uygulama: VitaminUygulama;
   /**

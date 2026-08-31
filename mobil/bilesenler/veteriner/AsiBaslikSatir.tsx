@@ -3,9 +3,9 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 
 type Props = {
-  /** Başa — kısa ad (Karma aşı, Solunum…) */
+  /** Başa — açıklama (Klostridiyal + pastörella, İç-dış parazit…) */
   koruma: string;
-  /** Aşının kendisi — parantez içinde çok küçük */
+  /** İğne / ürün adı — parantez içinde küçük */
   asiAdi: string;
   /** sabit 2 ml */
   mlEtiket: string;
@@ -13,7 +13,7 @@ type Props = {
   devletNotu?: string;
 };
 
-/** Karma aşı (Klostridiyal + pastörella) sabit 2 ml */
+/** Klostridiyal + pastörella (Karma aşı) sabit 2 ml */
 export function AsiBaslikSatir({ koruma, asiAdi, mlEtiket, devletNotu }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -22,7 +22,9 @@ export function AsiBaslikSatir({ koruma, asiAdi, mlEtiket, devletNotu }: Props) 
     <View>
       <Text style={{ lineHeight: 22 }}>
         <Text style={{ color: colors.text, fontWeight: '800', fontSize: 16 }}>{koruma}</Text>
-        <Text style={[styles.parantez, { color: colors.textSecondary }]}> ({asiAdi})</Text>
+        {asiAdi ? (
+          <Text style={[styles.parantez, { color: colors.textSecondary }]}> ({asiAdi})</Text>
+        ) : null}
         <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 14 }}> {mlEtiket}</Text>
       </Text>
       {devletNotu ? (

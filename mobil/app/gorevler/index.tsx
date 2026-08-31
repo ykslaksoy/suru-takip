@@ -68,6 +68,18 @@ function GorevSatiri({
             <Text style={{ color: colors.tint }}>{tarih}</Text>
             <Text style={{ color: colors.textSecondary }}> · </Text>
             {g.baslik}
+            {g.baslikIgne ? (
+              <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: '400' }}>
+                {' '}
+                ({g.baslikIgne})
+              </Text>
+            ) : null}
+            {g.baslikMl ? (
+              <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700' }}>
+                {' '}
+                {g.baslikMl}
+              </Text>
+            ) : null}
             {kuzuMetin ? (
               <>
                 <Text style={{ color: colors.textSecondary }}> · </Text>
