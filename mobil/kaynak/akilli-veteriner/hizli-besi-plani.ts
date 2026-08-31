@@ -17,7 +17,7 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v10';
+export const HIZLI_BESI_PLAN_SURUM = 'v11';
 
 /** @deprecated — karma klostridiyal kapsar; hızlı beside kullanılmıyor */
 export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
