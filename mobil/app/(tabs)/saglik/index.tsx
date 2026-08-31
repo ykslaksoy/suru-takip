@@ -7,7 +7,7 @@ import { AsiTakvimi } from '@/bilesenler/saglik/AsiTakvimi';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { getActiveWithdrawals, getHealthRecords } from '@/kaynak/cekirdek/veritabani';
+import { getActiveWithdrawals, getAsiKayitlari, getHealthRecords } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 
 type Sekme = 'kayitlar' | 'asi' | 'bekletme';
@@ -18,18 +18,23 @@ export default function HealthOverviewScreen() {
   const { refreshKey, pendingSync, ready } = useDatabase();
   const [sekme, setSekme] = useState<Sekme>('kayitlar');
   const [records, setRecords] = useState<Awaited<ReturnType<typeof getHealthRecords>>>([]);
+  const [asiKayitlari, setAsiKayitlari] = useState<Awaited<ReturnType<typeof getAsiKayitlari>>>([]);
   const [withdrawals, setWithdrawals] = useState<Awaited<ReturnType<typeof getActiveWithdrawals>>>([]);
 
   const load = useCallback(async () => {
-    setRecords(await getHealthRecords());
-    setWithdrawals(await getActiveWithdrawals());
+    const [kayitlar, asi, bekletme] = await Promise.all([
+      getHealthRecords(),
+      getAsiKayitlari(),
+      getActiveWithdrawals(),
+    ]);
+    setRecords(kayitlar);
+    setAsiKayitlari(asi);
+    setWithdrawals(bekletme);
   }, []);
 
   useEffect(() => {
     if (ready) load();
   }, [ready, refreshKey, load]);
-
-  const asiKayitlari = records.filter((r) => r.recordType === 'vaccine');
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

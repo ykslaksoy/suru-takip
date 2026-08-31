@@ -161,6 +161,19 @@ export async function getAllHealthRecordsForAsi(): Promise<
   return getHealthRecords(undefined, { limit: null });
 }
 
+/** Uygulanmış aşı + parazit kayıtları (limitsiz) */
+export async function getAsiKayitlari(): Promise<
+  (HealthRecord & { earTag?: string; sirtNo?: string | null })[]
+> {
+  const tum = await getAllHealthRecordsForAsi();
+  return tum.filter(
+    (r) =>
+      r.recordType === 'vaccine' ||
+      (r.recordType === 'treatment' &&
+        /parazit|albendazol|ivermektin|triklabendazol/i.test(`${r.medicine} ${r.treatment}`)),
+  );
+}
+
 export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: string }): Promise<HealthRecord> {
   const full: HealthRecord = { ...record, id: record.id ?? uuidv4() };
   await write(KEYS.health, [...(await read<HealthRecord>(KEYS.health)), full]);
