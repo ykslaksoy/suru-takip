@@ -3,7 +3,7 @@
  * Listede: tarih · ne · N kuzu — detayda kuzular.
  */
 
-import { ASI_PROGRAMI, asiDozEtiketi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, asiGorevOncelikliMi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
@@ -60,13 +60,19 @@ function kalanGunTarih(tarih: string): number {
   return Math.ceil((new Date(tarih).getTime() - Date.now()) / 86400000);
 }
 
+function takviyeGorevOncelikliMi(programId: string, tip: TakviyeTip): boolean {
+  if (tip === 'vitamin') return vitaminGorevOncelikliMi(programId);
+  if (tip === 'asi' || tip === 'parazit') return asiGorevOncelikliMi(programId);
+  return true;
+}
+
 function seviyeBelirle(
   kalan: number | null,
   planliMi: boolean,
   programId?: string,
   tip?: TakviyeTip,
 ): GorevSeviye {
-  if (tip === 'vitamin' && programId && !vitaminGorevOncelikliMi(programId)) return 'plan';
+  if (programId && tip && !takviyeGorevOncelikliMi(programId, tip)) return 'plan';
   if (planliMi && kalan != null && kalan > 7) return 'plan';
   if (kalan == null || kalan <= 0) return 'uyari';
   if (kalan <= 7) return 'sira';

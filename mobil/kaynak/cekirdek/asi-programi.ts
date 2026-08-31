@@ -28,7 +28,15 @@ export type AsiProgramKalemi = {
   devletNotu?: string;
   /** Varsayılan: aşı. Parazit hapı / iğnesi için 'parazit' */
   kategori?: AsiProgramKategori;
+  /** false → görevde yalnızca planlı (acil/sırada değil) */
+  oncelikli?: boolean;
 };
+
+/** Görev listesinde acil/sırada sayılır mı (varsayılan: evet) */
+export function asiGorevOncelikliMi(programId: string): boolean {
+  const p = ASI_PROGRAMI.find((x) => x.id === programId);
+  return p?.oncelikli !== false;
+}
 
 /** Ekranda "sabit 2 ml" / "1 hap / 10 kg" */
 export function asiDozEtiketi(p: AsiProgramKalemi): string {
@@ -251,6 +259,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     mlHayvan: null,
     dozNotu: "kg'ye göre ml (iğne)",
     kategori: 'parazit',
+    oncelikli: false,
   },
   {
     id: 'doramektin',
