@@ -21,6 +21,7 @@ import {
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
+import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK } from './hizli-besi-plani';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
 
@@ -129,8 +130,9 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
 
   const ids: Record<UrunModId, { asilar: string[]; vitaminler: string[] }> = {
     mod1: {
-      asilar: ['karma', 'pasteurella', 'clostridial', 'enterotoksemi', 'tetanos', 'albendazol', 'ivermektin'],
-      vitaminler: ['ad3e', 'b-kompleks', 'selen-e', 'elektrolit'],
+      // Hızlı besi — ayrı şablon: hizliBesiTakviyeSablonu()
+      asilar: [],
+      vitaminler: [],
     },
     mod2: {
       asilar: ['karma', 'pasteurella', 'clostridial', 'ppr', 'cicek', 'albendazol', 'ivermektin'],
@@ -145,6 +147,10 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       vitaminler: ['ad3e', 'kalsiyum', 'b-kompleks', 'mineral-yalama', 'premiks'],
     },
   };
+
+  if (modId === 'mod1') {
+    return hizliBesiTakviyeSablonu();
+  }
 
   const s = ids[modId];
   return [tartim, ...s.asilar.map(asi), ...s.vitaminler.map(vit)].filter(
@@ -203,6 +209,11 @@ export async function planGuncelle(plan: ModTakviyePlani): Promise<void> {
   if (idx >= 0) list[idx] = plan;
   else list.unshift(plan);
   await planlariYaz(list);
+}
+
+export async function planSil(planId: string): Promise<void> {
+  const list = await planlariOku();
+  await planlariYaz(list.filter((p) => p.id !== planId));
 }
 
 export async function aktifPlanOku(modId: UrunModId): Promise<ModTakviyePlani | null> {
@@ -373,11 +384,14 @@ export async function olusturModTakviyePlani(opts?: {
   const mevcut = await aktifPlanOku(modId);
   const health = await getAllHealthRecordsForAsi();
 
+  const baslik =
+    modId === 'mod1' ? HIZLI_BESI_PLAN_BASLIK : `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`;
+
   if (hayvanlar.length === 0) {
     const plan: ModTakviyePlani = {
       id: mevcut?.id ?? uuidv4(),
       modId,
-      baslik: `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`,
+      baslik,
       tarih: planTarih,
       kalemler,
       hayvanIds: [],
@@ -401,7 +415,7 @@ export async function olusturModTakviyePlani(opts?: {
   const plan: ModTakviyePlani = {
     id: mevcut?.id ?? uuidv4(),
     modId,
-    baslik: `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`,
+    baslik,
     tarih: planTarih,
     kalemler,
     hayvanIds: hayvanlar.map((h) => h.id),

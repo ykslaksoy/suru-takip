@@ -109,6 +109,14 @@ export {
   type TakviyeTip,
 } from './mod-takviye';
 export {
+  hizliBesiTakviyeSablonu,
+  HIZLI_BESI_GIRIS_ASI_PARAZIT,
+  HIZLI_BESI_GIRIS_VITAMIN,
+  HIZLI_BESI_PLAN_BASLIK,
+  HIZLI_BESI_PLAN_SURUM,
+  HIZLI_BESI_TAKVIM,
+} from './hizli-besi-plani';
+export {
   baslatTakip,
   getAktifTakipler,
   getTakip,
