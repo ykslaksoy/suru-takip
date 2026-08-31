@@ -86,7 +86,7 @@ export function gunSonraTarih(gun: number, now = new Date()): string {
 /** Aşı/parazit için varsayılan plan gecikmesi (karantina / ilk doz) */
 export const ASI_PLAN_GUN = 21;
 
-export function tipEtiket(tip: TakviyeTip): string {
+export function takviyeTipEtiket(tip: TakviyeTip): string {
   if (tip === 'asi') return 'aşı';
   if (tip === 'parazit') return 'parazit';
   if (tip === 'tartim') return 'tartım';

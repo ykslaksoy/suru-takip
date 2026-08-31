@@ -19,7 +19,7 @@ import {
   olusturModTakviyePlani,
   planaYeniHayvanlariEkle,
   planOzeti,
-  tipEtiket,
+  takviyeTipEtiket,
   type ModTakviyeKalemi,
   type ModTakviyeOzet,
   type ModTakviyePlani,
@@ -142,7 +142,7 @@ export function ModTakviyePaneli() {
         <View key={`${k.tip}-${k.programId}`} style={[styles.kart, { borderColor: colors.border }]}>
           <AsiBaslikSatir
             koruma={k.ad}
-            asiAdi={`${k.detay} · ${tipEtiket(k.tip)}`}
+            asiAdi={`${k.detay} · ${takviyeTipEtiket(k.tip)}`}
             mlEtiket={k.mlEtiket}
           />
         </View>
@@ -225,7 +225,7 @@ export function ModTakviyePaneli() {
                     <Text style={{ color: colors.text, fontWeight: '700' }}>
                       {d.earTag}{' '}
                       <Text style={{ fontWeight: '400', color: colors.textSecondary, fontSize: 12 }}>
-                        · {k?.ad ?? d.programId} ({tipEtiket(d.tip)})
+                        · {k?.ad ?? d.programId} ({takviyeTipEtiket(d.tip)})
                       </Text>
                     </Text>
                     {planlananEtiket(d.planlananAt) ? (

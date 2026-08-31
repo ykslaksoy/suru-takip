@@ -101,7 +101,7 @@ export {
   TARTIM_15_PROGRAM_ID,
   ASI_PLAN_GUN,
   gunSonraTarih,
-  tipEtiket,
+  takviyeTipEtiket,
   type ModTakviyePlani,
   type ModTakviyeKalemi,
   type ModTakviyeOzet,
