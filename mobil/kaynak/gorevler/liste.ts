@@ -55,13 +55,13 @@ export function bugunTarih(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Öncelik (acil → sırada → planlı) · aynı seviyede en yakın tarih önce */
+/** En yakın tarih önce · aynı günde acil → sırada → planlı */
 export function gorevleriSirala(gorevler: Gorev[]): Gorev[] {
   const bugun = bugunTarih();
   return [...gorevler].sort((a, b) => {
-    const ds = SEVIYE_SIRASI[a.seviye] - SEVIYE_SIRASI[b.seviye];
-    if (ds !== 0) return ds;
-    return (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
+    const dt = (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
+    if (dt !== 0) return dt;
+    return SEVIYE_SIRASI[a.seviye] - SEVIYE_SIRASI[b.seviye];
   });
 }
 

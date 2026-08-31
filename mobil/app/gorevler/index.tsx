@@ -152,7 +152,7 @@ export default function GorevlerScreen() {
           ) : (
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
-                Sıralama: Acil → Sırada → Planlı; aynı öncelikte en yakın tarih önce. Kategoriye
+                Sıralama: en yakın tarih önce; aynı günde Acil → Sırada → Planlı. Kategoriye
                 dokunun.
               </Text>
 
