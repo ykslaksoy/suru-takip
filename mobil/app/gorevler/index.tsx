@@ -52,12 +52,15 @@ function GorevSatiri({
   onTamamla?: () => void;
 }) {
   const renk = seviyeRenk(g.seviye, colors);
+  const tarih = gorevTarihMetni(g.tarih);
   return (
     <View style={styles.madde}>
       <Pressable onPress={() => router.push(g.href as never)}>
         <View style={styles.metaRow}>
-          <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600' }}>
-            📅 {gorevTarihMetni(g.tarih)}
+          <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15, flex: 1 }}>
+            <Text style={{ color: colors.tint }}>{tarih}</Text>
+            <Text style={{ color: colors.textSecondary }}> · </Text>
+            {g.baslik}
           </Text>
           <View style={[styles.seviyeBadge, { backgroundColor: renk + '22' }]}>
             <Text style={{ color: renk, fontSize: 11, fontWeight: '800' }}>
@@ -65,7 +68,6 @@ function GorevSatiri({
             </Text>
           </View>
         </View>
-        <Text style={{ color: colors.text, fontWeight: '700', marginTop: 6 }}>{g.baslik}</Text>
         <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>{g.aciklama}</Text>
         <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12, marginTop: 6 }}>{g.cta} →</Text>
       </Pressable>
