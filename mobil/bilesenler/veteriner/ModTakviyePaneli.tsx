@@ -22,8 +22,16 @@ import {
   type ModTakviyeKalemi,
   type ModTakviyeOzet,
   type ModTakviyePlani,
+  type TakviyeTip,
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
+
+function tipEtiket(tip: TakviyeTip): string {
+  if (tip === 'asi') return 'aşı';
+  if (tip === 'parazit') return 'parazit';
+  if (tip === 'tartim') return 'tartım';
+  return 'vitamin';
+}
 
 export function ModTakviyePaneli() {
   const scheme = useColorScheme() ?? 'light';
@@ -69,9 +77,12 @@ export function ModTakviyePaneli() {
 
   const kalemUygula = async (k: ModTakviyeKalemi) => {
     if (!ozet) return;
+    const tartimMi = k.tip === 'tartim';
     Alert.alert(
       `${k.ad} — tümüne uygula`,
-      `Bekleyen tüm hayvanlara ${k.mlEtiket} işaretlensin mi?`,
+      tartimMi
+        ? `Bekleyen tüm hayvanlarda ${k.ad} yapıldı işaretlensin mi? (Kilo kaydı için Kilo Takibi’ni kullanın)`
+        : `Bekleyen tüm hayvanlara ${k.mlEtiket} işaretlensin mi?`,
       [
         { text: 'İptal', style: 'cancel' },
         {
@@ -108,10 +119,10 @@ export function ModTakviyePaneli() {
 
   return (
     <View style={styles.kok}>
-      <Text style={[styles.title, { color: colors.text }]}>Mod aşı, parazit & vitamin planı</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Mod aşı, tartım & vitamin planı</Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
-        {aktifMod.icon} {aktifMod.baslik} — bu moda kayıtlı hayvanlar plana alınır; aşı, parazit hapı ve vitamin
-        için yapıldı denetimi tutulur.
+        {aktifMod.icon} {aktifMod.baslik} — bu moda kayıtlı hayvanlar plana alınır; 15 günde bir tartım,
+        aşı, parazit ve vitamin için yapıldı denetimi tutulur.
       </Text>
 
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
@@ -129,7 +140,7 @@ export function ModTakviyePaneli() {
         <View key={`${k.tip}-${k.programId}`} style={[styles.kart, { borderColor: colors.border }]}>
           <AsiBaslikSatir
             koruma={k.ad}
-            asiAdi={`${k.detay} · ${k.tip === 'asi' ? 'aşı' : k.tip === 'parazit' ? 'parazit' : 'vitamin'}`}
+            asiAdi={`${k.detay} · ${tipEtiket(k.tip)}`}
             mlEtiket={k.mlEtiket}
           />
         </View>
@@ -212,8 +223,7 @@ export function ModTakviyePaneli() {
                     <Text style={{ color: colors.text, fontWeight: '700' }}>
                       {d.earTag}{' '}
                       <Text style={{ fontWeight: '400', color: colors.textSecondary, fontSize: 12 }}>
-                        · {k?.ad ?? d.programId} (
-                        {d.tip === 'asi' ? 'aşı' : d.tip === 'parazit' ? 'parazit' : 'vitamin'})
+                        · {k?.ad ?? d.programId} ({tipEtiket(d.tip)})
                       </Text>
                     </Text>
                     <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 2 }}>

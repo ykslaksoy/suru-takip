@@ -15,6 +15,7 @@ import {
   getAnimals,
   getAllHealthRecordsForAsi,
   getStockItems,
+  getWeightRecords,
   upsertAnimal,
 } from '@/kaynak/cekirdek/veritabani';
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
@@ -23,7 +24,10 @@ import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
 
-export type TakviyeTip = 'asi' | 'vitamin' | 'parazit';
+/** 15 günde bir kontrol tartımı */
+export const TARTIM_15_PROGRAM_ID = 'tartim-15';
+
+export type TakviyeTip = 'asi' | 'vitamin' | 'parazit' | 'tartim';
 
 export type ModTakviyeKalemi = {
   tip: TakviyeTip;
@@ -70,7 +74,7 @@ function kalemAnahtar(tip: TakviyeTip, programId: string): string {
   return `${tip}:${programId}`;
 }
 
-/** Mod başına önerilen aşı + vitamin şablonu */
+/** Mod başına önerilen aşı + vitamin + 15 günde bir tartım şablonu */
 export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
   const asi = (id: string): ModTakviyeKalemi | null => {
     const p = ASI_PROGRAMI.find((x) => x.id === id);
@@ -96,6 +100,14 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
     };
   };
 
+  const tartim: ModTakviyeKalemi = {
+    tip: 'tartim',
+    programId: TARTIM_15_PROGRAM_ID,
+    ad: '15 günde bir tartım',
+    detay: 'Kontrol tartımı',
+    mlEtiket: '15 gün',
+  };
+
   const ids: Record<UrunModId, { asilar: string[]; vitaminler: string[] }> = {
     mod1: {
       asilar: ['karma', 'pasteurella', 'clostridial', 'enterotoksemi', 'tetanos', 'albendazol', 'ivermektin'],
@@ -116,7 +128,7 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
   };
 
   const s = ids[modId];
-  return [...s.asilar.map(asi), ...s.vitaminler.map(vit)].filter(
+  return [tartim, ...s.asilar.map(asi), ...s.vitaminler.map(vit)].filter(
     (x): x is ModTakviyeKalemi => x != null,
   );
 }
@@ -242,17 +254,49 @@ function eslesir(metin: string, anahtarlar: string[]): boolean {
   return anahtarlar.some((k) => n.includes(normalize(k)));
 }
 
-/** Sağlık kayıtlarından aşı/parazit yapıldı bilgisini birleştir */
-function durumlariSagliklaBirlestir(
+/** Sağlık + tartım kayıtlarından yapıldı bilgisini birleştir */
+async function durumlariKayitlarlaBirlestir(
   durumlar: HayvanKalemDurum[],
-  kalemler: ModTakviyeKalemi[],
   health: HealthRecord[],
-): HayvanKalemDurum[] {
-  return durumlar.map((d) => {
-    if (d.yapildi) return d;
-    if (d.tip === 'vitamin') return d;
+): Promise<HayvanKalemDurum[]> {
+  const tartimCache = new Map<string, { adet: number; sonAt: string | null }>();
+
+  const out: HayvanKalemDurum[] = [];
+  for (const d of durumlar) {
+    if (d.yapildi) {
+      out.push(d);
+      continue;
+    }
+
+    if (d.tip === 'tartim') {
+      let info = tartimCache.get(d.animalId);
+      if (!info) {
+        const wr = await getWeightRecords(d.animalId);
+        const sorted = [...wr].sort(
+          (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
+        );
+        info = { adet: wr.length, sonAt: sorted[0]?.recordedAt ?? null };
+        tartimCache.set(d.animalId, info);
+      }
+      // ≥2 tartım = 15 günlük kontrol yapıldı (A’da tek alım → bekliyor)
+      if (info.adet >= 2) {
+        out.push({ ...d, yapildi: true, yapildiAt: info.sonAt ?? undefined });
+      } else {
+        out.push(d);
+      }
+      continue;
+    }
+
+    if (d.tip === 'vitamin') {
+      out.push(d);
+      continue;
+    }
+
     const program = ASI_PROGRAMI.find((p) => p.id === d.programId);
-    if (!program) return d;
+    if (!program) {
+      out.push(d);
+      continue;
+    }
     const kategori = asiKategori(program);
     const related = health
       .filter((h) => {
@@ -271,9 +315,13 @@ function durumlariSagliklaBirlestir(
       )
       .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
     const last = related[0];
-    if (!last) return d;
-    return { ...d, yapildi: true, yapildiAt: last.recordedAt };
-  });
+    if (!last) {
+      out.push(d);
+      continue;
+    }
+    out.push({ ...d, yapildi: true, yapildiAt: last.recordedAt });
+  }
+  return out;
 }
 
 /**
@@ -314,9 +362,8 @@ export async function olusturModTakviyePlani(opts?: {
     };
   }
 
-  const durumlar = durumlariSagliklaBirlestir(
+  const durumlar = await durumlariKayitlarlaBirlestir(
     durumMatrisi(hayvanlar, kalemler, mevcut?.durumlar),
-    kalemler,
     health,
   );
 
@@ -370,6 +417,9 @@ async function stokDusTakviye(opts: {
   programId: string;
   earTag: string;
 }): Promise<{ dusum: number; uyari: string | null; ad: string | null }> {
+  if (opts.tip === 'tartim') {
+    return { dusum: 0, uyari: null, ad: null };
+  }
   const stock = await getStockItems();
   let item: StockItem | null = null;
   let doz = 1;
@@ -463,6 +513,26 @@ export async function isaretleYapildi(opts: {
   }
 
   const now = new Date().toISOString();
+
+  if (opts.tip === 'tartim') {
+    const durumlar = [...plan.durumlar];
+    durumlar[idx] = {
+      ...durumlar[idx],
+      yapildi: true,
+      yapildiAt: now,
+      earTag: hayvanAnaEtiket(hayvan),
+    };
+    const guncel: ModTakviyePlani = { ...plan, durumlar };
+    await planGuncelle(guncel);
+    return {
+      ok: true,
+      message: `${hayvanAnaEtiket(hayvan)} · ${kalem.ad} işaretlendi (tartım kaydı için Kilo Takibi’ne gidin)`,
+      plan: guncel,
+      stokDusum: 0,
+      stokUyari: null,
+    };
+  }
+
   await addHealthRecord({
     id: uuidv4(),
     animalId: hayvan.id,
@@ -493,14 +563,14 @@ export async function isaretleYapildi(opts: {
     ...durumlar[idx],
     yapildi: true,
     yapildiAt: now,
-    earTag: hayvan.earTag,
+    earTag: hayvanAnaEtiket(hayvan),
   };
   const guncel: ModTakviyePlani = { ...plan, durumlar };
   await planGuncelle(guncel);
 
   return {
     ok: true,
-    message: `${hayvan.earTag} · ${kalem.ad} yapıldı${stok.uyari ? ` · ${stok.uyari}` : stok.dusum ? ` · stok −${stok.dusum}` : ''}`,
+    message: `${hayvanAnaEtiket(hayvan)} · ${kalem.ad} yapıldı${stok.uyari ? ` · ${stok.uyari}` : stok.dusum ? ` · stok −${stok.dusum}` : ''}`,
     plan: guncel,
     stokDusum: stok.dusum,
     stokUyari: stok.uyari,

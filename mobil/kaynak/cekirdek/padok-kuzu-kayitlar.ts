@@ -19,6 +19,7 @@ import {
   planGuncelle,
   planKaydet,
   planlariOku,
+  TARTIM_15_PROGRAM_ID,
   type HayvanKalemDurum,
   type ModTakviyePlani,
 } from '@/kaynak/akilli-veteriner/mod-takviye';
@@ -152,7 +153,7 @@ export async function seedPadokRasyonPlanlari(): Promise<number> {
   return n;
 }
 
-/** Mod1 plan: A bekliyor · B/C giriş aşıları yapıldı */
+/** Mod1 plan: A aşı+tartım bekliyor · B/C giriş aşıları + 15g tartım serisi yapıldı */
 export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const modId = 'mod1' as const;
   const kalemler = modTakviyeSablonu(modId);
@@ -183,6 +184,12 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
     const yapildiAt =
       h.paddock === ESLESIK_KUZU_PADOK_B ? girisB : h.paddock === ESLESIK_KUZU_PADOK_C ? girisC : undefined;
 
+    const wr = await getWeightRecords(h.id);
+    const tartimYapildi = wr.length >= 2; // A: 1 alım → bekliyor · B/C: 15g serisi → yapıldı
+    const sonTartim = [...wr].sort(
+      (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
+    )[0]?.recordedAt;
+
     for (const k of kalemler) {
       const key = `${h.id}|${k.tip}:${k.programId}`;
       const onceki = oncekiMap.get(key);
@@ -190,14 +197,18 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         girisYapildi &&
         (k.tip === 'asi' || k.tip === 'parazit') &&
         MOD1_GIRIS_ASI_PARAZIT.includes(k.programId as (typeof MOD1_GIRIS_ASI_PARAZIT)[number]);
+      const tartimKalemi =
+        k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartimYapildi;
 
       durumlar.push({
         animalId: h.id,
         earTag: hayvanAnaEtiket(h),
         tip: k.tip,
         programId: k.programId,
-        yapildi: onceki?.yapildi || asiParazitYapildi,
-        yapildiAt: onceki?.yapildiAt ?? (asiParazitYapildi ? yapildiAt : undefined),
+        yapildi: onceki?.yapildi || asiParazitYapildi || tartimKalemi,
+        yapildiAt:
+          onceki?.yapildiAt ??
+          (asiParazitYapildi ? yapildiAt : tartimKalemi ? sonTartim : undefined),
       });
     }
   }
@@ -205,7 +216,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const plan: ModTakviyePlani = {
     id: PLAN_ID,
     modId,
-    baslik: 'Mod 1 — Padok A/B/C aşı & takviye',
+    baslik: 'Mod 1 — Padok A/B/C aşı, tartım & takviye',
     tarih: now.toISOString().slice(0, 10),
     kalemler,
     hayvanIds: hayvanlar.map((h) => h.id),
@@ -229,7 +240,10 @@ export async function seedPadokHayvanKayitlari(opts?: {
   await seedPadokAraTartimlari();
   await seedPadokRasyonPlanlari();
   const mevcut = (await planlariOku()).find((p) => p.id === PLAN_ID);
-  if (!mevcut || opts?.forcePlan) {
+  const tartimEksik = !mevcut?.kalemler.some(
+    (k) => k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID,
+  );
+  if (!mevcut || opts?.forcePlan || tartimEksik) {
     await seedMod1PadokTakviyePlani();
   }
 }

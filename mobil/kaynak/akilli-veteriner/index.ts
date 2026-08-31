@@ -98,6 +98,7 @@ export {
   kalemiTumuneUygula,
   planaYeniHayvanlariEkle,
   atanmamisHayvanlariModaBagla,
+  TARTIM_15_PROGRAM_ID,
   type ModTakviyePlani,
   type ModTakviyeKalemi,
   type ModTakviyeOzet,
