@@ -152,8 +152,8 @@ export default function GorevlerScreen() {
           ) : (
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
-                Sıralama: en yakın tarih önce; aynı günde Acil → Sırada → Planlı. Kategoriye
-                dokunun.
+                Sıralama: en yakın tarih önce; aynı günde parazit → karma → selenyum →
+                tartım → rapel. Kategoriye dokunun.
               </Text>
 
               {loading ? (

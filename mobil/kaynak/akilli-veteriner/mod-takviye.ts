@@ -21,7 +21,7 @@ import {
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
-import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK } from './hizli-besi-plani';
+import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, ENTEROTOKSEMI_RAPEL_PROGRAM_ID } from './hizli-besi-plani';
 
 const PLAN_KEY = 'sy_mod_takviye_plan_v1';
 
@@ -336,7 +336,27 @@ async function durumlariKayitlarlaBirlestir(
 
     const program = ASI_PROGRAMI.find((p) => p.id === d.programId);
     if (!program) {
-      out.push(d);
+      const rapel = d.programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID;
+      const base = rapel ? ASI_PROGRAMI.find((p) => p.id === 'enterotoksemi') : null;
+      if (!base) {
+        out.push(d);
+        continue;
+      }
+      const related = health
+        .filter((h) => h.animalId === d.animalId && h.recordType === 'vaccine')
+        .filter((h) =>
+          eslesir(`${h.medicine} ${h.treatment} ${h.diagnosis}`, [
+            base.koruma,
+            base.ad,
+            ...base.stokAnahtarlar,
+          ]),
+        )
+        .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+      if (related.length >= 2) {
+        out.push({ ...d, yapildi: true, yapildiAt: related[0].recordedAt });
+      } else {
+        out.push(d);
+      }
       continue;
     }
     const kategori = asiKategori(program);
@@ -471,7 +491,9 @@ async function stokDusTakviye(opts: {
   let ad = opts.programId;
 
   if (opts.tip === 'asi' || opts.tip === 'parazit') {
-    const program = ASI_PROGRAMI.find((p) => p.id === opts.programId);
+    const asiId =
+      opts.programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID ? 'enterotoksemi' : opts.programId;
+    const program = ASI_PROGRAMI.find((p) => p.id === asiId);
     if (!program) return { dusum: 0, uyari: 'Program yok — stok düşülmedi', ad: null };
     ad = program.koruma;
     doz = program.dozHayvan;

@@ -29,6 +29,7 @@ import {
   HIZLI_BESI_GIRIS_VITAMIN,
   HIZLI_BESI_PLAN_BASLIK,
   HIZLI_BESI_PLAN_SURUM,
+  ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
   hizliBesiPlanGun,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import {
@@ -42,6 +43,22 @@ const PLAN_ID = `mod1-hizli-besi-plan-${HIZLI_BESI_PLAN_SURUM}`;
 
 function isoOnce(now: Date, gun: number): string {
   return new Date(now.getTime() - gun * 86400000).toISOString();
+}
+
+function girisGunOnce(animal: Animal, now: Date): number {
+  if (animal.createdAt) {
+    return Math.max(
+      0,
+      Math.round((now.getTime() - new Date(animal.createdAt).getTime()) / 86400000),
+    );
+  }
+  return 0;
+}
+
+function planTarihFromGiris(animal: Animal, gun: number, now: Date): string {
+  const g = girisGunOnce(animal, now);
+  const hedef = Math.max(0, gun - g);
+  return gunSonraTarih(hedef, now);
 }
 
 async function asiKaydiYaz(opts: {
@@ -193,6 +210,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
       const asiParazitYapildi =
         girisYapildi &&
         asiParazit &&
+        k.programId !== ENTEROTOKSEMI_RAPEL_PROGRAM_ID &&
         (HIZLI_BESI_GIRIS_ASI_PARAZIT as readonly string[]).includes(k.programId);
       const vitaminYapildi =
         girisYapildi &&
@@ -205,11 +223,13 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         onceki?.yapildi || asiParazitYapildi || vitaminYapildi || tartimKalemi;
 
       let planlananAt = onceki?.planlananAt;
-      if (!yapildi && padokA) {
+      if (!yapildi) {
         const gun = hizliBesiPlanGun(k.tip, k.programId);
-        planlananAt = onceki?.planlananAt ?? gunSonraTarih(gun, now);
-      } else if (!yapildi && k.tip === 'vitamin' && k.programId === 'selen-e' && girisYapildi) {
-        planlananAt = onceki?.planlananAt ?? gunSonraTarih(7, now);
+        if (padokA) {
+          planlananAt = onceki?.planlananAt ?? gunSonraTarih(gun, now);
+        } else if (girisYapildi) {
+          planlananAt = onceki?.planlananAt ?? planTarihFromGiris(h, gun, now);
+        }
       }
 
       durumlar.push({

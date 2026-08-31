@@ -259,7 +259,6 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     mlHayvan: null,
     dozNotu: "kg'ye göre ml (iğne)",
     kategori: 'parazit',
-    oncelikli: false,
   },
   {
     id: 'doramektin',

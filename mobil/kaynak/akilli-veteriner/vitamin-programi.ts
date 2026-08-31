@@ -85,7 +85,6 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     dozNotu: 'Ürüne göre kg hesabı olabilir — etikete bak',
     neZaman: 'Eksiklik bölgesi, zayıf kuzu, kas titremesi şüphesi',
     stokAnahtarlar: ['selen', 'selenyum', 'e vitamin'],
-    oncelikli: false,
   },
   {
     id: 'e-vitamin',

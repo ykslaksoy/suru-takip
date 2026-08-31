@@ -8,7 +8,7 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
-import { takviyeTopluGorevleri } from '@/kaynak/gorevler/asi-gorev';
+import { takviyeTopluGorevleri, gorevTakviyeOncelikSira } from '@/kaynak/gorevler/asi-gorev';
 import { getAktifModId, getMod } from '@/sabitler/Modlar';
 import { getMod1BirlesikIlerleme, sonrakiAcikAdim } from '@/kaynak/besi-ortak';
 import { getMod2BirlesikIlerleme, sonrakiAcikAdimMod2 } from '@/kaynak/besi-koc-kat';
@@ -55,12 +55,14 @@ export function bugunTarih(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** En yakın tarih önce · aynı günde acil → sırada → planlı */
+/** En yakın tarih önce · aynı günde sağlık önceliği · sonra acil→sırada→planlı */
 export function gorevleriSirala(gorevler: Gorev[]): Gorev[] {
   const bugun = bugunTarih();
   return [...gorevler].sort((a, b) => {
     const dt = (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
     if (dt !== 0) return dt;
+    const po = gorevTakviyeOncelikSira(a.id) - gorevTakviyeOncelikSira(b.id);
+    if (po !== 0) return po;
     return SEVIYE_SIRASI[a.seviye] - SEVIYE_SIRASI[b.seviye];
   });
 }

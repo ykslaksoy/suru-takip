@@ -19,6 +19,10 @@ import {
   vitaminDozEtiketi,
   vitaminGorevOncelikliMi,
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
+import {
+  ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
+  takviyeGorevOncelikSira,
+} from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
 
 export type TakviyeGorevHayvan = {
@@ -56,6 +60,13 @@ type ProgramOzet = {
   enYakinTarih?: string;
 };
 
+/** takviye-ozet id’sinden öncelik sırası (tarih eşitse) */
+export function gorevTakviyeOncelikSira(id: string): number {
+  const m = id.match(/^takviye-ozet-(asi|parazit|vitamin|tartim)-(.+)$/);
+  if (!m) return 50;
+  return takviyeGorevOncelikSira(m[1] as TakviyeTip, m[2]);
+}
+
 function kalanGunTarih(tarih: string): number {
   return Math.ceil((new Date(tarih).getTime() - Date.now()) / 86400000);
 }
@@ -72,6 +83,8 @@ function seviyeBelirle(
   programId?: string,
   tip?: TakviyeTip,
 ): GorevSeviye {
+  // Tartım: sağlık işleri bitene kadar rozette öne çıkmasın
+  if (tip === 'tartim') return 'plan';
   if (programId && tip && !takviyeGorevOncelikliMi(programId, tip)) return 'plan';
   if (planliMi && kalan != null && kalan > 7) return 'plan';
   if (kalan == null || kalan <= 0) return 'uyari';
@@ -88,6 +101,17 @@ function hesaplaPlanTarihi(kalan: number | null, mevcut?: string): string {
 }
 
 function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTarih'> | null {
+  if (programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID) {
+    const p = ASI_PROGRAMI.find((x) => x.id === 'enterotoksemi');
+    if (!p) return null;
+    return {
+      programId,
+      koruma: 'Enterotoksemi rapel',
+      asiAdi: 'Çelertme 2. doz · 21 gün',
+      mlEtiket: asiDozEtiketi(p),
+      tip: 'asi',
+    };
+  }
   const p = ASI_PROGRAMI.find((x) => x.id === programId);
   if (!p) return null;
   return {
