@@ -14,7 +14,11 @@ import {
   type HayvanKalemDurum,
   type TakviyeTip,
 } from '@/kaynak/akilli-veteriner/mod-takviye';
-import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
+import {
+  VITAMIN_PROGRAMI,
+  vitaminDozEtiketi,
+  vitaminGorevOncelikliMi,
+} from '@/kaynak/akilli-veteriner/vitamin-programi';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
 
 export type TakviyeGorevHayvan = {
@@ -56,7 +60,13 @@ function kalanGunTarih(tarih: string): number {
   return Math.ceil((new Date(tarih).getTime() - Date.now()) / 86400000);
 }
 
-function seviyeBelirle(kalan: number | null, planliMi: boolean): GorevSeviye {
+function seviyeBelirle(
+  kalan: number | null,
+  planliMi: boolean,
+  programId?: string,
+  tip?: TakviyeTip,
+): GorevSeviye {
+  if (tip === 'vitamin' && programId && !vitaminGorevOncelikliMi(programId)) return 'plan';
   if (planliMi && kalan != null && kalan > 7) return 'plan';
   if (kalan == null || kalan <= 0) return 'uyari';
   if (kalan <= 7) return 'sira';
@@ -127,7 +137,7 @@ function ozettenGorev(o: ProgramOzet): Gorev | null {
 
   return {
     id: `takviye-ozet-${o.tip}-${o.programId}`,
-    seviye: seviyeBelirle(kalan, !!planli),
+    seviye: seviyeBelirle(kalan, !!planli, o.programId, o.tip),
     kaynak: kaynakIcin(o.tip),
     baslik,
     aciklama: `${n} kuzu`,

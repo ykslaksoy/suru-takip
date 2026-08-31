@@ -26,7 +26,15 @@ export type VitaminKalemi = {
   neZaman: string;
   /** Stok eşleşmesi */
   stokAnahtarlar: string[];
+  /** false → görevde yalnızca planlı (acil/sırada değil) */
+  oncelikli?: boolean;
 };
+
+/** Görev listesinde acil/sırada sayılır mı (varsayılan: evet) */
+export function vitaminGorevOncelikliMi(programId: string): boolean {
+  const v = VITAMIN_PROGRAMI.find((x) => x.id === programId);
+  return v?.oncelikli !== false;
+}
 
 /** Ekranda "sabit 2 ml" / "yeme karışım" */
 export function vitaminDozEtiketi(v: VitaminKalemi): string {
@@ -77,6 +85,7 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     dozNotu: 'Ürüne göre kg hesabı olabilir — etikete bak',
     neZaman: 'Eksiklik bölgesi, zayıf kuzu, kas titremesi şüphesi',
     stokAnahtarlar: ['selen', 'selenyum', 'e vitamin'],
+    oncelikli: false,
   },
   {
     id: 'e-vitamin',
