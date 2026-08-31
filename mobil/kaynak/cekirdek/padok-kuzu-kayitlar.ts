@@ -13,7 +13,6 @@ import {
   getHealthRecords,
   getWeightRecords,
 } from '@/kaynak/cekirdek/veritabani';
-import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import {
   ASI_PLAN_GUN,
   gunSonraTarih,
@@ -139,20 +138,16 @@ export async function seedPadokAraTartimlari(): Promise<number> {
   return n;
 }
 
-/** Son tartıma göre rasyon planı — FCR hesabı için */
+/** Son tartıma göre rasyon planı — hazır+arpa+yonca+saman karışımı */
 export async function seedPadokRasyonPlanlari(): Promise<number> {
-  const animals = await getAnimals();
-  const padoklar = new Set([ESLESIK_KUZU_PADOK_A, ESLESIK_KUZU_PADOK_B, ESLESIK_KUZU_PADOK_C]);
-  let n = 0;
-  for (const a of animals) {
-    if (!padoklar.has(a.paddock)) continue;
-    const { getWeightRecords, getLatestWeight } = await import('@/kaynak/cekirdek/veritabani');
-    const w = await getLatestWeight(a.id);
-    if (w == null || w <= 0) continue;
-    await upsertRationPlanFromWeight(a, w);
-    n += 1;
-  }
-  return n;
+  const {
+    seedPadokKuzuRasyonTarifi,
+    seedPadokRasyonStoklari,
+    seedPadokHayvanRasyonPlanlari,
+  } = await import('./padok-rasyon');
+  await seedPadokKuzuRasyonTarifi();
+  await seedPadokRasyonStoklari();
+  return seedPadokHayvanRasyonPlanlari();
 }
 
 /** Mod1 plan: A aşı 21 gün sonra · B/C giriş aşıları + 15g tartım yapıldı */

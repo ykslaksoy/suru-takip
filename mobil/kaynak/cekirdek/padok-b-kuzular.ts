@@ -2,8 +2,8 @@
  * Eşleşik kuzu seed’leri — Padok A + B + C.
  *
  * Padok A: ~2–2,5 ay · 17–24 kg · 9–12 bin ₺
- * Padok B: ~3,5 ay · giriş 1 ay önce · ~5,5–7,5 kg artış (~180–250 g/gün)
- * Padok C: 4,5 ay · giriş 2 ay önce · 15 günde bir tartım (5 nokta) · ~11–14 kg artış
+ * Padok B: ~3,5 ay · giriş 1 ay önce · rasyon FCR~4,8 ile ~5–7 kg artış
+ * Padok C: 4,5 ay · giriş 2 ay önce · 15g tartım · rasyon FCR~4,8 ile ~10–14 kg artış
  */
 
 import { addWeightRecord, getAnimals, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
@@ -11,13 +11,23 @@ import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { seedPadokHayvanKayitlari } from './padok-kuzu-kayitlar';
+import { padokBeklenenArtisKg, padokRasyonNotu } from './padok-rasyon';
 
-/** Mevcut tartım kaydını yeniden yazma — ADG/FCR tarihleri kaymasın */
+/** Mevcut tartımın tarihini koru; kilo revizyonunda kg güncelle */
 async function yazTartimEgerYok(
   record: Omit<WeightRecord, 'id'> & { id: string },
 ): Promise<void> {
   const mevcut = await getWeightRecords(record.animalId);
-  if (mevcut.some((r) => r.id === record.id)) return;
+  const eski = mevcut.find((r) => r.id === record.id);
+  if (eski) {
+    if (eski.weightKg === record.weightKg) return;
+    await addWeightRecord({
+      ...record,
+      recordedAt: eski.recordedAt,
+      notes: record.notes,
+    });
+    return;
+  }
   await addWeightRecord(record);
 }
 
@@ -95,7 +105,8 @@ export async function seedPadokAEslesikKuzular(): Promise<{ adet: number; padok:
       modId: 'mod1',
       notes:
         `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
-        `${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~${(k.yasGun / 30).toFixed(1)} ay`,
+        `${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~${(k.yasGun / 30).toFixed(1)} ay · ` +
+        `Rasyon: hazır kuzu yemi + arpa + yonca + saman (yeni alım)`,
     });
     await yazTartimEgerYok({
       id: `${k.id}-alim-tartim`,
@@ -120,7 +131,8 @@ export function padokBGrupKimlik(sira: number) {
   const yasGun = Math.round(100 + t * 10);
   const girisGunOnce = 30;
   const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
-  const artisKg = Math.round((5.5 + t * 2) * 10) / 10; // 1 ay: 5,5–7,5 kg
+  // Rasyon (hazır+arpa+yonca+saman) FCR~4,8 → ~30 günde 5–7 kg
+  const artisKg = padokBeklenenArtisKg(girisKg, girisGunOnce);
   const weightKg = Math.round((girisKg + artisKg) * 10) / 10;
   const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
   const pad = String(sira).padStart(2, '0');
@@ -168,7 +180,8 @@ export async function seedPadokBGrupKuzular(): Promise<{ adet: number; padok: st
       notes:
         `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
         `Giriş ${girisTarih} (1 aydır bakılıyor) · Giriş ${k.girisKg} kg → +${k.artisKg} kg → ` +
-        `Şimdi ${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~3,5 ay`,
+        `Şimdi ${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~3,5 ay · ` +
+        padokRasyonNotu(k.girisKg, 30),
     };
     await upsertAnimal(animal);
     await yazTartimEgerYok({
@@ -203,7 +216,8 @@ export function padokCGrupKimlik(sira: number) {
   // Şu an 4,5 aylık (~135 gün); giriş 2 ay önce → girişte ~2,5 ay
   const yasGun = 135;
   const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
-  const artisKg = Math.round((11 + t * 3) * 10) / 10; // 2 ay: 11–14 kg (~180–230 g/gün)
+  // Rasyon FCR~4,8 → 60 günde ~10–13+ kg
+  const artisKg = padokBeklenenArtisKg(girisKg, girisGunOnce);
   const weightKg = Math.round((girisKg + artisKg) * 10) / 10;
   const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
   const pad = String(sira).padStart(2, '0');
@@ -288,7 +302,8 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
         `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
         `Giriş ${girisTarih} (2 aydır bakılıyor) · 15 günde bir tartım · ` +
         `Giriş ${k.girisKg} kg → +${k.artisKg} kg → Şimdi ${k.weightKg} kg · ` +
-        `Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · 4,5 aylık`,
+        `Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · 4,5 aylık · ` +
+        padokRasyonNotu(k.girisKg, 60),
     };
     await upsertAnimal(animal);
 

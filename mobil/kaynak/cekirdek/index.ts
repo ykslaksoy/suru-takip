@@ -3,4 +3,5 @@ export * from './veritabani';
 export * from './asi-programi';
 export * from './padok-b-kuzular';
 export * from './padok-kuzu-kayitlar';
+export * from './padok-rasyon';
 export * from './hayvan-etiket';
