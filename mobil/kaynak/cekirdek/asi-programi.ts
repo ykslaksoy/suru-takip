@@ -57,7 +57,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     id: 'karma',
     koruma: 'Klostridiyal + pastörella',
     ad: 'Karma aşı',
-    stokAnahtarlar: ['karma', 'heptavac', 'kombine', 'çok bileşen'],
+    stokAnahtarlar: ['karma', 'heptavac', 'kombine', 'çok bileşen', 'çelertme', 'enterotoksemi'],
     tekrarGun: 365,
     hatirlatmaGun: 30,
     dozHayvan: 1,

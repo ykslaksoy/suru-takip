@@ -21,7 +21,6 @@ import {
   vitaminGorevOncelikliMi,
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
-  ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
   KARMA_RAPEL_PROGRAM_ID,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
@@ -110,17 +109,6 @@ function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTar
       programId,
       koruma: 'Klostridiyal + pastörella pekiştirme',
       asiAdi: 'Karma aşı 2. doz',
-      mlEtiket: asiDozEtiketi(p),
-      tip: 'asi',
-    };
-  }
-  if (programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID) {
-    const p = ASI_PROGRAMI.find((x) => x.id === 'enterotoksemi');
-    if (!p) return null;
-    return {
-      programId,
-      koruma: 'Çelertme pekiştirme',
-      asiAdi: 'Enterotoksemi 2. doz',
       mlEtiket: asiDozEtiketi(p),
       tip: 'asi',
     };

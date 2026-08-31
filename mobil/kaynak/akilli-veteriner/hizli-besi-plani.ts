@@ -2,8 +2,8 @@
  * Mod 1 — Hızlı / kapalı kuzu besi aşı · vitamin · hap planı.
  * Giriş koruma + yem dönüşümü desteği; damızlık / süt programından ayrı.
  *
- * Öncelik (Yasin Eymen Çelik + satın alım beside pratik):
- * iç-dış parazit → karma → selenyum → tartım → 21 gün rapel (karma + çelertme).
+ * Öncelik: iç-dış parazit → karma → selenyum → tartım → 21 gün karma rapel.
+ * Karma = klostridiyal + pastörella → ayrı çelertme (enterotoksemi) gerekmez.
  * Tartım: 1–2. gün alım (T1) + 15 günde bir kontrol.
  */
 
@@ -17,9 +17,9 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v8';
+export const HIZLI_BESI_PLAN_SURUM = 'v9';
 
-/** 21. gün çelertme rapel — ayrı plan kalemi */
+/** @deprecated — karma klostridiyal kapsar; hızlı beside kullanılmıyor */
 export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
 
 /** 21. gün karma rapel — ayrı plan kalemi */
@@ -27,7 +27,6 @@ export const KARMA_RAPEL_PROGRAM_ID = 'karma-rapel';
 
 /** Rapel kalemleri → ana aşı programı */
 export const RAPEL_ANA_PROGRAM: Record<string, string> = {
-  [ENTEROTOKSEMI_RAPEL_PROGRAM_ID]: 'enterotoksemi',
   [KARMA_RAPEL_PROGRAM_ID]: 'karma',
 };
 
@@ -41,11 +40,10 @@ export function rapelAnaProgramId(programId: string): string | null {
 
 /**
  * Girişte yapılan / yapılacak koruma (Padok B/C seed’de yapıldı sayılır).
- * Karma = klostridiyal + pastörella; rapeller ayrı kalemdir.
+ * Karma = klostridiyal + pastörella (çelertme dahil) — ayrı enterotoksemi yok.
  */
 export const HIZLI_BESI_GIRIS_ASI_PARAZIT = [
   'karma',
-  'enterotoksemi',
   'albendazol',
   'ivermektin',
 ] as const;
@@ -60,7 +58,7 @@ export const HIZLI_BESI_GIRIS_VITAMIN = [
 
 /**
  * Takvim: girişten sonra kaçıncı gün planlanır.
- * 0 = giriş · 1–2 = alım tartımı · 7 = selenyum · 15 = kontrol tartım · 21 = rapel
+ * 0 = giriş · 1–2 = alım tartımı · 7 = selenyum · 15 = kontrol tartım · 21 = karma rapel
  */
 export const HIZLI_BESI_TAKVIM: {
   tip: 'asi' | 'parazit' | 'vitamin' | 'tartim';
@@ -70,8 +68,12 @@ export const HIZLI_BESI_TAKVIM: {
 }[] = [
   { tip: 'parazit', programId: 'ivermektin', gun: 0, not: 'İç-dış parazit iğne — önce' },
   { tip: 'parazit', programId: 'albendazol', gun: 0, not: 'İç parazit hapı · 1 hap / 10 kg' },
-  { tip: 'asi', programId: 'karma', gun: 0, not: 'Klostridiyal + pastörella (1. doz)' },
-  { tip: 'asi', programId: 'enterotoksemi', gun: 0, not: 'Çelertme — yoğun yem öncesi (1. doz)' },
+  {
+    tip: 'asi',
+    programId: 'karma',
+    gun: 0,
+    not: 'Klostridiyal + pastörella (çelertme dahil · 1. doz)',
+  },
   { tip: 'vitamin', programId: 'ad3e', gun: 0, not: 'Kapalı besi A-D3-E' },
   { tip: 'vitamin', programId: 'b-kompleks', gun: 0, not: 'İştah · stres' },
   { tip: 'vitamin', programId: 'probiyotik', gun: 0, not: 'Rumen / yem değişimi' },
@@ -80,7 +82,6 @@ export const HIZLI_BESI_TAKVIM: {
   { tip: 'vitamin', programId: 'selen-e', gun: 7, not: 'Kas · beyaz kas riski' },
   { tip: 'tartim', programId: TARTIM_15_PROGRAM_ID, gun: 15, not: 'Kontrol tartımı — sağlık sonrası' },
   { tip: 'asi', programId: KARMA_RAPEL_PROGRAM_ID, gun: 21, not: 'Karma rapel (2. doz · 21 gün)' },
-  { tip: 'asi', programId: ENTEROTOKSEMI_RAPEL_PROGRAM_ID, gun: 21, not: 'Çelertme rapel (2. doz · 21 gün)' },
 ];
 
 /** Görev listesi sırası — düşük = önce (tartım / rapel en sonda) */
@@ -88,12 +89,10 @@ export function takviyeGorevOncelikSira(tip: TakviyeTip, programId: string): num
   if (programId === TARTIM_GIRIS_PROGRAM_ID) return 20;
   if (tip === 'tartim') return 100;
   if (programId === KARMA_RAPEL_PROGRAM_ID) return 94;
-  if (programId === ENTEROTOKSEMI_RAPEL_PROGRAM_ID) return 95;
   const sira: Record<string, number> = {
     ivermektin: 1,
     albendazol: 2,
     karma: 3,
-    enterotoksemi: 4,
     'selen-e': 5,
     ad3e: 10,
     'b-kompleks': 11,
@@ -107,24 +106,14 @@ function kalemOlustur(
   tip: ModTakviyeKalemi['tip'],
   programId: string,
 ): ModTakviyeKalemi | null {
-  const anaId = rapelAnaProgramId(programId);
-  if (anaId) {
-    const p = ASI_PROGRAMI.find((x) => x.id === anaId);
+  if (programId === KARMA_RAPEL_PROGRAM_ID) {
+    const p = ASI_PROGRAMI.find((x) => x.id === 'karma');
     if (!p) return null;
-    if (programId === KARMA_RAPEL_PROGRAM_ID) {
-      return {
-        tip: 'asi',
-        programId: KARMA_RAPEL_PROGRAM_ID,
-        ad: 'Klostridiyal + pastörella pekiştirme',
-        detay: 'Karma aşı 2. doz',
-        mlEtiket: asiDozEtiketi(p),
-      };
-    }
     return {
       tip: 'asi',
-      programId: ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
-      ad: 'Çelertme pekiştirme',
-      detay: 'Enterotoksemi 2. doz',
+      programId: KARMA_RAPEL_PROGRAM_ID,
+      ad: 'Klostridiyal + pastörella pekiştirme',
+      detay: 'Karma aşı 2. doz',
       mlEtiket: asiDozEtiketi(p),
     };
   }
@@ -170,7 +159,7 @@ function kalemOlustur(
 }
 
 /**
- * Mod 1 şablonu — veteriner sırası: parazit → aşı → alım tartım → selenyum → 15g tartım → rapel.
+ * Mod 1 şablonu — parazit → karma → alım tartım → selenyum → 15g tartım → karma rapel.
  */
 export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
   const seen = new Set<string>();
@@ -180,7 +169,6 @@ export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
     { tip: 'parazit', id: 'ivermektin' },
     { tip: 'parazit', id: 'albendazol' },
     { tip: 'asi', id: 'karma' },
-    { tip: 'asi', id: 'enterotoksemi' },
     { tip: 'vitamin', id: 'ad3e' },
     { tip: 'vitamin', id: 'b-kompleks' },
     { tip: 'vitamin', id: 'probiyotik' },
@@ -189,7 +177,6 @@ export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
     { tip: 'vitamin', id: 'selen-e' },
     { tip: 'tartim', id: TARTIM_15_PROGRAM_ID },
     { tip: 'asi', id: KARMA_RAPEL_PROGRAM_ID },
-    { tip: 'asi', id: ENTEROTOKSEMI_RAPEL_PROGRAM_ID },
   ];
 
   for (const s of sira) {
@@ -214,4 +201,4 @@ export function hizliBesiPlanGun(tip: string, programId: string): number {
 }
 
 export const HIZLI_BESI_PLAN_BASLIK =
-  'Hızlı besi — parazit · karma · alım tartım · selenyum · 15g tartım · 21g rapel';
+  'Hızlı besi — parazit · karma · alım tartım · selenyum · 15g tartım · 21g karma rapel';
