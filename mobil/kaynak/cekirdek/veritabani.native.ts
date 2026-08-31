@@ -264,18 +264,48 @@ export async function calculateADG(animalId: string, days = 30): Promise<number 
   return Math.round(((latest.weightKg - older.weightKg) / dayDiff) * 1000);
 }
 
-export async function getHealthRecords(animalId?: string): Promise<(HealthRecord & { earTag?: string })[]> {
+export type HealthRecordsOpts = {
+  /** Yoksa hayvan bazında limitsiz; genel listede varsayılan 50. `null` = limitsiz. */
+  limit?: number | null;
+};
+
+export async function getHealthRecords(
+  animalId?: string,
+  opts?: HealthRecordsOpts,
+): Promise<(HealthRecord & { earTag?: string; sirtNo?: string | null })[]> {
   const database = await getDatabase();
-  const query = animalId
-    ? `SELECT h.*, a.ear_tag FROM health_records h JOIN animals a ON a.id = h.animal_id WHERE h.animal_id = ? ORDER BY h.recorded_at DESC`
-    : `SELECT h.*, a.ear_tag FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC LIMIT 50`;
-  const rows = await database.getAllAsync<Record<string, unknown>>(query, animalId ? [animalId] : []);
-  return rows.map((row) => ({
-    id: row.id as string, animalId: row.animal_id as string, recordType: row.record_type as HealthRecord['recordType'],
-    symptoms: row.symptoms as string, diagnosis: row.diagnosis as string, treatment: row.treatment as string,
-    medicine: row.medicine as string, withdrawalDays: row.withdrawal_days as number, vetName: row.vet_name as string,
-    recordedAt: row.recorded_at as string, notes: row.notes as string, earTag: row.ear_tag as string,
-  }));
+  if (animalId) {
+    const rows = await database.getAllAsync<Record<string, unknown>>(
+      `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id WHERE h.animal_id = ? ORDER BY h.recorded_at DESC`,
+      [animalId],
+    );
+    return rows.map(mapHealthRow);
+  }
+  const limit = opts?.limit === null ? null : opts?.limit ?? 50;
+  const sql =
+    limit == null
+      ? `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC`
+      : `SELECT h.*, a.ear_tag, a.sirt_no FROM health_records h JOIN animals a ON a.id = h.animal_id ORDER BY h.recorded_at DESC LIMIT ?`;
+  const rows = await database.getAllAsync<Record<string, unknown>>(sql, limit == null ? [] : [limit]);
+  return rows.map(mapHealthRow);
+}
+
+function mapHealthRow(row: Record<string, unknown>): HealthRecord & { earTag?: string; sirtNo?: string | null } {
+  return {
+    id: row.id as string,
+    animalId: row.animal_id as string,
+    recordType: row.record_type as HealthRecord['recordType'],
+    symptoms: row.symptoms as string,
+    diagnosis: row.diagnosis as string,
+    treatment: row.treatment as string,
+    medicine: row.medicine as string,
+    withdrawalDays: row.withdrawal_days as number,
+    vetName: row.vet_name as string,
+    recordedAt: row.recorded_at as string,
+    notes: row.notes as string,
+    earTag: row.ear_tag as string,
+    sirtNo: (row.sirt_no as string) || null,
+  };
 }
 
 export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: string }): Promise<HealthRecord> {
@@ -293,7 +323,7 @@ export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: 
 }
 
 export async function getActiveWithdrawals(): Promise<(HealthRecord & { earTag: string })[]> {
-  const records = await getHealthRecords();
+  const records = await getHealthRecords(undefined, { limit: null });
   const now = Date.now();
   return records.filter((r) => r.withdrawalDays && r.medicine && new Date(r.recordedAt).getTime() + r.withdrawalDays * 86400000 > now) as (HealthRecord & { earTag: string })[];
 }

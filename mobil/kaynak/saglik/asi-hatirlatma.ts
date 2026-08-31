@@ -11,6 +11,7 @@ export type AsiBuHaftaSatir = {
   mlEtiket: string;
   animalId: string;
   earTag: string;
+  etiket: string;
   durum: 'yapilacak' | 'yaklasiyor';
   kalanGun: number | null;
 };
@@ -30,6 +31,7 @@ export function asiBuHaftaListesi(durumlar: AsiStokDurum[]): AsiBuHaftaSatir[] {
         mlEtiket: d.mlEtiket,
         animalId: h.animalId,
         earTag: h.earTag,
+        etiket: h.etiket || h.earTag,
         durum: h.durum,
         kalanGun: h.kalanGun,
       });
@@ -97,7 +99,7 @@ export async function asiHatirlatmalariYenile(
     await Notifications.scheduleNotificationAsync({
       content: {
         title: s.durum === 'yapilacak' ? 'Aşı yapılacak' : 'Aşı yaklaşıyor',
-        body: `${s.koruma} (${s.asiAdi}) ${s.mlEtiket} · ${s.earTag || 'hayvan'}`,
+        body: `${s.koruma} (${s.asiAdi}) ${s.mlEtiket} · ${s.etiket || s.earTag || 'hayvan'}`,
         data: { animalId: s.animalId, programId: s.programId },
       },
       trigger: {

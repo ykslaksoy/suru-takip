@@ -12,6 +12,7 @@ import {
   type SutYonlendirme,
 } from '@/kaynak/sut';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 
 type Props = {
   adim: 'laktasyon' | 'yonlendirme' | null;
@@ -63,7 +64,7 @@ export function Mod4IslemPaneli({ adim, onDegisti }: Props) {
                   },
                 ]}>
                 <Text style={{ color: aktif ? '#fff' : colors.text, fontWeight: '700', fontSize: 12 }}>
-                  {a.earTag || a.name}
+                  {hayvanAnaEtiket(a)}
                 </Text>
               </Pressable>
             );

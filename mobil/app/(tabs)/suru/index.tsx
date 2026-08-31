@@ -83,7 +83,7 @@ export default function FlockScreen() {
         onSelect={(k) => setFilter(k as Filter)}
       />
       <TextInput
-        placeholder="Küpe, isim veya TÜRKVET ara..."
+        placeholder="Küpe, sırt no, Aref veya TÜRKVET ara..."
         placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}

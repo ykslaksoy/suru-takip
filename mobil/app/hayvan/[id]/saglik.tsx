@@ -6,7 +6,9 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { HealthRecord } from '@/kaynak/cekirdek/tipler';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
 
 export default function AnimalHealthScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,6 +16,7 @@ export default function AnimalHealthScreen() {
   const colors = Colors[scheme];
   const { refreshKey, refresh } = useDatabase();
   const [records, setRecords] = useState<HealthRecord[]>([]);
+  const [animal, setAnimal] = useState<Animal | null>(null);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({
     recordType: 'illness' as HealthRecord['recordType'],
@@ -28,6 +31,7 @@ export default function AnimalHealthScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
+    setAnimal(await getAnimal(id));
     setRecords(await getHealthRecords(id));
   }, [id]);
 
@@ -67,6 +71,14 @@ export default function AnimalHealthScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {animal ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          <Text style={{ color: colors.text, fontWeight: '800', fontSize: 18 }}>{hayvanAnaEtiket(animal)}</Text>
+          {hayvanAltEtiket(animal) ? (
+            <Text style={{ color: colors.textSecondary, marginTop: 2 }}>{hayvanAltEtiket(animal)}</Text>
+          ) : null}
+        </View>
+      ) : null}
       <FlatList
         data={records}
         keyExtractor={(r) => r.id}

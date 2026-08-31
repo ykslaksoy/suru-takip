@@ -127,19 +127,23 @@ export async function uygulaSuruTedavisi(
   };
 }
 
-/** Kulak küpe ile hayvan bul */
+/** Küpe / sırt / Aref / TÜRKVET ile hayvan bul */
 export async function hayvanBulKupe(
   kupe: string
 ): Promise<{ id: string; earTag: string; paddock: string; kiloKg: number | null } | null> {
   const { getLatestWeight } = await import('@/kaynak/cekirdek/veritabani');
+  const { hayvanAnaEtiket } = await import('@/kaynak/cekirdek/hayvan-etiket');
   const term = kupe.trim().toLowerCase();
   if (!term) return null;
+  const digits = term.replace(/\D/g, '');
   const animals = await getAnimals({ search: kupe.trim() });
   const a =
+    animals.find((x) => (x.sirtNo ?? '').toLowerCase() === term || (x.sirtNo ?? '') === digits) ??
     animals.find((x) => x.earTag.toLowerCase() === term) ??
     animals.find((x) => x.turkvetNo.toLowerCase().includes(term)) ??
+    animals.find((x) => (x.gehisId ?? '').toLowerCase().includes(term)) ??
     animals[0];
   if (!a) return null;
   const kiloKg = await getLatestWeight(a.id);
-  return { id: a.id, earTag: a.earTag, paddock: a.paddock, kiloKg };
+  return { id: a.id, earTag: hayvanAnaEtiket(a), paddock: a.paddock, kiloKg };
 }

@@ -1,4 +1,5 @@
 import type { Animal, HealthRecord, StockItem } from './tipler';
+import { hayvanAnaEtiket } from './hayvan-etiket';
 
 /** Standart aşı / parazit programı — 1 doz / hayvan */
 export type AsiProgramKategori = 'asi' | 'parazit';
@@ -268,6 +269,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
 export type AsiHayvanDurum = {
   animalId: string;
   earTag: string;
+  /** Ekranda gösterim — sırt / küpe */
+  etiket: string;
   sonAsiAt: string | null;
   durum: 'yapilacak' | 'yaklasiyor' | 'tamam';
   kalanGun: number | null;
@@ -380,6 +383,7 @@ export function hesaplaAsiStokDurumu(
         return {
           animalId: a.id,
           earTag: a.earTag,
+          etiket: hayvanAnaEtiket(a),
           sonAsiAt: null,
           durum: 'yapilacak',
           kalanGun: null,
@@ -393,6 +397,7 @@ export function hesaplaAsiStokDurumu(
       return {
         animalId: a.id,
         earTag: a.earTag,
+        etiket: hayvanAnaEtiket(a),
         sonAsiAt: last.recordedAt,
         durum,
         kalanGun,

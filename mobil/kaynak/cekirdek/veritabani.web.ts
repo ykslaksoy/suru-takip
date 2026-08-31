@@ -126,15 +126,32 @@ export async function calculateADG(animalId: string, days = 30): Promise<number 
   return Math.round(((latest.weightKg - older.weightKg) / dayDiff) * 1000);
 }
 
-export async function getHealthRecords(animalId?: string): Promise<(HealthRecord & { earTag?: string })[]> {
+export type HealthRecordsOpts = {
+  /** Yoksa hayvan bazında limitsiz; genel listede varsayılan 50. `null` = limitsiz. */
+  limit?: number | null;
+};
+
+export async function getHealthRecords(
+  animalId?: string,
+  opts?: HealthRecordsOpts,
+): Promise<(HealthRecord & { earTag?: string; sirtNo?: string | null })[]> {
   const health = await read<HealthRecord>(KEYS.health);
   const animals = await read<Animal>(KEYS.animals);
-  const mapped = health.map((h) => ({
-    ...h,
-    earTag: animals.find((a) => a.id === h.animalId)?.earTag,
-  }));
+  const mapped = health.map((h) => {
+    const a = animals.find((x) => x.id === h.animalId);
+    return {
+      ...h,
+      earTag: a?.earTag,
+      sirtNo: a?.sirtNo ?? null,
+    };
+  });
   const filtered = animalId ? mapped.filter((h) => h.animalId === animalId) : mapped;
-  return filtered.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()).slice(0, animalId ? undefined : 50);
+  const sorted = filtered.sort(
+    (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
+  );
+  if (animalId) return sorted;
+  const limit = opts?.limit === null ? null : opts?.limit ?? 50;
+  return limit == null ? sorted : sorted.slice(0, limit);
 }
 
 export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: string }): Promise<HealthRecord> {
@@ -148,7 +165,7 @@ export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: 
 }
 
 export async function getActiveWithdrawals(): Promise<(HealthRecord & { earTag: string })[]> {
-  const records = await getHealthRecords();
+  const records = await getHealthRecords(undefined, { limit: null });
   const now = Date.now();
   return records.filter((r) => {
     if (!r.withdrawalDays || !r.medicine) return false;

@@ -11,10 +11,11 @@ import {
 import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
 import { kaydetYemSayim, clearAllYemSayim } from '@/kaynak/stok/sayim';
 import { kaydetKatalogKullanim, clearKatalogKullanim } from '@/kaynak/stok/kullanim';
-import { seedTumEslesikKuzular } from './padok-b-kuzular';
+import { seedTumEslesikKuzular, ensurePadokKuzuVerisi } from './padok-b-kuzular';
 
 export {
   seedTumEslesikKuzular,
+  ensurePadokKuzuVerisi,
   seedPadokAEslesikKuzular,
   seedPadokBEslesikKuzular,
   seedPadokBGrupKuzular,
@@ -29,7 +30,7 @@ export {
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
   if (count > 0) {
-    await seedTumEslesikKuzular();
+    await ensurePadokKuzuVerisi();
     return false;
   }
 

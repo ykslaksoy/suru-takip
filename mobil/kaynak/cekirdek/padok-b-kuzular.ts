@@ -6,11 +6,20 @@
  * Padok C: 4,5 ay · giriş 2 ay önce · 15 günde bir tartım (5 nokta) · ~11–14 kg artış
  */
 
-import { addWeightRecord, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { addWeightRecord, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
-import type { Animal } from '@/kaynak/cekirdek/tipler';
+import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { seedPadokHayvanKayitlari } from './padok-kuzu-kayitlar';
+
+/** Mevcut tartım kaydını yeniden yazma — ADG/FCR tarihleri kaymasın */
+async function yazTartimEgerYok(
+  record: Omit<WeightRecord, 'id'> & { id: string },
+): Promise<void> {
+  const mevcut = await getWeightRecords(record.animalId);
+  if (mevcut.some((r) => r.id === record.id)) return;
+  await addWeightRecord(record);
+}
 
 export const PADOK_A_KUZU_ADET = 20;
 export const PADOK_B_KUZU_ADET = 20;
@@ -88,7 +97,7 @@ export async function seedPadokAEslesikKuzular(): Promise<{ adet: number; padok:
         `Eşleşik: Sırt ${k.sirtNo} · Küpe ${k.earTag} · Aref ${k.arefId} · ` +
         `${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~${(k.yasGun / 30).toFixed(1)} ay`,
     });
-    await addWeightRecord({
+    await yazTartimEgerYok({
       id: `${k.id}-alim-tartim`,
       animalId: k.id,
       weightKg: k.weightKg,
@@ -162,14 +171,14 @@ export async function seedPadokBGrupKuzular(): Promise<{ adet: number; padok: st
         `Şimdi ${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ~3,5 ay`,
     };
     await upsertAnimal(animal);
-    await addWeightRecord({
+    await yazTartimEgerYok({
       id: `${k.id}-giris-tartim`,
       animalId: k.id,
       weightKg: k.girisKg,
       recordedAt: girisIso,
       notes: `Giriş tartımı · ${k.alimFiyat} ₺ · ${girisTarih}`,
     });
-    await addWeightRecord({
+    await yazTartimEgerYok({
       id: `${k.id}-guncel-tartim`,
       animalId: k.id,
       weightKg: k.weightKg,
@@ -295,7 +304,7 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
             : gunGecen === 30
               ? 'ara-tartim'
               : `tartim-gun-${gunGecen}`;
-      await addWeightRecord({
+      await yazTartimEgerYok({
         id: `${k.id}-${idSuffix}`,
         animalId: k.id,
         weightKg: nokta.weightKg,
@@ -311,10 +320,15 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
   return { adet: PADOK_C_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_C };
 }
 
-/** Padok A + B + C + aşı/tartım/FCR kayıtları */
+/** Padok A + B + C + aşı/tartım/FCR — mevcut tartımları yeniden yazmaz */
 export async function seedTumEslesikKuzular(): Promise<void> {
   await seedPadokAEslesikKuzular();
   await seedPadokBGrupKuzular();
   await seedPadokCGrupKuzular();
   await seedPadokHayvanKayitlari();
+}
+
+/** Mevcut kurulumda padok verisini tamamla (tartım tarihlerini bozmaz) */
+export async function ensurePadokKuzuVerisi(): Promise<void> {
+  await seedTumEslesikKuzular();
 }

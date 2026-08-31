@@ -10,6 +10,7 @@ import {
   kuzulatmaDurumuOku,
 } from '@/kaynak/besi-koc-kat';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { useFocusEffect } from 'expo-router';
 
 type Props = {
@@ -51,7 +52,7 @@ export function Mod2IslemPaneli({ adim, onDegisti }: Props) {
           oneriler.slice(0, 8).map(({ kuzu, adayAnneler }) => (
             <View key={kuzu.id} style={styles.rowBlock}>
               <Text style={{ color: colors.text, fontWeight: '700' }}>
-                {kuzu.earTag || kuzu.name || 'Kuzu'}
+                {hayvanAnaEtiket(kuzu)}
               </Text>
               <View style={styles.chips}>
                 {(adayAnneler.length ? adayAnneler : []).slice(0, 6).map((anne) => {
@@ -68,7 +69,7 @@ export function Mod2IslemPaneli({ adim, onDegisti }: Props) {
                         },
                       ]}>
                       <Text style={{ color: aktif ? '#fff' : colors.text, fontSize: 12, fontWeight: '700' }}>
-                        {anne.earTag || anne.name}
+                        {hayvanAnaEtiket(anne)}
                       </Text>
                     </Pressable>
                   );
@@ -107,7 +108,7 @@ export function Mod2IslemPaneli({ adim, onDegisti }: Props) {
           besiAday.slice(0, 10).map((a) => (
             <View key={a.id} style={styles.listRow}>
               <Text style={{ color: colors.text, flex: 1, fontWeight: '600' }}>
-                {a.earTag || a.name} · {a.paddock || 'padoksuz'}
+                {hayvanAnaEtiket(a)} · {a.paddock || 'padoksuz'}
               </Text>
               <Pressable
                 onPress={async () => {

@@ -45,7 +45,7 @@ export function AsiTakvimi() {
   const tekHayvanUygula = (s: AsiBuHaftaSatir) => {
     Alert.alert(
       'Aşı / parazit uygula',
-      `${s.earTag || 'Hayvan'}\n${s.koruma} (${s.asiAdi}) ${s.mlEtiket}\n\nSağlık kaydı yazılır, stok düşülür.`,
+      `${s.etiket || s.earTag || 'Hayvan'}\n${s.koruma} (${s.asiAdi}) ${s.mlEtiket}\n\nSağlık kaydı yazılır, stok düşülür.`,
       [
         { text: 'İptal', style: 'cancel' },
         {
@@ -98,7 +98,7 @@ export function AsiTakvimi() {
               onPress={() => tekHayvanUygula(s)}
               style={styles.weekRow}>
               <Text style={{ color: colors.text, flex: 1, fontWeight: '600' }}>
-                {s.earTag || '—'} · {s.koruma} ({s.asiAdi}) {s.mlEtiket}
+                {s.etiket || s.earTag || '—'} · {s.koruma} ({s.asiAdi}) {s.mlEtiket}
               </Text>
               <Text style={{ color: s.durum === 'yapilacak' ? colors.danger : colors.warning, fontWeight: '800', fontSize: 12 }}>
                 {s.durum === 'yapilacak'

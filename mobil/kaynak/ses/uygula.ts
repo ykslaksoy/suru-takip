@@ -1,14 +1,27 @@
 import { addHealthRecord, addWeightRecord, adjustStock, getAnimals, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { v4 as uuidv4 } from 'uuid';
 import type { SesKomutEylemi } from './tipler';
 
-async function hayvanBul(kupeArama: string) {
-  const list = await getAnimals({ search: kupeArama });
-  return list.find(
-    (a) =>
-      a.earTag.toUpperCase().includes(kupeArama.toUpperCase()) ||
-      a.turkvetNo.includes(kupeArama)
-  ) ?? list[0] ?? null;
+async function hayvanBul(arama: string) {
+  const term = arama.trim();
+  if (!term) return null;
+  const list = await getAnimals({ search: term });
+  const upper = term.toUpperCase();
+  const digits = term.replace(/\D/g, '');
+  return (
+    list.find((a) => a.sirtNo?.trim() === term || a.sirtNo?.trim() === digits) ??
+    list.find((a) => a.earTag.toUpperCase() === upper) ??
+    list.find(
+      (a) =>
+        a.earTag.toUpperCase().includes(upper) ||
+        a.turkvetNo.toUpperCase().includes(upper) ||
+        (a.gehisId ?? '').toUpperCase().includes(upper) ||
+        (a.sirtNo ?? '').includes(digits || term),
+    ) ??
+    list[0] ??
+    null
+  );
 }
 
 /** Onaylandıktan sonra eylemi veritabanına yazar */
@@ -17,7 +30,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
     case 'tartim': {
       const animal = await hayvanBul(eylem.kupeArama);
       if (!animal) {
-        return { ok: false, hata: `${eylem.kupeArama} küpeli hayvan bulunamadı.` };
+        return { ok: false, hata: `${eylem.kupeArama} kayıtlı hayvan bulunamadı.` };
       }
       await addWeightRecord({
         id: uuidv4(),
@@ -31,7 +44,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
     case 'asi': {
       const animal = await hayvanBul(eylem.kupeArama);
       if (!animal) {
-        return { ok: false, hata: `${eylem.kupeArama} küpeli hayvan bulunamadı.` };
+        return { ok: false, hata: `${eylem.kupeArama} kayıtlı hayvan bulunamadı.` };
       }
       await addHealthRecord({
         id: uuidv4(),
@@ -44,7 +57,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         withdrawalDays: 0,
         vetName: '',
         recordedAt: new Date().toISOString().split('T')[0],
-        notes: 'Sesli komut',
+        notes: `Sesli komut · ${hayvanAnaEtiket(animal)}`,
       });
       return { ok: true };
     }

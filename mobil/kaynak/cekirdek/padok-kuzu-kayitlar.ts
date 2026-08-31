@@ -11,6 +11,7 @@ import {
   addWeightRecord,
   getAnimals,
   getHealthRecords,
+  getWeightRecords,
 } from '@/kaynak/cekirdek/veritabani';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import {
@@ -26,6 +27,7 @@ import {
   ESLESIK_KUZU_PADOK_B,
   ESLESIK_KUZU_PADOK_C,
 } from './padok-b-kuzular';
+import { hayvanAnaEtiket } from './hayvan-etiket';
 
 const MOD1_GIRIS_ASI_PARAZIT = [
   'karma',
@@ -113,7 +115,8 @@ export async function seedPadokAraTartimlari(): Promise<number> {
   let n = 0;
   for (const a of animals) {
     if (a.paddock !== ESLESIK_KUZU_PADOK_B) continue;
-    const records = await import('@/kaynak/cekirdek/veritabani').then((m) => m.getWeightRecords(a.id));
+    const records = await getWeightRecords(a.id);
+    if (records.some((r) => r.id === `${a.id}-ara-tartim`)) continue;
     const sorted = [...records].sort(
       (x, y) => new Date(x.recordedAt).getTime() - new Date(y.recordedAt).getTime(),
     );
@@ -182,7 +185,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
 
       durumlar.push({
         animalId: h.id,
-        earTag: h.earTag,
+        earTag: hayvanAnaEtiket(h),
         tip: k.tip,
         programId: k.programId,
         yapildi: asiParazitYapildi,

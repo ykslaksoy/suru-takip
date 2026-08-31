@@ -8,6 +8,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { getActiveWithdrawals, getHealthRecords } from '@/kaynak/cekirdek/veritabani';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 
 type Sekme = 'kayitlar' | 'asi' | 'bekletme';
 
@@ -85,7 +86,14 @@ export default function HealthOverviewScreen() {
                   styles.card,
                   { backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16 },
                 ])}>
-                <Text style={[styles.tag, { color: colors.tint }]}>{item.earTag}</Text>
+                <Text style={[styles.tag, { color: colors.tint }]}>
+                  {hayvanAnaEtiket({
+                    earTag: item.earTag ?? '',
+                    sirtNo: item.sirtNo ?? null,
+                    gehisId: null,
+                    name: '',
+                  })}
+                </Text>
                 <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
                   {item.medicine || item.treatment || item.diagnosis || 'Aşı kaydı'}
                 </Text>
@@ -120,7 +128,14 @@ export default function HealthOverviewScreen() {
           renderItem={({ item }) => (
             <Link href={`/hayvan/${item.animalId}/saglik`} asChild>
               <Pressable style={StyleSheet.flatten([styles.card, { backgroundColor: colors.card, borderColor: colors.border }])}>
-                <Text style={[styles.tag, { color: colors.tint }]}>{item.earTag}</Text>
+                <Text style={[styles.tag, { color: colors.tint }]}>
+                  {hayvanAnaEtiket({
+                    earTag: item.earTag ?? '',
+                    sirtNo: item.sirtNo ?? null,
+                    gehisId: null,
+                    name: '',
+                  })}
+                </Text>
                 <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
                   {item.symptoms || item.diagnosis || item.treatment || 'Kayıt'}
                 </Text>

@@ -5,6 +5,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { damizlikAdayIsaretle, secereBagla, secilimSirala, type DamizlikSkor } from '@/kaynak/damizlik';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 
 type Props = {
   adim: 'aday' | 'kimlik' | 'seleksiyon' | null;
@@ -47,7 +48,7 @@ export function Mod3IslemPaneli({ adim, onDegisti }: Props) {
           style={[styles.row, { borderColor: colors.border }]}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: colors.text, fontWeight: '800' }}>
-              {s.animal.earTag || s.animal.name} · skor {s.skor}
+              {hayvanAnaEtiket(s.animal)} · skor {s.skor}
               {s.aday ? ' · aday' : ''}
             </Text>
             <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>

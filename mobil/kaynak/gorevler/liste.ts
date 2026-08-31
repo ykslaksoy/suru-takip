@@ -6,6 +6,7 @@ import {
   getLowStockItems,
   getStockItems,
 } from '@/kaynak/cekirdek/veritabani';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
 import { getAktifModId, getMod } from '@/sabitler/Modlar';
@@ -162,14 +163,14 @@ export async function getGorevler(): Promise<Gorev[]> {
       seviye: 'uyari',
       kaynak: 'bekletme',
       baslik: 'Bekletme',
-      aciklama: `${w.earTag ?? 'Hayvan'} · ${w.medicine} · ${gun} gün kaldı`,
+      aciklama: `${hayvanAnaEtiket({ earTag: w.earTag ?? '', sirtNo: (w as { sirtNo?: string | null }).sirtNo ?? null, gehisId: null, name: '' })} · ${w.medicine} · ${gun} gün kaldı`,
       href: `/hayvan/${w.animalId}/saglik`,
       cta: 'Kayıt aç',
     });
   }
 
   const animals = await getAnimals();
-  const health = await getHealthRecords();
+  const health = await getHealthRecords(undefined, { limit: null });
   const stock = await getStockItems();
   const asiDurum = hesaplaAsiStokDurumu(animals, health, stock);
 
@@ -195,8 +196,8 @@ export async function getGorevler(): Promise<Gorev[]> {
       baslik: `${s.koruma} (${s.asiAdi}) ${s.mlEtiket}`,
       aciklama:
         s.durum === 'yapilacak'
-          ? `${s.earTag || 'Hayvan'} · aşı zamanı geldi`
-          : `${s.earTag || 'Hayvan'} · ${s.kalanGun ?? '?'} gün içinde`,
+          ? `${s.etiket || s.earTag || 'Hayvan'} · aşı zamanı geldi`
+          : `${s.etiket || s.earTag || 'Hayvan'} · ${s.kalanGun ?? '?'} gün içinde`,
       href: `/hayvan/${s.animalId}/saglik`,
       cta: 'Kayıt aç',
     });
@@ -258,7 +259,7 @@ export async function getGorevler(): Promise<Gorev[]> {
       seviye: 'sira',
       kaynak: 'saglik',
       baslik: 'Sağlık takibi',
-      aciklama: `${h.earTag || h.name} hasta — tedavi / kontrol`,
+      aciklama: `${hayvanAnaEtiket(h)} hasta — tedavi / kontrol`,
       href: `/hayvan/${h.id}/saglik`,
       cta: 'Kayıt aç',
     });
@@ -273,7 +274,7 @@ export async function getGorevler(): Promise<Gorev[]> {
         seviye: 'sira',
         kaynak: 'tartim',
         baslik: 'Tartım yok',
-        aciklama: `${a.earTag || a.name || 'Hayvan'} · henüz tartım kaydı yok`,
+        aciklama: `${hayvanAnaEtiket(a)} · henüz tartım kaydı yok`,
         href: `/hayvan/${a.id}/kilo`,
         cta: 'Tartım gir',
       });

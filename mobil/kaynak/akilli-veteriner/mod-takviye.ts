@@ -7,8 +7,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
-import type { Animal, AnimalModId, StockItem } from '@/kaynak/cekirdek/tipler';
-import { addHealthRecord, adjustStock, getAnimals, getStockItems, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import type { Animal, AnimalModId, HealthRecord, StockItem } from '@/kaynak/cekirdek/tipler';
+import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
+import {
+  addHealthRecord,
+  adjustStock,
+  getAnimals,
+  getHealthRecords,
+  getStockItems,
+  upsertAnimal,
+} from '@/kaynak/cekirdek/veritabani';
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
@@ -204,12 +212,13 @@ function durumMatrisi(
     for (const k of kalemler) {
       const key = `${h.id}|${kalemAnahtar(k.tip, k.programId)}`;
       const eski = map.get(key);
+      const etiket = hayvanAnaEtiket(h);
       out.push(
         eski
-          ? { ...eski, earTag: h.earTag }
+          ? { ...eski, earTag: etiket }
           : {
               animalId: h.id,
-              earTag: h.earTag,
+              earTag: etiket,
               tip: k.tip,
               programId: k.programId,
               yapildi: false,
@@ -220,9 +229,56 @@ function durumMatrisi(
   return out;
 }
 
+function normalize(s: string): string {
+  return s
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i');
+}
+
+function eslesir(metin: string, anahtarlar: string[]): boolean {
+  const n = normalize(metin);
+  return anahtarlar.some((k) => n.includes(normalize(k)));
+}
+
+/** Sağlık kayıtlarından aşı/parazit yapıldı bilgisini birleştir */
+function durumlariSagliklaBirlestir(
+  durumlar: HayvanKalemDurum[],
+  kalemler: ModTakviyeKalemi[],
+  health: HealthRecord[],
+): HayvanKalemDurum[] {
+  return durumlar.map((d) => {
+    if (d.yapildi) return d;
+    if (d.tip === 'vitamin') return d;
+    const program = ASI_PROGRAMI.find((p) => p.id === d.programId);
+    if (!program) return d;
+    const kategori = asiKategori(program);
+    const related = health
+      .filter((h) => {
+        if (h.animalId !== d.animalId) return false;
+        if (kategori === 'parazit') {
+          return h.recordType === 'vaccine' || h.recordType === 'treatment';
+        }
+        return h.recordType === 'vaccine';
+      })
+      .filter((h) =>
+        eslesir(`${h.medicine} ${h.treatment} ${h.diagnosis}`, [
+          program.koruma,
+          program.ad,
+          ...program.stokAnahtarlar,
+        ]),
+      )
+      .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+    const last = related[0];
+    if (!last) return d;
+    return { ...d, yapildi: true, yapildiAt: last.recordedAt };
+  });
+}
+
 /**
- * Aktif (veya verilen) mod için aşı+vitamin planı oluştur.
- * Atanmamış hayvanları bu moda bağlar; tüm mod hayvanlarını dahil eder.
+ * Aktif (veya verilen) mod için aşı+vitamin planı oluştur / yenile.
+ * Mevcut planın yapıldı durumları + sağlık kayıtları korunur.
  */
 export async function olusturModTakviyePlani(opts?: {
   modId?: UrunModId;
@@ -235,19 +291,22 @@ export async function olusturModTakviyePlani(opts?: {
   const kalemler = opts?.kalemler ?? modTakviyeSablonu(modId);
   const mod = getMod(modId);
   const tarih = opts?.tarih ?? new Date().toISOString().slice(0, 10);
+  const mevcut = await aktifPlanOku(modId);
+  const health = await getHealthRecords(undefined, { limit: null });
 
   if (hayvanlar.length === 0) {
     const plan: ModTakviyePlani = {
-      id: uuidv4(),
+      id: mevcut?.id ?? uuidv4(),
       modId,
       baslik: `${mod.baslik} — aşı, parazit & vitamin`,
       tarih,
       kalemler,
       hayvanIds: [],
       durumlar: [],
-      olusturuldu: new Date().toISOString(),
+      olusturuldu: mevcut?.olusturuldu ?? new Date().toISOString(),
     };
-    await planKaydet(plan);
+    if (mevcut) await planGuncelle(plan);
+    else await planKaydet(plan);
     return {
       plan,
       baglanan,
@@ -255,22 +314,30 @@ export async function olusturModTakviyePlani(opts?: {
     };
   }
 
+  const durumlar = durumlariSagliklaBirlestir(
+    durumMatrisi(hayvanlar, kalemler, mevcut?.durumlar),
+    kalemler,
+    health,
+  );
+
   const plan: ModTakviyePlani = {
-    id: uuidv4(),
+    id: mevcut?.id ?? uuidv4(),
     modId,
     baslik: `${mod.baslik} — aşı, parazit & vitamin`,
     tarih,
     kalemler,
     hayvanIds: hayvanlar.map((h) => h.id),
-    durumlar: durumMatrisi(hayvanlar, kalemler),
-    olusturuldu: new Date().toISOString(),
+    durumlar,
+    olusturuldu: mevcut?.olusturuldu ?? new Date().toISOString(),
   };
-  await planKaydet(plan);
+  if (mevcut) await planGuncelle(plan);
+  else await planKaydet(plan);
 
+  const ozet = planOzeti(plan);
   return {
     plan,
     baglanan,
-    message: `${hayvanlar.length} hayvan · ${kalemler.length} kalem plana alındı${
+    message: `${hayvanlar.length} hayvan · ${kalemler.length} kalem · ${ozet.yapilan}/${ozet.toplamIs} yapıldı${
       baglanan > 0 ? ` · ${baglanan} eski kayıt bu moda bağlandı` : ''
     }.`,
   };
@@ -296,19 +363,6 @@ export async function planaYeniHayvanlariEkle(planId: string): Promise<{ eklenen
   };
   await planGuncelle(guncel);
   return { eklenen: yeniler.length, plan: guncel };
-}
-
-function normalize(s: string): string {
-  return s
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/ı/g, 'i');
-}
-
-function eslesir(metin: string, anahtarlar: string[]): boolean {
-  const n = normalize(metin);
-  return anahtarlar.some((k) => n.includes(normalize(k)));
 }
 
 async function stokDusTakviye(opts: {
