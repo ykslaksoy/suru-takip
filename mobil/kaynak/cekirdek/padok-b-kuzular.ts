@@ -2,8 +2,8 @@
  * Eşleşik kuzu seed’leri — Padok A + B + C.
  *
  * Padok A: ~2–2,5 ay · 17–24 kg · 9–12 bin ₺
- * Padok B: ~3,5 ay · giriş 1 ay önce · rasyon FCR~4,8 ile ~5–7 kg artış
- * Padok C: 4,5 ay · giriş 2 ay önce · 15g tartım · rasyon FCR~4,8 ile ~10–14 kg artış
+ * Padok B: ~3,5 ay · giriş 1 ay önce · rasyon FCR~5,5 ile simüle artış
+ * Padok C: 4,5 ay · giriş 2 ay önce · 15g tartım · rasyon FCR~5,5 ile simüle artış
  */
 
 import { addWeightRecord, getAnimals, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
@@ -11,7 +11,7 @@ import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { seedPadokHayvanKayitlari } from './padok-kuzu-kayitlar';
-import { padokBeklenenArtisKg, padokRasyonNotu } from './padok-rasyon';
+import { padokAgirlikGun, padokBeklenenArtisKg, padokRasyonNotu } from './padok-rasyon';
 
 /** Mevcut tartımın tarihini koru; kilo revizyonunda kg güncelle */
 async function yazTartimEgerYok(
@@ -131,9 +131,8 @@ export function padokBGrupKimlik(sira: number) {
   const yasGun = Math.round(100 + t * 10);
   const girisGunOnce = 30;
   const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
-  // Rasyon (hazır+arpa+yonca+saman) FCR~4,8 → ~30 günde 5–7 kg
   const artisKg = padokBeklenenArtisKg(girisKg, girisGunOnce);
-  const weightKg = Math.round((girisKg + artisKg) * 10) / 10;
+  const weightKg = padokAgirlikGun(girisKg, girisGunOnce);
   const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
   const pad = String(sira).padStart(2, '0');
   return {
@@ -216,9 +215,8 @@ export function padokCGrupKimlik(sira: number) {
   // Şu an 4,5 aylık (~135 gün); giriş 2 ay önce → girişte ~2,5 ay
   const yasGun = 135;
   const girisKg = Math.round((17 + t * 7) * 10) / 10; // giriş: 17–24 kg
-  // Rasyon FCR~4,8 → 60 günde ~10–13+ kg
   const artisKg = padokBeklenenArtisKg(girisKg, girisGunOnce);
-  const weightKg = Math.round((girisKg + artisKg) * 10) / 10;
+  const weightKg = padokAgirlikGun(girisKg, girisGunOnce);
   const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
   const pad = String(sira).padStart(2, '0');
   return {
@@ -236,8 +234,8 @@ export function padokCGrupKimlik(sira: number) {
   };
 }
 
-/** Dönem içi tartım noktaları: gün 0, 15, 30, 45, 60 — lineer tutarlı artış */
-export function padokCTartimSerisi(girisKg: number, artisKg: number): {
+/** Dönem içi tartım noktaları: gün 0, 15, 30, 45, 60 — rasyon simülasyonu ile tutarlı artış */
+export function padokCTartimSerisi(girisKg: number, _artisKg: number): {
   gunOnce: number;
   weightKg: number;
   adim: number;
@@ -252,7 +250,7 @@ export function padokCTartimSerisi(girisKg: number, artisKg: number): {
   }[] = [];
   for (let adim = 0; adim <= adimSayisi; adim++) {
     const gunGecen = adim * PADOK_C_TARTIM_ARALIK_GUN;
-    const kg = Math.round((girisKg + (artisKg * adim) / adimSayisi) * 10) / 10;
+    const kg = padokAgirlikGun(girisKg, gunGecen);
     const etiket =
       adim === 0
         ? 'Giriş tartımı'
@@ -345,8 +343,21 @@ export async function seedTumEslesikKuzular(): Promise<void> {
 
 /**
  * Mevcut kurulum: sadece eksik padok grubunu ekle / eksik tartım noktalarını merge et.
- * Her refresh’te hayvanları yeniden seed etmez; tartım tarihlerini bozmaz.
+ * Her refresh'te hayvanları yeniden seed etmez; tartım tarihlerini bozmaz.
+ * Simülasyon revizyonu: güncel tartım kg eski formülle yazılmışsa kg güncellenir (tarih korunur).
  */
+async function padokGuncelTartimRevizeEt(
+  kimlikFn: (sira: number) => { id: string; weightKg: number },
+  seedFn: () => Promise<unknown>,
+): Promise<void> {
+  const k = kimlikFn(1);
+  const wr = await getWeightRecords(k.id);
+  const guncel = wr.find((r) => r.id === `${k.id}-guncel-tartim`);
+  if (guncel && Math.abs(guncel.weightKg - k.weightKg) >= 0.05) {
+    await seedFn();
+  }
+}
+
 export async function ensurePadokKuzuVerisi(): Promise<void> {
   const animals = await getAnimals();
   const ids = new Set(animals.map((a) => a.id));
@@ -359,12 +370,19 @@ export async function ensurePadokKuzuVerisi(): Promise<void> {
 
   if (eksik('padok-a-kuzu-', PADOK_A_KUZU_ADET)) await seedPadokAEslesikKuzular();
   if (eksik('padok-b-grup-', PADOK_B_KUZU_ADET)) await seedPadokBGrupKuzular();
+  else {
+    await padokGuncelTartimRevizeEt(padokBGrupKimlik, seedPadokBGrupKuzular);
+  }
   if (eksik('padok-c-grup-', PADOK_C_KUZU_ADET)) {
     await seedPadokCGrupKuzular();
   } else if (ids.has('padok-c-grup-01')) {
     const wr = await getWeightRecords('padok-c-grup-01');
     // Eski 2–3 noktalı seed → 15 günde bir 5 nokta tamamla (mevcut kayıtlar dokunulmaz)
-    if (wr.length < 5) await seedPadokCGrupKuzular();
+    if (wr.length < 5) {
+      await seedPadokCGrupKuzular();
+    } else {
+      await padokGuncelTartimRevizeEt(padokCGrupKimlik, seedPadokCGrupKuzular);
+    }
   }
 
   // Aşı/ara tartım/rasyon: idempotent; mod planı yoksa oluştur (mevcut planı ezme)

@@ -2,6 +2,18 @@ import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { calculateFCR } from '@/kaynak/kilo/fcr';
 import { getAnimalRationPlan, dailyFeedForAnimal } from '@/kaynak/rasyon/hayvan-plani';
 import { hayvanBasinaYemTuketimi } from '@/kaynak/stok/yem-tuketim';
+import {
+  ESLESIK_KUZU_PADOK_A,
+  ESLESIK_KUZU_PADOK_B,
+  ESLESIK_KUZU_PADOK_C,
+} from '@/kaynak/cekirdek/padok-b-kuzular';
+import { padokDonemOrtGunlukRasyon, padokGunlukRasyonKg } from '@/kaynak/cekirdek/padok-rasyon';
+
+const PADOKLAR = new Set([ESLESIK_KUZU_PADOK_A, ESLESIK_KUZU_PADOK_B, ESLESIK_KUZU_PADOK_C]);
+
+function padokHayvanMi(animal: Animal): boolean {
+  return PADOKLAR.has(animal.paddock?.trim() ?? '');
+}
 
 export interface TartimDonemi {
   gainKg: number;
@@ -73,7 +85,11 @@ export async function hesaplaFcr(
 
   const plan = await getAnimalRationPlan(animal.id);
   let dailyGivenKg = plan?.dailyGivenKg ?? plan?.dailyFeedKg ?? 0;
-  if (dailyGivenKg <= 0) {
+
+  if (padokHayvanMi(animal)) {
+    // Güncel plan tek gün rasyonu; dönem FCR için simülasyon ortalaması (ADG ile tutarlı).
+    dailyGivenKg = padokDonemOrtGunlukRasyon(donem.startWeightKg, donem.periodDays);
+  } else if (dailyGivenKg <= 0) {
     dailyGivenKg = dailyFeedForAnimal(animal, donem.endWeightKg);
   }
 

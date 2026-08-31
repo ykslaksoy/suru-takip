@@ -1,6 +1,6 @@
 /**
  * Padok A/B/C kuzu besi rasyonu — hazır yem + arpa + yonca + saman.
- * Kilo artışı: günlük verilen / hedef FCR (rasyon yokken sabit ADG kullanılıyordu).
+ * Kilo artışı: günlük rasyon / FCR ile gün gün simüle edilir (ADG ↔ FCR tutarlı).
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -42,10 +42,73 @@ export function padokGunlukRasyonKg(canliAgirlikKg: number): number {
   return Math.round(Math.min(2.4, Math.max(1.3, ham)) * 10) / 10;
 }
 
-/** Beklenen dönem artışı (kg) — rasyon × gün / FCR */
+export type PadokDonemSim = {
+  baslangicKg: number;
+  gun: number;
+  bitisKg: number;
+  artisKg: number;
+  /** Dönem ort. günlük rasyon (kg) */
+  ortGunlukRasyonKg: number;
+  /** Ort. ADG (g/gün) — calculateADG ile aynı birim */
+  adgGram: number;
+  toplamYemKg: number;
+};
+
+/** Günlük rasyon arttıkça kilo da artar — giriş rasyonu × gün yanlış ADG/FCR üretir. */
+export function padokDonemSimulasyonu(baslangicKg: number, gun: number): PadokDonemSim {
+  if (gun <= 0) {
+    const g = padokGunlukRasyonKg(baslangicKg);
+    return {
+      baslangicKg,
+      gun: 0,
+      bitisKg: baslangicKg,
+      artisKg: 0,
+      ortGunlukRasyonKg: g,
+      adgGram: 0,
+      toplamYemKg: 0,
+    };
+  }
+  let w = baslangicKg;
+  let toplamYem = 0;
+  for (let d = 0; d < gun; d++) {
+    const feed = padokGunlukRasyonKg(w);
+    toplamYem += feed;
+    w += feed / PADOK_HEDEF_FCR;
+  }
+  const artisKg = Math.round((w - baslangicKg) * 10) / 10;
+  const bitisKg = Math.round(w * 10) / 10;
+  const ortGunlukRasyonKg = Math.round((toplamYem / gun) * 100) / 100;
+  const adgGram = Math.round((artisKg / gun) * 1000);
+  return {
+    baslangicKg,
+    gun,
+    bitisKg,
+    artisKg,
+    ortGunlukRasyonKg,
+    adgGram,
+    toplamYemKg: Math.round(toplamYem * 10) / 10,
+  };
+}
+
+/** Simülasyon sonrası belirli gündeki canlı ağırlık (kg). */
+export function padokAgirlikGun(baslangicKg: number, gecenGun: number): number {
+  if (gecenGun <= 0) return baslangicKg;
+  return padokDonemSimulasyonu(baslangicKg, gecenGun).bitisKg;
+}
+
+/** Beklenen dönem artışı (kg) — simülasyon. */
 export function padokBeklenenArtisKg(girisKg: number, gun: number): number {
-  const gunluk = padokGunlukRasyonKg(girisKg);
-  return Math.round(((gunluk / PADOK_HEDEF_FCR) * gun) * 10) / 10;
+  return padokDonemSimulasyonu(girisKg, gun).artisKg;
+}
+
+/** Dönem ort. ADG (g/gün). */
+export function padokBeklenenAdgGram(girisKg: number, gun: number): number {
+  return padokDonemSimulasyonu(girisKg, gun).adgGram;
+}
+
+/** FCR penceresi için ort. günlük verilen yem (kg). */
+export function padokDonemOrtGunlukRasyon(baslangicKg: number, gun: number): number {
+  return padokDonemSimulasyonu(baslangicKg, gun).ortGunlukRasyonKg;
 }
 
 /** Bileşen kg/gün (hayvan başına) */
@@ -113,22 +176,21 @@ export async function seedPadokHayvanRasyonPlanlari(): Promise<number> {
     const w = await getLatestWeight(a.id);
     if (w == null || w <= 0) continue;
     await upsertRationPlanFromWeight(a, w);
-    const gunluk = padokGunlukRasyonKg(w);
-    await setDailyGivenKg(a.id, gunluk);
+    // Güncel tartım ağırlığına göre bugünkü rasyon; FCR geçmiş dönemde ort. ile hesaplanır.
+    await setDailyGivenKg(a.id, padokGunlukRasyonKg(w));
     n += 1;
   }
   return n;
 }
 
 export function padokRasyonNotu(girisKg: number, gun: number): string {
-  const gunluk = padokGunlukRasyonKg(girisKg);
-  const artis = padokBeklenenArtisKg(girisKg, gun);
+  const sim = padokDonemSimulasyonu(girisKg, gun);
   const bilesen = padokRasyonGunlukBilesenler(girisKg)
     .map((b) => `${b.ad} ${b.kgGun} kg`)
     .join(' + ');
   return (
-    `Rasyon ~${gunluk} kg/gün (FCR ${PADOK_HEDEF_FCR}) · ${bilesen} · ` +
-    `${gun}g beklenen +${artis} kg`
+    `Rasyon ~${sim.ortGunlukRasyonKg} kg/gün ort. (FCR ${PADOK_HEDEF_FCR}) · ${bilesen} · ` +
+    `${gun}g +${sim.artisKg} kg · ADG ~${sim.adgGram} g/gün`
   );
 }
 
