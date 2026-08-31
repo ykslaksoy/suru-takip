@@ -1,12 +1,23 @@
+/**
+ * Toplu görevler: aşı / parazit / vitamin / tartım.
+ * Listede: tarih · ne · N kuzu — detayda kuzular.
+ */
+
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
 import { getAktifModId } from '@/sabitler/Modlar';
-import { aktifPlanOku, type HayvanKalemDurum } from '@/kaynak/akilli-veteriner/mod-takviye';
-import type { Gorev, GorevSeviye } from '@/kaynak/gorevler/liste';
+import {
+  aktifPlanOku,
+  TARTIM_15_PROGRAM_ID,
+  type HayvanKalemDurum,
+  type TakviyeTip,
+} from '@/kaynak/akilli-veteriner/mod-takviye';
+import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
+import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
 
-export type AsiGorevHayvan = {
+export type TakviyeGorevHayvan = {
   animalId: string;
   etiket: string;
   altEtiket: string;
@@ -16,42 +27,30 @@ export type AsiGorevHayvan = {
   planlananAt?: string;
 };
 
-export type AsiGorevDetay = {
+export type TakviyeGorevDetay = {
   programId: string;
   koruma: string;
   asiAdi: string;
   mlEtiket: string;
-  tip: 'asi' | 'parazit';
+  tip: TakviyeTip;
   hayvanSayisi: number;
-  hayvanlar: AsiGorevHayvan[];
+  hayvanlar: TakviyeGorevHayvan[];
   planlananAt?: string;
 };
+
+/** @deprecated — AsiGorev* adları geriye uyum */
+export type AsiGorevHayvan = TakviyeGorevHayvan;
+export type AsiGorevDetay = TakviyeGorevDetay;
 
 type ProgramOzet = {
   programId: string;
   koruma: string;
   asiAdi: string;
   mlEtiket: string;
-  tip: 'asi' | 'parazit';
-  hayvanlar: Map<string, AsiGorevHayvan>;
+  tip: TakviyeTip;
+  hayvanlar: Map<string, TakviyeGorevHayvan>;
   enYakinTarih?: string;
 };
-
-function programMeta(programId: string): {
-  koruma: string;
-  asiAdi: string;
-  mlEtiket: string;
-  tip: 'asi' | 'parazit';
-} | null {
-  const p = ASI_PROGRAMI.find((x) => x.id === programId);
-  if (!p) return null;
-  return {
-    koruma: p.koruma,
-    asiAdi: p.ad,
-    mlEtiket: asiDozEtiketi(p),
-    tip: asiKategori(p) === 'parazit' ? 'parazit' : 'asi',
-  };
-}
 
 function kalanGunTarih(tarih: string): number {
   return Math.ceil((new Date(tarih).getTime() - Date.now()) / 86400000);
@@ -72,8 +71,100 @@ function hesaplaPlanTarihi(kalan: number | null, mevcut?: string): string {
   return bugun.toISOString().slice(0, 10);
 }
 
-/** Mod plan + takvim — program bazında bekleyen hayvanlar (hayvan görevi değil). */
-export async function asiGorevProgramHaritasi(): Promise<Map<string, ProgramOzet>> {
+function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTarih'> | null {
+  const p = ASI_PROGRAMI.find((x) => x.id === programId);
+  if (!p) return null;
+  return {
+    programId,
+    koruma: p.koruma,
+    asiAdi: p.ad,
+    mlEtiket: asiDozEtiketi(p),
+    tip: asiKategori(p) === 'parazit' ? 'parazit' : 'asi',
+  };
+}
+
+function vitaminMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTarih'> | null {
+  const v = VITAMIN_PROGRAMI.find((x) => x.id === programId);
+  if (!v) return null;
+  return {
+    programId,
+    koruma: v.ad,
+    asiAdi: v.detay,
+    mlEtiket: vitaminDozEtiketi(v),
+    tip: 'vitamin',
+  };
+}
+
+function kaynakIcin(tip: TakviyeTip): GorevKaynak {
+  if (tip === 'tartim') return 'tartim';
+  if (tip === 'vitamin') return 'saglik';
+  return 'asi';
+}
+
+function ozettenGorev(o: ProgramOzet): Gorev | null {
+  if (o.hayvanlar.size === 0) return null;
+  const hayvanlar = [...o.hayvanlar.values()];
+  const planli = hayvanlar.every((h) => h.durum === 'planli' && h.planlananAt);
+  const tarihler = hayvanlar
+    .map((h) => h.planlananAt)
+    .filter((t): t is string => !!t)
+    .sort();
+  const hamTarih = tarihler[0] ?? o.enYakinTarih;
+  const kalan =
+    hamTarih != null
+      ? kalanGunTarih(hamTarih)
+      : hayvanlar.reduce<number | null>((min, h) => {
+          if (h.kalanGun == null) return min;
+          if (min == null) return h.kalanGun;
+          return Math.min(min, h.kalanGun);
+        }, null);
+  const enYakinTarih = hesaplaPlanTarihi(kalan, hamTarih);
+  const n = hayvanlar.length;
+  const baslik =
+    o.tip === 'tartim'
+      ? o.koruma
+      : `${o.koruma} (${o.asiAdi}) ${o.mlEtiket}`;
+
+  return {
+    id: `takviye-ozet-${o.tip}-${o.programId}`,
+    seviye: seviyeBelirle(kalan, !!planli),
+    kaynak: kaynakIcin(o.tip),
+    baslik,
+    aciklama: `${n} kuzu`,
+    href: `/gorevler/asi/${o.programId}`,
+    cta: 'Kuzuları gör',
+    tarih: enYakinTarih,
+  };
+}
+
+function hayvanEkle(
+  o: ProgramOzet,
+  d: {
+    animalId: string;
+    etiket: string;
+    altEtiket: string;
+    paddock: string;
+    planlananAt?: string;
+    kalanGun: number | null;
+    durum: TakviyeGorevHayvan['durum'];
+  },
+) {
+  o.hayvanlar.set(d.animalId, {
+    animalId: d.animalId,
+    etiket: d.etiket,
+    altEtiket: d.altEtiket,
+    paddock: d.paddock,
+    durum: d.durum,
+    kalanGun: d.kalanGun,
+    planlananAt: d.planlananAt,
+  });
+  if (d.planlananAt && (!o.enYakinTarih || d.planlananAt < o.enYakinTarih)) {
+    o.enYakinTarih = d.planlananAt;
+  }
+}
+
+/** Tüm bekleyen takviye kalemleri (aşı, parazit, vitamin, tartım). */
+export async function takviyeGorevProgramHaritasi(): Promise<Map<string, ProgramOzet>> {
   const modId = await getAktifModId();
   const plan = await aktifPlanOku(modId);
   const animals = await getAnimals();
@@ -82,30 +173,43 @@ export async function asiGorevProgramHaritasi(): Promise<Map<string, ProgramOzet
   const stock = await getStockItems();
   const asiDurum = hesaplaAsiStokDurumu(animals, health, stock);
 
-  const modPlanProgramIds = new Set<string>();
-  if (plan) {
-    for (const k of plan.kalemler) {
-      if (k.tip === 'asi' || k.tip === 'parazit') modPlanProgramIds.add(k.programId);
-    }
-  }
-
   const map = new Map<string, ProgramOzet>();
 
-  const ensure = (programId: string, meta?: ReturnType<typeof programMeta>): ProgramOzet | null => {
+  const ensure = (
+    programId: string,
+    tip: TakviyeTip,
+    meta?: { koruma: string; asiAdi: string; mlEtiket: string },
+  ): ProgramOzet | null => {
     let o = map.get(programId);
-    if (!o) {
-      const m = meta ?? programMeta(programId);
+    if (o) return o;
+    if (meta) {
+      o = { programId, ...meta, tip, hayvanlar: new Map() };
+      map.set(programId, o);
+      return o;
+    }
+    if (tip === 'vitamin') {
+      const m = vitaminMeta(programId);
       if (!m) return null;
+      o = { ...m, hayvanlar: new Map() };
+      map.set(programId, o);
+      return o;
+    }
+    if (tip === 'tartim') {
       o = {
         programId,
-        koruma: m.koruma,
-        asiAdi: m.asiAdi,
-        mlEtiket: m.mlEtiket,
-        tip: m.tip,
+        koruma: '15 günde bir tartım',
+        asiAdi: 'Kontrol tartımı',
+        mlEtiket: '15 gün',
+        tip: 'tartim',
         hayvanlar: new Map(),
       };
       map.set(programId, o);
+      return o;
     }
+    const m = asiMeta(programId);
+    if (!m) return null;
+    o = { ...m, hayvanlar: new Map() };
+    map.set(programId, o);
     return o;
   };
 
@@ -114,31 +218,28 @@ export async function asiGorevProgramHaritasi(): Promise<Map<string, ProgramOzet
     const a = byId.get(d.animalId);
     if (!a || a.status === 'sold' || a.status === 'dead') return;
 
-    const o = ensure(d.programId, {
+    const o = ensure(d.programId, d.tip, {
       koruma: kalem.ad,
       asiAdi: kalem.detay,
       mlEtiket: kalem.mlEtiket,
-      tip: d.tip === 'parazit' ? 'parazit' : 'asi',
     });
     if (!o) return;
 
     const planTarih = d.planlananAt?.slice(0, 10);
     const kalan = planTarih ? kalanGunTarih(planTarih) : null;
-    o.hayvanlar.set(d.animalId, {
+    hayvanEkle(o, {
       animalId: d.animalId,
       etiket: hayvanAnaEtiket(a),
       altEtiket: hayvanAltEtiket(a),
       paddock: a.paddock,
-      durum: planTarih && kalan != null && kalan > 0 ? 'planli' : 'yapilacak',
-      kalanGun: kalan,
       planlananAt: planTarih,
+      kalanGun: kalan,
+      durum: planTarih && kalan != null && kalan > 0 ? 'planli' : 'yapilacak',
     });
-    if (planTarih && (!o.enYakinTarih || planTarih < o.enYakinTarih)) o.enYakinTarih = planTarih;
   };
 
   if (plan) {
     for (const k of plan.kalemler) {
-      if (k.tip !== 'asi' && k.tip !== 'parazit') continue;
       for (const d of plan.durumlar) {
         if (d.tip !== k.tip || d.programId !== k.programId) continue;
         planDurumEkle(d, k);
@@ -146,80 +247,61 @@ export async function asiGorevProgramHaritasi(): Promise<Map<string, ProgramOzet
     }
   }
 
-  // Takvim: mod planda olmayan programlar veya planda olmayan hayvanlar
+  // Takvim aşıları — planda olmayan / farklı hayvanlar
+  const modPlanAsiIds = new Set(
+    plan?.kalemler.filter((k) => k.tip === 'asi' || k.tip === 'parazit').map((k) => k.programId) ?? [],
+  );
   for (const s of asiBuHaftaListesi(asiDurum)) {
-    if (modPlanProgramIds.has(s.programId)) {
-      const o = map.get(s.programId);
-      if (o?.hayvanlar.has(s.animalId)) continue;
-    }
+    if (modPlanAsiIds.has(s.programId) && map.get(s.programId)?.hayvanlar.has(s.animalId)) continue;
     const a = byId.get(s.animalId);
     if (!a) continue;
     const d = asiDurum.find((x) => x.programId === s.programId);
-    const o = ensure(s.programId, d ? {
-      koruma: d.koruma,
-      asiAdi: d.asiAdi,
-      mlEtiket: d.mlEtiket,
-      tip: programMeta(s.programId)?.tip ?? 'asi',
-    } : undefined);
-    if (!o) continue;
-    o.hayvanlar.set(s.animalId, {
+    const o = ensure(
+      s.programId,
+      asiMeta(s.programId)?.tip ?? 'asi',
+      d
+        ? { koruma: d.koruma, asiAdi: d.asiAdi, mlEtiket: d.mlEtiket }
+        : undefined,
+    );
+    if (!o || o.hayvanlar.has(s.animalId)) continue;
+    hayvanEkle(o, {
       animalId: s.animalId,
       etiket: hayvanAnaEtiket(a),
       altEtiket: hayvanAltEtiket(a),
       paddock: a.paddock,
-      durum: s.durum,
       kalanGun: s.kalanGun,
+      durum: s.durum,
     });
+  }
+
+  // Tartım id sabit
+  if (!map.has(TARTIM_15_PROGRAM_ID) && plan) {
+    // plan'da yoksa ekleme
   }
 
   return map;
 }
 
-/** Aşı kategorisi — program başına tek görev; listede yalnızca kuzu sayısı. */
-export async function asiTopluGorevleri(): Promise<Gorev[]> {
-  const map = await asiGorevProgramHaritasi();
+/** @deprecated — eski ad */
+export const asiGorevProgramHaritasi = takviyeGorevProgramHaritasi;
+
+export async function takviyeTopluGorevleri(): Promise<Gorev[]> {
+  const map = await takviyeGorevProgramHaritasi();
   const out: Gorev[] = [];
-
   for (const o of map.values()) {
-    if (o.hayvanlar.size === 0) continue;
-
-    const hayvanlar = [...o.hayvanlar.values()];
-    const planli = hayvanlar.every((h) => h.durum === 'planli' && h.planlananAt);
-    const tarihler = hayvanlar
-      .map((h) => h.planlananAt)
-      .filter((t): t is string => !!t)
-      .sort();
-    const hamTarih = tarihler[0] ?? o.enYakinTarih;
-    const kalan =
-      hamTarih != null
-        ? kalanGunTarih(hamTarih)
-        : hayvanlar.reduce<number | null>((min, h) => {
-            if (h.kalanGun == null) return min;
-            if (min == null) return h.kalanGun;
-            return Math.min(min, h.kalanGun);
-          }, null);
-
-    const enYakinTarih = hesaplaPlanTarihi(kalan, hamTarih);
-    const n = hayvanlar.length;
-    const seviye = seviyeBelirle(kalan, !!planli);
-
-    out.push({
-      id: `asi-ozet-${o.programId}`,
-      seviye,
-      kaynak: 'asi',
-      baslik: `${o.koruma} (${o.asiAdi}) ${o.mlEtiket}`,
-      aciklama: `${n} kuzu`,
-      href: `/gorevler/asi/${o.programId}`,
-      cta: 'Kuzuları gör',
-      tarih: enYakinTarih,
-    });
+    const g = ozettenGorev(o);
+    if (g) out.push(g);
   }
-
   return out;
 }
 
-export async function getAsiGorevDetay(programId: string): Promise<AsiGorevDetay | null> {
-  const map = await asiGorevProgramHaritasi();
+/** @deprecated */
+export async function asiTopluGorevleri(): Promise<Gorev[]> {
+  return (await takviyeTopluGorevleri()).filter((g) => g.kaynak === 'asi');
+}
+
+export async function getTakviyeGorevDetay(programId: string): Promise<TakviyeGorevDetay | null> {
+  const map = await takviyeGorevProgramHaritasi();
   const o = map.get(programId);
   if (!o || o.hayvanlar.size === 0) return null;
 
@@ -228,7 +310,6 @@ export async function getAsiGorevDetay(programId: string): Promise<AsiGorevDetay
     if (pa !== 0) return pa;
     return a.etiket.localeCompare(b.etiket, 'tr', { numeric: true });
   });
-
   const tarihler = hayvanlar.map((h) => h.planlananAt).filter((t): t is string => !!t).sort();
 
   return {
@@ -239,6 +320,9 @@ export async function getAsiGorevDetay(programId: string): Promise<AsiGorevDetay
     tip: o.tip,
     hayvanSayisi: hayvanlar.length,
     hayvanlar,
-    planlananAt: tarihler[0],
+    planlananAt: tarihler[0] ?? o.enYakinTarih,
   };
 }
+
+/** @deprecated */
+export const getAsiGorevDetay = getTakviyeGorevDetay;

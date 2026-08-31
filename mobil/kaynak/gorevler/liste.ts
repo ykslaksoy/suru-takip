@@ -8,9 +8,8 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
-import { asiTopluGorevleri } from '@/kaynak/gorevler/asi-gorev';
+import { takviyeTopluGorevleri } from '@/kaynak/gorevler/asi-gorev';
 import { getAktifModId, getMod } from '@/sabitler/Modlar';
-import { aktifPlanOku } from '@/kaynak/akilli-veteriner/mod-takviye';
 import { getMod1BirlesikIlerleme, sonrakiAcikAdim } from '@/kaynak/besi-ortak';
 import { getMod2BirlesikIlerleme, sonrakiAcikAdimMod2 } from '@/kaynak/besi-koc-kat';
 import { getMod3BirlesikIlerleme, sonrakiAcikAdimMod3 } from '@/kaynak/damizlik';
@@ -107,49 +106,6 @@ function sktYakinTakviyeler(items: StockItem[], gun = 60): StockItem[] {
       new Date(i.expiryDate).getTime() <= limit &&
       new Date(i.expiryDate).getTime() >= Date.now()
   );
-}
-
-/** Mod takviye planı — bekleyen aşı (21g) + tartım (15g) görevleri */
-async function modPlanGorevleri(): Promise<Gorev[]> {
-  const modId = await getAktifModId();
-  const plan = await aktifPlanOku(modId);
-  if (!plan) return [];
-
-  const bugun = new Date().toISOString().slice(0, 10);
-  const out: Gorev[] = [];
-
-  for (const k of plan.kalemler) {
-    if (k.tip !== 'asi' && k.tip !== 'parazit' && k.tip !== 'tartim') continue;
-    const bekleyen = plan.durumlar.filter(
-      (d) => d.tip === k.tip && d.programId === k.programId && !d.yapildi,
-    );
-    if (bekleyen.length === 0) continue;
-
-    const tarihler = bekleyen
-      .map((d) => d.planlananAt?.slice(0, 10))
-      .filter((t): t is string => !!t)
-      .sort();
-    // Tartımda planlanan yoksa bugün say
-    const tarih = tarihler[0] ?? (k.tip === 'tartim' ? bugun : plan.tarih.slice(0, 10));
-    const kalan = Math.ceil((new Date(tarih).getTime() - Date.now()) / 86400000);
-    const gecikti = kalan <= 0;
-    const yakin = !gecikti && kalan <= 7;
-
-    if (k.tip === 'tartim') {
-      out.push({
-        id: `mod-plan-tartim-${k.programId}`,
-        seviye: gecikti || yakin ? 'sira' : 'plan',
-        kaynak: 'tartim',
-        baslik: k.ad,
-        aciklama: `${bekleyen.length} kuzu`,
-        href: '/(tabs)/veteriner',
-        cta: 'Plana bak',
-        tarih,
-      });
-    }
-  }
-
-  return out;
 }
 
 async function yolculukGorevi(): Promise<Gorev | null> {
@@ -274,7 +230,7 @@ export async function getGorevler(): Promise<Gorev[]> {
     });
   }
 
-  out.push(...(await asiTopluGorevleri()));
+  out.push(...(await takviyeTopluGorevleri()));
 
   const dusukTakviye = dusukTakviyeler(stock);
   const sktTakviye = sktYakinTakviyeler(stock);
@@ -362,8 +318,6 @@ export async function getGorevler(): Promise<Gorev[]> {
   const yol = await yolculukGorevi();
   if (yol) out.push({ ...yol, tarih: yol.tarih ?? bugun });
 
-  out.push(...(await modPlanGorevleri()));
-
   for (const ip of await getIsPlaniKayitlari()) {
     const meta = IS_PLANI_META[ip.tur];
     const kalan = isPlaniKalanGun(ip.tarih, bugun);
@@ -411,6 +365,7 @@ export async function getGorevler(): Promise<Gorev[]> {
 }
 
 const BUGUN_DISLA = (id: string) =>
+  id.startsWith('takviye-ozet-') ||
   id.startsWith('asi-ozet-') ||
   id.startsWith('tartim-hayvan-') ||
   id.startsWith('bekletme-') ||
@@ -425,7 +380,10 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
 
   const ozetler: Gorev[] = [];
   const asiN = ham.filter(
-    (g) => g.kaynak === 'asi' && g.id.startsWith('asi-ozet-') && gunluk(g),
+    (g) =>
+      g.kaynak === 'asi' &&
+      (g.id.startsWith('takviye-ozet-') || g.id.startsWith('asi-ozet-')) &&
+      gunluk(g),
   ).length;
   if (asiN) {
     ozetler.push({
@@ -436,12 +394,15 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       aciklama: `${asiN} aşı · bekleyen kuzu grupları`,
       href: '/gorevler',
       cta: 'Görevlere bak',
+      tarih: bugun,
     });
   }
   const tartimN = ham.filter(
     (g) =>
       g.kaynak === 'tartim' &&
-      (g.id.startsWith('tartim-hayvan-') || g.id.startsWith('mod-plan-tartim-')) &&
+      (g.id.startsWith('tartim-hayvan-') ||
+        g.id.startsWith('takviye-ozet-tartim-') ||
+        g.id.startsWith('mod-plan-tartim-')) &&
       gunluk(g),
   ).length;
   if (tartimN) {
@@ -453,6 +414,7 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       aciklama: `${tartimN} kalem · tartım bekliyor`,
       href: '/gorevler',
       cta: 'Görevlere bak',
+      tarih: bugun,
     });
   }
   const stokN = ham.filter((g) => g.kaynak === 'stok' && gunluk(g)).length;
@@ -465,6 +427,7 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       aciklama: `${stokN} kalem · düşük veya SKT yakın`,
       href: '/gorevler',
       cta: 'Görevlere bak',
+      tarih: bugun,
     });
   }
   const bekN = ham.filter((g) => g.kaynak === 'bekletme' && gunluk(g)).length;
@@ -477,6 +440,22 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       aciklama: `${bekN} hayvan · ilaç bekletmesi devam ediyor`,
       href: '/gorevler',
       cta: 'Görevlere bak',
+      tarih: bugun,
+    });
+  }
+  const vitaminN = ham.filter(
+    (g) => g.id.startsWith('takviye-ozet-vitamin-') && gunluk(g),
+  ).length;
+  if (vitaminN) {
+    ozetler.push({
+      id: 'bugun-vitamin-ozet',
+      seviye: 'sira',
+      kaynak: 'saglik',
+      baslik: 'Vitamin',
+      aciklama: `${vitaminN} takviye · bekleyen kuzu grupları`,
+      href: '/gorevler',
+      cta: 'Görevlere bak',
+      tarih: bugun,
     });
   }
   const isPlaniN = ham.filter((g) => g.id.startsWith('is-plani-') && gunluk(g)).length;
@@ -489,6 +468,7 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       aciklama: `${isPlaniN} iş · bugün veya gecikmiş`,
       href: '/gorevler',
       cta: 'Görevlere bak',
+      tarih: bugun,
     });
   }
 

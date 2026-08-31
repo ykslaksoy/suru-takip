@@ -4,11 +4,11 @@ import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { getAsiGorevDetay, type AsiGorevDetay } from '@/kaynak/gorevler/asi-gorev';
+import { getTakviyeGorevDetay, type TakviyeGorevDetay } from '@/kaynak/gorevler/asi-gorev';
 import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
 import { takviyeTipEtiket } from '@/kaynak/akilli-veteriner/mod-takviye';
 
-function durumEtiket(h: AsiGorevDetay['hayvanlar'][0]): string {
+function durumEtiket(h: TakviyeGorevDetay['hayvanlar'][0]): string {
   if (h.planlananAt && h.kalanGun != null && h.kalanGun > 0) {
     return `Plan: ${h.kalanGun} gün · ${gorevTarihMetni(h.planlananAt, { yil: true })}`;
   }
@@ -21,14 +21,14 @@ export default function AsiGorevDetayScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { ready, refreshKey } = useDatabase();
-  const [detay, setDetay] = useState<AsiGorevDetay | null>(null);
+  const [detay, setDetay] = useState<TakviyeGorevDetay | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!programId) return;
     setLoading(true);
     try {
-      setDetay(await getAsiGorevDetay(programId));
+      setDetay(await getTakviyeGorevDetay(programId));
     } finally {
       setLoading(false);
     }
@@ -42,20 +42,32 @@ export default function AsiGorevDetayScreen() {
 
   const tarihTam = detay?.planlananAt
     ? gorevTarihMetni(detay.planlananAt, { yil: true })
-    : null;
+    : detay
+      ? gorevTarihMetni(new Date().toISOString().slice(0, 10), { yil: true })
+      : null;
+
   const neYapilacak = detay
-    ? `${detay.koruma} (${detay.asiAdi}) ${detay.mlEtiket}`
+    ? detay.tip === 'tartim'
+      ? detay.koruma
+      : `${detay.koruma} (${detay.asiAdi}) ${detay.mlEtiket}`
     : '';
+
+  const ekranBaslik =
+    detay?.tip === 'tartim'
+      ? 'Tartım görevi'
+      : detay?.tip === 'vitamin'
+        ? 'Vitamin görevi'
+        : 'Aşı görevi';
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Aşı görevi' }} />
+      <Stack.Screen options={{ title: ekranBaslik }} />
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
         {loading ? (
           <ActivityIndicator color={colors.tint} style={{ marginVertical: 32 }} />
         ) : !detay ? (
           <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 32 }}>
-            Bu aşı için bekleyen kuzu bulunamadı.
+            Bu kalem için bekleyen kuzu bulunamadı.
           </Text>
         ) : (
           <>
@@ -79,7 +91,13 @@ export default function AsiGorevDetayScreen() {
             {detay.hayvanlar.map((h) => (
               <Pressable
                 key={h.animalId}
-                onPress={() => router.push(`/hayvan/${h.animalId}/saglik`)}
+                onPress={() =>
+                  router.push(
+                    detay.tip === 'tartim'
+                      ? `/hayvan/${h.animalId}/kilo`
+                      : `/hayvan/${h.animalId}/saglik`,
+                  )
+                }
                 style={[styles.satir, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: colors.text, fontWeight: '700' }}>{h.etiket}</Text>
@@ -92,7 +110,9 @@ export default function AsiGorevDetayScreen() {
                     {h.paddock} · {durumEtiket(h)}
                   </Text>
                 </View>
-                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>Kayıt →</Text>
+                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>
+                  {detay.tip === 'tartim' ? 'Tartım →' : 'Kayıt →'}
+                </Text>
               </Pressable>
             ))}
 

@@ -28,9 +28,13 @@ export {
 } from './planlanan';
 export {
   getAsiGorevDetay,
+  getTakviyeGorevDetay,
   asiTopluGorevleri,
+  takviyeTopluGorevleri,
   type AsiGorevDetay,
   type AsiGorevHayvan,
+  type TakviyeGorevDetay,
+  type TakviyeGorevHayvan,
 } from './asi-gorev';
 export {
   IS_PLANI_META,
