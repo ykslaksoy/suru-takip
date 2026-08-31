@@ -33,13 +33,13 @@ export const PADOK_RASYON_BILESENLER = [
 export const PADOK_HEDEF_FCR = 5.5;
 
 /**
- * Günlük as-fed rasyon (kg/hayvan).
- * Hazır+arpa+yonca+saman karışımında kaba yem hacmiyle ~%6 CA;
- * 17 kg kuzuya 0,8 yetmez — taban 1,3 kg.
+ * Günlük as-fed rasyon (kg/hayvan) — hazır+arpa+yonca+saman karışımı.
+ * 17 kg kuzu ~1,0 kg · 24 kg ~1,2 kg (üst sınır).
+ * Örnek: 0,8 kg/gün yem + FCR 5,5 → ~145 g/gün ADG → 3 ayda ~13 kg artış.
  */
 export function padokGunlukRasyonKg(canliAgirlikKg: number): number {
-  const ham = canliAgirlikKg * 0.06 + 0.25;
-  return Math.round(Math.min(2.4, Math.max(1.3, ham)) * 10) / 10;
+  const ham = canliAgirlikKg * 0.035 + 0.35;
+  return Math.round(Math.min(1.2, Math.max(0.85, ham)) * 10) / 10;
 }
 
 export type PadokDonemSim = {

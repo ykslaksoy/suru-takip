@@ -2,8 +2,8 @@
  * Eşleşik kuzu seed’leri — Padok A + B + C.
  *
  * Padok A: ~2–2,5 ay · 17–24 kg · 9–12 bin ₺
- * Padok B: ~3,5 ay · giriş 1 ay önce · rasyon FCR~5,5 ile simüle artış
- * Padok C: 4,5 ay · giriş 2 ay önce · 15g tartım · rasyon FCR~5,5 ile simüle artış
+ * Padok B: ~3,5 ay · giriş 1 ay önce · ~5–6,5 kg / 30 gün (rasyon simülasyonu)
+ * Padok C: 4,5 ay · giriş 2 ay önce · 15g tartım · ~12–13 kg / 60 gün
  */
 
 import { addWeightRecord, getAnimals, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
