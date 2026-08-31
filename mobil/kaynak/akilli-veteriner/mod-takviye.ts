@@ -46,6 +46,8 @@ export type HayvanKalemDurum = {
   programId: string;
   yapildi: boolean;
   yapildiAt?: string;
+  /** Planlanan uygulama tarihi (ISO) — örn. 21 gün sonra aşı */
+  planlananAt?: string;
 };
 
 export type ModTakviyePlani = {
@@ -72,6 +74,23 @@ export type ModTakviyeOzet = {
 
 function kalemAnahtar(tip: TakviyeTip, programId: string): string {
   return `${tip}:${programId}`;
+}
+
+/** Bugünden N gün sonrası (YYYY-MM-DD) */
+export function gunSonraTarih(gun: number, now = new Date()): string {
+  const d = new Date(now);
+  d.setDate(d.getDate() + gun);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Aşı/parazit için varsayılan plan gecikmesi (karantina / ilk doz) */
+export const ASI_PLAN_GUN = 21;
+
+export function tipEtiket(tip: TakviyeTip): string {
+  if (tip === 'asi') return 'aşı';
+  if (tip === 'parazit') return 'parazit';
+  if (tip === 'tartim') return 'tartım';
+  return 'vitamin';
 }
 
 /** Mod başına önerilen aşı + vitamin + 15 günde bir tartım şablonu */
@@ -215,7 +234,10 @@ function durumMatrisi(
   hayvanlar: Animal[],
   kalemler: ModTakviyeKalemi[],
   onceki?: HayvanKalemDurum[],
+  opts?: { asiPlanGun?: number },
 ): HayvanKalemDurum[] {
+  const asiPlanGun = opts?.asiPlanGun ?? ASI_PLAN_GUN;
+  const planlanan = gunSonraTarih(asiPlanGun);
   const map = new Map(
     (onceki ?? []).map((d) => [`${d.animalId}|${kalemAnahtar(d.tip, d.programId)}`, d]),
   );
@@ -225,17 +247,26 @@ function durumMatrisi(
       const key = `${h.id}|${kalemAnahtar(k.tip, k.programId)}`;
       const eski = map.get(key);
       const etiket = hayvanAnaEtiket(h);
-      out.push(
-        eski
-          ? { ...eski, earTag: etiket }
-          : {
-              animalId: h.id,
-              earTag: etiket,
-              tip: k.tip,
-              programId: k.programId,
-              yapildi: false,
-            },
-      );
+      const asiParazit = k.tip === 'asi' || k.tip === 'parazit';
+      if (eski) {
+        out.push({
+          ...eski,
+          earTag: etiket,
+          planlananAt:
+            eski.yapildi || !asiParazit
+              ? eski.planlananAt
+              : eski.planlananAt ?? planlanan,
+        });
+      } else {
+        out.push({
+          animalId: h.id,
+          earTag: etiket,
+          tip: k.tip,
+          programId: k.programId,
+          yapildi: false,
+          planlananAt: asiParazit ? planlanan : undefined,
+        });
+      }
     }
   }
   return out;
@@ -338,7 +369,7 @@ export async function olusturModTakviyePlani(opts?: {
   const hayvanlar = await getHayvanlarByMod(modId);
   const kalemler = opts?.kalemler ?? modTakviyeSablonu(modId);
   const mod = getMod(modId);
-  const tarih = opts?.tarih ?? new Date().toISOString().slice(0, 10);
+  const planTarih = opts?.tarih ?? gunSonraTarih(ASI_PLAN_GUN);
   const mevcut = await aktifPlanOku(modId);
   const health = await getAllHealthRecordsForAsi();
 
@@ -346,8 +377,8 @@ export async function olusturModTakviyePlani(opts?: {
     const plan: ModTakviyePlani = {
       id: mevcut?.id ?? uuidv4(),
       modId,
-      baslik: `${mod.baslik} — aşı, parazit & vitamin`,
-      tarih,
+      baslik: `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`,
+      tarih: planTarih,
       kalemler,
       hayvanIds: [],
       durumlar: [],
@@ -370,8 +401,8 @@ export async function olusturModTakviyePlani(opts?: {
   const plan: ModTakviyePlani = {
     id: mevcut?.id ?? uuidv4(),
     modId,
-    baslik: `${mod.baslik} — aşı, parazit & vitamin`,
-    tarih,
+    baslik: `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`,
+    tarih: planTarih,
     kalemler,
     hayvanIds: hayvanlar.map((h) => h.id),
     durumlar,

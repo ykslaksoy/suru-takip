@@ -19,18 +19,20 @@ import {
   olusturModTakviyePlani,
   planaYeniHayvanlariEkle,
   planOzeti,
+  tipEtiket,
   type ModTakviyeKalemi,
   type ModTakviyeOzet,
   type ModTakviyePlani,
-  type TakviyeTip,
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 
-function tipEtiket(tip: TakviyeTip): string {
-  if (tip === 'asi') return 'aşı';
-  if (tip === 'parazit') return 'parazit';
-  if (tip === 'tartim') return 'tartım';
-  return 'vitamin';
+function planlananEtiket(iso?: string): string | null {
+  if (!iso) return null;
+  const gun = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+  const tarih = new Date(iso).toLocaleDateString('tr-TR');
+  if (gun > 0) return `${gun} gün sonra · ${tarih}`;
+  if (gun === 0) return `Bugün · ${tarih}`;
+  return `Gecikti (${Math.abs(gun)}g) · ${tarih}`;
 }
 
 export function ModTakviyePaneli() {
@@ -121,8 +123,8 @@ export function ModTakviyePaneli() {
     <View style={styles.kok}>
       <Text style={[styles.title, { color: colors.text }]}>Mod aşı, tartım & vitamin planı</Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 12, lineHeight: 20 }}>
-        {aktifMod.icon} {aktifMod.baslik} — bu moda kayıtlı hayvanlar plana alınır; 15 günde bir tartım,
-        aşı, parazit ve vitamin için yapıldı denetimi tutulur.
+        {aktifMod.icon} {aktifMod.baslik} — aşı/parazit 21 gün sonraya planlanır; 15 günde bir tartım ve
+        vitamin takip edilir.
       </Text>
 
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
@@ -166,7 +168,7 @@ export function ModTakviyePaneli() {
             </Text>
             <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 19 }}>
               {ozet.yapilan}/{ozet.toplamIs} işlem · {ozet.hayvanSayisi} hayvan · {ozet.kalemSayisi}{' '}
-              kalem · tarih {ozet.plan.tarih}
+              kalem · aşı planı {ozet.plan.tarih}
             </Text>
             <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
               Bekleyen: {ozet.bekleyen}
@@ -226,6 +228,11 @@ export function ModTakviyePaneli() {
                         · {k?.ad ?? d.programId} ({tipEtiket(d.tip)})
                       </Text>
                     </Text>
+                    {planlananEtiket(d.planlananAt) ? (
+                      <Text style={{ color: colors.warning, fontSize: 12, fontWeight: '700', marginTop: 2 }}>
+                        Plan: {planlananEtiket(d.planlananAt)}
+                      </Text>
+                    ) : null}
                     <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 2 }}>
                       Yapıldı işaretle · {k?.mlEtiket ?? ''}
                     </Text>
