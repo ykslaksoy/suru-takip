@@ -4,9 +4,12 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
-import { SUBSCRIPTION_LIMITS, SUBSCRIPTION_PRICES, type SubscriptionTier } from '@/kaynak/cekirdek/tipler';
-
-const TIERS: SubscriptionTier[] = ['free', 'farmer', 'professional', 'enterprise'];
+import {
+  PAKET_LISTESI,
+  SUBSCRIPTION_LIMITS,
+  SUBSCRIPTION_PRICES,
+  type SubscriptionTier,
+} from '@/kaynak/abonelik/paketler';
 
 export default function AbonelikEkrani() {
   const scheme = useColorScheme() ?? 'light';
@@ -15,10 +18,6 @@ export default function AbonelikEkrani() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   const buy = async (t: SubscriptionTier) => {
-    if (t === 'enterprise') {
-      Alert.alert('Kurumsal', 'Damızlık ve kooperatifler için özel teklif: info@suruyon.app');
-      return;
-    }
     const result = await purchase(t, billing);
     Alert.alert(result.success ? 'Başarılı' : 'Hata', result.message);
   };
@@ -26,27 +25,27 @@ export default function AbonelikEkrani() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.intro, { color: colors.textSecondary }]}>
-        Ücretsiz paket — 30 hayvana kadar. {iapAciklama}
+        30 kuzu ücretsiz · 50–1000 arası kademeli paketler. {iapAciklama}
       </Text>
 
       <View style={styles.billingRow}>
         {(['monthly', 'yearly'] as const).map((b) => (
           <AnaButon
             key={b}
-            title={b === 'monthly' ? 'Aylık' : 'Yıllık (%17 indirim)'}
+            title={b === 'monthly' ? 'Aylık' : 'Yıllık (~2 ay indirim)'}
             variant={billing === b ? 'primary' : 'secondary'}
             onPress={() => setBilling(b)}
           />
         ))}
       </View>
 
-      {TIERS.map((t) => {
-        const info = SUBSCRIPTION_PRICES[t];
+      {PAKET_LISTESI.map((paket) => {
+        const info = SUBSCRIPTION_PRICES[paket.id];
         const price = billing === 'yearly' ? info.yearly : info.monthly;
-        const active = tier === t;
+        const active = tier === paket.id;
         return (
           <View
-            key={t}
+            key={paket.id}
             style={[
               styles.card,
               {
@@ -55,20 +54,26 @@ export default function AbonelikEkrani() {
                 borderWidth: active ? 2 : 1,
               },
             ]}>
-            <Text style={[styles.planName, { color: colors.text }]}>{info.label}</Text>
+            <Text style={[styles.planName, { color: colors.text }]}>
+              {info.label}
+              {paket.ucretsiz ? ' · Ücretsiz' : ''}
+            </Text>
             <Text style={[styles.price, { color: colors.tint }]}>
-              {t === 'enterprise' ? 'Özel teklif' : t === 'free' ? '0 TL' : `${price} TL/${billing === 'yearly' ? 'yıl' : 'ay'}`}
+              {paket.ucretsiz ? '0 TL' : `${price} TL/${billing === 'yearly' ? 'yıl' : 'ay'}`}
             </Text>
             <Text style={{ color: colors.textSecondary, marginBottom: 12 }}>
-              {SUBSCRIPTION_LIMITS[t] >= 999999 ? 'Sınırsız hayvan' : `${SUBSCRIPTION_LIMITS[t]} hayvana kadar`}
+              {SUBSCRIPTION_LIMITS[paket.id]} hayvana kadar
             </Text>
-            {t !== 'free' && (
+            {!paket.ucretsiz && (
               <AnaButon
-                title={active ? 'Aktif Paket' : 'Satın Al (Deneme)'}
+                title={active ? 'Aktif paket' : 'Satın al (deneme)'}
                 variant={active ? 'secondary' : 'primary'}
                 disabled={active}
-                onPress={() => buy(t)}
+                onPress={() => buy(paket.id)}
               />
+            )}
+            {paket.ucretsiz && active && (
+              <Text style={{ color: colors.tint, fontWeight: '700' }}>Aktif paket</Text>
             )}
           </View>
         );

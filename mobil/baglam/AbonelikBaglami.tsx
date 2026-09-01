@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { getAnimalLimit, getSubscriptionTier, getTierInfo } from '@/kaynak/abonelik/limit';
 import { iapGeriYukle, iapOrtamAciklama, iapSatinAl } from '@/kaynak/abonelik/iap';
-import { SUBSCRIPTION_PRICES, type SubscriptionTier } from '@/kaynak/cekirdek/tipler';
+import { VARSAYILAN_PAKET, type SubscriptionTier } from '@/kaynak/abonelik/paketler';
+import { SUBSCRIPTION_PRICES } from '@/kaynak/abonelik/paketler';
 
 interface SubscriptionContextValue {
   tier: SubscriptionTier;
@@ -15,18 +16,18 @@ interface SubscriptionContextValue {
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue>({
-  tier: 'free',
+  tier: VARSAYILAN_PAKET,
   limit: 30,
   loading: true,
   iapAciklama: '',
   refresh: async () => {},
   purchase: async () => ({ success: false, message: '' }),
   restore: async () => ({ success: false, message: '' }),
-  tierLabel: 'Ücretsiz',
+  tierLabel: '30 kuzu',
 });
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [tier, setTier] = useState<SubscriptionTier>('free');
+  const [tier, setTier] = useState<SubscriptionTier>(VARSAYILAN_PAKET);
   const [limit, setLimit] = useState(30);
   const [loading, setLoading] = useState(true);
 

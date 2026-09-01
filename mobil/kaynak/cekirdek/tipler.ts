@@ -2,7 +2,18 @@ export type AnimalSex = 'female' | 'male';
 export type AnimalSpecies = 'sheep' | 'goat';
 export type AnimalStatus = 'healthy' | 'sick' | 'pregnant' | 'lactating' | 'dry' | 'sold' | 'dead';
 export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement';
-export type SubscriptionTier = 'free' | 'farmer' | 'professional' | 'enterprise';
+export type {
+  PaketAdet,
+  PaketTanim,
+  SubscriptionTier,
+} from '@/kaynak/abonelik/paketler';
+export {
+  PAKET_ADETLER,
+  PAKET_LISTESI,
+  SUBSCRIPTION_LIMITS,
+  SUBSCRIPTION_PRICES,
+  VARSAYILAN_PAKET,
+} from '@/kaynak/abonelik/paketler';
 export type SyncStatus = 'synced' | 'pending' | 'error';
 export type RationPhase = 'maintenance' | 'pregnant' | 'lactating' | 'lamb_fattening' | 'dry';
 
@@ -137,20 +148,6 @@ export interface VetSuggestion {
   urgency: 'low' | 'medium' | 'high';
   seeVet: boolean;
 }
-
-export const SUBSCRIPTION_LIMITS: Record<SubscriptionTier, number> = {
-  free: 30,
-  farmer: 200,
-  professional: 1000,
-  enterprise: 999999,
-};
-
-export const SUBSCRIPTION_PRICES: Record<SubscriptionTier, { monthly: number; yearly: number; label: string }> = {
-  free: { monthly: 0, yearly: 0, label: 'Ücretsiz' },
-  farmer: { monthly: 149, yearly: 1490, label: 'Çiftçi' },
-  professional: { monthly: 349, yearly: 3490, label: 'Profesyonel' },
-  enterprise: { monthly: 0, yearly: 0, label: 'Kurumsal' },
-};
 
 export const ANIMAL_STATUS_LABELS: Record<AnimalStatus, string> = {
   healthy: 'Sağlıklı',

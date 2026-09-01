@@ -1,4 +1,5 @@
 export * from './limit';
+export * from './paketler';
 export {
   iapOrtam,
   iapOrtamAciklama,

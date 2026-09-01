@@ -11,6 +11,7 @@ import {
   purchaseSubscription,
   setSubscriptionTier,
 } from './limit';
+import { paketBul, VARSAYILAN_PAKET } from './paketler';
 export { iapOrtam, iapOrtamAciklama, type IapOrtam } from './iap-ortam';
 import { iapOrtam } from './iap-ortam';
 
@@ -32,24 +33,24 @@ export async function iapSatinAl(
 export async function iapGeriYukle(): Promise<{ success: boolean; message: string; tier: SubscriptionTier }> {
   const tier = await getSubscriptionTier();
   const expiry = await getSubscriptionExpiry();
-  if (tier === 'free') {
+  if (paketBul(tier).ucretsiz) {
     return {
       success: true,
-      message: 'Ücretsiz paket aktif. Mağaza kaydı yok.',
+      message: '30 kuzu ücretsiz paket aktif. Mağaza kaydı yok.',
       tier,
     };
   }
   if (expiry && expiry < new Date()) {
-    await setSubscriptionTier('free');
+    await setSubscriptionTier(VARSAYILAN_PAKET);
     return {
       success: true,
-      message: 'Süresi dolmuş paket ücretsize alındı.',
-      tier: 'free',
+      message: 'Süresi dolmuş paket 30 kuzu ücretsize alındı.',
+      tier: VARSAYILAN_PAKET,
     };
   }
   return {
     success: true,
-    message: `${tier} paketi geri yüklendi (yerel kayıt)${
+    message: `${paketBul(tier).label} paketi geri yüklendi (yerel kayıt)${
       expiry ? ` · bitiş ${expiry.toLocaleDateString('tr-TR')}` : ''
     }.`,
     tier,
