@@ -39,15 +39,15 @@ export const abonelikModul: TestModul = {
       ),
       test(
         'Abonelik / paketler',
-        'Aylık = adet × 1 TL/kuzu',
+        'Aylık = adet × 2 TL/kuzu',
         PAKET_LISTESI.filter((p) => !p.ucretsiz).every(
           (p) => p.monthly === p.adet * KUZU_BASI_AYLIK_TL,
         ),
       ),
       test(
         'Abonelik / paketler',
-        '200 kuzu = 200 TL/ay',
-        PAKET_LISTESI.find((p) => p.adet === 200)?.monthly === 200,
+        '200 kuzu = 400 TL/ay',
+        PAKET_LISTESI.find((p) => p.adet === 200)?.monthly === 400,
       ),
     ];
   },

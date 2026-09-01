@@ -10,7 +10,7 @@ export type PaketAdet = (typeof PAKET_ADETLER)[number];
 export type SubscriptionTier = `p${PaketAdet}`;
 
 /** Ücretli paketlerde aylık kuzu başı TL */
-export const KUZU_BASI_AYLIK_TL = 1;
+export const KUZU_BASI_AYLIK_TL = 2;
 
 /** Yıllık = 10 ay bedeli (2 ay indirim) */
 export const YILLIK_AY_ESDEGER = 10;
