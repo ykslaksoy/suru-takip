@@ -1,4 +1,4 @@
-import { PAKET_ADETLER, PAKET_LISTESI, SUBSCRIPTION_LIMITS } from '@/kaynak/abonelik/paketler';
+import { PAKET_ADETLER, PAKET_LISTESI, SUBSCRIPTION_LIMITS, KUZU_BASI_AYLIK_TL } from '@/kaynak/abonelik/paketler';
 import { test, type TestModul } from '../cerceve';
 
 export const abonelikModul: TestModul = {
@@ -36,6 +36,18 @@ export const abonelikModul: TestModul = {
         'Abonelik / paketler',
         'Ücretli paketlerde fiyat var',
         PAKET_LISTESI.filter((p) => !p.ucretsiz).every((p) => p.monthly > 0 && p.yearly > 0),
+      ),
+      test(
+        'Abonelik / paketler',
+        'Aylık = adet × 1 TL/kuzu',
+        PAKET_LISTESI.filter((p) => !p.ucretsiz).every(
+          (p) => p.monthly === p.adet * KUZU_BASI_AYLIK_TL,
+        ),
+      ),
+      test(
+        'Abonelik / paketler',
+        '200 kuzu = 200 TL/ay',
+        PAKET_LISTESI.find((p) => p.adet === 200)?.monthly === 200,
       ),
     ];
   },

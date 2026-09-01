@@ -5,6 +5,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import {
+  KUZU_BASI_AYLIK_TL,
   PAKET_LISTESI,
   SUBSCRIPTION_LIMITS,
   SUBSCRIPTION_PRICES,
@@ -25,7 +26,7 @@ export default function AbonelikEkrani() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.intro, { color: colors.textSecondary }]}>
-        30 kuzu ücretsiz · 50–1000 arası kademeli paketler. {iapAciklama}
+        30 kuzu ücretsiz · ücretli paketler 1 TL/kuzu/ay. {iapAciklama}
       </Text>
 
       <View style={styles.billingRow}>
@@ -63,6 +64,7 @@ export default function AbonelikEkrani() {
             </Text>
             <Text style={{ color: colors.textSecondary, marginBottom: 12 }}>
               {SUBSCRIPTION_LIMITS[paket.id]} hayvana kadar
+              {!paket.ucretsiz ? ` · ${KUZU_BASI_AYLIK_TL} TL/kuzu/ay` : ''}
             </Text>
             {!paket.ucretsiz && (
               <AnaButon

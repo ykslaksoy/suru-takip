@@ -1,6 +1,6 @@
 /**
  * Hayvan adedi paketleri — mağaza / abonelik limitleri.
- * 30 ücretsiz · 50–1000 ücretli kademeler.
+ * 30 ücretsiz · 50–1000 ücretli kademeler · 1 TL / kuzu / ay.
  */
 
 export const PAKET_ADETLER = [30, 50, 75, 100, 150, 200, 300, 400, 500, 1000] as const;
@@ -9,30 +9,42 @@ export type PaketAdet = (typeof PAKET_ADETLER)[number];
 
 export type SubscriptionTier = `p${PaketAdet}`;
 
+/** Ücretli paketlerde aylık kuzu başı TL */
+export const KUZU_BASI_AYLIK_TL = 1;
+
+/** Yıllık = 10 ay bedeli (2 ay indirim) */
+export const YILLIK_AY_ESDEGER = 10;
+
 export type PaketTanim = {
   id: SubscriptionTier;
   adet: PaketAdet;
   label: string;
-  /** Aylık TL — simülasyon; mağaza fiyatı IAP ile eşlenir */
+  /** Aylık TL — adet × KUZU_BASI_AYLIK_TL (ücretsiz pakette 0) */
   monthly: number;
-  /** Yıllık TL (~2 ay indirim) */
+  /** Yıllık TL — adet × YILLIK_AY_ESDEGER */
   yearly: number;
   ucretsiz: boolean;
 };
 
-/** Kademeli fiyat — büyük sürüde birim maliyet düşer */
-export const PAKET_LISTESI: PaketTanim[] = [
-  { id: 'p30', adet: 30, label: '30 kuzu', monthly: 0, yearly: 0, ucretsiz: true },
-  { id: 'p50', adet: 50, label: '50 kuzu', monthly: 79, yearly: 790, ucretsiz: false },
-  { id: 'p75', adet: 75, label: '75 kuzu', monthly: 99, yearly: 990, ucretsiz: false },
-  { id: 'p100', adet: 100, label: '100 kuzu', monthly: 119, yearly: 1190, ucretsiz: false },
-  { id: 'p150', adet: 150, label: '150 kuzu', monthly: 149, yearly: 1490, ucretsiz: false },
-  { id: 'p200', adet: 200, label: '200 kuzu', monthly: 179, yearly: 1790, ucretsiz: false },
-  { id: 'p300', adet: 300, label: '300 kuzu', monthly: 229, yearly: 2290, ucretsiz: false },
-  { id: 'p400', adet: 400, label: '400 kuzu', monthly: 279, yearly: 2790, ucretsiz: false },
-  { id: 'p500', adet: 500, label: '500 kuzu', monthly: 319, yearly: 3190, ucretsiz: false },
-  { id: 'p1000', adet: 1000, label: '1000 kuzu', monthly: 449, yearly: 4490, ucretsiz: false },
-];
+function paketFiyat(adet: PaketAdet, ucretsiz: boolean): { monthly: number; yearly: number } {
+  if (ucretsiz) return { monthly: 0, yearly: 0 };
+  return {
+    monthly: adet * KUZU_BASI_AYLIK_TL,
+    yearly: adet * YILLIK_AY_ESDEGER,
+  };
+}
+
+export const PAKET_LISTESI: PaketTanim[] = PAKET_ADETLER.map((adet) => {
+  const ucretsiz = adet === 30;
+  const fiyat = paketFiyat(adet, ucretsiz);
+  return {
+    id: `p${adet}` as SubscriptionTier,
+    adet,
+    label: `${adet} kuzu`,
+    ...fiyat,
+    ucretsiz,
+  };
+});
 
 export const VARSAYILAN_PAKET: SubscriptionTier = 'p30';
 
