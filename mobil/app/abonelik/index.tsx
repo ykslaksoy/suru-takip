@@ -9,13 +9,14 @@ import {
   PAKET_LISTESI,
   SUBSCRIPTION_LIMITS,
   SUBSCRIPTION_PRICES,
+  UCRETSIZ_DENEME_AY,
   type SubscriptionTier,
 } from '@/kaynak/abonelik/paketler';
 
 export default function AbonelikEkrani() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { tier, purchase, restore, iapAciklama } = useSubscription();
+  const { tier, purchase, restore, iapAciklama, denemeHakki, denemeKalanGun } = useSubscription();
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   const buy = async (t: SubscriptionTier) => {
@@ -26,8 +27,20 @@ export default function AbonelikEkrani() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.intro, { color: colors.textSecondary }]}>
-        30 kuzu ücretsiz · ücretli paketler 1 TL/kuzu/ay. {iapAciklama}
+        30 kuzu her zaman ücretsiz · ücretli paketler {KUZU_BASI_AYLIK_TL} TL/kuzu/ay.
+        {denemeHakki
+          ? ` İlk ücretli paket: ${UCRETSIZ_DENEME_AY} ay ücretsiz deneme.`
+          : ''}{' '}
+        {iapAciklama}
       </Text>
+
+      {denemeKalanGun != null && denemeKalanGun > 0 ? (
+        <View style={[styles.denemeKutu, { backgroundColor: colors.accent, borderColor: colors.border }]}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>
+            Deneme süresi · {denemeKalanGun} gün kaldı
+          </Text>
+        </View>
+      ) : null}
 
       <View style={styles.billingRow}>
         {(['monthly', 'yearly'] as const).map((b) => (
@@ -44,6 +57,10 @@ export default function AbonelikEkrani() {
         const info = SUBSCRIPTION_PRICES[paket.id];
         const price = billing === 'yearly' ? info.yearly : info.monthly;
         const active = tier === paket.id;
+        const denemeButon =
+          denemeHakki && !paket.ucretsiz
+            ? `${UCRETSIZ_DENEME_AY} ay ücretsiz dene`
+            : 'Satın al (simülasyon)';
         return (
           <View
             key={paket.id}
@@ -65,10 +82,11 @@ export default function AbonelikEkrani() {
             <Text style={{ color: colors.textSecondary, marginBottom: 12 }}>
               {SUBSCRIPTION_LIMITS[paket.id]} hayvana kadar
               {!paket.ucretsiz ? ` · ${KUZU_BASI_AYLIK_TL} TL/kuzu/ay` : ''}
+              {!paket.ucretsiz && denemeHakki ? ` · ilk ${UCRETSIZ_DENEME_AY} ay 0 TL` : ''}
             </Text>
             {!paket.ucretsiz && (
               <AnaButon
-                title={active ? 'Aktif paket' : 'Satın al (deneme)'}
+                title={active ? 'Aktif paket' : denemeButon}
                 variant={active ? 'secondary' : 'primary'}
                 disabled={active}
                 onPress={() => buy(paket.id)}
@@ -90,7 +108,8 @@ export default function AbonelikEkrani() {
       />
 
       <Text style={[styles.note, { color: colors.textSecondary }]}>
-        Canlı sürümde App Store / Play Store (RevenueCat) EXPO_PUBLIC_REVENUECAT_KEY ile açılır. Şu an simülasyon.
+        Deneme bir kez kullanılır (cihaz başına). Canlı sürümde App Store / Play Store ile otomatik yenileme
+        açılır.
       </Text>
     </ScrollView>
   );
@@ -99,6 +118,7 @@ export default function AbonelikEkrani() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   intro: { marginBottom: 16, lineHeight: 20 },
+  denemeKutu: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12 },
   billingRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   card: { borderRadius: 14, padding: 18, marginBottom: 12 },
   planName: { fontSize: 20, fontWeight: '800' },

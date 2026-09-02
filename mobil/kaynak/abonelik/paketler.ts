@@ -1,6 +1,6 @@
 /**
  * Hayvan adedi paketleri — mağaza / abonelik limitleri.
- * 30 ücretsiz · 50–1000 ücretli kademeler · 1 TL / kuzu / ay.
+ * 30 ücretsiz · 50–1000 ücretli · 2 TL/kuzu/ay · ilk ücretli paket 3 ay deneme.
  */
 
 export const PAKET_ADETLER = [30, 50, 75, 100, 150, 200, 300, 400, 500, 1000] as const;
@@ -14,6 +14,9 @@ export const KUZU_BASI_AYLIK_TL = 2;
 
 /** Yıllık = 10 ay bedeli (2 ay indirim) */
 export const YILLIK_AY_ESDEGER = 10;
+
+/** İlk ücretli pakette tanıtım — bir kez / cihaz */
+export const UCRETSIZ_DENEME_AY = 3;
 
 export type PaketTanim = {
   id: SubscriptionTier;

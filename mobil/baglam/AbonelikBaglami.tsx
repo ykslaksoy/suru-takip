@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getAnimalLimit, getSubscriptionTier, getTierInfo } from '@/kaynak/abonelik/limit';
+import { getAnimalLimit, getDenemeKalanGun, getSubscriptionTier, getTierInfo, denemeHakkiVarMi } from '@/kaynak/abonelik/limit';
 import { iapGeriYukle, iapOrtamAciklama, iapSatinAl } from '@/kaynak/abonelik/iap';
-import { VARSAYILAN_PAKET, type SubscriptionTier } from '@/kaynak/abonelik/paketler';
+import { UCRETSIZ_DENEME_AY, VARSAYILAN_PAKET, type SubscriptionTier } from '@/kaynak/abonelik/paketler';
 import { SUBSCRIPTION_PRICES } from '@/kaynak/abonelik/paketler';
 
 interface SubscriptionContextValue {
@@ -13,6 +13,8 @@ interface SubscriptionContextValue {
   purchase: (tier: SubscriptionTier, billing: 'monthly' | 'yearly') => Promise<{ success: boolean; message: string }>;
   restore: () => Promise<{ success: boolean; message: string }>;
   tierLabel: string;
+  denemeHakki: boolean;
+  denemeKalanGun: number | null;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue>({
@@ -24,18 +26,24 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   purchase: async () => ({ success: false, message: '' }),
   restore: async () => ({ success: false, message: '' }),
   tierLabel: '30 kuzu',
+  denemeHakki: true,
+  denemeKalanGun: null,
 });
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [tier, setTier] = useState<SubscriptionTier>(VARSAYILAN_PAKET);
   const [limit, setLimit] = useState(30);
   const [loading, setLoading] = useState(true);
+  const [denemeHakki, setDenemeHakki] = useState(true);
+  const [denemeKalanGun, setDenemeKalanGun] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     const t = await getSubscriptionTier();
     const l = await getAnimalLimit();
     setTier(t);
     setLimit(l);
+    setDenemeHakki(await denemeHakkiVarMi());
+    setDenemeKalanGun(await getDenemeKalanGun());
     setLoading(false);
   }, []);
 
@@ -69,6 +77,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         purchase,
         restore,
         tierLabel: getTierInfo(tier).label,
+        denemeHakki,
+        denemeKalanGun,
       }}>
       {children}
     </SubscriptionContext.Provider>
