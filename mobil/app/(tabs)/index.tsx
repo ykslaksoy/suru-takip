@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
@@ -11,6 +11,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useAnaSayfa } from '@/baglam/AnaSayfaBaglami';
 import { useMod } from '@/baglam/ModBaglami';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
+import { gitAyarlar } from '@/kaynak/navigasyon/ayarlar';
 
 export default function AnaSayfaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -65,7 +66,8 @@ export default function AnaSayfaScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Ayarlar"
-              onPress={() => router.push('/(tabs)/ayarlar' as never)}
+              hitSlop={8}
+              onPress={gitAyarlar}
               style={({ pressed }) =>
                 StyleSheet.flatten([
                   styles.ayarlarBtn,
@@ -73,6 +75,7 @@ export default function AnaSayfaScreen() {
                     backgroundColor: colors.card,
                     borderColor: colors.tint,
                     opacity: pressed ? 0.85 : 1,
+                    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : null),
                   },
                 ])
               }>

@@ -15,6 +15,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { SEKME_IKONLARI, SEKME_IKONLARI_DOLU } from '@/bilesenler/ortak/SekmeIkonlari';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
+import { gitAyarlar } from '@/kaynak/navigasyon/ayarlar';
 
 type TabRoute = { key: string; name: string; params?: object };
 
@@ -133,17 +134,14 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
     setBarW(e.nativeEvent.layout.width);
   }, []);
 
-  const ayarlarRoute = state.routes.find((r) => r.name === 'ayarlar');
-  const digerRoutes = state.routes.filter((r) => r.name !== 'ayarlar');
-  const pinW = Math.min(72, Math.max(56, Math.round(barW * 0.16)));
+  const pinW = Math.min(76, Math.max(60, Math.round(barW * 0.18)));
   const scrollW = Math.max(0, barW - pinW);
-  const n = Math.max(1, digerRoutes.length);
+  const n = Math.max(1, state.routes.length);
   const itemMinW = Math.max(48, Math.min(64, Math.floor(scrollW / Math.min(n, 5))));
   const needScroll = n * itemMinW > scrollW + 4;
   const etiketGoster = !kisa && winH >= 520;
   const iconSize = itemMinW < 52 ? 16 : 18;
   const aktifKey = state.routes[state.index]?.key;
-  const aktifName = state.routes[state.index]?.name;
 
   const pressFor = useCallback(
     (route: TabRoute, focused: boolean) => () => {
@@ -190,14 +188,14 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
 
   // Aktif sekme kaydırma alanında görünür kalsın
   useEffect(() => {
-    if (!aktifKey || aktifName === 'ayarlar' || !needScroll) return;
-    const idx = digerRoutes.findIndex((r) => r.key === aktifKey);
+    if (!aktifKey || !needScroll) return;
+    const idx = state.routes.findIndex((r) => r.key === aktifKey);
     if (idx < 0) return;
     const x = Math.max(0, idx * itemMinW - itemMinW);
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({ x, animated: true });
     });
-  }, [aktifKey, aktifName, itemMinW, needScroll, digerRoutes]);
+  }, [aktifKey, itemMinW, needScroll, state.routes]);
 
   const shellPadBottom =
     Platform.OS === 'web'
@@ -224,20 +222,45 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
           bounces={needScroll}
           style={StyleSheet.flatten([styles.scroll, { width: scrollW }])}
           contentContainerStyle={styles.scrollContent}>
-          {digerRoutes.map((route) => renderItem(route))}
+          {state.routes.map((route) => renderItem(route))}
         </ScrollView>
-        {ayarlarRoute ? (
-          <View
-            style={StyleSheet.flatten([
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ayarlar"
+          onPress={gitAyarlar}
+          style={({ pressed }) =>
+            StyleSheet.flatten([
               styles.pin,
+              styles.item,
               {
                 width: pinW,
                 borderLeftColor: colors.border,
+                opacity: pressed ? 0.7 : 1,
+                minHeight: kisa ? 42 : 48,
+              },
+            ])
+          }>
+          <View
+            style={StyleSheet.flatten([
+              styles.pill,
+              {
+                backgroundColor: colors.tint,
+                minWidth: Math.min(44, pinW - 8),
+                height: kisa ? 28 : 30,
+                borderRadius: 15,
               },
             ])}>
-            {renderItem(ayarlarRoute, { minW: pinW - 4, forceLabel: true })}
+            <Ionicons name="settings" size={iconSize} color="#fff" />
           </View>
-        ) : null}
+          <Text
+            numberOfLines={1}
+            style={StyleSheet.flatten([
+              styles.label,
+              { color: colors.tint, fontSize: 10, fontWeight: '800' },
+            ])}>
+            Ayarlar
+          </Text>
+        </Pressable>
       </View>
     </View>
   );

@@ -14,7 +14,6 @@ const TABS: { name: string; title: string; short: string }[] = [
   { name: 'veteriner', title: 'Veteriner', short: 'Vet' },
   { name: 'akilli-kuzu', title: 'Akıllı Kuzu', short: 'Kuzu' },
   { name: 'yolculuk', title: 'Yolculuk', short: 'Yol' },
-  { name: 'ayarlar', title: 'Ayarlar', short: 'Ayar' },
 ];
 
 export default function TabLayout() {
