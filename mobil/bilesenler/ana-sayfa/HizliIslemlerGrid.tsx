@@ -70,14 +70,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    gap: 6,
   },
-  icon: {
-    marginBottom: 6,
-  },
+  icon: {},
   label: {
     fontWeight: '700',
     textAlign: 'center',
+    width: '100%',
   },
 });

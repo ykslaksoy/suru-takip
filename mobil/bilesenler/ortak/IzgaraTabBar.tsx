@@ -1,7 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { useMod } from '@/baglam/ModBaglami';
 
 type TabRoute = { key: string; name: string; params?: object };
 
@@ -19,47 +18,50 @@ type IzgaraTabBarProps = {
   };
 };
 
-/** Alt navigasyon — 9 sekme, 3×3 ızgara */
+/** Kısa sabit etiket — uzun mod adı ızgarayı bozmasın */
+const SABIT_ETIKET: Record<string, string> = {
+  index: 'Ana',
+  suru: 'Sürü',
+  stok: 'Stok',
+  saglik: 'Sağlık',
+  rasyon: 'Rasyon',
+  veteriner: 'Veteriner',
+  'akilli-kuzu': 'Kuzu',
+  yolculuk: 'Yolculuk',
+  ayarlar: 'Ayarlar',
+};
+
+/** Alt navigasyon — 9 sekme, eşit 3×3 ızgara */
 export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>) {
   const { state, descriptors, navigation } = props as IzgaraTabBarProps;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { aktifMod } = useMod();
-
-  const rows: TabRoute[][] = [];
-  for (let i = 0; i < state.routes.length; i += 3) {
-    rows.push(state.routes.slice(i, i + 3));
-  }
+  const { width } = useWindowDimensions();
+  const dar = width < 360;
 
   return (
     <View style={[styles.bar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-      {rows.map((row, rowIndex) => (
-        <View key={`r-${rowIndex}`} style={styles.row}>
-          {row.map((route) => {
-            const index = state.routes.findIndex((r) => r.key === route.key);
-            const focused = state.index === index;
-            const { options } = descriptors[route.key];
-            let label = options.tabBarLabel ?? options.title ?? route.name;
-            const emoji = options.tabBarEmoji ?? '•';
+      <View style={styles.grid}>
+        {state.routes.map((route, index) => {
+          const focused = state.index === index;
+          const { options } = descriptors[route.key];
+          const emoji = options.tabBarEmoji ?? '•';
+          const label = SABIT_ETIKET[route.name] ?? options.tabBarLabel ?? options.title ?? route.name;
 
-            if (route.name === 'yolculuk') {
-              label = aktifMod.baslik.length <= 14 ? aktifMod.baslik : aktifMod.kisa;
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
             }
+          };
 
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
-              if (!focused && !event.defaultPrevented) {
-                navigation.navigate(route.name, route.params);
-              }
-            };
-
-            return (
+          return (
+            <View key={route.key} style={styles.cellWrap}>
               <Pressable
-                key={route.key}
                 accessibilityRole="button"
                 accessibilityState={{ selected: focused }}
                 accessibilityLabel={label}
@@ -67,59 +69,65 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
                 style={({ pressed }) => [
                   styles.cell,
                   {
-                    backgroundColor: focused ? colors.tint + '18' : 'transparent',
-                    borderColor: focused ? colors.tint : 'transparent',
+                    backgroundColor: focused ? colors.tint + '18' : colors.background,
+                    borderColor: focused ? colors.tint : colors.border,
                     opacity: pressed ? 0.85 : 1,
+                    minHeight: dar ? 56 : 60,
                   },
                 ]}>
-                <Text style={{ fontSize: focused ? 18 : 16 }}>
-                  {route.name === 'yolculuk' ? aktifMod.icon : emoji}
-                </Text>
+                <Text style={styles.emoji}>{emoji}</Text>
                 <Text
                   numberOfLines={1}
-                  style={[styles.label, { color: focused ? colors.tint : colors.tabIconDefault }]}>
+                  style={[
+                    styles.label,
+                    {
+                      color: focused ? colors.tint : colors.textSecondary,
+                      fontSize: dar ? 10 : 11,
+                    },
+                  ]}>
                   {label}
                 </Text>
               </Pressable>
-            );
-          })}
-          {row.length < 3
-            ? Array.from({ length: 3 - row.length }).map((_, i) => (
-                <View key={`sp-${rowIndex}-${i}`} style={styles.cell} />
-              ))
-            : null}
-        </View>
-      ))}
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
-    borderTopWidth: 1,
-    paddingHorizontal: 6,
-    paddingTop: 6,
-    paddingBottom: 8,
-    gap: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 10,
   },
-  row: {
+  grid: {
     flexDirection: 'row',
-    gap: 4,
+    flexWrap: 'wrap',
+  },
+  cellWrap: {
+    width: '33.333%',
+    padding: 3,
   },
   cell: {
-    flex: 1,
-    minHeight: 52,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  emoji: {
+    fontSize: 18,
+    lineHeight: 22,
+    textAlign: 'center',
   },
   label: {
-    fontSize: 9,
     fontWeight: '700',
-    marginTop: 2,
     textAlign: 'center',
+    width: '100%',
   },
 });

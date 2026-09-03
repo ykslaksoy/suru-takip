@@ -12,9 +12,15 @@ interface Props {
 export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { onLayout, horizontalPadding, olcek, kestirmeGenislik } = useAnaSayfaDuzeni();
+  const { onLayout, horizontalPadding, olcek, kestirmeGenislik, kestirmeSutun } =
+    useAnaSayfaDuzeni();
 
   if (items.length === 0) return null;
+
+  const rows: MenuOgesi[][] = [];
+  for (let i = 0; i < items.length; i += kestirmeSutun) {
+    rows.push(items.slice(i, i + kestirmeSutun));
+  }
 
   return (
     <View onLayout={onLayout} style={styles.wrap}>
@@ -22,38 +28,48 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
         <Text style={[styles.title, { color: colors.textSecondary }]}>Kestirmeler</Text>
         <Text style={[styles.count, { color: colors.textSecondary }]}>{items.length} kısayol</Text>
       </View>
-      <View
-        style={[
-          styles.grid,
-          { paddingHorizontal: horizontalPadding, gap: olcek.kestirmeGap },
-        ]}>
-        {items.map((item) => (
-          <Pressable
-            key={item.id}
-            accessibilityRole="button"
-            accessibilityLabel={item.label}
-            onPress={() => router.push(item.href as never)}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                width: kestirmeGenislik,
-                backgroundColor: colors.background,
-                borderColor: colors.border,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}>
-            <Text style={[styles.chipIcon, { fontSize: olcek.kestirmeIcon }]}>{item.icon}</Text>
-            <Text
-              style={[
-                styles.chipText,
-                { color: colors.text, fontSize: olcek.kestirmeYazi, lineHeight: olcek.kestirmeYazi + 4 },
-              ]}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.85}>
-              {item.label}
-            </Text>
-          </Pressable>
+      <View style={[styles.list, { paddingHorizontal: horizontalPadding, gap: olcek.kestirmeGap }]}>
+        {rows.map((row, rowIndex) => (
+          <View key={`kr-${rowIndex}`} style={[styles.row, { gap: olcek.kestirmeGap }]}>
+            {row.map((item) => (
+              <Pressable
+                key={item.id}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+                onPress={() => router.push(item.href as never)}
+                style={({ pressed }) => [
+                  styles.chip,
+                  {
+                    width: kestirmeGenislik,
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.85 : 1,
+                    minHeight: olcek.dar ? 44 : 48,
+                  },
+                ]}>
+                <Text style={[styles.chipIcon, { fontSize: olcek.kestirmeIcon }]}>{item.icon}</Text>
+                <Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: colors.text,
+                      fontSize: olcek.kestirmeYazi,
+                      lineHeight: olcek.kestirmeYazi + 4,
+                    },
+                  ]}
+                  numberOfLines={2}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.85}>
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))}
+            {row.length < kestirmeSutun
+              ? Array.from({ length: kestirmeSutun - row.length }).map((_, i) => (
+                  <View key={`sp-${rowIndex}-${i}`} style={{ width: kestirmeGenislik }} />
+                ))
+              : null}
+          </View>
         ))}
       </View>
     </View>
@@ -63,7 +79,7 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   headerRow: {
     flexDirection: 'row',
@@ -81,19 +97,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  grid: {
+  list: {},
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    minHeight: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   chipIcon: {
     width: 22,
