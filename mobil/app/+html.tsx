@@ -29,12 +29,26 @@ export default function Root({ children }: { children: ReactNode }) {
 const webStyles = `
 html, body, #root {
   height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+html {
+  overflow: hidden;
 }
 
 body {
   background-color: #f4f7f0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,13 +65,15 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 28px 16px;
+    overflow: auto;
   }
 
   #root {
     width: 100%;
     max-width: 430px;
-    height: min(920px, calc(100vh - 56px));
+    height: min(920px, calc(100dvh - 56px));
     max-height: 920px;
     border-radius: 32px;
     overflow: hidden;
@@ -74,11 +90,25 @@ body {
   }
 }
 
-/* Gerçek telefonda tam ekran + çentik desteği */
+/* Gerçek telefonda tam ekran + çentik / Safari toolbar payı */
 @media (max-width: 519px) {
   #root {
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Tarayıcı alt çubuğu için minimum pay — içerik kesilmesin */
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+  }
+}
+
+@media (orientation: landscape) and (max-width: 900px) {
+  html, body, #root {
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  #root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
   }
 }
 `;

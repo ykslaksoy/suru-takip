@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
@@ -10,6 +10,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useAnaSayfa } from '@/baglam/AnaSayfaBaglami';
 import { useMod } from '@/baglam/ModBaglami';
+import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 
 export default function AnaSayfaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -17,6 +18,8 @@ export default function AnaSayfaScreen() {
   const { pendingSync } = useDatabase();
   const { hizliIslemler, kestirmeler, loading } = useAnaSayfa();
   const { aktifMod } = useMod();
+  const { height } = useWindowDimensions();
+  const { scrollPadBottom, kisa } = useAltGuvenliBosluk();
 
   const kestirmeGoster = kestirmeler.map((k) =>
     k.id === 'besi'
@@ -29,14 +32,25 @@ export default function AnaSayfaScreen() {
       : k
   );
 
+  // Ayarlar kestirmesini üste taşı — altta kesilmesin
+  const kestirmeSirali = [...kestirmeGoster].sort((a, b) => {
+    if (a.id === 'ayarlar') return -1;
+    if (b.id === 'ayarlar') return 1;
+    return 0;
+  });
+
   return (
     <View style={StyleSheet.flatten([styles.shell, { backgroundColor: colors.background }])}>
       <CevrimdisiBanner pendingSync={pendingSync} />
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+        contentContainerStyle={StyleSheet.flatten([
+          styles.scrollContent,
+          { paddingBottom: scrollPadBottom, minHeight: Math.max(height * 0.55, 280) },
+        ])}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+        <View style={StyleSheet.flatten([styles.header, { paddingTop: kisa ? 2 : 4 }])}>
           <View style={styles.brand}>
             <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])} numberOfLines={1}>
               SürüYön
@@ -54,15 +68,18 @@ export default function AnaSayfaScreen() {
               onPress={() => router.push('/(tabs)/ayarlar' as never)}
               style={({ pressed }) =>
                 StyleSheet.flatten([
-                  styles.iconBtn,
+                  styles.ayarlarBtn,
                   {
                     backgroundColor: colors.card,
-                    borderColor: colors.border,
+                    borderColor: colors.tint,
                     opacity: pressed ? 0.85 : 1,
                   },
                 ])
               }>
-              <Ionicons name="settings-outline" size={18} color={colors.tint} />
+              <Ionicons name="settings-outline" size={16} color={colors.tint} />
+              <Text style={StyleSheet.flatten([styles.ayarlarText, { color: colors.tint }])}>
+                Ayarlar
+              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -106,23 +123,22 @@ export default function AnaSayfaScreen() {
           </>
         ) : null}
 
-        {kestirmeGoster.length > 0 ? <KestirmelerSatiri items={kestirmeGoster} /> : null}
+        {kestirmeSirali.length > 0 ? <KestirmelerSatiri items={kestirmeSirali} /> : null}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  shell: { flex: 1 },
+  shell: { flex: 1, width: '100%' },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 16, flexGrow: 1 },
+  scrollContent: { flexGrow: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingTop: 4,
     paddingBottom: 6,
-    gap: 10,
+    gap: 8,
   },
   brand: {
     flex: 1,
@@ -143,6 +159,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     flexShrink: 0,
+  },
+  ayarlarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    height: 40,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  ayarlarText: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
   iconBtn: {
     width: 40,

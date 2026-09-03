@@ -12,8 +12,8 @@ export const VARSAYILAN_ANA_SAYFA = {
     'turkvet',
   ],
   kestirmeIds: [
-    'gorevler',
     'ayarlar',
+    'gorevler',
     'besi',
     'ses',
     'seri-ahir',

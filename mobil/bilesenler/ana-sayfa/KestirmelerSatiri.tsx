@@ -96,7 +96,7 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     paddingTop: 2,
-    paddingBottom: 8,
+    paddingBottom: 16,
     width: '100%',
   },
   headerRow: {
