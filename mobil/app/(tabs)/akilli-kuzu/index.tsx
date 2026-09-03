@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
@@ -27,8 +28,8 @@ function AkilliKuzuBubble({
 }) {
   return (
     <View style={styles.bubbleRow}>
-      <View style={[styles.avatar, { backgroundColor: colors.tint }]}>
-        <Text style={styles.avatarEmoji}>{AKILLI_KUZU.emoji}</Text>
+      <View style={[styles.avatar, { backgroundColor: colors.tint + '18' }]}>
+        <Ionicons name="sparkles" size={18} color={colors.tint} />
       </View>
       <View style={[styles.bubble, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.bubbleName, { color: colors.tint }]}>{AKILLI_KUZU.name}</Text>
@@ -91,16 +92,18 @@ export default function AkilliKuzuScreen() {
         }}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 28 }}>
         {alt === 'oneriler' ? (
           <>
             <Text style={[styles.header, { color: colors.text }]}>Akıllı Kuzu</Text>
             <Text style={[styles.sub, { color: colors.textSecondary }]}>
-              Önerileri {AKILLI_KUZU.name} getirir · En üstte {SUPER_KUZU_BASARI.name}
+              Günlük öneriler · kritikler üstte
             </Text>
 
             <View style={[styles.hero, { backgroundColor: colors.tint }]}>
-              <Text style={styles.heroEmoji}>{AKILLI_KUZU.emoji}</Text>
+              <View style={styles.heroIcon}>
+                <Ionicons name="sparkles" size={22} color="#fff" />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.heroName}>{AKILLI_KUZU.name}</Text>
                 <Text style={styles.heroTag}>{greeting}</Text>
@@ -109,7 +112,6 @@ export default function AkilliKuzuScreen() {
 
             {showSuperKuzu ? (
               <View style={[styles.superCard, { borderColor: colors.warning, backgroundColor: colors.card }]}>
-                <Text style={{ fontSize: 32, textAlign: 'center' }}>{SUPER_KUZU_BASARI.emoji}</Text>
                 <Text style={[styles.superTitle, { color: colors.text }]}>{SUPER_KUZU_BASARI.title}</Text>
                 <Text style={{ color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
                   {SUPER_KUZU_BASARI.desc}
@@ -121,10 +123,14 @@ export default function AkilliKuzuScreen() {
               {suggestions.map((s) => (
                 <View key={s.id} style={styles.block}>
                   <View style={styles.tagRow}>
-                    <Text style={[styles.tag, { color: urgencyColor(s.urgency) }]}>
-                      {s.urgency === 'alert' ? 'Önemli' : s.urgency === 'action' ? 'Şimdi' : 'İpucu'}
+                    <View style={[styles.tagPill, { backgroundColor: urgencyColor(s.urgency) + '18' }]}>
+                      <Text style={[styles.tag, { color: urgencyColor(s.urgency) }]}>
+                        {s.urgency === 'alert' ? 'Önemli' : s.urgency === 'action' ? 'Şimdi' : 'İpucu'}
+                      </Text>
+                    </View>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600' }}>
+                      {s.title}
                     </Text>
-                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{s.title}</Text>
                   </View>
                   <AkilliKuzuBubble text={s.voice} colors={colors} />
                   {s.cta ? <CtaLink cta={s.cta} colors={colors} /> : null}
@@ -170,49 +176,74 @@ function CtaLink({ cta, colors }: { cta: string; colors: (typeof Colors)['light'
   return (
     <Pressable
       onPress={() => router.push(href as never)}
-      style={{ marginTop: 6, marginLeft: 54 }}>
-      <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>{cta} →</Text>
+      style={styles.cta}>
+      <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>{cta}</Text>
+      <Ionicons name="arrow-forward" size={14} color={colors.tint} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   shell: { flex: 1 },
-  header: { fontSize: 22, fontWeight: '800', paddingHorizontal: 16, paddingTop: 8 },
-  sub: { paddingHorizontal: 16, marginBottom: 12 },
+  header: { fontSize: 22, fontWeight: '800', paddingHorizontal: 16, paddingTop: 4, letterSpacing: -0.4 },
+  sub: { paddingHorizontal: 16, marginBottom: 12, fontSize: 13 },
   hero: {
     marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 16,
+    marginBottom: 14,
+    padding: 14,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  heroEmoji: { fontSize: 36 },
-  heroName: { color: '#fff', fontWeight: '800', fontSize: 18 },
-  heroTag: { color: '#ffffffcc', marginTop: 4, lineHeight: 18 },
-  superCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 2,
-  },
-  superTitle: { fontWeight: '800', fontSize: 18, textAlign: 'center', marginVertical: 8 },
-  block: { marginBottom: 16 },
-  tagRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6, paddingLeft: 54 },
-  tag: { fontWeight: '800', fontSize: 12 },
-  bubbleRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  heroIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEmoji: { fontSize: 22 },
-  bubble: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 12 },
+  heroName: { color: '#fff', fontWeight: '800', fontSize: 17, letterSpacing: -0.3 },
+  heroTag: { color: '#ffffffcc', marginTop: 3, lineHeight: 18, fontSize: 13 },
+  superCard: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
+  superTitle: { fontWeight: '800', fontSize: 17, textAlign: 'center', marginBottom: 6 },
+  block: { marginBottom: 14 },
+  tagRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+    paddingLeft: 50,
+  },
+  tagPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  tag: { fontWeight: '800', fontSize: 11 },
+  bubbleRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bubble: { flex: 1, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
   bubbleName: { fontWeight: '800', fontSize: 12, marginBottom: 4 },
   bubbleText: { lineHeight: 20, fontSize: 14 },
+  cta: {
+    marginTop: 6,
+    marginLeft: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
 });

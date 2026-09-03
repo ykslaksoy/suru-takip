@@ -5,17 +5,17 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { WebDurumCubugu } from '@/bilesenler/ortak/WebDurumCubugu';
 import { IzgaraTabBar } from '@/bilesenler/ortak/IzgaraTabBar';
 
-/** 9 sekme — kompakt tek satır dock (3×3 kaldırıldı) */
-const TABS: { name: string; title: string; short: string; emoji: string }[] = [
-  { name: 'index', title: 'Ana Sayfa', short: 'Ana', emoji: '🏠' },
-  { name: 'suru', title: 'Sürü', short: 'Sürü', emoji: '🐑' },
-  { name: 'stok', title: 'Stok', short: 'Stok', emoji: '📦' },
-  { name: 'saglik', title: 'Sağlık', short: 'Sağlık', emoji: '💊' },
-  { name: 'rasyon', title: 'Rasyon', short: 'Rasyon', emoji: '🌾' },
-  { name: 'veteriner', title: 'Veteriner', short: 'Vet', emoji: '🩺' },
-  { name: 'akilli-kuzu', title: 'Akıllı Kuzu', short: 'Kuzu', emoji: '✨' },
-  { name: 'yolculuk', title: 'Yolculuk', short: 'Yol', emoji: '🛤️' },
-  { name: 'ayarlar', title: 'Ayarlar', short: 'Ayar', emoji: '⚙️' },
+/** 9 sekme — modern tek satır vektör dock */
+const TABS: { name: string; title: string; short: string }[] = [
+  { name: 'index', title: 'Ana Sayfa', short: 'Ana' },
+  { name: 'suru', title: 'Sürü', short: 'Sürü' },
+  { name: 'stok', title: 'Stok', short: 'Stok' },
+  { name: 'saglik', title: 'Sağlık', short: 'Sağlık' },
+  { name: 'rasyon', title: 'Rasyon', short: 'Rasyon' },
+  { name: 'veteriner', title: 'Veteriner', short: 'Vet' },
+  { name: 'akilli-kuzu', title: 'Akıllı Kuzu', short: 'Kuzu' },
+  { name: 'yolculuk', title: 'Yolculuk', short: 'Yol' },
+  { name: 'ayarlar', title: 'Ayarlar', short: 'Ayar' },
 ];
 
 export default function TabLayout() {
@@ -35,13 +35,10 @@ export default function TabLayout() {
           <Tabs.Screen
             key={t.name}
             name={t.name}
-            options={
-              {
-                title: t.title,
-                tabBarLabel: t.short,
-                tabBarEmoji: t.emoji,
-              } as never
-            }
+            options={{
+              title: t.title,
+              tabBarLabel: t.short,
+            }}
           />
         ))}
       </Tabs>

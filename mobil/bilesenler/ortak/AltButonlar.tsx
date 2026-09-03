@@ -7,7 +7,7 @@ export type AltButon = {
   label: string;
 };
 
-/** Sekme içi küçük alt butonlar (yatay kaydırılabilir) */
+/** Modern segment kontrol — ince hap butonlar */
 export function AltButonlar({
   items,
   activeKey,
@@ -21,23 +21,32 @@ export function AltButonlar({
   const colors = Colors[scheme];
 
   return (
-    <View style={StyleSheet.flatten([styles.wrap, { borderBottomColor: colors.border }])}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <View style={StyleSheet.flatten([styles.wrap, { backgroundColor: colors.background }])}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}>
         {items.map((item) => {
           const on = item.key === activeKey;
           return (
             <Pressable
               key={item.key}
               onPress={() => onSelect(item.key)}
-              style={StyleSheet.flatten([
-                styles.btn,
-                {
-                  backgroundColor: on ? colors.tint : colors.card,
-                  borderColor: on ? colors.tint : colors.border,
-                },
-              ])}>
+              style={({ pressed }) =>
+                StyleSheet.flatten([
+                  styles.btn,
+                  {
+                    backgroundColor: on ? colors.tint : colors.card,
+                    borderColor: on ? colors.tint : colors.border,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ])
+              }>
               <Text
-                style={StyleSheet.flatten([styles.label, { color: on ? '#fff' : colors.text }])}
+                style={StyleSheet.flatten([
+                  styles.label,
+                  { color: on ? '#fff' : colors.textSecondary },
+                ])}
                 numberOfLines={1}>
                 {item.label}
               </Text>
@@ -51,24 +60,24 @@ export function AltButonlar({
 
 const styles = StyleSheet.create({
   wrap: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
     paddingVertical: 8,
   },
   row: {
-    paddingHorizontal: 12,
-    gap: 8,
+    paddingHorizontal: 14,
+    gap: 6,
     alignItems: 'center',
   },
   btn: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
-    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
     minHeight: 34,
     justifyContent: 'center',
   },
   label: {
     fontSize: 12,
     fontWeight: '700',
+    letterSpacing: -0.2,
   },
 });
