@@ -4,6 +4,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useAnaSayfaDuzeni } from '@/bilesenler/ortak/duyarli-izgara';
 import { KESTIRMELER, type MenuOgesi } from '@/kaynak/ana-sayfa';
+import { gitAyarlar } from '@/kaynak/navigasyon/ayarlar';
 
 interface Props {
   items?: MenuOgesi[];
@@ -47,7 +48,9 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
                 key={item.id}
                 accessibilityRole="button"
                 accessibilityLabel={item.label}
-                onPress={() => router.push(item.href as never)}
+                onPress={() =>
+                  item.id === 'ayarlar' ? gitAyarlar() : router.push(item.href as never)
+                }
                 style={({ pressed }) =>
                   StyleSheet.flatten([
                     styles.chip,

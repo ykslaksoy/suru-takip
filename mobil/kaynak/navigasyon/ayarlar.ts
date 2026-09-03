@@ -1,8 +1,19 @@
-import { router } from 'expo-router';
+import { useEffect } from 'react';
 
-/** Tek gerçek Ayarlar yolu — sekme ile çakışmasın diye stack ekranı */
+type AcFn = () => void;
+
+let acFn: AcFn | null = null;
+
 export const AYARLAR_HREF = '/ayarlar' as const;
 
+export function kaydetAyarlarAc(fn: AcFn | null) {
+  acFn = fn;
+}
+
+/** Ayarlar ekranını her zaman üstte açar (router’a bağlı değil). */
 export function gitAyarlar() {
-  router.push(AYARLAR_HREF);
+  if (acFn) {
+    acFn();
+    return;
+  }
 }

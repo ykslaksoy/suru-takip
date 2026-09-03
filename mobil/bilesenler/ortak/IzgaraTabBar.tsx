@@ -16,6 +16,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { SEKME_IKONLARI, SEKME_IKONLARI_DOLU } from '@/bilesenler/ortak/SekmeIkonlari';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 import { gitAyarlar } from '@/kaynak/navigasyon/ayarlar';
+import { useAyarlar } from '@/baglam/AyarlarBaglami';
 
 type TabRoute = { key: string; name: string; params?: object };
 
@@ -127,6 +128,7 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
   const colors = Colors[scheme];
   const { width: winW, height: winH } = useWindowDimensions();
   const { tabBarPadBottom, kisa } = useAltGuvenliBosluk();
+  const { acik: ayarlarAcik } = useAyarlar();
   const [barW, setBarW] = useState(winW);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -244,13 +246,13 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
             style={StyleSheet.flatten([
               styles.pill,
               {
-                backgroundColor: colors.tint,
+                backgroundColor: ayarlarAcik ? colors.tint : 'transparent',
                 minWidth: Math.min(44, pinW - 8),
                 height: kisa ? 28 : 30,
                 borderRadius: 15,
               },
             ])}>
-            <Ionicons name="settings" size={iconSize} color="#fff" />
+            <Ionicons name="settings" size={iconSize} color={ayarlarAcik ? '#fff' : colors.tint} />
           </View>
           <Text
             numberOfLines={1}
