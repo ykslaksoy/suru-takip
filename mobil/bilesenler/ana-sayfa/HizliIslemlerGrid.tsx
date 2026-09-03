@@ -9,6 +9,7 @@ interface Props {
   items?: MenuOgesi[];
 }
 
+/** Kompakt hızlı işlem kartları — ikon rozetli */
 export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -41,16 +42,26 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
                   styles.cell,
                   {
                     width: hizliHucreGenislik,
-                    minHeight: Math.min(76, olcek.hizliHucreYukseklik),
+                    minHeight: Math.min(72, olcek.hizliHucreYukseklik),
                     backgroundColor: colors.card,
                     borderColor: colors.border,
                     opacity: pressed ? 0.88 : 1,
                   },
                 ])
               }>
-              <Text style={StyleSheet.flatten([styles.icon, { fontSize: Math.min(22, olcek.hizliIcon) }])}>
-                {item.icon}
-              </Text>
+              <View
+                style={StyleSheet.flatten([
+                  styles.iconBadge,
+                  { backgroundColor: colors.tint + '18' },
+                ])}>
+                <Text
+                  style={StyleSheet.flatten([
+                    styles.icon,
+                    { fontSize: Math.min(18, olcek.hizliIcon) },
+                  ])}>
+                  {item.icon}
+                </Text>
+              </View>
               <Text
                 style={StyleSheet.flatten([
                   styles.label,
@@ -80,17 +91,22 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
 
 const styles = StyleSheet.create({
   grid: { marginBottom: 4 },
-  row: {
-    flexDirection: 'row',
-  },
+  row: { flexDirection: 'row' },
   cell: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
     paddingVertical: 10,
-    gap: 4,
+    gap: 6,
+  },
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   icon: {},
   label: {

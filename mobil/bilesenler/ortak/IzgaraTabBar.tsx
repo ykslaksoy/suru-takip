@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 
@@ -18,7 +18,7 @@ type IzgaraTabBarProps = {
   };
 };
 
-const SABIT_ETIKET: Record<string, string> = {
+const ETIKET: Record<string, string> = {
   index: 'Ana',
   suru: 'Sürü',
   stok: 'Stok',
@@ -30,30 +30,33 @@ const SABIT_ETIKET: Record<string, string> = {
   ayarlar: 'Ayar',
 };
 
-/** Tek satır kaydırmalı alt menü — 3×3 ızgara ekranı yiyordu */
+/**
+ * Kompakt alt dock — 9 sekme tek satırda, eşit genişlik.
+ * Eski 3×3 ızgara ~3 satır yer kaplıyordu; bu ~58px.
+ */
 export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>) {
   const { state, descriptors, navigation } = props as IzgaraTabBarProps;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { width } = useWindowDimensions();
-  const dar = width < 360;
+  const dar = width < 380;
 
   return (
     <View
       style={StyleSheet.flatten([
-        styles.bar,
-        { backgroundColor: colors.card, borderTopColor: colors.border },
+        styles.shell,
+        {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          paddingBottom: Platform.OS === 'web' ? 8 : 10,
+        },
       ])}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-        keyboardShouldPersistTaps="handled">
+      <View style={styles.row}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
           const { options } = descriptors[route.key];
           const emoji = options.tabBarEmoji ?? '•';
-          const label = SABIT_ETIKET[route.name] ?? options.tabBarLabel ?? options.title ?? route.name;
+          const label = ETIKET[route.name] ?? options.tabBarLabel ?? options.title ?? route.name;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -74,64 +77,83 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
               accessibilityLabel={label}
               onPress={onPress}
               style={({ pressed }) =>
-                StyleSheet.flatten([
-                  styles.cell,
-                  {
-                    backgroundColor: focused ? colors.tint + '18' : 'transparent',
-                    borderColor: focused ? colors.tint : 'transparent',
-                    opacity: pressed ? 0.85 : 1,
-                    minWidth: dar ? 58 : 64,
-                  },
-                ])
+                StyleSheet.flatten([styles.item, { opacity: pressed ? 0.75 : 1 }])
               }>
-              <Text style={styles.emoji}>{emoji}</Text>
+              <View
+                style={StyleSheet.flatten([
+                  styles.iconWrap,
+                  {
+                    backgroundColor: focused ? colors.tint : scheme === 'dark' ? colors.border : '#eef5ee',
+                  },
+                ])}>
+                <Text style={StyleSheet.flatten([styles.emoji, { fontSize: dar ? 13 : 14 }])}>
+                  {emoji}
+                </Text>
+              </View>
               <Text
                 numberOfLines={1}
                 style={StyleSheet.flatten([
                   styles.label,
                   {
-                    color: focused ? colors.tint : colors.textSecondary,
-                    fontSize: dar ? 10 : 11,
+                    color: focused ? colors.tint : colors.tabIconDefault,
+                    fontSize: dar ? 9 : 10,
+                    fontWeight: focused ? '800' : '600',
                   },
                 ])}>
                 {label}
               </Text>
+              <View
+                style={StyleSheet.flatten([
+                  styles.dot,
+                  { backgroundColor: focused ? colors.tint : 'transparent' },
+                ])}
+              />
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: {
+  shell: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 4,
-    paddingBottom: 6,
+    paddingTop: 6,
   },
   row: {
-    paddingHorizontal: 8,
-    gap: 4,
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 2,
   },
-  cell: {
-    borderRadius: 12,
-    borderWidth: 1.5,
+  item: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingTop: 2,
     minHeight: 52,
+    gap: 2,
+  },
+  iconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emoji: {
-    fontSize: 16,
-    lineHeight: 20,
+    lineHeight: 18,
     textAlign: 'center',
   },
   label: {
-    fontWeight: '700',
     textAlign: 'center',
-    marginTop: 2,
+    width: '100%',
+    letterSpacing: -0.2,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 1,
   },
 });
