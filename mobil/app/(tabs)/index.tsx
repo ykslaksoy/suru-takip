@@ -56,19 +56,19 @@ export default function AnaSayfaScreen() {
                   { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
                 ])
               }>
-              <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Ayarlar</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Ana ekranı planla"
-              onPress={() => router.push('/ana-sayfa/duzenle' as never)}
-              style={({ pressed }) =>
-                StyleSheet.flatten([
-                  styles.planBtn,
-                  { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
-                ])
-              }>
-              <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Planla</Text>
+            <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>Ayarlar</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ana ekranı planla"
+            onPress={() => router.push('/ana-sayfa/duzenle' as never)}
+            style={({ pressed }) =>
+              StyleSheet.flatten([
+                styles.planBtn,
+                { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
+              ])
+            }>
+            <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>Planla</Text>
             </Pressable>
           </View>
         </View>
@@ -102,36 +102,38 @@ export default function AnaSayfaScreen() {
 
 const styles = StyleSheet.create({
   shell: { flex: 1 },
-  scroll: { paddingBottom: 20 },
+  scroll: { paddingBottom: 12 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
-    gap: 12,
-  },
-  title: { fontSize: 26, fontWeight: '800' },
-  headerActions: { flexDirection: 'row', gap: 8 },
-  planBtn: {
-    borderWidth: 1,
-    borderRadius: 10,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    minHeight: 44,
+    paddingTop: 6,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
+  headerActions: { flexDirection: 'row', gap: 6 },
+  planBtn: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    minHeight: 34,
     justifyContent: 'center',
   },
   section: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '800',
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingHorizontal: 14,
+    marginBottom: 8,
+    marginTop: 2,
+    letterSpacing: -0.2,
   },
   emptyBox: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
+    marginHorizontal: 14,
+    marginBottom: 12,
+    padding: 12,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 });

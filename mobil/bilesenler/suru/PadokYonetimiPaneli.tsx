@@ -240,19 +240,19 @@ export function PadokYonetimiPaneli() {
 
 const styles = StyleSheet.create({
   box: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 10,
   },
   ust: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 4,
   },
-  title: { fontWeight: '800', fontSize: 15 },
-  hint: { fontSize: 12, marginTop: 2, fontWeight: '600' },
+  title: { fontWeight: '800', fontSize: 14, letterSpacing: -0.2 },
+  hint: { fontSize: 11, marginTop: 1, fontWeight: '600' },
   yeniBtn: {
     borderWidth: 1,
     borderRadius: 10,
