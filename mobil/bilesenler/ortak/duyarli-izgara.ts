@@ -45,15 +45,15 @@ export function anaSayfaOlcegi(contentWidth: number, height: number) {
     genis,
     kisa,
     hizliSutun,
-    hizliGap: dar ? 8 : 10,
-    hizliHucreYukseklik: kisa ? (dar ? 72 : 80) : dar ? 84 : genis ? 104 : 96,
-    hizliIcon: dar ? 22 : genis ? 28 : 26,
-    hizliYazi: dar ? 11 : genis ? 13 : 12,
-    kestirmeMinGenislik: dar ? 112 : genis ? 148 : 128,
+    hizliGap: dar ? 6 : 8,
+    hizliHucreYukseklik: kisa ? (dar ? 64 : 70) : dar ? 70 : genis ? 78 : 74,
+    hizliIcon: dar ? 16 : genis ? 20 : 18,
+    hizliYazi: dar ? 11 : genis ? 12 : 11,
+    kestirmeMinGenislik: dar ? 100 : genis ? 130 : 112,
     kestirmeMaxSutun: genis ? 4 : dar ? 2 : 3,
-    kestirmeGap: 8,
-    kestirmeYazi: dar ? 11 : 12,
-    kestirmeIcon: dar ? 14 : 16,
+    kestirmeGap: 6,
+    kestirmeYazi: dar ? 10 : 11,
+    kestirmeIcon: dar ? 12 : 14,
   };
 }
 
