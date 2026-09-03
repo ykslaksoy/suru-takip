@@ -9,11 +9,11 @@ interface Props {
   items?: MenuOgesi[];
 }
 
-/** Kompakt hızlı işlem kartları — ikon rozetli */
+/** Flex tabanlı hızlı işlemler — yatay/dikeyde sütun sayısı dinamik */
 export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { onLayout, horizontalPadding, olcek, hizliHucreGenislik } = useAnaSayfaDuzeni();
+  const { onLayout, horizontalPadding, olcek } = useAnaSayfaDuzeni();
 
   const rows: MenuOgesi[][] = [];
   for (let i = 0; i < items.length; i += olcek.hizliSutun) {
@@ -25,12 +25,12 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
       onLayout={onLayout}
       style={StyleSheet.flatten([
         styles.grid,
-        { paddingHorizontal: horizontalPadding, gap: Math.min(8, olcek.hizliGap) },
+        { paddingHorizontal: horizontalPadding, gap: olcek.hizliGap },
       ])}>
       {rows.map((row, rowIndex) => (
         <View
           key={`row-${rowIndex}`}
-          style={StyleSheet.flatten([styles.row, { gap: Math.min(8, olcek.hizliGap) }])}>
+          style={StyleSheet.flatten([styles.row, { gap: olcek.hizliGap }])}>
           {row.map((item) => (
             <Pressable
               key={item.id}
@@ -41,8 +41,8 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
                 StyleSheet.flatten([
                   styles.cell,
                   {
-                    width: hizliHucreGenislik,
-                    minHeight: Math.min(72, olcek.hizliHucreYukseklik),
+                    flex: 1,
+                    minHeight: olcek.hizliHucreYukseklik,
                     backgroundColor: colors.card,
                     borderColor: colors.border,
                     opacity: pressed ? 0.88 : 1,
@@ -52,35 +52,34 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
               <View
                 style={StyleSheet.flatten([
                   styles.iconBadge,
-                  { backgroundColor: colors.tint + '18' },
+                  {
+                    backgroundColor: colors.tint + '18',
+                    width: olcek.kisa ? 28 : 32,
+                    height: olcek.kisa ? 28 : 32,
+                    borderRadius: olcek.kisa ? 9 : 10,
+                  },
                 ])}>
-                <Text
-                  style={StyleSheet.flatten([
-                    styles.icon,
-                    { fontSize: Math.min(18, olcek.hizliIcon) },
-                  ])}>
-                  {item.icon}
-                </Text>
+                <Text style={{ fontSize: olcek.hizliIcon }}>{item.icon}</Text>
               </View>
               <Text
                 style={StyleSheet.flatten([
                   styles.label,
                   {
                     color: colors.text,
-                    fontSize: Math.min(12, olcek.hizliYazi),
-                    lineHeight: Math.min(12, olcek.hizliYazi) + 3,
+                    fontSize: olcek.hizliYazi,
+                    lineHeight: olcek.hizliYazi + 3,
                   },
                 ])}
-                numberOfLines={2}
+                numberOfLines={olcek.yatay ? 1 : 2}
                 adjustsFontSizeToFit
-                minimumFontScale={0.85}>
+                minimumFontScale={0.8}>
                 {item.label}
               </Text>
             </Pressable>
           ))}
           {row.length < olcek.hizliSutun
             ? Array.from({ length: olcek.hizliSutun - row.length }).map((_, i) => (
-                <View key={`spacer-${rowIndex}-${i}`} style={{ width: hizliHucreGenislik }} />
+                <View key={`spacer-${rowIndex}-${i}`} style={styles.spacer} />
               ))
             : null}
         </View>
@@ -90,25 +89,23 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
 }
 
 const styles = StyleSheet.create({
-  grid: { marginBottom: 4 },
-  row: { flexDirection: 'row' },
+  grid: { marginBottom: 4, width: '100%' },
+  row: { flexDirection: 'row', width: '100%' },
   cell: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    paddingVertical: 8,
+    paddingVertical: 6,
     gap: 4,
+    minWidth: 0,
   },
+  spacer: { flex: 1, minWidth: 0 },
   iconBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {},
   label: {
     fontWeight: '700',
     textAlign: 'center',

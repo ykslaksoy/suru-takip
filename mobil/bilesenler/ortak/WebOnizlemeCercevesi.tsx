@@ -1,17 +1,23 @@
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-/** Masaüstü web önizlemede ortalanmış telefon çerçevesi */
+/**
+ * Masaüstünde dikey önizleme çerçevesi.
+ * Yatay / kısa ekranda çerçeve kapalı — içerik gerçek genişliği kullanır.
+ */
 export function WebOnizlemeCercevesi({ children }: { children: React.ReactNode }) {
   const { width, height } = useWindowDimensions();
-  const masaustu = Platform.OS === 'web' && width >= 520;
+  const yatay = width > height;
+  const kisa = height < 520;
+  const masaustuDikey =
+    Platform.OS === 'web' && width >= 560 && !yatay && !kisa;
 
-  if (!masaustu) {
+  if (!masaustuDikey) {
     return <View style={styles.tamEkran}>{children}</View>;
   }
 
   return (
     <View style={styles.dis}>
-      <View style={[styles.telefon, { maxHeight: Math.min(920, height - 56) }]}>{children}</View>
+      <View style={[styles.telefon, { maxHeight: Math.min(920, height - 48) }]}>{children}</View>
     </View>
   );
 }
@@ -19,13 +25,15 @@ export function WebOnizlemeCercevesi({ children }: { children: React.ReactNode }
 const styles = StyleSheet.create({
   tamEkran: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
   dis: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1a2e1a',
-    paddingVertical: 28,
+    paddingVertical: 24,
     paddingHorizontal: 16,
   },
   telefon: {

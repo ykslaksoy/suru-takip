@@ -9,16 +9,15 @@ interface Props {
   items?: MenuOgesi[];
 }
 
-/** 3 sütunlu yoğun kestirme şeridi */
+/** Flex kestirmeler — yatayda daha fazla sütun */
 export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { onLayout, horizontalPadding, olcek, kestirmeGenislik, kestirmeSutun } =
-    useAnaSayfaDuzeni();
+  const { onLayout, horizontalPadding, olcek, kestirmeSutun } = useAnaSayfaDuzeni();
 
   if (items.length === 0) return null;
 
-  const sutun = Math.min(3, Math.max(2, kestirmeSutun));
+  const sutun = Math.max(2, kestirmeSutun);
   const rows: MenuOgesi[][] = [];
   for (let i = 0; i < items.length; i += sutun) {
     rows.push(items.slice(i, i + sutun));
@@ -37,12 +36,12 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
       <View
         style={StyleSheet.flatten([
           styles.list,
-          { paddingHorizontal: horizontalPadding, gap: Math.min(6, olcek.kestirmeGap) },
+          { paddingHorizontal: horizontalPadding, gap: olcek.kestirmeGap },
         ])}>
         {rows.map((row, rowIndex) => (
           <View
             key={`kr-${rowIndex}`}
-            style={StyleSheet.flatten([styles.row, { gap: Math.min(6, olcek.kestirmeGap) }])}>
+            style={StyleSheet.flatten([styles.row, { gap: olcek.kestirmeGap }])}>
             {row.map((item) => (
               <Pressable
                 key={item.id}
@@ -53,10 +52,11 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
                   StyleSheet.flatten([
                     styles.chip,
                     {
-                      width: kestirmeGenislik,
+                      flex: 1,
                       backgroundColor: colors.card,
                       borderColor: colors.border,
                       opacity: pressed ? 0.85 : 1,
+                      minHeight: olcek.kisa ? 34 : 38,
                     },
                   ])
                 }>
@@ -72,8 +72,8 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
                     styles.chipText,
                     {
                       color: colors.text,
-                      fontSize: Math.min(11, olcek.kestirmeYazi),
-                      lineHeight: 14,
+                      fontSize: olcek.kestirmeYazi,
+                      lineHeight: olcek.kestirmeYazi + 3,
                     },
                   ])}
                   numberOfLines={1}>
@@ -83,7 +83,7 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
             ))}
             {row.length < sutun
               ? Array.from({ length: sutun - row.length }).map((_, i) => (
-                  <View key={`sp-${rowIndex}-${i}`} style={{ width: kestirmeGenislik }} />
+                  <View key={`sp-${rowIndex}-${i}`} style={styles.spacer} />
                 ))
               : null}
           </View>
@@ -97,12 +97,13 @@ const styles = StyleSheet.create({
   wrap: {
     paddingTop: 2,
     paddingBottom: 8,
+    width: '100%',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   title: {
     fontSize: 11,
@@ -114,20 +115,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  list: {},
+  list: { width: '100%' },
   row: {
     flexDirection: 'row',
+    width: '100%',
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 11,
     paddingHorizontal: 8,
-    paddingVertical: 7,
-    minHeight: 38,
+    paddingVertical: 6,
+    minWidth: 0,
   },
+  spacer: { flex: 1, minWidth: 0 },
   iconDot: {
     width: 22,
     height: 22,
@@ -142,5 +145,6 @@ const styles = StyleSheet.create({
   chipText: {
     flex: 1,
     fontWeight: '600',
+    minWidth: 0,
   },
 });

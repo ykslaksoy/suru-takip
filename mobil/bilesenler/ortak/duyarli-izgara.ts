@@ -1,19 +1,35 @@
 import { useCallback, useMemo, useState } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 
-/** Gerçek kapsayıcı genişliği — web önizleme çerçevesi dahil */
-export function useKapsayiciGenisligi(horizontalPadding = 16) {
-  const { width: windowWidth } = useWindowDimensions();
-  const [measured, setMeasured] = useState<number | null>(null);
+/** Kapsayıcı ölçümü — pencere yerine gerçek alan (yatay/çerçeve dostu) */
+export function useKapsayiciOlcu(horizontalPadding = 14) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const [measuredW, setMeasuredW] = useState<number | null>(null);
+  const [measuredH, setMeasuredH] = useState<number | null>(null);
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setMeasured(e.nativeEvent.layout.width);
+    const { width, height } = e.nativeEvent.layout;
+    setMeasuredW(width);
+    setMeasuredH(height);
   }, []);
 
-  const containerWidth = measured ?? windowWidth;
+  const containerWidth = measuredW ?? windowWidth;
+  const containerHeight = measuredH ?? windowHeight;
   const contentWidth = Math.max(0, containerWidth - horizontalPadding * 2);
+  const yatay = containerWidth > containerHeight;
+  const kisa = containerHeight < 480;
 
-  return { containerWidth, contentWidth, onLayout, horizontalPadding };
+  return {
+    containerWidth,
+    containerHeight,
+    contentWidth,
+    onLayout,
+    horizontalPadding,
+    yatay,
+    kisa,
+    windowWidth,
+    windowHeight,
+  };
 }
 
 export function sutunSayisi(
@@ -28,40 +44,42 @@ export function sutunSayisi(
   return Math.max(min, Math.min(max, cols));
 }
 
-export function ogeGenisligi(contentWidth: number, columns: number, gap: number): number {
-  if (columns <= 0) return contentWidth;
-  return (contentWidth - gap * (columns - 1)) / columns;
-}
+export function anaSayfaOlcegi(contentWidth: number, height: number, yatay: boolean) {
+  const dar = contentWidth < 360;
+  const genis = contentWidth >= 700 || (yatay && contentWidth >= 560);
+  const orta = contentWidth >= 480;
+  const kisa = height < 480 || yatay;
 
-export function anaSayfaOlcegi(contentWidth: number, height: number) {
-  const dar = contentWidth < 340;
-  const genis = contentWidth >= 520;
-  const kisa = height < 680;
-
-  const hizliSutun = genis ? 4 : dar ? 2 : 3;
+  // Yatayda daha çok sütun — butonlar alanı doldursun
+  const hizliSutun = genis ? 6 : yatay ? (orta ? 5 : 4) : orta ? 4 : dar ? 2 : 3;
+  const kestirmeMaxSutun = genis ? 6 : yatay ? 5 : dar ? 2 : 4;
 
   return {
     dar,
     genis,
+    yatay,
     kisa,
     hizliSutun,
     hizliGap: dar ? 6 : 8,
-    hizliHucreYukseklik: kisa ? (dar ? 64 : 70) : dar ? 70 : genis ? 78 : 74,
-    hizliIcon: dar ? 16 : genis ? 20 : 18,
-    hizliYazi: dar ? 11 : genis ? 12 : 11,
-    kestirmeMinGenislik: dar ? 100 : genis ? 130 : 112,
-    kestirmeMaxSutun: genis ? 4 : dar ? 2 : 3,
+    hizliHucreYukseklik: kisa ? (dar ? 56 : 60) : dar ? 68 : genis ? 76 : 70,
+    hizliIcon: dar ? 15 : genis ? 20 : 17,
+    hizliYazi: dar ? 10 : genis ? 12 : 11,
+    kestirmeMinGenislik: yatay ? 120 : dar ? 100 : 112,
+    kestirmeMaxSutun,
     kestirmeGap: 6,
     kestirmeYazi: dar ? 10 : 11,
     kestirmeIcon: dar ? 12 : 14,
   };
 }
 
-export function useAnaSayfaDuzeni(horizontalPadding = 16) {
-  const { height } = useWindowDimensions();
-  const { contentWidth, onLayout, horizontalPadding: pad } = useKapsayiciGenisligi(horizontalPadding);
+export function useAnaSayfaDuzeni(horizontalPadding = 14) {
+  const olcu = useKapsayiciOlcu(horizontalPadding);
+  const { contentWidth, containerHeight, yatay, onLayout, horizontalPadding: pad } = olcu;
 
-  const olcek = useMemo(() => anaSayfaOlcegi(contentWidth, height), [contentWidth, height]);
+  const olcek = useMemo(
+    () => anaSayfaOlcegi(contentWidth, containerHeight, yatay),
+    [contentWidth, containerHeight, yatay]
+  );
 
   const kestirmeSutun = useMemo(
     () =>
@@ -75,23 +93,13 @@ export function useAnaSayfaDuzeni(horizontalPadding = 16) {
     [contentWidth, olcek.kestirmeMinGenislik, olcek.kestirmeGap, olcek.kestirmeMaxSutun]
   );
 
-  const kestirmeGenislik = useMemo(
-    () => ogeGenisligi(contentWidth, kestirmeSutun, olcek.kestirmeGap),
-    [contentWidth, kestirmeSutun, olcek.kestirmeGap]
-  );
-
-  const hizliHucreGenislik = useMemo(
-    () => ogeGenisligi(contentWidth, olcek.hizliSutun, olcek.hizliGap),
-    [contentWidth, olcek.hizliSutun, olcek.hizliGap]
-  );
-
   return {
     onLayout,
     horizontalPadding: pad,
     contentWidth,
     olcek,
     kestirmeSutun,
-    kestirmeGenislik,
-    hizliHucreGenislik,
+    yatay,
+    kisa: olcek.kisa,
   };
 }

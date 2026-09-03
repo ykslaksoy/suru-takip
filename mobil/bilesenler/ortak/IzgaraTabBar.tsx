@@ -1,4 +1,13 @@
-import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useState } from 'react';
+import {
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -33,24 +42,40 @@ const ETIKET: Record<string, string> = {
 };
 
 /**
- * Modern alt dock — tek satır, vektör ikon, aktif yeşil hap.
- * Eski 3×3 emoji kutuları kaldırıldı.
+ * Dinamik alt dock — gerçek genişlik/yüksekliğe göre ikon ve etiket ölçekler.
+ * Yatayda etiketler gizlenir, dokunma alanları esnek kalır.
  */
 export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>) {
   const { state, descriptors, navigation } = props as IzgaraTabBarProps;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { width } = useWindowDimensions();
-  const dar = width < 390;
+  const { width: winW, height: winH } = useWindowDimensions();
+  const [barW, setBarW] = useState(winW);
+
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    setBarW(e.nativeEvent.layout.width);
+  }, []);
+
+  const yatay = winW > winH;
+  const kisa = winH < 480 || yatay;
+  const n = Math.max(1, state.routes.length);
+  const itemW = barW / n;
+  const cokDar = itemW < 48;
+  const etiketGoster = !kisa && !cokDar && itemW >= 52;
+  const iconSize = cokDar ? 15 : itemW < 64 ? 16 : 18;
+  const pillH = kisa ? 26 : 28;
+  const pillMinW = Math.min(40, Math.max(28, itemW - 8));
 
   return (
     <View
+      onLayout={onLayout}
       style={StyleSheet.flatten([
         styles.shell,
         {
           backgroundColor: scheme === 'dark' ? colors.card : '#fbfcf9',
           borderTopColor: colors.border,
-          paddingBottom: Platform.OS === 'web' ? 10 : 12,
+          paddingBottom: Platform.OS === 'web' ? (kisa ? 4 : 8) : kisa ? 6 : 10,
+          paddingTop: kisa ? 4 : 6,
         },
       ])}>
       <View style={styles.row}>
@@ -81,34 +106,44 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
               accessibilityLabel={label}
               onPress={onPress}
               style={({ pressed }) =>
-                StyleSheet.flatten([styles.item, { opacity: pressed ? 0.7 : 1 }])
+                StyleSheet.flatten([
+                  styles.item,
+                  {
+                    opacity: pressed ? 0.7 : 1,
+                    minHeight: kisa ? 40 : 48,
+                  },
+                ])
               }>
               <View
                 style={StyleSheet.flatten([
                   styles.pill,
                   {
                     backgroundColor: focused ? colors.tint : 'transparent',
-                    paddingHorizontal: dar ? 8 : 10,
+                    minWidth: pillMinW,
+                    height: pillH,
+                    borderRadius: pillH / 2,
                   },
                 ])}>
                 <Ionicons
                   name={icon}
-                  size={dar ? 16 : 18}
+                  size={iconSize}
                   color={focused ? '#fff' : colors.tabIconDefault}
                 />
               </View>
-              <Text
-                numberOfLines={1}
-                style={StyleSheet.flatten([
-                  styles.label,
-                  {
-                    color: focused ? colors.tint : colors.tabIconDefault,
-                    fontSize: dar ? 9 : 10,
-                    fontWeight: focused ? '800' : '600',
-                  },
-                ])}>
-                {label}
-              </Text>
+              {etiketGoster ? (
+                <Text
+                  numberOfLines={1}
+                  style={StyleSheet.flatten([
+                    styles.label,
+                    {
+                      color: focused ? colors.tint : colors.tabIconDefault,
+                      fontSize: itemW < 70 ? 9 : 10,
+                      fontWeight: focused ? '800' : '600',
+                    },
+                  ])}>
+                  {label}
+                </Text>
+              ) : null}
             </Pressable>
           );
         })}
@@ -120,26 +155,24 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
 const styles = StyleSheet.create({
   shell: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 8,
+    width: '100%',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    width: '100%',
+    paddingHorizontal: 2,
   },
   item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    minHeight: 48,
+    gap: 2,
   },
   pill: {
-    minWidth: 36,
-    height: 28,
-    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 6,
   },
   label: {
     textAlign: 'center',
