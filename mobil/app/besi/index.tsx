@@ -1,6 +1,12 @@
-import { Redirect } from 'expo-router';
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-/** Eski yol → Yolculuk sekmesi */
+/** Eski /besi yolu → Yolculuk sekmesi */
 export default function BesiRedirect() {
-  return <Redirect href="/(tabs)/yolculuk" />;
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/(tabs)/yolculuk');
+  }, [router]);
+  return <View />;
 }

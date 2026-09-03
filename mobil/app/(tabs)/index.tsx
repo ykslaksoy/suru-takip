@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { BugunKarti } from '@/bilesenler/ana-sayfa/BugunKarti';
 import { HizliIslemlerGrid } from '@/bilesenler/ana-sayfa/HizliIslemlerGrid';
@@ -40,28 +40,30 @@ export default function AnaSayfaScreen() {
             <Text style={{ color: colors.textSecondary }}>{aktifMod.baslik}</Text>
           </View>
           <View style={styles.headerActions}>
-            <Link href="/(tabs)/ayarlar" asChild>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ayarlar"
-                style={({ pressed }) => [
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ayarlar"
+              onPress={() => router.push('/(tabs)/ayarlar' as never)}
+              style={({ pressed }) =>
+                StyleSheet.flatten([
                   styles.planBtn,
                   { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
-                ]}>
-                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Ayarlar</Text>
-              </Pressable>
-            </Link>
-            <Link href="/ana-sayfa/duzenle" asChild>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ana ekranı planla"
-                style={({ pressed }) => [
+                ])
+              }>
+              <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Ayarlar</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ana ekranı planla"
+              onPress={() => router.push('/ana-sayfa/duzenle' as never)}
+              style={({ pressed }) =>
+                StyleSheet.flatten([
                   styles.planBtn,
                   { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
-                ]}>
-                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Planla</Text>
-              </Pressable>
-            </Link>
+                ])
+              }>
+              <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Planla</Text>
+            </Pressable>
           </View>
         </View>
 

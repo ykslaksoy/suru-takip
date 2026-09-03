@@ -1,6 +1,12 @@
-import { Redirect } from 'expo-router';
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-/** Eski yol → sekme */
+/** Eski /ayarlar yolu → sekme (Redirect Slot hatası vermesin diye) */
 export default function AyarlarRedirect() {
-  return <Redirect href="/(tabs)/ayarlar" />;
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/(tabs)/ayarlar');
+  }, [router]);
+  return <View />;
 }

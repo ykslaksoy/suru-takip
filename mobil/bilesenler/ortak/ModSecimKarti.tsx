@@ -18,15 +18,17 @@ export function ModSecimKarti({ mod, secili, onPress }: Props) {
       accessibilityRole="button"
       accessibilityState={{ selected: !!secili }}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: colors.card,
-          borderColor: secili ? colors.tint : colors.border,
-          borderWidth: secili ? 2 : 1,
-          opacity: pressed ? 0.9 : 1,
-        },
-      ]}>
+      style={({ pressed }) =>
+        StyleSheet.flatten([
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: secili ? colors.tint : colors.border,
+            borderWidth: secili ? 2 : 1,
+            opacity: pressed ? 0.9 : 1,
+          },
+        ])
+      }>
       <View style={styles.top}>
         <Text style={styles.icon}>{mod.icon}</Text>
         <View style={{ flex: 1 }}>

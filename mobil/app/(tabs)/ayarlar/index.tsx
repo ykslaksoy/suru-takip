@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { Link, router, useNavigation } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { ModSecimKarti } from '@/bilesenler/ortak/ModSecimKarti';
@@ -13,6 +13,8 @@ import { hayvanListesiCsv } from '@/kaynak/excel/disa-aktar';
 import { suruyonYedekJson } from '@/kaynak/cekirdek/yedek';
 import { appOrtamEtiketi } from '@/sabitler/Ortam';
 import { OZELLIK_BAYRAKLARI, ozellikDurumEtiketi } from '@/sabitler/OzellikBayraklari';
+
+type LinkSatir = { baslik: string; href?: string; onPress?: () => void; ok?: string };
 
 export default function AyarlarScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -36,18 +38,58 @@ export default function AyarlarScreen() {
     }
   };
 
+  const satirStil = useMemo(
+    () =>
+      StyleSheet.flatten([
+        styles.linkRow,
+        { borderColor: colors.border, backgroundColor: colors.card },
+      ]),
+    [colors.border, colors.card],
+  );
+
+  const linkler: LinkSatir[] = [
+    { baslik: 'İşletme profili', href: '/isletme-profil' },
+    { baslik: 'Sistem kontrolü (testler)', href: '/sistem-kontrol' },
+    { baslik: 'Sesli komut', href: '/ses' },
+    { baslik: 'Seri ahır modu', href: '/seri-giris' },
+    { baslik: 'Abonelik', href: '/abonelik' },
+    { baslik: 'Ana ekranı planla', href: '/ana-sayfa/duzenle' },
+    { baslik: 'Pilot program', href: '/beta' },
+    { baslik: 'TÜRKVET aktarım', href: '/turkvet-aktar' },
+    {
+      baslik: 'JSON yedek (tam veri)',
+      ok: '↗',
+      onPress: async () => {
+        const json = await suruyonYedekJson();
+        await Share.share({ message: json, title: 'suruyon-yedek.json' });
+      },
+    },
+    { baslik: 'KVKK / gizlilik', href: '/yasal/gizlilik' },
+    { baslik: 'Kullanım koşulları', href: '/yasal/kullanim' },
+    {
+      baslik: 'Excel / CSV dışa aktar',
+      ok: '↗',
+      onPress: async () => {
+        const csv = await hayvanListesiCsv();
+        await Share.share({ message: csv, title: 'suruyon-hayvanlar.csv' });
+      },
+    },
+  ];
+
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
-      <Text style={[styles.h1, { color: colors.text }]}>Ayarlar</Text>
+    <ScrollView
+      style={StyleSheet.flatten([{ flex: 1, backgroundColor: colors.background }])}
+      contentContainerStyle={styles.scroll}>
+      <Text style={StyleSheet.flatten([styles.h1, { color: colors.text }])}>Ayarlar</Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 8 }}>
         Paket: {tierLabel} · {limit} hayvan · Ortam: {appOrtamEtiketi()}
       </Text>
-      <Text style={[styles.aktifSatir, { color: colors.tint }]}>
+      <Text style={StyleSheet.flatten([styles.aktifSatir, { color: colors.tint }])}>
         Şu an: {aktifMod.icon} {aktifMod.baslik}
       </Text>
 
-      <Text style={[styles.section, { color: colors.text }]}>Ürün modu</Text>
-      <Text style={[styles.sectionSub, { color: colors.textSecondary }]}>
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text }])}>Ürün modu</Text>
+      <Text style={StyleSheet.flatten([styles.sectionSub, { color: colors.textSecondary }])}>
         Seçtiğiniz moda gidilir. Aktif mod adı ana sayfada görünür.
       </Text>
 
@@ -57,102 +99,63 @@ export default function AyarlarScreen() {
 
       <Pressable
         onPress={() => router.push('/(tabs)/yolculuk' as never)}
-        style={[styles.cta, { backgroundColor: colors.tint }]}>
+        style={StyleSheet.flatten([styles.cta, { backgroundColor: colors.tint }])}>
         <Text style={styles.ctaText}>{aktifMod.baslik} →</Text>
       </Pressable>
 
-      <Text style={[styles.section, { color: colors.text, marginTop: 20 }]}>Diğer</Text>
-      <Link href="/isletme-profil" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>İşletme profili</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 20 }])}>
+        Diğer
+      </Text>
+
+      {linkler.slice(0, 2).map((l) => (
+        <Pressable
+          key={l.baslik}
+          onPress={() => (l.href ? router.push(l.href as never) : l.onPress?.())}
+          style={satirStil}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>{l.baslik}</Text>
+          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
         </Pressable>
-      </Link>
-      <Link href="/sistem-kontrol" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Sistem kontrolü (testler)</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
+      ))}
+
       <SenkronDurumu />
       <VetIletisimFormu />
-      <Link href="/ses" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Sesli komut</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
+
+      {linkler.slice(2, 9).map((l) => (
+        <Pressable
+          key={l.baslik}
+          onPress={() => (l.href ? router.push(l.href as never) : void l.onPress?.())}
+          style={satirStil}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>{l.baslik}</Text>
+          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
         </Pressable>
-      </Link>
-      <Link href="/seri-giris" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Seri ahır modu</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Link href="/abonelik" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Abonelik</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Link href="/ana-sayfa/duzenle" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Ana ekranı planla</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Link href="/beta" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Pilot program</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Link href="/turkvet-aktar" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>TÜRKVET aktarım</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Pressable
-        onPress={async () => {
-          const json = await suruyonYedekJson();
-          await Share.share({ message: json, title: 'suruyon-yedek.json' });
-        }}
-        style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={{ color: colors.text, fontWeight: '700' }}>JSON yedek (tam veri)</Text>
-        <Text style={{ color: colors.tint }}>↗</Text>
-      </Pressable>
-      <Link href="/yasal/gizlilik" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>KVKK / gizlilik</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Link href="/yasal/kullanim" asChild>
-        <Pressable style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Kullanım koşulları</Text>
-          <Text style={{ color: colors.tint }}>→</Text>
-        </Pressable>
-      </Link>
-      <Text style={[styles.section, { color: colors.text, marginTop: 16 }]}>Özellik durumu</Text>
+      ))}
+
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 16 }])}>
+        Özellik durumu
+      </Text>
       {OZELLIK_BAYRAKLARI.map((o) => (
         <View
           key={o.id}
-          style={[styles.ozellikSatir, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          style={StyleSheet.flatten([
+            styles.ozellikSatir,
+            { borderColor: colors.border, backgroundColor: colors.card },
+          ])}>
           <Text style={{ color: colors.text, fontWeight: '700', flex: 1 }}>{o.ad}</Text>
           <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
             {ozellikDurumEtiketi(o.durum)}
           </Text>
         </View>
       ))}
-      <Pressable
-        onPress={async () => {
-          const csv = await hayvanListesiCsv();
-          await Share.share({ message: csv, title: 'suruyon-hayvanlar.csv' });
-        }}
-        style={[styles.linkRow, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={{ color: colors.text, fontWeight: '700' }}>Excel / CSV dışa aktar</Text>
-        <Text style={{ color: colors.tint }}>↗</Text>
-      </Pressable>
+
+      {linkler.slice(9).map((l) => (
+        <Pressable
+          key={l.baslik}
+          onPress={() => (l.href ? router.push(l.href as never) : void l.onPress?.())}
+          style={satirStil}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>{l.baslik}</Text>
+          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
+        </Pressable>
+      ))}
     </ScrollView>
   );
 }
