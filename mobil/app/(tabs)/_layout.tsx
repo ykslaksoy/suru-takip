@@ -2,7 +2,6 @@ import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { WebDurumCubugu } from '@/bilesenler/ortak/WebDurumCubugu';
 import { IzgaraTabBar } from '@/bilesenler/ortak/IzgaraTabBar';
 
 /** 9 sekme — modern tek satır vektör dock */
@@ -23,7 +22,6 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <WebDurumCubugu />
       <Tabs
         tabBar={(props) => <IzgaraTabBar {...props} />}
         screenOptions={{
