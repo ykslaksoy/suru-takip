@@ -1,5 +1,6 @@
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { BugunKarti } from '@/bilesenler/ana-sayfa/BugunKarti';
 import { HizliIslemlerGrid } from '@/bilesenler/ana-sayfa/HizliIslemlerGrid';
@@ -13,11 +14,9 @@ import { useMod } from '@/baglam/ModBaglami';
 export default function AnaSayfaScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { width } = useWindowDimensions();
   const { pendingSync } = useDatabase();
   const { hizliIslemler, kestirmeler, loading } = useAnaSayfa();
   const { aktifMod } = useMod();
-  const dar = width < 360;
 
   const kestirmeGoster = kestirmeler.map((k) =>
     k.id === 'besi'
@@ -33,42 +32,53 @@ export default function AnaSayfaScreen() {
   return (
     <View style={StyleSheet.flatten([styles.shell, { backgroundColor: colors.background }])}>
       <CevrimdisiBanner pendingSync={pendingSync} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={StyleSheet.flatten([
-                styles.title,
-                { color: colors.text, fontSize: dar ? 22 : 24 },
-              ])}>
+          <View style={styles.brand}>
+            <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])} numberOfLines={1}>
               SürüYön
             </Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{aktifMod.baslik}</Text>
+            <Text
+              style={StyleSheet.flatten([styles.sub, { color: colors.textSecondary }])}
+              numberOfLines={1}>
+              {aktifMod.baslik}
+            </Text>
           </View>
-          <View style={styles.headerActions}>
+          <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Ayarlar"
               onPress={() => router.push('/(tabs)/ayarlar' as never)}
               style={({ pressed }) =>
                 StyleSheet.flatten([
-                  styles.planBtn,
-                  { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
+                  styles.iconBtn,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.85 : 1,
+                  },
                 ])
               }>
-            <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>Ayarlar</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Ana ekranı planla"
-            onPress={() => router.push('/ana-sayfa/duzenle' as never)}
-            style={({ pressed }) =>
-              StyleSheet.flatten([
-                styles.planBtn,
-                { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.88 : 1 },
-              ])
-            }>
-            <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>Planla</Text>
+              <Ionicons name="settings-outline" size={18} color={colors.tint} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ana ekranı planla"
+              onPress={() => router.push('/ana-sayfa/duzenle' as never)}
+              style={({ pressed }) =>
+                StyleSheet.flatten([
+                  styles.iconBtn,
+                  {
+                    backgroundColor: colors.tint,
+                    borderColor: colors.tint,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ])
+              }>
+              <Ionicons name="grid-outline" size={18} color="#fff" />
             </Pressable>
           </View>
         </View>
@@ -82,14 +92,16 @@ export default function AnaSayfaScreen() {
               { backgroundColor: colors.card, borderColor: colors.border },
             ])}>
             <Text style={{ color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
-              Ana ekran boş. Planla ile kısayollarınızı seçin veya başlangıç düzenine dönün.
+              Ana ekran boş. Sağ üstteki düzenle ile kısayol ekleyin.
             </Text>
           </View>
         ) : null}
 
         {hizliGoster.length > 0 ? (
           <>
-            <Text style={StyleSheet.flatten([styles.section, { color: colors.text }])}>Hızlı işlemler</Text>
+            <Text style={StyleSheet.flatten([styles.section, { color: colors.text }])}>
+              Hızlı işlemler
+            </Text>
             <HizliIslemlerGrid items={hizliGoster} />
           </>
         ) : null}
@@ -102,23 +114,42 @@ export default function AnaSayfaScreen() {
 
 const styles = StyleSheet.create({
   shell: { flex: 1 },
-  scroll: { paddingBottom: 12 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 16, flexGrow: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingTop: 6,
-    paddingBottom: 8,
-    gap: 8,
+    paddingTop: 4,
+    paddingBottom: 6,
+    gap: 10,
   },
-  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
-  headerActions: { flexDirection: 'row', gap: 6 },
-  planBtn: {
+  brand: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  sub: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 0,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    minHeight: 34,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   section: {
@@ -126,7 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     paddingHorizontal: 14,
     marginBottom: 8,
-    marginTop: 2,
+    marginTop: 4,
     letterSpacing: -0.2,
   },
   emptyBox: {
