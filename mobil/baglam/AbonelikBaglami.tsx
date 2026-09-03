@@ -3,6 +3,7 @@ import { getAnimalLimit, getDenemeKalanGun, getSubscriptionTier, getTierInfo, de
 import { iapGeriYukle, iapOrtamAciklama, iapSatinAl } from '@/kaynak/abonelik/iap';
 import { UCRETSIZ_DENEME_AY, VARSAYILAN_PAKET, type SubscriptionTier } from '@/kaynak/abonelik/paketler';
 import { SUBSCRIPTION_PRICES } from '@/kaynak/abonelik/paketler';
+import { useDatabase } from '@/baglam/VeritabaniBaglami';
 
 interface SubscriptionContextValue {
   tier: SubscriptionTier;
@@ -31,6 +32,7 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
 });
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
+  const { ready } = useDatabase();
   const [tier, setTier] = useState<SubscriptionTier>(VARSAYILAN_PAKET);
   const [limit, setLimit] = useState(30);
   const [loading, setLoading] = useState(true);
@@ -48,8 +50,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     void refresh();
-  }, [refresh]);
+  }, [ready, refresh]);
 
   const purchase = useCallback(
     async (newTier: SubscriptionTier, billing: 'monthly' | 'yearly') => {
