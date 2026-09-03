@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import {
   addPadok,
   getPadoklar,
@@ -11,13 +11,27 @@ import {
   type Padok,
 } from '@/kaynak/suru/padok';
 
+function uyar(baslik: string, mesaj: string) {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.alert(`${baslik}\n\n${mesaj}`);
+    return;
+  }
+  const { Alert } = require('react-native') as typeof import('react-native');
+  Alert.alert(baslik, mesaj);
+}
+
+type PadokSatir = Padok & { hayvan: number; bos: number; dolu: boolean };
+
+/** Kompakt padok şeridi — Giriş ile hayvan ekleme, yeni padok gizli formda */
 export function PadokYonetimiPaneli() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const [liste, setListe] = useState<(Padok & { hayvan: number; bos: number; dolu: boolean })[]>([]);
+  const [liste, setListe] = useState<PadokSatir[]>([]);
   const [ad, setAd] = useState('');
   const [kapasite, setKapasite] = useState('30');
   const [karantina, setKarantina] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [formAcik, setFormAcik] = useState(false);
 
   const load = useCallback(async () => {
     const padoklar = await getPadoklar();
@@ -25,109 +39,279 @@ export function PadokYonetimiPaneli() {
       padoklar.map(async (p) => {
         const d = await padokDoluluk(p);
         return { ...p, ...d };
-      })
+      }),
     );
     setListe(zengin);
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
+  const ozet = useMemo(() => {
+    const hayvan = liste.reduce((s, p) => s + p.hayvan, 0);
+    const kap = liste.reduce((s, p) => s + p.kapasite, 0);
+    return `${liste.length} padok · ${hayvan}/${kap}`;
+  }, [liste]);
+
   const ekle = async () => {
+    if (busy) return;
+    setBusy(true);
     try {
+      const isim = ad.trim();
       await addPadok({
-        ad,
+        ad: isim,
         kapasite: parseInt(kapasite, 10) || 30,
         karantina,
       });
       setAd('');
       setKapasite('30');
       setKarantina(false);
+      setFormAcik(false);
       await load();
+      uyar('Tamam', `"${isim}" padoku eklendi.`);
     } catch (e) {
-      Alert.alert('Hata', e instanceof Error ? e.message : 'Padok eklenemedi');
+      uyar('Hata', e instanceof Error ? e.message : 'Padok eklenemedi');
+    } finally {
+      setBusy(false);
     }
   };
 
+  const sil = (p: PadokSatir) => {
+    const yap = async () => {
+      try {
+        await silPadok(p.id);
+        await load();
+      } catch (e) {
+        uyar('Hata', e instanceof Error ? e.message : 'Silinemedi');
+      }
+    };
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm(`${p.ad} silinsin mi?`)) void yap();
+      return;
+    }
+    const { Alert } = require('react-native') as typeof import('react-native');
+    Alert.alert('Padok sil', `${p.ad} silinsin mi?`, [
+      { text: 'Vazgeç', style: 'cancel' },
+      { text: 'Sil', style: 'destructive', onPress: () => void yap() },
+    ]);
+  };
+
   return (
-    <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Padok / ağıl</Text>
-      {liste.map((p) => (
-        <View key={p.id} style={[styles.row, { borderColor: colors.border }]}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.text, fontWeight: '700' }}>
-              {p.karantina ? '🛡️ ' : ''}
-              {p.ad}
-            </Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-              {p.hayvan}/{p.kapasite} hayvan · {p.bos} boş
-              {p.dolu ? ' · DOLU' : ''}
-            </Text>
+    <View
+      style={StyleSheet.flatten([
+        styles.box,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ])}>
+      <View style={styles.ust}>
+        <View style={{ flex: 1 }}>
+          <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])}>Padoklar</Text>
+          <Text style={StyleSheet.flatten([styles.hint, { color: colors.textSecondary }])}>
+            {ozet} · Giriş ile hayvan ekle
+          </Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={formAcik ? 'Formu kapat' : 'Yeni padok'}
+          onPress={() => setFormAcik((v) => !v)}
+          style={StyleSheet.flatten([
+            styles.yeniBtn,
+            { borderColor: colors.border, backgroundColor: colors.background },
+          ])}>
+          <Text style={StyleSheet.flatten([styles.yeniText, { color: colors.tint }])}>
+            {formAcik ? 'Kapat' : '+ Yeni'}
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.liste}>
+        {liste.map((p) => {
+          const doluluk = p.kapasite > 0 ? Math.min(1, p.hayvan / p.kapasite) : 0;
+          return (
+            <View
+              key={p.id}
+              style={StyleSheet.flatten([styles.row, { borderColor: colors.border }])}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text
+                  numberOfLines={1}
+                  style={StyleSheet.flatten([styles.padokAd, { color: colors.text }])}>
+                  {p.karantina ? '🛡 ' : ''}
+                  {p.ad}
+                </Text>
+                <View style={styles.barTrack}>
+                  <View
+                    style={StyleSheet.flatten([
+                      styles.barFill,
+                      {
+                        width: `${Math.round(doluluk * 100)}%`,
+                        backgroundColor: p.dolu ? colors.danger : colors.tint,
+                      },
+                    ])}
+                  />
+                </View>
+                <Text style={StyleSheet.flatten([styles.meta, { color: colors.textSecondary }])}>
+                  {p.hayvan}/{p.kapasite}
+                  {p.dolu ? ' · dolu' : ` · ${p.bos} boş`}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.ad} padok giriş`}
+                disabled={p.dolu}
+                onPress={() =>
+                  router.push({ pathname: '/hayvan/ekle', params: { padok: p.ad } } as never)
+                }
+                style={StyleSheet.flatten([
+                  styles.girisBtn,
+                  {
+                    backgroundColor: p.dolu ? colors.border : colors.tint,
+                    opacity: p.dolu ? 0.55 : 1,
+                  },
+                ])}>
+                <Text style={styles.girisText}>{p.dolu ? 'Dolu' : 'Giriş'}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.ad} sil`}
+                onPress={() => sil(p)}
+                hitSlop={6}
+                style={styles.silBtn}>
+                <Text style={StyleSheet.flatten([styles.silText, { color: colors.danger }])}>Sil</Text>
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
+
+      {formAcik ? (
+        <View style={StyleSheet.flatten([styles.form, { borderTopColor: colors.border }])}>
+          <TextInput
+            placeholder="Padok adı"
+            placeholderTextColor={colors.textSecondary}
+            value={ad}
+            onChangeText={setAd}
+            style={StyleSheet.flatten([
+              styles.input,
+              { borderColor: colors.border, color: colors.text, backgroundColor: colors.background },
+            ])}
+          />
+          <View style={styles.formRow}>
+            <TextInput
+              placeholder="Kapasite"
+              keyboardType="number-pad"
+              placeholderTextColor={colors.textSecondary}
+              value={kapasite}
+              onChangeText={setKapasite}
+              style={StyleSheet.flatten([
+                styles.input,
+                styles.kapasite,
+                { borderColor: colors.border, color: colors.text, backgroundColor: colors.background },
+              ])}
+            />
+            <Pressable onPress={() => setKarantina(!karantina)} style={styles.karantina}>
+              <Text
+                style={{
+                  color: karantina ? colors.tint : colors.textSecondary,
+                  fontWeight: '700',
+                  fontSize: 13,
+                }}>
+                {karantina ? '✓ Karantina' : '○ Normal'}
+              </Text>
+            </Pressable>
           </View>
           <Pressable
-            onPress={() => {
-              Alert.alert('Padok sil', `${p.ad} silinsin mi?`, [
-                { text: 'Vazgeç', style: 'cancel' },
-                {
-                  text: 'Sil',
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      await silPadok(p.id);
-                      await load();
-                    } catch (e) {
-                      Alert.alert('Hata', e instanceof Error ? e.message : 'Silinemedi');
-                    }
-                  },
-                },
-              ]);
-            }}>
-            <Text style={{ color: colors.danger, fontWeight: '700' }}>Sil</Text>
+            accessibilityRole="button"
+            disabled={busy || !ad.trim()}
+            onPress={() => void ekle()}
+            style={StyleSheet.flatten([
+              styles.kaydetBtn,
+              {
+                backgroundColor: colors.tint,
+                opacity: busy || !ad.trim() ? 0.5 : 1,
+              },
+            ])}>
+            <Text style={styles.girisText}>{busy ? 'Ekleniyor…' : 'Padok ekle'}</Text>
           </Pressable>
         </View>
-      ))}
-
-      <TextInput
-        placeholder="Yeni padok adı"
-        placeholderTextColor={colors.textSecondary}
-        value={ad}
-        onChangeText={setAd}
-        style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-      />
-      <TextInput
-        placeholder="Kapasite"
-        keyboardType="number-pad"
-        placeholderTextColor={colors.textSecondary}
-        value={kapasite}
-        onChangeText={setKapasite}
-        style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-      />
-      <Pressable onPress={() => setKarantina(!karantina)} style={{ marginBottom: 8 }}>
-        <Text style={{ color: karantina ? colors.tint : colors.textSecondary, fontWeight: '700' }}>
-          {karantina ? '✓ Karantina padoku' : '○ Normal padok'}
-        </Text>
-      </Pressable>
-      <AnaButon title="Padok ekle" onPress={ekle} />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  box: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 16 },
-  title: { fontWeight: '800', fontSize: 16, marginBottom: 10 },
+  box: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  ust: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  title: { fontWeight: '800', fontSize: 15 },
+  hint: { fontSize: 12, marginTop: 2, fontWeight: '600' },
+  yeniBtn: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  yeniText: { fontWeight: '800', fontSize: 13 },
+  liste: { gap: 0 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 8,
-    marginBottom: 4,
   },
+  padokAd: { fontWeight: '700', fontSize: 14 },
+  barTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#e8efe6',
+    marginTop: 6,
+    marginBottom: 4,
+    overflow: 'hidden',
+  },
+  barFill: { height: 4, borderRadius: 2 },
+  meta: { fontSize: 11, fontWeight: '600' },
+  girisBtn: {
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    minHeight: 38,
+    justifyContent: 'center',
+  },
+  girisText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  silBtn: { paddingHorizontal: 4, paddingVertical: 8, minHeight: 38, justifyContent: 'center' },
+  silText: { fontWeight: '700', fontSize: 13 },
+  form: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 12,
+    marginTop: 4,
+    gap: 8,
+  },
+  formRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   input: {
     borderWidth: 1,
     borderRadius: 10,
-    padding: 10,
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 44,
+    fontSize: 15,
+  },
+  kapasite: { flex: 1 },
+  karantina: { paddingVertical: 8, paddingHorizontal: 4 },
+  kaydetBtn: {
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: 44,
   },
 });

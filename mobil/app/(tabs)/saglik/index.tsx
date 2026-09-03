@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import { AsiTakvimi } from '@/bilesenler/saglik/AsiTakvimi';
@@ -123,13 +123,13 @@ export default function HealthOverviewScreen() {
           contentContainerStyle={{ paddingBottom: 24 }}
           ListHeaderComponent={<AsiTakvimi />}
           renderItem={({ item }) => (
-            <Link href={`/hayvan/${item.animalId}/saglik`} asChild>
-              <Pressable
-                style={StyleSheet.flatten([
-                  styles.card,
-                  { backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16 },
-                ])}>
-                <Text style={[styles.tag, { color: colors.tint }]}>
+            <Pressable
+              onPress={() => router.push(`/hayvan/${item.animalId}/saglik`)}
+              style={StyleSheet.flatten([
+                styles.card,
+                { backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16 },
+              ])}>
+                <Text style={StyleSheet.flatten([styles.tag, { color: colors.tint }])}>
                   {hayvanAnaEtiket({
                     earTag: item.earTag ?? '',
                     sirtNo: item.sirtNo ?? null,
@@ -144,7 +144,6 @@ export default function HealthOverviewScreen() {
                   {new Date(item.recordedAt).toLocaleDateString('tr-TR')}
                 </Text>
               </Pressable>
-            </Link>
           )}
           ListEmptyComponent={
             <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 8 }}>
@@ -179,10 +178,13 @@ export default function HealthOverviewScreen() {
             </>
           }
           renderItem={({ item }) => (
-            <Link href={`/hayvan/${item.animalId}/saglik`} asChild>
-              <Pressable
-                style={StyleSheet.flatten([styles.card, { backgroundColor: colors.card, borderColor: colors.border }])}>
-                <Text style={[styles.tag, { color: colors.tint }]}>
+            <Pressable
+              onPress={() => router.push(`/hayvan/${item.animalId}/saglik`)}
+              style={StyleSheet.flatten([
+                styles.card,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ])}>
+                <Text style={StyleSheet.flatten([styles.tag, { color: colors.tint }])}>
                   {hayvanAnaEtiket({
                     earTag: item.earTag ?? '',
                     sirtNo: item.sirtNo ?? null,
@@ -198,7 +200,6 @@ export default function HealthOverviewScreen() {
                   {item.vetName ? ` · ${item.vetName}` : ''}
                 </Text>
               </Pressable>
-            </Link>
           )}
           ListFooterComponent={
             kalan > 0 ? (

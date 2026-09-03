@@ -1,40 +1,40 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
-/** Web önizlemede üst durum çubuğu — native uygulama hissi */
+/** Web önizlemede ince durum şeridi — fazla yer yemesin */
 export function WebDurumCubugu() {
   if (Platform.OS !== 'web') return null;
 
   return (
     <View style={styles.bar} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Text style={styles.side}>9:41</Text>
-      <View style={styles.notch} />
-      <Text style={styles.side}>●●●</Text>
+      <Text style={styles.side}>SürüYön</Text>
+      <View style={styles.dot} />
+      <Text style={styles.side}>önizleme</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
-    height: 44,
+    height: 22,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    backgroundColor: '#f4f7f0',
+    paddingHorizontal: 14,
+    backgroundColor: '#e8f0e4',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#d8e2d0',
   },
   side: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1a2e1a',
-    minWidth: 48,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#4a5f4a',
+    minWidth: 56,
   },
-  notch: {
-    width: 88,
-    height: 24,
-    borderRadius: 14,
-    backgroundColor: '#1a2e1a',
-    opacity: 0.08,
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2d6a4f',
+    opacity: 0.45,
   },
 });

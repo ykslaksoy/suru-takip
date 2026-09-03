@@ -31,13 +31,19 @@ export default function AnaSayfaScreen() {
   );
 
   return (
-    <View style={[styles.shell, { backgroundColor: colors.background }]}>
+    <View style={StyleSheet.flatten([styles.shell, { backgroundColor: colors.background }])}>
       <CevrimdisiBanner pendingSync={pendingSync} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: colors.text, fontSize: dar ? 22 : 26 }]}>SürüYön</Text>
-            <Text style={{ color: colors.textSecondary }}>{aktifMod.baslik}</Text>
+            <Text
+              style={StyleSheet.flatten([
+                styles.title,
+                { color: colors.text, fontSize: dar ? 22 : 24 },
+              ])}>
+              SürüYön
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{aktifMod.baslik}</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable
@@ -70,7 +76,11 @@ export default function AnaSayfaScreen() {
         <BugunKarti />
 
         {!loading && hizliIslemler.length === 0 && kestirmeler.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={StyleSheet.flatten([
+              styles.emptyBox,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ])}>
             <Text style={{ color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
               Ana ekran boş. Planla ile kısayollarınızı seçin veya başlangıç düzenine dönün.
             </Text>
@@ -79,7 +89,7 @@ export default function AnaSayfaScreen() {
 
         {hizliGoster.length > 0 ? (
           <>
-            <Text style={[styles.section, { color: colors.text }]}>Hızlı işlemler</Text>
+            <Text style={StyleSheet.flatten([styles.section, { color: colors.text }])}>Hızlı işlemler</Text>
             <HizliIslemlerGrid items={hizliGoster} />
           </>
         ) : null}

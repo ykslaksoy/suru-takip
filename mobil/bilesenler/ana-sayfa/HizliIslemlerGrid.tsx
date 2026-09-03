@@ -20,28 +20,46 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
   }
 
   return (
-    <View onLayout={onLayout} style={[styles.grid, { paddingHorizontal: horizontalPadding, gap: olcek.hizliGap }]}>
+    <View
+      onLayout={onLayout}
+      style={StyleSheet.flatten([
+        styles.grid,
+        { paddingHorizontal: horizontalPadding, gap: Math.min(8, olcek.hizliGap) },
+      ])}>
       {rows.map((row, rowIndex) => (
-        <View key={`row-${rowIndex}`} style={[styles.row, { gap: olcek.hizliGap }]}>
+        <View
+          key={`row-${rowIndex}`}
+          style={StyleSheet.flatten([styles.row, { gap: Math.min(8, olcek.hizliGap) }])}>
           {row.map((item) => (
             <Pressable
               key={item.id}
               accessibilityRole="button"
               accessibilityLabel={item.label}
               onPress={() => router.push(item.href as never)}
-              style={({ pressed }) => [
-                styles.cell,
-                {
-                  width: hizliHucreGenislik,
-                  minHeight: olcek.hizliHucreYukseklik,
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.88 : 1,
-                },
-              ]}>
-              <Text style={[styles.icon, { fontSize: olcek.hizliIcon }]}>{item.icon}</Text>
+              style={({ pressed }) =>
+                StyleSheet.flatten([
+                  styles.cell,
+                  {
+                    width: hizliHucreGenislik,
+                    minHeight: Math.min(76, olcek.hizliHucreYukseklik),
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.88 : 1,
+                  },
+                ])
+              }>
+              <Text style={StyleSheet.flatten([styles.icon, { fontSize: Math.min(22, olcek.hizliIcon) }])}>
+                {item.icon}
+              </Text>
               <Text
-                style={[styles.label, { color: colors.text, fontSize: olcek.hizliYazi, lineHeight: olcek.hizliYazi + 4 }]}
+                style={StyleSheet.flatten([
+                  styles.label,
+                  {
+                    color: colors.text,
+                    fontSize: Math.min(12, olcek.hizliYazi),
+                    lineHeight: Math.min(12, olcek.hizliYazi) + 3,
+                  },
+                ])}
                 numberOfLines={2}
                 adjustsFontSizeToFit
                 minimumFontScale={0.85}>
@@ -61,18 +79,18 @@ export function HizliIslemlerGrid({ items = HIZLI_ISLEMLER }: Props) {
 }
 
 const styles = StyleSheet.create({
-  grid: {},
+  grid: { marginBottom: 4 },
   row: {
     flexDirection: 'row',
   },
   cell: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    gap: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 10,
+    gap: 4,
   },
   icon: {},
   label: {

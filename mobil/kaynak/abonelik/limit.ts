@@ -1,13 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { SubscriptionTier } from '@/kaynak/cekirdek/tipler';
 import {
   paketAdetLimit,
   paketBul,
+  paketHayvanIcin,
   SUBSCRIPTION_LIMITS,
   SUBSCRIPTION_PRICES,
   tierNormalize,
   UCRETSIZ_DENEME_AY,
   VARSAYILAN_PAKET,
+  type SubscriptionTier,
 } from '@/kaynak/abonelik/paketler';
 
 const TIER_KEY = 'suruyon_subscription_tier';
@@ -111,4 +112,23 @@ export async function purchaseSubscription(
     success: true,
     message: `${paket.label} paketi aktif (${price} TL/${billingEtiket}). App Store/Play Store entegrasyonu canlı sürümde tamamlanacak.`,
   };
+}
+
+/** Mevcut hayvan sayısı paketi aşıyorsa deneme / uygun pakete yükselt */
+export async function limitAsimindaPaketAc(hayvanSayisi: number): Promise<{
+  success: boolean;
+  message: string;
+  tier: SubscriptionTier;
+}> {
+  const limit = await getAnimalLimit();
+  if (hayvanSayisi <= limit) {
+    return {
+      success: true,
+      message: 'Limit yeterli.',
+      tier: await getSubscriptionTier(),
+    };
+  }
+  const hedef = paketHayvanIcin(Math.max(hayvanSayisi + 10, 50));
+  const sonuc = await purchaseSubscription(hedef.id, 'monthly');
+  return { ...sonuc, tier: hedef.id };
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
@@ -168,11 +168,11 @@ function CtaLink({ cta, colors }: { cta: string; colors: (typeof Colors)['light'
             : '/(tabs)/suru';
 
   return (
-    <Link href={href as never} asChild>
-      <Pressable style={{ marginTop: 6, marginLeft: 54 }}>
-        <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>{cta} →</Text>
-      </Pressable>
-    </Link>
+    <Pressable
+      onPress={() => router.push(href as never)}
+      style={{ marginTop: 6, marginLeft: 54 }}>
+      <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>{cta} →</Text>
+    </Pressable>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { Link, Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -158,12 +158,15 @@ export default function SesKomutScreen() {
           }}
         />
 
-        <Link href="/seri-giris" asChild>
-          <Pressable style={[styles.link, { borderColor: colors.border, backgroundColor: colors.card }]}>
-            <Text style={{ color: colors.text, fontWeight: '700' }}>Seri ahır modu (toplu satır)</Text>
-            <Text style={{ color: colors.tint }}>→</Text>
-          </Pressable>
-        </Link>
+        <Pressable
+          onPress={() => router.push('/seri-giris')}
+          style={StyleSheet.flatten([
+            styles.link,
+            { borderColor: colors.border, backgroundColor: colors.card },
+          ])}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>Seri ahır modu (toplu satır)</Text>
+          <Text style={{ color: colors.tint }}>→</Text>
+        </Pressable>
       </ScrollView>
     </>
   );

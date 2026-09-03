@@ -31,7 +31,7 @@ export function PadokSecici({ value, onChange, label = 'Padok' }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <Text style={StyleSheet.flatten([styles.label, { color: colors.text }])}>{label}</Text>
       <View style={styles.row}>
         {padoklar.map((p) => {
           const aktif = value === p.ad;
@@ -39,15 +39,19 @@ export function PadokSecici({ value, onChange, label = 'Padok' }: Props) {
             <Pressable
               key={p.id}
               onPress={() => onChange(p.ad)}
-              style={[
+              style={StyleSheet.flatten([
                 styles.chip,
                 {
                   borderColor: aktif ? colors.tint : colors.border,
                   backgroundColor: aktif ? colors.tint + '22' : colors.card,
                 },
-              ]}>
-              <Text style={{ color: aktif ? colors.tint : colors.text, fontWeight: aktif ? '800' : '600' }}>
-                {p.karantina ? '🛡️ ' : ''}
+              ])}>
+              <Text
+                style={{
+                  color: aktif ? colors.tint : colors.text,
+                  fontWeight: aktif ? '800' : '600',
+                }}>
+                {p.karantina ? '🛡 ' : ''}
                 {p.ad}
               </Text>
               <Text style={{ color: colors.textSecondary, fontSize: 11 }}>

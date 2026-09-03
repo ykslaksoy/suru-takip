@@ -67,6 +67,12 @@ export function paketBul(id: SubscriptionTier): PaketTanim {
   return PAKET_LISTESI.find((p) => p.id === id) ?? PAKET_LISTESI[0];
 }
 
+/** Hayvan sayısına yeten en küçük paket */
+export function paketHayvanIcin(adet: number): PaketTanim {
+  const uygun = PAKET_LISTESI.find((p) => p.adet >= adet);
+  return uygun ?? PAKET_LISTESI[PAKET_LISTESI.length - 1];
+}
+
 export function paketAdetLimit(id: SubscriptionTier): number {
   return paketBul(id).adet;
 }

@@ -20,11 +20,13 @@ export function AnaButon({ title, onPress, variant = 'primary', disabled }: Prop
     <Pressable
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.btn,
-        { backgroundColor: bg, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
-      ]}>
-      <Text style={[styles.text, { color: fg }]}>{title}</Text>
+      style={({ pressed }) =>
+        StyleSheet.flatten([
+          styles.btn,
+          { backgroundColor: bg, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
+        ])
+      }>
+      <Text style={StyleSheet.flatten([styles.text, { color: fg }])}>{title}</Text>
     </Pressable>
   );
 }

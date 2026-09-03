@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
@@ -44,7 +44,7 @@ export default function FlockScreen() {
           isSick: a.status === 'sick',
         });
         return { ...a, latestWeight, grade };
-      })
+      }),
     );
     setAnimals(withWeights);
     setTotal(await countAnimals());
@@ -61,21 +61,25 @@ export default function FlockScreen() {
     { key: 'lamb', label: 'Kuzu' },
   ];
 
+  const limitYazi = limit === Number.POSITIVE_INFINITY ? '∞' : String(limit);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])}>
       <CevrimdisiBanner pendingSync={pendingSync} />
       <View style={styles.header}>
         <View>
-          <Text style={[styles.title, { color: colors.text }]}>SürüYön</Text>
+          <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])}>SürüYön</Text>
           <Text style={{ color: colors.textSecondary }}>
-            {total} hayvan · {tierLabel} ({total}/{limit})
+            {total} hayvan · {tierLabel} ({total}/{limitYazi})
           </Text>
         </View>
-        <Link href="/hayvan/ekle" asChild>
-          <Pressable style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
-            <Text style={styles.addText}>+ Ekle</Text>
-          </Pressable>
-        </Link>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Hayvan ekle"
+          onPress={() => router.push('/hayvan/ekle')}
+          style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
+          <Text style={styles.addText}>+ Ekle</Text>
+        </Pressable>
       </View>
       <AltButonlar
         items={filters.map((f) => ({ key: f.key, label: f.label }))}
@@ -87,11 +91,15 @@ export default function FlockScreen() {
         placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}
-        style={[styles.search, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+        style={StyleSheet.flatten([
+          styles.search,
+          { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
+        ])}
       />
       <FlatList
         data={animals}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
         ListHeaderComponent={<PadokYonetimiPaneli />}
         renderItem={({ item }) => (
           <HayvanKarti animal={item} latestWeight={item.latestWeight} grade={item.grade} />
@@ -104,7 +112,7 @@ export default function FlockScreen() {
         refreshing={false}
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 40 }}>
-            Henüz hayvan kaydı yok. + Ekle ile başlayın.
+            Henüz hayvan kaydı yok. Padok satırındaki Giriş veya + Ekle ile başlayın.
           </Text>
         }
       />

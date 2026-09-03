@@ -17,55 +17,68 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
 
   if (items.length === 0) return null;
 
+  const sutun = Math.min(3, Math.max(2, kestirmeSutun));
   const rows: MenuOgesi[][] = [];
-  for (let i = 0; i < items.length; i += kestirmeSutun) {
-    rows.push(items.slice(i, i + kestirmeSutun));
+  for (let i = 0; i < items.length; i += sutun) {
+    rows.push(items.slice(i, i + sutun));
   }
 
   return (
     <View onLayout={onLayout} style={styles.wrap}>
-      <View style={[styles.headerRow, { paddingHorizontal: horizontalPadding }]}>
-        <Text style={[styles.title, { color: colors.textSecondary }]}>Kestirmeler</Text>
-        <Text style={[styles.count, { color: colors.textSecondary }]}>{items.length} kısayol</Text>
+      <View style={StyleSheet.flatten([styles.headerRow, { paddingHorizontal: horizontalPadding }])}>
+        <Text style={StyleSheet.flatten([styles.title, { color: colors.textSecondary }])}>
+          Kestirmeler
+        </Text>
+        <Text style={StyleSheet.flatten([styles.count, { color: colors.textSecondary }])}>
+          {items.length}
+        </Text>
       </View>
-      <View style={[styles.list, { paddingHorizontal: horizontalPadding, gap: olcek.kestirmeGap }]}>
+      <View
+        style={StyleSheet.flatten([
+          styles.list,
+          { paddingHorizontal: horizontalPadding, gap: olcek.kestirmeGap },
+        ])}>
         {rows.map((row, rowIndex) => (
-          <View key={`kr-${rowIndex}`} style={[styles.row, { gap: olcek.kestirmeGap }]}>
+          <View
+            key={`kr-${rowIndex}`}
+            style={StyleSheet.flatten([styles.row, { gap: olcek.kestirmeGap }])}>
             {row.map((item) => (
               <Pressable
                 key={item.id}
                 accessibilityRole="button"
                 accessibilityLabel={item.label}
                 onPress={() => router.push(item.href as never)}
-                style={({ pressed }) => [
-                  styles.chip,
-                  {
-                    width: kestirmeGenislik,
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                    opacity: pressed ? 0.85 : 1,
-                    minHeight: olcek.dar ? 44 : 48,
-                  },
-                ]}>
-                <Text style={[styles.chipIcon, { fontSize: olcek.kestirmeIcon }]}>{item.icon}</Text>
+                style={({ pressed }) =>
+                  StyleSheet.flatten([
+                    styles.chip,
+                    {
+                      width: kestirmeGenislik,
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      opacity: pressed ? 0.85 : 1,
+                      minHeight: 40,
+                    },
+                  ])
+                }>
+                <Text style={StyleSheet.flatten([styles.chipIcon, { fontSize: 14 }])}>
+                  {item.icon}
+                </Text>
                 <Text
-                  style={[
+                  style={StyleSheet.flatten([
                     styles.chipText,
                     {
                       color: colors.text,
-                      fontSize: olcek.kestirmeYazi,
-                      lineHeight: olcek.kestirmeYazi + 4,
+                      fontSize: Math.min(12, olcek.kestirmeYazi),
+                      lineHeight: 15,
                     },
-                  ]}
-                  numberOfLines={2}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.85}>
+                  ])}
+                  numberOfLines={1}>
                   {item.label}
                 </Text>
               </Pressable>
             ))}
-            {row.length < kestirmeSutun
-              ? Array.from({ length: kestirmeSutun - row.length }).map((_, i) => (
+            {row.length < sutun
+              ? Array.from({ length: sutun - row.length }).map((_, i) => (
                   <View key={`sp-${rowIndex}-${i}`} style={{ width: kestirmeGenislik }} />
                 ))
               : null}
@@ -78,17 +91,17 @@ export function KestirmelerSatiri({ items = KESTIRMELER }: Props) {
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingTop: 8,
-    paddingBottom: 16,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -104,14 +117,14 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   chipIcon: {
-    width: 22,
+    width: 18,
     textAlign: 'center',
   },
   chipText: {

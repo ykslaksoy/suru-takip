@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Link, useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -148,16 +148,16 @@ export default function AnimalDetailScreen() {
       ) : null}
 
       <View style={styles.actions}>
-        <Link href={`/hayvan/${animal.id}/kilo`} asChild>
-          <Pressable style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.tint }])}>
-            <Text style={styles.actionText}>📊 Kilo Takibi</Text>
-          </Pressable>
-        </Link>
-        <Link href={`/hayvan/${animal.id}/saglik`} asChild>
-          <Pressable style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.accent }])}>
-            <Text style={[styles.actionText, { color: colors.text }]}>💊 Sağlık</Text>
-          </Pressable>
-        </Link>
+        <Pressable
+          onPress={() => router.push(`/hayvan/${animal.id}/kilo`)}
+          style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.tint }])}>
+          <Text style={styles.actionText}>📊 Kilo Takibi</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push(`/hayvan/${animal.id}/saglik`)}
+          style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.accent }])}>
+          <Text style={StyleSheet.flatten([styles.actionText, { color: colors.text }])}>💊 Sağlık</Text>
+        </Pressable>
       </View>
 
       {animal.notes ? (

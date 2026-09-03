@@ -21,7 +21,7 @@ export function AltButonlar({
   const colors = Colors[scheme];
 
   return (
-    <View style={[styles.wrap, { borderBottomColor: colors.border }]}>
+    <View style={StyleSheet.flatten([styles.wrap, { borderBottomColor: colors.border }])}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {items.map((item) => {
           const on = item.key === activeKey;
@@ -29,14 +29,16 @@ export function AltButonlar({
             <Pressable
               key={item.key}
               onPress={() => onSelect(item.key)}
-              style={[
+              style={StyleSheet.flatten([
                 styles.btn,
                 {
                   backgroundColor: on ? colors.tint : colors.card,
                   borderColor: on ? colors.tint : colors.border,
                 },
-              ]}>
-              <Text style={[styles.label, { color: on ? '#fff' : colors.text }]} numberOfLines={1}>
+              ])}>
+              <Text
+                style={StyleSheet.flatten([styles.label, { color: on ? '#fff' : colors.text }])}
+                numberOfLines={1}>
                 {item.label}
               </Text>
             </Pressable>

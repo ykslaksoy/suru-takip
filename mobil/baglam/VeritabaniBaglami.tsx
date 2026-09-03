@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';
+import { countAnimals, getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';
 import { ensurePadokKuzuVerisi, seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
 import { demoSeedOtomatik } from '@/sabitler/Ortam';
+import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 
 interface DatabaseContextValue {
   ready: boolean;
@@ -28,6 +29,11 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
         await seedDemoDataIfEmpty();
       } else {
         await ensurePadokKuzuVerisi();
+      }
+      // Demo sürü ücretsiz limiti aşarsa uygun paketi aç (giriş engellenmesin)
+      const hayvan = await countAnimals();
+      if (hayvan > 0) {
+        await limitAsimindaPaketAc(hayvan);
       }
       const count = await getPendingSyncCount();
       setPendingSync(count);
