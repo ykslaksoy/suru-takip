@@ -15,6 +15,7 @@ import { abonelikModul } from './moduller/abonelik';
 import { senkronModul } from './moduller/senkron';
 import { yasalModul } from './moduller/yasal';
 import { kaynakModul } from './moduller/kaynak-dogrulama';
+import { superAgilModul } from './moduller/super-agil';
 
 const MODULLER = [
   hizliBesiModul,
@@ -28,6 +29,7 @@ const MODULLER = [
   senkronModul,
   yasalModul,
   kaynakModul,
+  superAgilModul,
 ];
 
 async function main() {
