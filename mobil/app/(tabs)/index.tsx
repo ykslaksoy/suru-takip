@@ -11,7 +11,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useAnaSayfa } from '@/baglam/AnaSayfaBaglami';
 import { useMod } from '@/baglam/ModBaglami';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
-import { gitAyarlar } from '@/kaynak/navigasyon/ayarlar';
+import { useAyarlar } from '@/baglam/AyarlarBaglami';
 
 export default function AnaSayfaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -21,6 +21,7 @@ export default function AnaSayfaScreen() {
   const { aktifMod } = useMod();
   const { height } = useWindowDimensions();
   const { scrollPadBottom, kisa } = useAltGuvenliBosluk();
+  const { ac: ayarlariAc } = useAyarlar();
 
   const kestirmeGoster = kestirmeler.map((k) =>
     k.id === 'besi'
@@ -67,7 +68,7 @@ export default function AnaSayfaScreen() {
               accessibilityRole="button"
               accessibilityLabel="Ayarlar"
               hitSlop={8}
-              onPress={gitAyarlar}
+              onPress={ayarlariAc}
               style={({ pressed }) =>
                 StyleSheet.flatten([
                   styles.ayarlarBtn,

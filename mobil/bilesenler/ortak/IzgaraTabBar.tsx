@@ -15,7 +15,6 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { SEKME_IKONLARI, SEKME_IKONLARI_DOLU } from '@/bilesenler/ortak/SekmeIkonlari';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
-import { gitAyarlar } from '@/kaynak/navigasyon/ayarlar';
 import { useAyarlar } from '@/baglam/AyarlarBaglami';
 
 type TabRoute = { key: string; name: string; params?: object };
@@ -128,7 +127,7 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
   const colors = Colors[scheme];
   const { width: winW, height: winH } = useWindowDimensions();
   const { tabBarPadBottom, kisa } = useAltGuvenliBosluk();
-  const { acik: ayarlarAcik } = useAyarlar();
+  const { ac: ayarlariAc } = useAyarlar();
   const [barW, setBarW] = useState(winW);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -229,7 +228,8 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Ayarlar"
-          onPress={gitAyarlar}
+          hitSlop={10}
+          onPress={ayarlariAc}
           style={({ pressed }) =>
             StyleSheet.flatten([
               styles.pin,
@@ -238,7 +238,8 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
                 width: pinW,
                 borderLeftColor: colors.border,
                 opacity: pressed ? 0.7 : 1,
-                minHeight: kisa ? 42 : 48,
+                minHeight: kisa ? 44 : 52,
+                ...(Platform.OS === 'web' ? { cursor: 'pointer' } : null),
               },
             ])
           }>
@@ -246,13 +247,13 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
             style={StyleSheet.flatten([
               styles.pill,
               {
-                backgroundColor: ayarlarAcik ? colors.tint : 'transparent',
-                minWidth: Math.min(44, pinW - 8),
-                height: kisa ? 28 : 30,
-                borderRadius: 15,
+                backgroundColor: colors.tint,
+                minWidth: Math.min(48, pinW - 6),
+                height: kisa ? 30 : 32,
+                borderRadius: 16,
               },
             ])}>
-            <Ionicons name="settings" size={iconSize} color={ayarlarAcik ? '#fff' : colors.tint} />
+            <Ionicons name="settings" size={iconSize + 1} color="#fff" />
           </View>
           <Text
             numberOfLines={1}

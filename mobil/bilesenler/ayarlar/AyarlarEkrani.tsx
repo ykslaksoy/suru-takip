@@ -28,7 +28,10 @@ export function AyarlarEkrani() {
 
   const git = (href: string) => {
     kapat();
-    router.push(href as never);
+    // Modal kapansın, sonra sayfa açılsın
+    requestAnimationFrame(() => {
+      router.push(href as never);
+    });
   };
 
   const sec = async (id: UrunModId) => {
@@ -51,15 +54,18 @@ export function AyarlarEkrani() {
     [colors.border, colors.card]
   );
 
-  const linkler: LinkSatir[] = [
+  const anaAyarlar: LinkSatir[] = [
     { baslik: 'İşletme profili', href: '/isletme-profil' },
-    { baslik: 'Sistem kontrolü (testler)', href: '/sistem-kontrol' },
+    { baslik: 'Abonelik / paket', href: '/abonelik' },
+    { baslik: 'Ana ekranı planla', href: '/ana-sayfa/duzenle' },
     { baslik: 'Sesli komut', href: '/ses' },
     { baslik: 'Seri ahır modu', href: '/seri-giris' },
-    { baslik: 'Abonelik', href: '/abonelik' },
-    { baslik: 'Ana ekranı planla', href: '/ana-sayfa/duzenle' },
+    { baslik: 'Sistem kontrolü (testler)', href: '/sistem-kontrol' },
     { baslik: 'Pilot program', href: '/beta' },
     { baslik: 'TÜRKVET aktarım', href: '/turkvet-aktar' },
+  ];
+
+  const yedekVeYasal: LinkSatir[] = [
     {
       baslik: 'JSON yedek (tam veri)',
       ok: '↗',
@@ -68,8 +74,6 @@ export function AyarlarEkrani() {
         await Share.share({ message: json, title: 'suruyon-yedek.json' });
       },
     },
-    { baslik: 'KVKK / gizlilik', href: '/yasal/gizlilik' },
-    { baslik: 'Kullanım koşulları', href: '/yasal/kullanim' },
     {
       baslik: 'Excel / CSV dışa aktar',
       ok: '↗',
@@ -78,23 +82,71 @@ export function AyarlarEkrani() {
         await Share.share({ message: csv, title: 'suruyon-hayvanlar.csv' });
       },
     },
+    { baslik: 'KVKK / gizlilik', href: '/yasal/gizlilik' },
+    { baslik: 'Kullanım koşulları', href: '/yasal/kullanim' },
   ];
 
   return (
     <ScrollView
-      style={StyleSheet.flatten([{ flex: 1, backgroundColor: colors.background }])}
+      style={styles.scroll}
       contentContainerStyle={StyleSheet.flatten([
-        styles.scroll,
-        { paddingBottom: scrollPadBottom + 24 },
-      ])}>
-      <Text style={{ color: colors.textSecondary, marginBottom: 8 }}>
-        Paket: {tierLabel} · {limit} hayvan · Ortam: {appOrtamEtiketi()}
-      </Text>
-      <Text style={StyleSheet.flatten([styles.aktifSatir, { color: colors.tint }])}>
-        Şu an: {aktifMod.icon} {aktifMod.baslik}
+        styles.scrollContent,
+        { paddingBottom: Math.max(scrollPadBottom, 48) + 40 },
+      ])}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator>
+      <View
+        style={StyleSheet.flatten([
+          styles.ozetKutu,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ])}>
+        <Text style={StyleSheet.flatten([styles.ozetBaslik, { color: colors.text }])}>
+          Paket: {tierLabel}
+        </Text>
+        <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
+          {limit} hayvan · Ortam: {appOrtamEtiketi()}
+        </Text>
+        <Text style={StyleSheet.flatten([styles.aktifSatir, { color: colors.tint }])}>
+          Şu an: {aktifMod.icon} {aktifMod.baslik}
+        </Text>
+      </View>
+
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text }])}>Ayarlar</Text>
+      <Text style={StyleSheet.flatten([styles.sectionSub, { color: colors.textSecondary }])}>
+        İşletme, abonelik ve uygulama tercihleri
       </Text>
 
-      <Text style={StyleSheet.flatten([styles.section, { color: colors.text }])}>Ürün modu</Text>
+      {anaAyarlar.map((l) => (
+        <Pressable
+          key={l.baslik}
+          accessibilityRole="button"
+          onPress={() => (l.href ? git(l.href) : void l.onPress?.())}
+          style={satirStil}>
+          <Text style={{ color: colors.text, fontWeight: '700', flex: 1 }}>{l.baslik}</Text>
+          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
+        </Pressable>
+      ))}
+
+      <SenkronDurumu />
+      <VetIletisimFormu />
+
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 18 }])}>
+        Yedek ve yasal
+      </Text>
+      {yedekVeYasal.map((l) => (
+        <Pressable
+          key={l.baslik}
+          accessibilityRole="button"
+          onPress={() => (l.href ? git(l.href) : void l.onPress?.())}
+          style={satirStil}>
+          <Text style={{ color: colors.text, fontWeight: '700', flex: 1 }}>{l.baslik}</Text>
+          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
+        </Pressable>
+      ))}
+
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 18 }])}>
+        Ürün modu
+      </Text>
       <Text style={StyleSheet.flatten([styles.sectionSub, { color: colors.textSecondary }])}>
         Seçtiğiniz moda gidilir. Aktif mod adı ana sayfada görünür.
       </Text>
@@ -109,34 +161,7 @@ export function AyarlarEkrani() {
         <Text style={styles.ctaText}>{aktifMod.baslik} →</Text>
       </Pressable>
 
-      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 20 }])}>
-        Diğer
-      </Text>
-
-      {linkler.slice(0, 2).map((l) => (
-        <Pressable
-          key={l.baslik}
-          onPress={() => (l.href ? git(l.href) : l.onPress?.())}
-          style={satirStil}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>{l.baslik}</Text>
-          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
-        </Pressable>
-      ))}
-
-      <SenkronDurumu />
-      <VetIletisimFormu />
-
-      {linkler.slice(2, 9).map((l) => (
-        <Pressable
-          key={l.baslik}
-          onPress={() => (l.href ? git(l.href) : void l.onPress?.())}
-          style={satirStil}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>{l.baslik}</Text>
-          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
-        </Pressable>
-      ))}
-
-      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 16 }])}>
+      <Text style={StyleSheet.flatten([styles.section, { color: colors.text, marginTop: 18 }])}>
         Özellik durumu
       </Text>
       {OZELLIK_BAYRAKLARI.map((o) => (
@@ -152,23 +177,21 @@ export function AyarlarEkrani() {
           </Text>
         </View>
       ))}
-
-      {linkler.slice(9).map((l) => (
-        <Pressable
-          key={l.baslik}
-          onPress={() => (l.href ? git(l.href) : void l.onPress?.())}
-          style={satirStil}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>{l.baslik}</Text>
-          <Text style={{ color: colors.tint }}>{l.ok ?? '→'}</Text>
-        </Pressable>
-      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: 16 },
-  aktifSatir: { fontWeight: '800', marginBottom: 16, fontSize: 15 },
+  scroll: { flex: 1, width: '100%' },
+  scrollContent: { padding: 16, flexGrow: 1 },
+  ozetKutu: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+  },
+  ozetBaslik: { fontSize: 16, fontWeight: '800' },
+  aktifSatir: { fontWeight: '800', marginTop: 8, fontSize: 15 },
   section: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
   sectionSub: { marginBottom: 12, lineHeight: 20 },
   cta: {
@@ -186,6 +209,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
+    gap: 8,
   },
   ozellikSatir: {
     flexDirection: 'row',

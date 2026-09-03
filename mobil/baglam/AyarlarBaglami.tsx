@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
-import { kaydetAyarlarAc } from '@/kaynak/navigasyon/ayarlar';
+import { ayarlarAcildiMiDinle, kaydetAyarlarAc, kapatAyarlarSinyal } from '@/kaynak/navigasyon/ayarlar';
 
 type AyarlarCtx = {
   acik: boolean;
@@ -19,12 +19,23 @@ export function useAyarlar() {
 
 export function AyarlarProvider({ children }: { children: React.ReactNode }) {
   const [acik, setAcik] = useState(false);
+
   const ac = useCallback(() => setAcik(true), []);
-  const kapat = useCallback(() => setAcik(false), []);
+  const kapat = useCallback(() => {
+    setAcik(false);
+    kapatAyarlarSinyal();
+  }, []);
 
   useLayoutEffect(() => {
     kaydetAyarlarAc(ac);
-    return () => kaydetAyarlarAc(null);
+    const unsub = ayarlarAcildiMiDinle((v) => {
+      if (v) setAcik(true);
+      else setAcik(false);
+    });
+    return () => {
+      kaydetAyarlarAc(null);
+      unsub();
+    };
   }, [ac]);
 
   const value = useMemo(() => ({ acik, ac, kapat }), [acik, ac, kapat]);
