@@ -55,6 +55,18 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
     aciklama: 'CSV dışa aktarım hazır',
   },
   {
+    id: 'ureme-dogum',
+    ad: 'Üreme / doğum kaydı',
+    durum: 'tam',
+    aciklama: 'Gebe işaretle · doğumda kuzu + anne bağlama',
+  },
+  {
+    id: 'ozet-rapor-csv',
+    ad: 'Sürü özet CSV',
+    durum: 'tam',
+    aciklama: 'Padok / durum / aşı özeti · Excel’de açılır',
+  },
+  {
     id: 'iap',
     ad: 'Mağaza ödemesi',
     durum: 'simulasyon',

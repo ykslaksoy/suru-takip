@@ -10,7 +10,7 @@ import { useMod } from '@/baglam/ModBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { useAyarlar } from '@/baglam/AyarlarBaglami';
 import type { UrunModId } from '@/sabitler/Modlar';
-import { hayvanListesiCsv } from '@/kaynak/excel/disa-aktar';
+import { hayvanListesiCsv, suruOzetCsv } from '@/kaynak/excel/disa-aktar';
 import { suruyonYedekJson } from '@/kaynak/cekirdek/yedek';
 import { appOrtamEtiketi } from '@/sabitler/Ortam';
 import { OZELLIK_BAYRAKLARI, ozellikDurumEtiketi } from '@/sabitler/OzellikBayraklari';
@@ -75,7 +75,15 @@ export function AyarlarEkrani() {
       },
     },
     {
-      baslik: 'Excel / CSV dışa aktar',
+      baslik: 'Sürü özet raporu (CSV)',
+      ok: '↗',
+      onPress: async () => {
+        const csv = await suruOzetCsv();
+        await Share.share({ message: csv, title: 'suruyon-ozet.csv' });
+      },
+    },
+    {
+      baslik: 'Hayvan listesi CSV',
       ok: '↗',
       onPress: async () => {
         const csv = await hayvanListesiCsv();

@@ -14,6 +14,8 @@ export const kaynakModul: TestModul = {
     const dosyalar = [
       'kaynak/akilli-veteriner/hizli-besi-plani.ts',
       'kaynak/cekirdek/padok-kuzu-kayitlar.ts',
+      'kaynak/ureme/dogum-kayit.ts',
+      'kaynak/excel/disa-aktar.ts',
       'kaynak/gorevler/liste.ts',
       'sabitler/Ortam.ts',
       'sabitler/OzellikBayraklari.ts',
@@ -22,6 +24,8 @@ export const kaynakModul: TestModul = {
     ];
     const plan = oku('kaynak/akilli-veteriner/hizli-besi-plani.ts');
     const banner = oku('bilesenler/ortak/CevrimdisiBanner.tsx');
+    const dogum = oku('kaynak/ureme/dogum-kayit.ts');
+    const disa = oku('kaynak/excel/disa-aktar.ts');
 
     return [
       ...dosyalar.map((d) =>
@@ -36,6 +40,16 @@ export const kaynakModul: TestModul = {
         'Kaynak dosya bütünlüğü',
         'Banner otomatik bulut senkron iddiası yok',
         !banner.includes('İnternet gelince otomatik senkron'),
+      ),
+      test(
+        'Kaynak dosya bütünlüğü',
+        'Doğum kaydı anne UUID bağlar',
+        dogum.includes('motherId: anne.id'),
+      ),
+      test(
+        'Kaynak dosya bütünlüğü',
+        'Özet CSV export var',
+        disa.includes('suruOzetCsv'),
       ),
       test(
         'Kaynak dosya bütünlüğü',

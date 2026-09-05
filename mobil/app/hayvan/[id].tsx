@@ -17,6 +17,7 @@ import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 import { turEtiketi, turEmoji } from '@/kaynak/suru/tur';
 import { terim, fcrDeger } from '@/sabitler/Metinler';
+import { gebeIsaretle } from '@/kaynak/ureme';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
@@ -32,6 +33,7 @@ export default function AnimalDetailScreen() {
   const [fcrValue, setFcrValue] = useState<number | null>(null);
   const [dailyRation, setDailyRation] = useState<number | null>(null);
   const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
+  const [anneEtiket, setAnneEtiket] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -56,6 +58,12 @@ export default function AnimalDetailScreen() {
             fcr: fcr?.fcr ?? null,
           })
         );
+        if (a.motherId) {
+          const anne = await getAnimal(a.motherId);
+          setAnneEtiket(anne ? hayvanAnaEtiket(anne) : a.motherId);
+        } else {
+          setAnneEtiket(null);
+        }
       }
     })();
   }, [id, refreshKey]);
@@ -126,7 +134,11 @@ export default function AnimalDetailScreen() {
         <InfoRow label="Sırt no" value={animal.sirtNo || '—'} colors={colors} />
         <InfoRow label="Aref / GEKİS ID" value={animal.gehisId || '—'} colors={colors} />
         <InfoRow label={TURKVET_FIELD_LABELS.birthDate} value={animal.birthDate || '—'} colors={colors} />
-        <InfoRow label={TURKVET_FIELD_LABELS.motherId} value={animal.motherId || '—'} colors={colors} />
+        <InfoRow
+          label={TURKVET_FIELD_LABELS.motherId}
+          value={anneEtiket || animal.motherId || '—'}
+          colors={colors}
+        />
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -159,6 +171,30 @@ export default function AnimalDetailScreen() {
           <Text style={StyleSheet.flatten([styles.actionText, { color: colors.text }])}>💊 Sağlık</Text>
         </Pressable>
       </View>
+
+      {animal.sex === 'female' && animal.status !== 'sold' && animal.status !== 'dead' ? (
+        <View style={[styles.actions, { marginTop: 10 }]}>
+          {animal.status !== 'pregnant' ? (
+            <Pressable
+              onPress={async () => {
+                const r = await gebeIsaretle(animal.id);
+                if (!r.ok) {
+                  Alert.alert('Gebe', r.message);
+                  return;
+                }
+                refresh();
+              }}
+              style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.tint }])}>
+              <Text style={StyleSheet.flatten([styles.actionText, { color: colors.tint }])}>Gebe işaretle</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => router.push(`/hayvan/${animal.id}/dogum`)}
+            style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.tint }])}>
+            <Text style={styles.actionText}>Doğum kaydı</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {animal.notes ? (
         <Text style={[styles.notes, { color: colors.textSecondary }]}>Not: {animal.notes}</Text>
