@@ -1,21 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  type LayoutChangeEvent,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { SekmeIkonAdi } from '@/bilesenler/ortak/SekmeIkonlari';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { SEKME_IKONLARI, SEKME_IKONLARI_DOLU } from '@/bilesenler/ortak/SekmeIkonlari';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
-import { useAyarlar } from '@/baglam/AyarlarBaglami';
+import { KILITLI_DOCK, KILITLI_DOCK_ADLARI } from '@/sabitler/HizliIslemler';
 
 type TabRoute = { key: string; name: string; params?: object };
 
@@ -33,237 +23,84 @@ type IzgaraTabBarProps = {
   };
 };
 
-const ETIKET: Record<string, string> = {
-  index: 'Ana',
-  suru: 'Sürü',
-  stok: 'Stok',
-  saglik: 'Sağlık',
-  rasyon: 'Rasyon',
-  veteriner: 'Vet',
-  'akilli-kuzu': 'Kuzu',
-  yolculuk: 'Yol',
-  ayarlar: 'Ayarlar',
-};
-
-type TabItemProps = {
-  route: TabRoute;
-  focused: boolean;
-  label: string;
-  icon: SekmeIkonAdi;
-  colors: (typeof Colors)['light'];
-  kisa: boolean;
-  minW: number;
-  iconSize: number;
-  showLabel: boolean;
-  onPress: () => void;
-};
-
-function TabItem({
-  route,
-  focused,
-  label,
-  icon,
-  colors,
-  kisa,
-  minW,
-  iconSize,
-  showLabel,
-  onPress,
-}: TabItemProps) {
-  return (
-    <Pressable
-      key={route.key}
-      accessibilityRole="button"
-      accessibilityState={{ selected: focused }}
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed }) =>
-        StyleSheet.flatten([
-          styles.item,
-          {
-            opacity: pressed ? 0.7 : 1,
-            minHeight: kisa ? 42 : 48,
-            minWidth: minW,
-          },
-        ])
-      }>
-      <View
-        style={StyleSheet.flatten([
-          styles.pill,
-          {
-            backgroundColor: focused ? colors.tint : 'transparent',
-            minWidth: Math.min(44, Math.max(30, minW - 4)),
-            height: kisa ? 28 : 30,
-            borderRadius: 15,
-          },
-        ])}>
-        <Ionicons name={icon} size={iconSize} color={focused ? '#fff' : colors.tabIconDefault} />
-      </View>
-      {showLabel ? (
-        <Text
-          numberOfLines={1}
-          style={StyleSheet.flatten([
-            styles.label,
-            {
-              color: focused ? colors.tint : colors.tabIconDefault,
-              fontSize: label.length > 5 ? 9 : 10,
-              fontWeight: focused ? '800' : '600',
-            },
-          ])}>
-          {label}
-        </Text>
-      ) : null}
-    </Pressable>
-  );
-}
-
 /**
- * Dinamik alt dock — Ayarlar sağda sabit; diğer sekmeler kaydırılabilir.
- * Safari alt çubuğu için ekstra padding.
+ * Kilitli 5’li dock — Ana Sayfa, Sürü, Stok, Akıllı Kuzu, Daha.
+ * Gizli sekmeler (sağlık/rasyon/vet/yolculuk) Daha üzerinden açılır.
  */
 export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>) {
   const { state, descriptors, navigation } = props as IzgaraTabBarProps;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { width: winW, height: winH } = useWindowDimensions();
   const { tabBarPadBottom, kisa } = useAltGuvenliBosluk();
-  const { ac: ayarlariAc } = useAyarlar();
-  const [barW, setBarW] = useState(winW);
-  const scrollRef = useRef<ScrollView>(null);
+  const aktifAd = state.routes[state.index]?.name ?? 'index';
+  const gizlenenAktif = !KILITLI_DOCK_ADLARI.includes(aktifAd);
 
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setBarW(e.nativeEvent.layout.width);
-  }, []);
-
-  const pinW = Math.min(76, Math.max(60, Math.round(barW * 0.18)));
-  const scrollW = Math.max(0, barW - pinW);
-  const n = Math.max(1, state.routes.length);
-  const itemMinW = Math.max(48, Math.min(64, Math.floor(scrollW / Math.min(n, 5))));
-  const needScroll = n * itemMinW > scrollW + 4;
-  const etiketGoster = !kisa && winH >= 520;
-  const iconSize = itemMinW < 52 ? 16 : 18;
-  const aktifKey = state.routes[state.index]?.key;
-
-  const pressFor = useCallback(
-    (route: TabRoute, focused: boolean) => () => {
-      const event = navigation.emit({
-        type: 'tabPress',
-        target: route.key,
-        canPreventDefault: true,
-      });
-      if (!focused && !event.defaultPrevented) {
-        navigation.navigate(route.name, route.params);
-      }
-    },
-    [navigation]
+  const dockRoutes = KILITLI_DOCK.map((d) => state.routes.find((r) => r.name === d.name)).filter(
+    (r): r is TabRoute => Boolean(r),
   );
 
-  const renderItem = useCallback(
-    (route: TabRoute, opts?: { minW?: number; forceLabel?: boolean }) => {
-      const index = state.routes.findIndex((r) => r.key === route.key);
-      const focused = state.index === index;
-      const { options } = descriptors[route.key];
-      const label = ETIKET[route.name] ?? options.tabBarLabel ?? options.title ?? route.name;
-      const icon = focused
-        ? (SEKME_IKONLARI_DOLU[route.name] ?? 'ellipse')
-        : (SEKME_IKONLARI[route.name] ?? 'ellipse-outline');
-
-      return (
-        <TabItem
-          key={route.key}
-          route={route}
-          focused={focused}
-          label={label}
-          icon={icon}
-          colors={colors}
-          kisa={kisa}
-          minW={opts?.minW ?? itemMinW}
-          iconSize={iconSize}
-          showLabel={opts?.forceLabel || etiketGoster}
-          onPress={pressFor(route, focused)}
-        />
-      );
-    },
-    [state, descriptors, colors, kisa, itemMinW, iconSize, etiketGoster, pressFor]
-  );
-
-  // Aktif sekme kaydırma alanında görünür kalsın
-  useEffect(() => {
-    if (!aktifKey || !needScroll) return;
-    const idx = state.routes.findIndex((r) => r.key === aktifKey);
-    if (idx < 0) return;
-    const x = Math.max(0, idx * itemMinW - itemMinW);
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ x, animated: true });
-    });
-  }, [aktifKey, itemMinW, needScroll, state.routes]);
-
-  const shellPadBottom =
-    Platform.OS === 'web'
-      ? Math.max(tabBarPadBottom, 20)
-      : tabBarPadBottom;
+  const shellPadBottom = Platform.OS === 'web' ? Math.max(tabBarPadBottom, 16) : tabBarPadBottom;
 
   return (
     <View
-      onLayout={onLayout}
       style={StyleSheet.flatten([
         styles.shell,
         {
-          backgroundColor: scheme === 'dark' ? colors.card : '#fbfcf9',
+          backgroundColor: scheme === 'dark' ? colors.card : '#ffffff',
           borderTopColor: colors.border,
           paddingBottom: shellPadBottom,
-          paddingTop: kisa ? 4 : 6,
+          paddingTop: kisa ? 4 : 8,
         },
       ])}>
       <View style={styles.row}>
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          bounces={needScroll}
-          style={StyleSheet.flatten([styles.scroll, { width: scrollW }])}
-          contentContainerStyle={styles.scrollContent}>
-          {state.routes.map((route) => renderItem(route))}
-        </ScrollView>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Ayarlar"
-          hitSlop={10}
-          onPress={ayarlariAc}
-          style={({ pressed }) =>
-            StyleSheet.flatten([
-              styles.pin,
-              styles.item,
-              {
-                width: pinW,
-                borderLeftColor: colors.border,
-                opacity: pressed ? 0.7 : 1,
-                minHeight: kisa ? 44 : 52,
-                ...(Platform.OS === 'web' ? { cursor: 'pointer' } : null),
-              },
-            ])
-          }>
-          <View
-            style={StyleSheet.flatten([
-              styles.pill,
-              {
-                backgroundColor: colors.tint,
-                minWidth: Math.min(48, pinW - 6),
-                height: kisa ? 30 : 32,
-                borderRadius: 16,
-              },
-            ])}>
-            <Ionicons name="settings" size={iconSize + 1} color="#fff" />
-          </View>
-          <Text
-            numberOfLines={1}
-            style={StyleSheet.flatten([
-              styles.label,
-              { color: colors.tint, fontSize: 10, fontWeight: '800' },
-            ])}>
-            Ayarlar
-          </Text>
-        </Pressable>
+        {dockRoutes.map((route) => {
+          const focused = route.name === aktifAd || (gizlenenAktif && route.name === 'daha');
+          const meta = KILITLI_DOCK.find((d) => d.name === route.name);
+          const options = descriptors[route.key]?.options;
+          const label = meta?.title ?? options?.tabBarLabel ?? options?.title ?? route.name;
+          const icon = focused
+            ? (SEKME_IKONLARI_DOLU[route.name] ?? 'ellipse')
+            : (SEKME_IKONLARI[route.name] ?? 'ellipse-outline');
+          const renk = focused ? colors.tint : colors.tabIconDefault;
+
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={{ selected: focused }}
+              accessibilityLabel={label}
+              onPress={() => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                if (!focused && !event.defaultPrevented) {
+                  navigation.navigate(route.name, route.params);
+                }
+              }}
+              style={({ pressed }) =>
+                StyleSheet.flatten([
+                  styles.item,
+                  { opacity: pressed ? 0.7 : 1, minHeight: kisa ? 44 : 52 },
+                ])
+              }>
+              <Ionicons name={icon as SekmeIkonAdi} size={kisa ? 20 : 22} color={renk} />
+              <Text
+                numberOfLines={1}
+                style={StyleSheet.flatten([
+                  styles.label,
+                  {
+                    color: renk,
+                    fontSize: label.length > 10 ? 9 : 10,
+                    fontWeight: focused ? '800' : '600',
+                  },
+                ])}>
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -278,31 +115,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     width: '100%',
-  },
-  scroll: {
-    flexGrow: 0,
-    flexShrink: 1,
-  },
-  scrollContent: {
-    alignItems: 'center',
-    paddingHorizontal: 2,
-  },
-  pin: {
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    paddingHorizontal: 4,
   },
   item: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 3,
     paddingHorizontal: 2,
-  },
-  pill: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
+    minWidth: 0,
   },
   label: {
     textAlign: 'center',

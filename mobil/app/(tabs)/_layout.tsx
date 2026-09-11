@@ -3,17 +3,13 @@ import { View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { IzgaraTabBar } from '@/bilesenler/ortak/IzgaraTabBar';
+import { KILITLI_DOCK } from '@/sabitler/HizliIslemler';
 
-/** 9 sekme — modern tek satır vektör dock */
-const TABS: { name: string; title: string; short: string }[] = [
-  { name: 'index', title: 'Ana Sayfa', short: 'Ana' },
-  { name: 'suru', title: 'Sürü', short: 'Sürü' },
-  { name: 'stok', title: 'Stok', short: 'Stok' },
-  { name: 'saglik', title: 'Sağlık', short: 'Sağlık' },
-  { name: 'rasyon', title: 'Rasyon', short: 'Rasyon' },
-  { name: 'veteriner', title: 'Veteriner', short: 'Vet' },
-  { name: 'akilli-kuzu', title: 'Akıllı Kuzu', short: 'Kuzu' },
-  { name: 'yolculuk', title: 'Yolculuk', short: 'Yol' },
+const GIZLI: { name: string; title: string }[] = [
+  { name: 'saglik', title: 'Sağlık' },
+  { name: 'rasyon', title: 'Rasyon' },
+  { name: 'veteriner', title: 'Veteriner' },
+  { name: 'yolculuk', title: 'Yolculuk' },
 ];
 
 export default function TabLayout() {
@@ -28,13 +24,23 @@ export default function TabLayout() {
           tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
           headerShown: false,
         }}>
-        {TABS.map((t) => (
+        {KILITLI_DOCK.map((t) => (
           <Tabs.Screen
             key={t.name}
             name={t.name}
             options={{
               title: t.title,
-              tabBarLabel: t.short,
+              tabBarLabel: t.title,
+            }}
+          />
+        ))}
+        {GIZLI.map((t) => (
+          <Tabs.Screen
+            key={t.name}
+            name={t.name}
+            options={{
+              title: t.title,
+              href: null,
             }}
           />
         ))}

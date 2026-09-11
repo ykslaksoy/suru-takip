@@ -10,9 +10,10 @@ export const SEKME_IKONLARI: Record<string, SekmeIkonAdi> = {
   saglik: 'medkit-outline',
   rasyon: 'leaf-outline',
   veteriner: 'fitness-outline',
-  'akilli-kuzu': 'sparkles-outline',
+  'akilli-kuzu': 'person-outline',
   yolculuk: 'map-outline',
   ayarlar: 'settings-outline',
+  daha: 'ellipsis-horizontal',
 };
 
 export const SEKME_IKONLARI_DOLU: Record<string, SekmeIkonAdi> = {
@@ -22,7 +23,8 @@ export const SEKME_IKONLARI_DOLU: Record<string, SekmeIkonAdi> = {
   saglik: 'medkit',
   rasyon: 'leaf',
   veteriner: 'fitness',
-  'akilli-kuzu': 'sparkles',
+  'akilli-kuzu': 'person',
   yolculuk: 'map',
   ayarlar: 'settings',
+  daha: 'ellipsis-horizontal',
 };
