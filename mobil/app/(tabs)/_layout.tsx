@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { IzgaraTabBar } from '@/bilesenler/ortak/IzgaraTabBar';
-import { KILITLI_DOCK } from '@/sabitler/HizliIslemler';
 
 const GIZLI: { name: string; title: string }[] = [
   { name: 'saglik', title: 'Sağlık' },
@@ -24,16 +23,11 @@ export default function TabLayout() {
           tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
           headerShown: false,
         }}>
-        {KILITLI_DOCK.map((t) => (
-          <Tabs.Screen
-            key={t.name}
-            name={t.name}
-            options={{
-              title: t.title,
-              tabBarLabel: t.title,
-            }}
-          />
-        ))}
+        <Tabs.Screen name="index" options={{ title: 'Ana Sayfa', tabBarLabel: 'Ana Sayfa' }} />
+        <Tabs.Screen name="suru" options={{ title: 'Sürü', tabBarLabel: 'Sürü' }} />
+        <Tabs.Screen name="stok" options={{ title: 'Stok', tabBarLabel: 'Stok' }} />
+        <Tabs.Screen name="akilli-kuzu" options={{ title: 'Akıllı Kuzu', tabBarLabel: 'Akıllı Kuzu' }} />
+        <Tabs.Screen name="daha" options={{ title: 'Daha', tabBarLabel: 'Daha' }} />
         {GIZLI.map((t) => (
           <Tabs.Screen
             key={t.name}

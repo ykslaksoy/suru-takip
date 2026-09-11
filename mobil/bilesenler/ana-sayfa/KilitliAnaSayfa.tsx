@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingRight: 8,
   },
-  title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.6, textAlign: 'center' },
+  title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.2, textAlign: 'center' },
   sub: { fontSize: 14, fontWeight: '600', marginTop: 2, textAlign: 'center' },
   metrikRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 18 },
   metrikKart: {

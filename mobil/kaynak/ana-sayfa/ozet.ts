@@ -1,4 +1,4 @@
-import { countAnimals, countAnimalsInPaddock } from '@/kaynak/cekirdek/veritabani';
+import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { getBugunGorevleri } from '@/kaynak/gorevler/liste';
 import { getSmartSuggestions } from '@/kaynak/akilli-kuzu/oneri';
 
@@ -38,17 +38,29 @@ const KILITLI_ONERI_CTX = {
   lowStock: true,
 };
 
+const PADOK_KUZU_ON_EK: Record<string, string> = {
+  'Padok A': 'padok-a-kuzu-',
+  'Padok B': 'padok-b-grup-',
+  'Padok C': 'padok-c-grup-',
+};
+
+function sezonKuzuMu(id: string, padok: string): boolean {
+  const ek = PADOK_KUZU_ON_EK[padok];
+  return Boolean(ek && id.startsWith(ek));
+}
+
 export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
-  const [hayvanSayisi, gorevler, ...baslar] = await Promise.all([
-    countAnimals(),
-    getBugunGorevleri(50),
-    ...KILITLI_PADOKLAR.map((p) => countAnimalsInPaddock(p.ad)),
-  ]);
+  const [hayvanlar, gorevler] = await Promise.all([getAnimals(), getBugunGorevleri(3)]);
+  const partiler = KILITLI_PADOKLAR.map((p) => ({
+    ...p,
+    bas: hayvanlar.filter((a) => sezonKuzuMu(a.id, p.ad) && a.status !== 'sold' && a.status !== 'dead')
+      .length,
+  }));
   const oneriler = getSmartSuggestions(KILITLI_ONERI_CTX);
   return {
-    hayvanSayisi,
+    hayvanSayisi: partiler.reduce((s, p) => s + p.bas, 0),
     gorevSayisi: gorevler.length,
-    partiler: KILITLI_PADOKLAR.map((p, i) => ({ ...p, bas: baslar[i] ?? 0 })),
+    partiler,
     kritik: oneriler.filter((s) => s.urgency === 'alert').length,
     aksiyon: oneriler.filter((s) => s.urgency === 'action').length,
   };
