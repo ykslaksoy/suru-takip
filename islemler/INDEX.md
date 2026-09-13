@@ -5,8 +5,8 @@
 ## Özet
 
 - **Tamam (kilitli):** 79
-- **Açık:** 26
-- **Toplam işlem dosyası:** 105
+- **Açık:** 27
+- **Toplam işlem dosyası:** 106
 
 ## `00-kural/`
 
@@ -24,6 +24,7 @@
 
 - [x] [`01-bes-ana-ekran.md`](./02-ekran-taslak/01-bes-ana-ekran.md) — 5 ana ekran wireframe 🔒
 - [ ] [`02-akilli-kuzu-home-kilit.md`](./02-ekran-taslak/02-akilli-kuzu-home-kilit.md) — Grok kilitli ana sayfa (2026-09-07)
+- [ ] [`03-gorevler-kategori-sayfa.md`](./02-ekran-taslak/03-gorevler-kategori-sayfa.md) — Görevler kategori ayrı sayfa
 
 ## `03-cekirdek/`
 

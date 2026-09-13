@@ -12,17 +12,14 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import { IsPlaniPaneli } from '@/bilesenler/gorevler/IsPlaniPaneli';
+import { GorevSatiri } from '@/bilesenler/gorevler/GorevSatiri';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import {
   getGorevGruplari,
   setPlanlananTamam,
   setIsPlaniTamam,
-  gorevSeviyeEtiket,
-  gorevTarihMetni,
   type Gorev,
   type GorevGrup,
-  type GorevKategoriId,
-  type GorevSeviye,
 } from '@/kaynak/gorevler';
 
 type Sekme = 'gunluk' | 'is-plani';
@@ -35,80 +32,6 @@ async function gorevTamamla(id: string): Promise<void> {
   }
 }
 
-function seviyeRenk(seviye: GorevSeviye, colors: (typeof Colors)['light']): string {
-  if (seviye === 'uyari') return colors.danger;
-  if (seviye === 'sira') return colors.warning;
-  if (seviye === 'plan') return colors.tint;
-  return colors.textSecondary;
-}
-
-function GorevSatiri({
-  g,
-  colors,
-  onTamamla,
-}: {
-  g: Gorev;
-  colors: (typeof Colors)['light'];
-  onTamamla?: () => void;
-}) {
-  const renk = seviyeRenk(g.seviye, colors);
-  const tarih = gorevTarihMetni(g.tarih);
-  // "20 kuzu" veya "20 kuzu · …" → satırda kaç kuzu net görünsün
-  const kuzuEslesme = g.aciklama.match(/^(\d+)\s*kuzu\b/i);
-  const kuzuMetin = kuzuEslesme ? `${kuzuEslesme[1]} kuzu` : null;
-  const kalanAciklama = kuzuEslesme
-    ? g.aciklama.replace(/^\d+\s*kuzu\s*[·•-]?\s*/i, '').trim()
-    : g.aciklama;
-
-  return (
-    <View style={styles.madde}>
-      <Pressable onPress={() => router.push(g.href as never)}>
-        <View style={styles.metaRow}>
-          <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15, flex: 1 }}>
-            <Text style={{ color: colors.tint }}>{tarih}</Text>
-            <Text style={{ color: colors.textSecondary }}> · </Text>
-            {g.baslik}
-            {g.baslikIgne ? (
-              <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: '400' }}>
-                {' '}
-                ({g.baslikIgne})
-              </Text>
-            ) : null}
-            {g.baslikMl ? (
-              <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700' }}>
-                {' '}
-                {g.baslikMl}
-              </Text>
-            ) : null}
-            {kuzuMetin ? (
-              <>
-                <Text style={{ color: colors.textSecondary }}> · </Text>
-                <Text style={{ color: colors.text }}>{kuzuMetin}</Text>
-              </>
-            ) : null}
-          </Text>
-          <View style={[styles.seviyeBadge, { backgroundColor: renk + '22' }]}>
-            <Text style={{ color: renk, fontSize: 11, fontWeight: '800' }}>
-              {gorevSeviyeEtiket(g.seviye)}
-            </Text>
-          </View>
-        </View>
-        {kalanAciklama ? (
-          <Text style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>
-            {kalanAciklama}
-          </Text>
-        ) : null}
-        <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12, marginTop: 6 }}>{g.cta} →</Text>
-      </Pressable>
-      {g.tamamlanabilir && onTamamla ? (
-        <Pressable onPress={onTamamla} style={[styles.tamamBtn, { borderColor: colors.success }]}>
-          <Text style={{ color: colors.success, fontWeight: '700', fontSize: 12 }}>Tamamla</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 export default function GorevlerScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -117,7 +40,6 @@ export default function GorevlerScreen() {
   const [gruplar, setGruplar] = useState<GorevGrup[]>([]);
   const [diger, setDiger] = useState<Gorev[]>([]);
   const [loading, setLoading] = useState(true);
-  const [secili, setSecili] = useState<GorevKategoriId | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,10 +47,6 @@ export default function GorevlerScreen() {
       const { gruplar: g, diger: d } = await getGorevGruplari();
       setGruplar(g);
       setDiger(d);
-      setSecili((prev) => {
-        if (prev && g.some((x) => x.id === prev)) return prev;
-        return null;
-      });
     } finally {
       setLoading(false);
     }
@@ -140,7 +58,6 @@ export default function GorevlerScreen() {
     }, [ready, load, refreshKey])
   );
 
-  const aktifGrup = secili ? gruplar.find((g) => g.id === secili) : null;
   const tamamlaVeYenile = async (id: string) => {
     await gorevTamamla(id);
     await load();
@@ -165,7 +82,7 @@ export default function GorevlerScreen() {
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
                 Sıralama: en yakın tarih önce; aynı günde parazit → karma → selenyum →
-                tartım → rapel. Kategoriye dokunun.
+                tartım → rapel. Kategoriye dokunun — liste ayrı sayfada açılır.
               </Text>
 
               {loading ? (
@@ -177,59 +94,25 @@ export default function GorevlerScreen() {
               ) : (
                 <>
                   <View style={styles.kategoriRow}>
-                    {gruplar.map((g) => {
-                      const aktif = secili === g.id;
-                      return (
-                        <Pressable
-                          key={g.id}
-                          onPress={() => setSecili(aktif ? null : g.id)}
-                          style={[
-                            styles.kategoriBtn,
-                            {
-                              borderColor: aktif ? colors.tint : colors.border,
-                              backgroundColor: aktif ? `${colors.tint}18` : colors.card,
-                            },
-                          ]}>
-                          <Text style={styles.kategoriIcon}>{g.icon}</Text>
-                          <Text style={[styles.kategoriLabel, { color: colors.text }]}>{g.label}</Text>
-                          <View
-                            style={[styles.sayi, { backgroundColor: aktif ? colors.tint : colors.warning }]}>
-                            <Text style={styles.sayiText}>{g.adet}</Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-
-                  {aktifGrup ? (
-                    <View style={[styles.detay, { backgroundColor: colors.card, borderColor: colors.tint }]}>
-                      <View style={styles.detayBaslik}>
-                        <Text style={[styles.detayTitle, { color: colors.text }]}>
-                          {aktifGrup.icon} {aktifGrup.label}
-                        </Text>
-                        <Text style={{ color: colors.textSecondary }}>{aktifGrup.adet} görev</Text>
-                      </View>
-                      {aktifGrup.gorevler.map((g) => (
-                        <GorevSatiri
-                          key={g.id}
-                          g={g}
-                          colors={colors}
-                          onTamamla={
-                            g.tamamlanabilir ? () => tamamlaVeYenile(g.id) : undefined
-                          }
-                        />
-                      ))}
-                      <Pressable onPress={() => router.push(aktifGrup.href as never)} style={{ marginTop: 8 }}>
-                        <Text style={{ color: colors.tint, fontWeight: '800' }}>
-                          {aktifGrup.label} ekranına git →
-                        </Text>
+                    {gruplar.map((g) => (
+                      <Pressable
+                        key={g.id}
+                        onPress={() => router.push(`/gorevler/kategori/${g.id}` as never)}
+                        style={[
+                          styles.kategoriBtn,
+                          {
+                            borderColor: colors.border,
+                            backgroundColor: colors.card,
+                          },
+                        ]}>
+                        <Text style={styles.kategoriIcon}>{g.icon}</Text>
+                        <Text style={[styles.kategoriLabel, { color: colors.text }]}>{g.label}</Text>
+                        <View style={[styles.sayi, { backgroundColor: colors.warning }]}>
+                          <Text style={styles.sayiText}>{g.adet}</Text>
+                        </View>
                       </Pressable>
-                    </View>
-                  ) : gruplar.length > 0 ? (
-                    <Text style={{ color: colors.textSecondary, textAlign: 'center', marginVertical: 16 }}>
-                      Detay için bir kategori seçin.
-                    </Text>
-                  ) : null}
+                    ))}
+                  </View>
 
                   {diger.length > 0 ? (
                     <View style={[styles.detay, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -300,34 +183,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
   },
-  detayBaslik: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   detayTitle: { fontSize: 17, fontWeight: '800' },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
-  },
-  seviyeBadge: {
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  madde: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-  },
-  tamamBtn: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
 });
