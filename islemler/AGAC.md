@@ -16,7 +16,8 @@ suruyon/
     │   ├── [x] 02-anket-formu.md 🔒  — Anket formu
     │   └── [x] 03-dogrulama-raporu.md 🔒  — Faz 0 doğrulama raporu
     ├── 02-ekran-taslak/
-    │   └── [x] 01-bes-ana-ekran.md 🔒  — 5 ana ekran wireframe
+    │   ├── [x] 01-bes-ana-ekran.md 🔒  — 5 ana ekran wireframe
+    │   └── [ ] 02-akilli-kuzu-home-kilit.md  — Grok kilitli ana sayfa (2026-09-07)
     ├── 03-cekirdek/
     │   ├── [x] 01-tipler.md 🔒  — Ortak TypeScript tipleri
     │   ├── [x] 02-sqlite-native.md 🔒  — 

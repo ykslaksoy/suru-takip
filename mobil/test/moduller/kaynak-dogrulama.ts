@@ -21,6 +21,8 @@ export const kaynakModul: TestModul = {
       'sabitler/OzellikBayraklari.ts',
       'sabitler/YasalMetinler.ts',
       'app.json',
+      'assets/home-locked/mascot-lamb.png',
+      'sabitler/HizliIslemler.ts',
     ];
     const plan = oku('kaynak/akilli-veteriner/hizli-besi-plani.ts');
     const banner = oku('bilesenler/ortak/CevrimdisiBanner.tsx');

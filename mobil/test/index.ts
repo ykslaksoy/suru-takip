@@ -17,6 +17,7 @@ import { yasalModul } from './moduller/yasal';
 import { kaynakModul } from './moduller/kaynak-dogrulama';
 import { superAgilModul } from './moduller/super-agil';
 import { uremeModul } from './moduller/ureme';
+import { anaSayfaKilitModul } from './moduller/ana-sayfa-kilit';
 
 const MODULLER = [
   hizliBesiModul,
@@ -32,6 +33,7 @@ const MODULLER = [
   kaynakModul,
   superAgilModul,
   uremeModul,
+  anaSayfaKilitModul,
 ];
 
 async function main() {
