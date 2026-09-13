@@ -153,7 +153,8 @@ export const ANIMAL_STATUS_LABELS: Record<AnimalStatus, string> = {
   healthy: 'Sağlıklı',
   sick: 'Hasta',
   pregnant: 'Gebe',
-  lactating: 'Sağmal',
+  // Sürü kartı sağlık rozeti (Hasta ile çift); süt rasyon fazı ayrı: hesapla.ts
+  lactating: 'Sağlıklı',
   dry: 'Kuru',
   sold: 'Satıldı',
   dead: 'Öldü',

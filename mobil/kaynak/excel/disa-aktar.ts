@@ -95,7 +95,7 @@ export async function suruOzetCsv(): Promise<string> {
     csvEscape('Ozet') + ',' + csvEscape('Toplam hayvan') + ',' + csvEscape(toplam),
     csvEscape('Ozet') + ',' + csvEscape('Aktif') + ',' + csvEscape(aktif.length),
     csvEscape('Ozet') + ',' + csvEscape('Gebe') + ',' + csvEscape(durumSayac.get('pregnant') ?? 0),
-    csvEscape('Ozet') + ',' + csvEscape('Sağmal') + ',' + csvEscape(durumSayac.get('lactating') ?? 0),
+    csvEscape('Ozet') + ',' + csvEscape(ANIMAL_STATUS_LABELS.lactating) + ',' + csvEscape(durumSayac.get('lactating') ?? 0),
     csvEscape('Ozet') + ',' + csvEscape('Son 30 gün doğum (kuzu)') + ',' + csvEscape(sonDogumlar.length),
     csvEscape('Ozet') + ',' + csvEscape('Aşı kayıtları') + ',' + csvEscape(asi),
     csvEscape('Ozet') + ',' + csvEscape('Hastalık kayıtları') + ',' + csvEscape(hastalik),
