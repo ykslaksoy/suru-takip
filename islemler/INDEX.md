@@ -85,6 +85,7 @@
 - [x] [`06-super-kuzu-karakter.md`](./09-okul/06-super-kuzu-karakter.md) — Karakter: Süper Kuzu 🔒
 - [x] [`07-ders-listesi-kaldirildi.md`](./09-okul/07-ders-listesi-kaldirildi.md) — Ders listesi kaldırıldı — eğitim öneriyle 🔒
 - [x] [`08-akilli-vs-super-kuzu.md`](./09-okul/08-akilli-vs-super-kuzu.md) — Akıllı Kuzu = rehber · Süper Kuzu = başarı 🔒
+- [ ] [`09-bes-asama-profesyonellik.md`](./09-okul/09-bes-asama-profesyonellik.md) — Profesyonellik 5 aşama (N paket)
 
 ## `10-akilli-veteriner/`
 
