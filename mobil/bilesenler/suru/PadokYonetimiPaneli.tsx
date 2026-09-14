@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
+import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import {
   addPadok,
   getPadoklar,
@@ -30,18 +31,21 @@ type Props = {
 };
 
 /**
- * Padok listesi — satıra / Giriş’e dokununca padok açılır (içindeki hayvanlar).
- * + ile o padoka yeni hayvan eklenir.
+ * Padok listesi — üstte; satıra / Giriş’e dokununca padok açılır (hayvanlar altta).
+ * Seçilince liste daralır, hayvanlar öne çıkar.
  */
 export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { refreshKey } = useDatabase();
   const [liste, setListe] = useState<PadokSatir[]>([]);
   const [ad, setAd] = useState('');
   const [kapasite, setKapasite] = useState('30');
   const [karantina, setKarantina] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formAcik, setFormAcik] = useState(false);
+  /** Seçiliyken padok listesini tekrar göster */
+  const [listeAcik, setListeAcik] = useState(false);
 
   const load = useCallback(async () => {
     const padoklar = await getPadoklar();
@@ -56,7 +60,12 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshKey]);
+
+  useEffect(() => {
+    // Yeni seçimde listeyi kapat — hayvanlar görünsün
+    if (seciliPadok) setListeAcik(false);
+  }, [seciliPadok]);
 
   const ozet = useMemo(() => {
     const hayvan = liste.reduce((s, p) => s + p.hayvan, 0);
@@ -66,6 +75,7 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
 
   const acPadok = (padokAd: string) => {
     onPadokSec?.(padokAd);
+    setListeAcik(false);
   };
 
   const ekle = async () => {
@@ -112,6 +122,8 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
     ]);
   };
 
+  const listeGoster = !seciliPadok || listeAcik;
+
   return (
     <View
       style={StyleSheet.flatten([
@@ -122,7 +134,7 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])}>Padoklar</Text>
           <Text style={StyleSheet.flatten([styles.hint, { color: colors.textSecondary }])}>
-            {ozet} · dokunarak aç
+            {ozet} · dokun → hayvanlar
           </Text>
         </View>
         <Pressable
@@ -140,104 +152,122 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
       </View>
 
       {seciliPadok ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Tüm padokları göster"
-          onPress={() => onPadokSec?.(null)}
-          style={StyleSheet.flatten([
-            styles.seciliSerit,
-            { backgroundColor: colors.tint + '14', borderColor: colors.tint },
-          ])}>
-          <Ionicons name="filter" size={14} color={colors.tint} />
-          <Text style={StyleSheet.flatten([styles.seciliYazi, { color: colors.tint }])} numberOfLines={1}>
-            {seciliPadok} açık · tümüne dön
-          </Text>
-          <Ionicons name="close-circle" size={16} color={colors.tint} />
-        </Pressable>
+        <View style={styles.seciliBlok}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Tüm padokları göster"
+            onPress={() => {
+              onPadokSec?.(null);
+              setListeAcik(true);
+            }}
+            style={StyleSheet.flatten([
+              styles.seciliSerit,
+              { backgroundColor: colors.tint + '14', borderColor: colors.tint },
+            ])}>
+            <Ionicons name="arrow-back" size={18} color={colors.tint} />
+            <Text style={StyleSheet.flatten([styles.seciliYazi, { color: colors.tint }])} numberOfLines={1}>
+              {seciliPadok} · tümüne dön
+            </Text>
+            <Ionicons name="close-circle" size={22} color={colors.tint} />
+          </Pressable>
+          {!listeAcik ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Başka padok seç"
+              onPress={() => setListeAcik(true)}
+              style={StyleSheet.flatten([
+                styles.degistirBtn,
+                { borderColor: colors.border, backgroundColor: colors.background },
+              ])}>
+              <Text style={StyleSheet.flatten([styles.degistirText, { color: colors.text }])}>
+                Başka padok
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
 
-      <View style={styles.liste}>
-        {liste.map((p) => {
-          const doluluk = p.kapasite > 0 ? Math.min(1, p.hayvan / p.kapasite) : 0;
-          const secili = seciliPadok === p.ad;
-          return (
-            <View
-              key={p.id}
-              style={StyleSheet.flatten([
-                styles.row,
-                {
-                  borderColor: colors.border,
-                  backgroundColor: secili ? colors.tint + '10' : 'transparent',
-                },
-              ])}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${p.ad} padokunu aç, ${p.hayvan} hayvan`}
-                onPress={() => acPadok(p.ad)}
-                style={styles.satirGovde}>
-                <Text
-                  numberOfLines={1}
-                  style={StyleSheet.flatten([
-                    styles.padokAd,
-                    { color: secili ? colors.tint : colors.text },
-                  ])}>
-                  {p.karantina ? '🛡 ' : ''}
-                  {p.ad}
-                </Text>
-                <View style={styles.barTrack}>
-                  <View
+      {listeGoster ? (
+        <View style={styles.liste}>
+          {liste.map((p) => {
+            const doluluk = p.kapasite > 0 ? Math.min(1, p.hayvan / p.kapasite) : 0;
+            const secili = seciliPadok === p.ad;
+            return (
+              <View
+                key={p.id}
+                style={StyleSheet.flatten([
+                  styles.row,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: secili ? colors.tint + '10' : 'transparent',
+                  },
+                ])}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${p.ad} padokunu aç, ${p.hayvan} hayvan`}
+                  onPress={() => acPadok(p.ad)}
+                  style={styles.satirGovde}>
+                  <Text
+                    numberOfLines={1}
                     style={StyleSheet.flatten([
-                      styles.barFill,
-                      {
-                        width: `${Math.round(doluluk * 100)}%`,
-                        backgroundColor: p.dolu ? colors.danger : colors.tint,
-                      },
-                    ])}
-                  />
-                </View>
-                <Text style={StyleSheet.flatten([styles.meta, { color: colors.textSecondary }])}>
-                  {p.hayvan}/{p.kapasite}
-                  {p.dolu ? ' · dolu' : ` · ${p.bos} boş`}
-                  {secili ? ' · açık' : ''}
-                </Text>
-              </Pressable>
+                      styles.padokAd,
+                      { color: secili ? colors.tint : colors.text },
+                    ])}>
+                    {p.karantina ? '🛡 ' : ''}
+                    {p.ad}
+                  </Text>
+                  <View style={styles.barTrack}>
+                    <View
+                      style={StyleSheet.flatten([
+                        styles.barFill,
+                        {
+                          width: `${Math.round(doluluk * 100)}%`,
+                          backgroundColor: p.dolu ? colors.danger : colors.tint,
+                        },
+                      ])}
+                    />
+                  </View>
+                  <Text style={StyleSheet.flatten([styles.meta, { color: colors.textSecondary }])}>
+                    {p.hayvan}/{p.kapasite}
+                    {p.dolu ? ' · dolu' : ` · ${p.bos} boş`}
+                    {secili ? ' · açık' : ''}
+                  </Text>
+                </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${p.ad} aç`}
-                onPress={() => acPadok(p.ad)}
-                style={StyleSheet.flatten([
-                  styles.girisBtn,
-                  { backgroundColor: secili ? colors.tint : colors.tint },
-                ])}>
-                <Text style={styles.girisText}>{secili ? 'Açık' : 'Giriş'}</Text>
-              </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${p.ad} aç`}
+                  onPress={() => acPadok(p.ad)}
+                  style={StyleSheet.flatten([styles.girisBtn, { backgroundColor: colors.tint }])}>
+                  <Text style={styles.girisText}>{secili ? 'Açık' : 'Giriş'}</Text>
+                </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${p.ad} hayvan ekle`}
-                onPress={() =>
-                  router.push({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: p.ad } } as never)
-                }
-                style={StyleSheet.flatten([
-                  styles.ekleBtn,
-                  { borderColor: colors.border, backgroundColor: colors.background },
-                ])}>
-                <Ionicons name="add" size={18} color={colors.tint} />
-              </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${p.ad} hayvan ekle`}
+                  onPress={() =>
+                    router.push({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: p.ad } } as never)
+                  }
+                  style={StyleSheet.flatten([
+                    styles.ekleBtn,
+                    { borderColor: colors.border, backgroundColor: colors.background },
+                  ])}>
+                  <Ionicons name="add" size={22} color={colors.tint} />
+                </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${p.ad} sil`}
-                onPress={() => sil(p)}
-                hitSlop={6}
-                style={styles.silBtn}>
-                <Text style={StyleSheet.flatten([styles.silText, { color: colors.danger }])}>Sil</Text>
-              </Pressable>
-            </View>
-          );
-        })}
-      </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${p.ad} sil`}
+                  onPress={() => sil(p)}
+                  hitSlop={8}
+                  style={styles.silBtn}>
+                  <Text style={StyleSheet.flatten([styles.silText, { color: colors.danger }])}>Sil</Text>
+                </Pressable>
+              </View>
+            );
+          })}
+        </View>
+      ) : null}
 
       {formAcik ? (
         <View style={StyleSheet.flatten([styles.form, { borderTopColor: colors.border }])}>
@@ -269,7 +299,7 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
                 style={{
                   color: karantina ? colors.tint : colors.textSecondary,
                   fontWeight: '700',
-                  fontSize: 13,
+                  fontSize: 14,
                 }}>
                 {karantina ? '✓ Karantina' : '○ Normal'}
               </Text>
@@ -297,79 +327,97 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
 const styles = StyleSheet.create({
   box: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 10,
+    borderRadius: 14,
+    padding: 12,
   },
   ust: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  title: { fontWeight: '800', fontSize: 14, letterSpacing: -0.2 },
-  hint: { fontSize: 11, marginTop: 1, fontWeight: '600' },
+  title: { fontWeight: '800', fontSize: 17, letterSpacing: -0.2 },
+  hint: { fontSize: 12, marginTop: 2, fontWeight: '600' },
   yeniBtn: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 36,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 48,
     justifyContent: 'center',
   },
-  yeniText: { fontWeight: '800', fontSize: 13 },
+  yeniText: { fontWeight: '800', fontSize: 15 },
+  seciliBlok: { gap: 8, marginBottom: 4, marginTop: 4 },
   seciliSerit: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 6,
-    marginTop: 4,
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    minHeight: 52,
   },
-  seciliYazi: { flex: 1, fontWeight: '700', fontSize: 12 },
+  seciliYazi: { flex: 1, fontWeight: '800', fontSize: 15 },
+  degistirBtn: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    paddingVertical: 12,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  degistirText: { fontWeight: '800', fontSize: 14 },
   liste: { gap: 0 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
+    gap: 8,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 4,
+    minHeight: 56,
   },
-  satirGovde: { flex: 1, minWidth: 0, paddingVertical: 2 },
-  padokAd: { fontWeight: '700', fontSize: 14 },
+  satirGovde: { flex: 1, minWidth: 0, paddingVertical: 4 },
+  padokAd: { fontWeight: '800', fontSize: 16 },
   barTrack: {
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: '#e8efe6',
     marginTop: 6,
     marginBottom: 4,
     overflow: 'hidden',
   },
-  barFill: { height: 4, borderRadius: 2 },
-  meta: { fontSize: 11, fontWeight: '600' },
+  barFill: { height: 5, borderRadius: 3 },
+  meta: { fontSize: 12, fontWeight: '600' },
   girisBtn: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 36,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 48,
+    minWidth: 64,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  girisText: { color: '#fff', fontWeight: '800', fontSize: 12 },
+  girisText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   ekleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  silBtn: { paddingHorizontal: 4, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
-  silText: { fontWeight: '700', fontSize: 12 },
+  silBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    minHeight: 48,
+    minWidth: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  silText: { fontWeight: '800', fontSize: 14 },
   form: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: 12,
@@ -379,18 +427,18 @@ const styles = StyleSheet.create({
   formRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   input: {
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-    fontSize: 15,
+    paddingVertical: 12,
+    minHeight: 48,
+    fontSize: 16,
   },
   kapasite: { flex: 1 },
-  karantina: { paddingVertical: 8, paddingHorizontal: 4 },
+  karantina: { paddingVertical: 12, paddingHorizontal: 6, minHeight: 48, justifyContent: 'center' },
   kaydetBtn: {
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: 52,
   },
 });

@@ -79,8 +79,9 @@ export function PadokButonIzgarasi({
 
   return (
     <View style={styles.wrap}>
+      <Text style={[styles.baslik, { color: colors.text }]}>Padoklar</Text>
       <Text style={[styles.hint, { color: colors.textSecondary }]}>
-        Padoka dokunun · önerilen: {oneriAd}
+        Üstten seçin · önerilen: {oneriAd}
       </Text>
       <View style={styles.grid}>
         {liste.map((p) => {
@@ -152,7 +153,8 @@ export function PadokButonIzgarasi({
 
 const styles = StyleSheet.create({
   wrap: { gap: 4 },
-  hint: { fontSize: 14, marginBottom: 10, fontWeight: '600' },
+  baslik: { fontSize: 22, fontWeight: '900', marginBottom: 2, letterSpacing: -0.3 },
+  hint: { fontSize: 14, marginBottom: 12, fontWeight: '600' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   btn: {
     width: '47%',
@@ -160,9 +162,9 @@ const styles = StyleSheet.create({
     minWidth: '42%',
     borderWidth: 2,
     borderRadius: 14,
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 12,
-    minHeight: 88,
+    minHeight: 96,
   },
   btnTitle: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
   yeniBaslik: { fontWeight: '800', fontSize: 16, marginTop: 20, marginBottom: 8 },

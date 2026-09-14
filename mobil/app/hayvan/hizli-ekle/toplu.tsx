@@ -492,9 +492,6 @@ export default function TopluKabulScreen() {
 
         {adim === 'padok' && (
           <View style={styles.gap}>
-            <Text style={{ color: colors.textSecondary, marginBottom: 8, fontWeight: '600' }}>
-              Varsayılan: Gözlem padok (yeni kabul). Değiştirebilirsiniz.
-            </Text>
             <PadokButonIzgarasi
               oneriAd={VARSAYILAN_KABUL_PADOK}
               yeniSonraSec={false}
@@ -503,8 +500,8 @@ export default function TopluKabulScreen() {
                 setAdim('sayi');
               }}
             />
-            <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 8 }}>
-              Seçili: {padok}
+            <Text style={{ color: colors.textSecondary, marginTop: 4, fontWeight: '600' }}>
+              Varsayılan: Gözlem padok. Seçili: {padok}
             </Text>
             <Pressable
               onPress={() => setAdim('sayi')}

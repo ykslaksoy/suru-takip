@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
@@ -27,7 +27,6 @@ export default function FlockScreen() {
   const [filter, setFilter] = useState<Filter>('all');
   const [padokFiltre, setPadokFiltre] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
-  const listeRef = useRef<FlatList<HayvanSatir>>(null);
 
   const load = useCallback(async () => {
     const list = await getAnimals({ search: search || undefined });
@@ -56,15 +55,6 @@ export default function FlockScreen() {
   useEffect(() => {
     if (ready) void load();
   }, [ready, refreshKey, load]);
-
-  useEffect(() => {
-    if (padokFiltre) {
-      // Padok seçilince hayvan listesine kaydır
-      requestAnimationFrame(() => {
-        listeRef.current?.scrollToOffset({ offset: 220, animated: true });
-      });
-    }
-  }, [padokFiltre]);
 
   const filters: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Tümü' },
@@ -105,6 +95,12 @@ export default function FlockScreen() {
           <Text style={styles.addText}>+ Ekle</Text>
         </Pressable>
       </View>
+
+      {/* Padoklar en üstte — seçince altta hayvanlar gelir */}
+      <View style={styles.padokWrap}>
+        <PadokYonetimiPaneli seciliPadok={padokFiltre} onPadokSec={setPadokFiltre} />
+      </View>
+
       <AltButonlar
         items={filters.map((f) => ({ key: f.key, label: f.label }))}
         activeKey={filter}
@@ -121,13 +117,9 @@ export default function FlockScreen() {
         ])}
       />
       <FlatList
-        ref={listeRef}
         data={animals}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={
-          <PadokYonetimiPaneli seciliPadok={padokFiltre} onPadokSec={setPadokFiltre} />
-        }
         renderItem={({ item }) => (
           <HayvanKarti animal={item} latestWeight={item.latestWeight} grade={item.grade} />
         )}
@@ -141,7 +133,7 @@ export default function FlockScreen() {
           <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 24, paddingHorizontal: 16 }}>
             {padokFiltre
               ? `${padokFiltre} içinde hayvan yok. + ile ekleyin.`
-              : 'Henüz hayvan kaydı yok. Padok satırına dokunup Giriş veya + Ekle ile başlayın.'}
+              : 'Padok seçin veya Giriş’e dokunun — hayvanlar burada açılır.'}
           </Text>
         }
       />
@@ -157,18 +149,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 4,
     gap: 10,
   },
   title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
   addBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    minHeight: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minHeight: 48,
     justifyContent: 'center',
   },
-  addText: { color: '#fff', fontWeight: '700' },
+  addText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  padokWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
   search: {
     marginHorizontal: 16,
     marginTop: 8,
@@ -177,7 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     fontSize: 15,
-    minHeight: 44,
+    minHeight: 48,
   },
   list: { paddingHorizontal: 16, paddingBottom: 32, paddingTop: 8 },
 });
