@@ -33,7 +33,8 @@ suruyon/
     │   ├── [x] 03-hayvan-ekle.md 🔒  — Hayvan ekleme formu
     │   ├── [x] 04-hayvan-detay.md 🔒  — Hayvan detay ekranı
     │   ├── [x] 05-koyun-keci-tur.md 🔒  — Tür alanı koyun/keçi
-    │   └── [x] 06-padok-agil.md 🔒  — Padok / ağıl grup yönetimi
+    │   ├── [x] 06-padok-agil.md 🔒  — Padok / ağıl grup yönetimi
+    │   └── [ ] 07-status-etiket-saglikli.md  — Kart durum Sağmal → Sağlıklı
     ├── 05-kilo/
     │   ├── [x] 01-tartim-kaydi.md 🔒  — Tartım kaydı ekleme
     │   ├── [x] 02-tartim-grafigi.md 🔒  — Tartım grafik bileşeni

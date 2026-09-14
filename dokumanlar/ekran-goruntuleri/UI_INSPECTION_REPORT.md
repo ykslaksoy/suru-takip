@@ -35,7 +35,7 @@ Three animal cards displayed vertically:
    - Icons: Wheat/plant and sheep symbols
    - Details: "♀ Merinos · Kas durumu güçlü (yağına göre) ~53.4 ay"
    - Location: "Padok A"
-   - Weight: "68 kg · Sağmal"
+   - Weight: "68 kg · Sağlıklı"
    - Action buttons on right
 
 2. **Boğa** (TR-34-001235)

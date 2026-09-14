@@ -53,7 +53,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
       sex: 'female' as const,
       birthDate: '2022-03-15',
       paddock: 'Padok A',
-      status: 'lactating' as const,
+      status: 'healthy' as const,
       motherId: null,
       gehisId: null,
       sirtNo: null,
