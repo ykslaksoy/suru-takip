@@ -19,7 +19,9 @@ suruyon/
     │   ├── [x] 01-bes-ana-ekran.md 🔒  — 5 ana ekran wireframe
     │   ├── [ ] 02-akilli-kuzu-home-kilit.md  — Grok kilitli ana sayfa (2026-09-07)
     │   ├── [ ] 03-gorevler-kategori-sayfa.md  — Görevler kategori ayrı sayfa
-    │   └── [ ] 04-hizli-kuzu-padok-toplu.md  — Hızlı/toplu kuzu + padok + kaynak
+    │   ├── [ ] 04-hizli-kuzu-padok-toplu.md  — Hızlı/toplu kuzu + padok + kaynak
+    │   ├── [ ] 07-toplu-onay-adet-cinsiyet.md  — Özet/onay + adet + erkek
+    │   └── [ ] 08-onay-prod-deploy.md  — Prod onay undeployed + kota/stub
     ├── 03-cekirdek/
     │   ├── [x] 01-tipler.md 🔒  — Ortak TypeScript tipleri
     │   ├── [x] 02-sqlite-native.md 🔒  — 
