@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm --prefix mobil ci --no-audit --no-fund && npm --prefix mobil exec expo export -- -p web",
+  "installCommand": "cd mobil && npm ci --no-audit --no-fund",
+  "buildCommand": "cd mobil && npx expo export -p web",
   "outputDirectory": "mobil/dist",
-  "installCommand": "echo 'deps installed in buildCommand'",
   "framework": null,
   "cleanUrls": true,
   "trailingSlash": false
