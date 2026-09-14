@@ -17,6 +17,7 @@ import { rfidOku } from '@/kaynak/rfid';
 import { ocrKupeFotodan, ocrKupeNormalize, ocrSirtNormalize } from '@/kaynak/ocr';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import type { AnimalSex, AnimalSpecies, AnimalStatus } from '@/kaynak/cekirdek/tipler';
+import { VARSAYILAN_KABUL_CINSIYET } from '@/kaynak/suru/hizli-kuzu-kabul';
 
 function uyar(baslik: string, mesaj: string, actions?: { text: string; onPress?: () => void }[]) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -48,7 +49,7 @@ export default function AddAnimalScreen() {
     name: '',
     breed: 'Merinos',
     species: 'sheep' as AnimalSpecies,
-    sex: 'female' as AnimalSex,
+    sex: VARSAYILAN_KABUL_CINSIYET as AnimalSex,
     birthDate: new Date().toISOString().split('T')[0],
     paddock: padokParam || 'Padok A',
     status: 'healthy' as AnimalStatus,
@@ -229,10 +230,10 @@ export default function AddAnimalScreen() {
       <View style={styles.field}>
         <Text style={StyleSheet.flatten([styles.label, { color: colors.text }])}>Cinsiyet</Text>
         <View style={styles.row}>
-          {(['female', 'male'] as AnimalSex[]).map((s) => (
+          {(['male', 'female'] as AnimalSex[]).map((s) => (
             <AnaButon
               key={s}
-              title={s === 'female' ? 'Dişi ♀' : 'Erkek ♂'}
+              title={s === 'male' ? 'Erkek' : 'Dişi'}
               variant={form.sex === s ? 'primary' : 'secondary'}
               onPress={() => setForm({ ...form, sex: s })}
             />

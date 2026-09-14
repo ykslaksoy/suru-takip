@@ -30,7 +30,7 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       turkvet_no TEXT NOT NULL DEFAULT '',
       name TEXT NOT NULL DEFAULT '',
       breed TEXT NOT NULL DEFAULT '',
-      sex TEXT NOT NULL DEFAULT 'female',
+      sex TEXT NOT NULL DEFAULT 'male',
       birth_date TEXT NOT NULL DEFAULT '',
       paddock TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'healthy',

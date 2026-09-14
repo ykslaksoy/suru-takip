@@ -76,7 +76,7 @@ export default function AnimalDetailScreen() {
     );
   }
 
-  const sexLabel = animal.sex === 'female' ? 'Dişi ♀' : 'Erkek ♂';
+  const sexLabel = animal.sex === 'female' ? 'Dişi' : 'Erkek';
   const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
   const ageMonths = ageInMonths(animal.birthDate);
   const ageBand = bandForAge(ageMonths);
