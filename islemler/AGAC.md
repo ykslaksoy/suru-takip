@@ -17,7 +17,8 @@ suruyon/
     │   └── [x] 03-dogrulama-raporu.md 🔒  — Faz 0 doğrulama raporu
     ├── 02-ekran-taslak/
     │   ├── [x] 01-bes-ana-ekran.md 🔒  — 5 ana ekran wireframe
-    │   └── [ ] 02-akilli-kuzu-home-kilit.md  — Grok kilitli ana sayfa (2026-09-07)
+    │   ├── [ ] 02-akilli-kuzu-home-kilit.md  — Grok kilitli ana sayfa (2026-09-07)
+    │   └── [ ] 03-gorevler-kategori-sayfa.md  — Görevler kategori ayrı sayfa
     ├── 03-cekirdek/
     │   ├── [x] 01-tipler.md 🔒  — Ortak TypeScript tipleri
     │   ├── [x] 02-sqlite-native.md 🔒  — 

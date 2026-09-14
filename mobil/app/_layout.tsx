@@ -58,6 +58,8 @@ export default function RootLayout() {
                     <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
                     <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
                     <Stack.Screen name="gorevler/index" options={{ title: 'Görevler' }} />
+                    <Stack.Screen name="gorevler/kategori/[id]" options={{ title: 'Kategori' }} />
+                    <Stack.Screen name="gorevler/asi/[programId]" options={{ title: 'Aşı görevi' }} />
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
