@@ -1,16 +1,16 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem, kaliciRemoveItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { v4 as uuidv4 } from 'uuid';
 import type { YemSayim } from '@/kaynak/cekirdek/tipler';
 
 const KEY = 'sy_yem_sayim';
 
 async function readAll(): Promise<YemSayim[]> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   return raw ? JSON.parse(raw) : [];
 }
 
 async function writeAll(list: YemSayim[]): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(list));
+  await kaliciSetItem(KEY, JSON.stringify(list));
 }
 
 /** Stok güncellemesinde yem sayımı kaydet. */
@@ -47,5 +47,5 @@ export async function sonSayimOncesi(stockId: string, beforeIso: string): Promis
 }
 
 export async function clearAllYemSayim(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  await kaliciRemoveItem(KEY);
 }

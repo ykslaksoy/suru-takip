@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem, kaliciRemoveItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { getStockItems, getStockMovements } from '@/kaynak/cekirdek/veritabani';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import {
@@ -24,7 +24,7 @@ export type StokListeSatiri = {
 };
 
 async function readKullanim(): Promise<Record<string, number>> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   if (!raw) return {};
   try {
     return JSON.parse(raw) as Record<string, number>;
@@ -34,11 +34,11 @@ async function readKullanim(): Promise<Record<string, number>> {
 }
 
 async function writeKullanim(map: Record<string, number>): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(map));
+  await kaliciSetItem(KEY, JSON.stringify(map));
 }
 
 export async function clearKatalogKullanim(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  await kaliciRemoveItem(KEY);
 }
 
 /** Katalogdan seçim / stok çıkışı → kullanım artar */

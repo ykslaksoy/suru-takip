@@ -23,7 +23,7 @@ import {
   aralikAdet,
   ensureGozlemPadok,
   kupeAralikAyikla,
-  onekMaxNumara,
+  onerilenBaslangicNo,
   otomatikKupeSerisi,
   topluKuzuKabul,
 } from '@/kaynak/suru/hizli-kuzu-kabul';
@@ -55,7 +55,7 @@ export default function TopluKabulScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { scrollPadBottom } = useAltGuvenliBosluk(72);
-  const { refresh } = useDatabase();
+  const { refresh, ready, refreshKey } = useDatabase();
   const { limit, refresh: refreshSub } = useSubscription();
 
   const [adim, setAdim] = useState<'kaynak' | 'padok' | 'sayi' | 'onay'>('kaynak');
@@ -76,6 +76,7 @@ export default function TopluKabulScreen() {
   const [adetMetin, setAdetMetin] = useState('');
   const [baslangicMetin, setBaslangicMetin] = useState('');
   const [mevcutTags, setMevcutTags] = useState<string[]>([]);
+  const [kayitliSayi, setKayitliSayi] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const listeleriYukle = useCallback(async () => {
@@ -94,15 +95,20 @@ export default function TopluKabulScreen() {
     void listeleriYukle();
   }, [listeleriYukle]);
 
+  /** Seed / ensure bitmeden okuma → boş sürü → başlangıç 1 hatası; ready + refresh sonrası yeniden yükle */
   useEffect(() => {
-    void getAnimals().then((list) => setMevcutTags(list.map((a) => a.earTag)));
-  }, []);
+    if (!ready) return;
+    void getAnimals().then((list) => {
+      setMevcutTags(list.map((a) => a.earTag));
+      setKayitliSayi(list.length);
+    });
+  }, [ready, refreshKey]);
 
-  /** Önek serisindeki max+1 — alan opsiyonel; öneri olarak doldurulur, kilitlenmez */
-  const onerilenBaslangic = useMemo(() => {
-    const { max } = onekMaxNumara(mevcutTags, onek);
-    return max + 1;
-  }, [mevcutTags, onek]);
+  /** max(önek max+1, kayıtlı hayvan+1) — 60 kuzu → 61; önek TR-34-… ile uyumsuz olsa bile */
+  const onerilenBaslangic = useMemo(
+    () => onerilenBaslangicNo(mevcutTags, onek, kayitliSayi),
+    [mevcutTags, onek, kayitliSayi],
+  );
 
   useEffect(() => {
     setBaslangicMetin(String(onerilenBaslangic));
@@ -130,9 +136,10 @@ export default function TopluKabulScreen() {
       onek,
       adet,
       mevcutEarTags: mevcutTags,
+      toplamHayvan: kayitliSayi,
       baslangic: Number.isFinite(baslangicNo) && baslangicNo >= 1 ? baslangicNo : undefined,
     });
-  }, [aralik, adet, onek, mevcutTags, baslangicNo]);
+  }, [aralik, adet, onek, mevcutTags, kayitliSayi, baslangicNo]);
 
   const kaynakSec = (id: KabulKaynakId) => {
     setKaynakId(id);
@@ -523,8 +530,7 @@ export default function TopluKabulScreen() {
                   Başlangıç no (opsiyonel)
                 </Text>
                 <Text style={{ color: colors.textSecondary, marginBottom: 6 }}>
-                  Öneri: mevcuttan sonraki ({onerilenBaslangic}). Önek değişince güncellenir;
-                  değiştirebilir veya boş bırakabilirsiniz.
+                  Öneri: kayıtlı {kayitliSayi} hayvan → sonraki ({onerilenBaslangic}). Düzenlenebilir.
                 </Text>
                 <TextInput
                   value={baslangicMetin}

@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { v4 as uuidv4 } from 'uuid';
 
 const KEY = 'sy_is_plani_v1';
@@ -63,7 +63,7 @@ export const IS_PLANI_META = Object.fromEntries(IS_PLANI_TURLER.map((t) => [t.id
 >;
 
 async function oku(): Promise<IsPlaniKaydi[]> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   if (!raw) return [];
   try {
     const list = JSON.parse(raw) as IsPlaniKaydi[];
@@ -74,7 +74,7 @@ async function oku(): Promise<IsPlaniKaydi[]> {
 }
 
 async function yaz(list: IsPlaniKaydi[]): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(list));
+  await kaliciSetItem(KEY, JSON.stringify(list));
 }
 
 export async function getIsPlaniKayitlari(): Promise<IsPlaniKaydi[]> {

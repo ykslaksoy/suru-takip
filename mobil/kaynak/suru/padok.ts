@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { countAnimalsInPaddock } from '@/kaynak/cekirdek/veritabani';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 
 const KEY = 'sy_padoklar_v1';
 
@@ -24,7 +24,7 @@ const VARSAYILAN: Omit<Padok, 'id'>[] = [
 export const GOZLEM_PADOK_AD = 'Gözlem';
 
 async function oku(): Promise<Padok[]> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   if (!raw) return [];
   try {
     const list = JSON.parse(raw) as Padok[];
@@ -35,7 +35,7 @@ async function oku(): Promise<Padok[]> {
 }
 
 async function yaz(list: Padok[]): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(list));
+  await kaliciSetItem(KEY, JSON.stringify(list));
 }
 
 export async function ensureVarsayilanPadoklar(): Promise<Padok[]> {
