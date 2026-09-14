@@ -24,7 +24,7 @@ export type AsiProgramKalemi = {
   mlHayvan: number | null;
   /** mlHayvan null iken gösterilecek kısa not */
   dozNotu?: string;
-  /** Devlet / resmi program notu */
+  /** Tarım Bakanlığı / resmi program notu (kullanıcı “ekle” değil) */
   devletNotu?: string;
   /** Varsayılan: aşı. Parazit hapı / iğnesi için 'parazit' */
   kategori?: AsiProgramKategori;
@@ -133,7 +133,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 45,
     dozHayvan: 1,
     mlHayvan: 1,
-    devletNotu: 'Devlet — kuzu/oğlak destek şartı · VETBİS kaydı (Trakya muaf)',
+    devletNotu: 'Tarım Bakanlığı — kuzu/oğlak destek şartı · VETBİS kaydı (Trakya muaf)',
   },
   {
     id: 'cicek',
@@ -144,7 +144,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 45,
     dozHayvan: 1,
     mlHayvan: 0.5,
-    devletNotu: 'Devlet — kuzu/oğlak destek şartı · VETBİS kaydı',
+    devletNotu: 'Tarım Bakanlığı — kuzu/oğlak destek şartı · VETBİS kaydı (Gökçeada muaf)',
   },
   {
     id: 'sap',
@@ -155,7 +155,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 1,
-    devletNotu: 'Devlet programı — il/ilçe müdürlüğü takvimi',
+    devletNotu: 'Tarım Bakanlığı programı — il/ilçe müdürlüğü takvimi',
   },
   {
     id: 'brusella',
@@ -166,7 +166,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 45,
     dozHayvan: 1,
     mlHayvan: 1,
-    devletNotu: 'Devlet programı — resmi brusella (Rev1)',
+    devletNotu: 'Tarım Bakanlığı programı — resmi brusella (Rev1)',
   },
   {
     id: 'sarbon',
@@ -177,7 +177,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 1,
-    devletNotu: 'Devlet — bölgesel risk programı',
+    devletNotu: 'Tarım Bakanlığı — bölgesel risk programı',
   },
   {
     id: 'agalaksi',

@@ -217,7 +217,7 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={`${p.ad} hayvan ekle`}
                 onPress={() =>
-                  router.push({ pathname: '/hayvan/ekle', params: { padok: p.ad } } as never)
+                  router.push({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: p.ad } } as never)
                 }
                 style={StyleSheet.flatten([
                   styles.ekleBtn,

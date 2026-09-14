@@ -25,6 +25,7 @@
 - [x] [`01-bes-ana-ekran.md`](./02-ekran-taslak/01-bes-ana-ekran.md) — 5 ana ekran wireframe 🔒
 - [ ] [`02-akilli-kuzu-home-kilit.md`](./02-ekran-taslak/02-akilli-kuzu-home-kilit.md) — Grok kilitli ana sayfa (2026-09-07)
 - [ ] [`03-gorevler-kategori-sayfa.md`](./02-ekran-taslak/03-gorevler-kategori-sayfa.md) — Görevler kategori ayrı sayfa
+- [ ] [`04-hizli-kuzu-padok-toplu.md`](./02-ekran-taslak/04-hizli-kuzu-padok-toplu.md) — Hızlı/toplu kuzu + padok + kaynak
 
 ## `03-cekirdek/`
 

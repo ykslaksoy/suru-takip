@@ -18,7 +18,7 @@ export type KilitliHizliIslem = {
 };
 
 export const KILITLI_HIZLI_ISLEMLER: KilitliHizliIslem[] = [
-  { id: 'kuzu-ekle', label: 'Kuzu Ekle', href: '/hayvan/ekle', icon: 'kuzu-ekle' },
+  { id: 'kuzu-ekle', label: 'Kuzu Ekle', href: '/hayvan/hizli-ekle', icon: 'kuzu-ekle' },
   { id: 'asi', label: 'Aşı', href: '/(tabs)/saglik', icon: 'asi' },
   { id: 'hizli-tartim', label: 'Hızlı Tartım', href: '/seri-giris', icon: 'hizli-tartim' },
   { id: 'rasyon', label: 'Rasyon', href: '/(tabs)/rasyon', icon: 'rasyon' },
@@ -51,6 +51,7 @@ export const DAHA_MENUSU: DahaMenuOgesi[] = [
   { id: 'rasyon', label: 'Rasyon', href: '/(tabs)/rasyon' },
   { id: 'veteriner', label: 'Veteriner', href: '/(tabs)/veteriner' },
   { id: 'yolculuk', label: 'Yolculuk', href: '/(tabs)/yolculuk' },
+  { id: 'profesyonellik', label: 'Profesyonellik', href: '/profesyonellik' },
   { id: 'ayarlar', label: 'Ayarlar', ayarlar: true },
   { id: 'gorevler', label: 'Görevler', href: '/gorevler' },
   { id: 'seri', label: 'Seri ahır', href: '/seri-giris' },

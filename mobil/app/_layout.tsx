@@ -49,6 +49,7 @@ export default function RootLayout() {
                   <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                     <Stack.Screen name="hayvan/ekle" options={{ title: 'Hayvan Ekle', presentation: 'modal' }} />
+                    <Stack.Screen name="hayvan/hizli-ekle" options={{ headerShown: false }} />
                     <Stack.Screen name="hayvan/[id]" options={{ title: 'Hayvan Detay' }} />
                     <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
                     <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
@@ -60,6 +61,10 @@ export default function RootLayout() {
                     <Stack.Screen name="gorevler/index" options={{ title: 'Görevler' }} />
                     <Stack.Screen name="gorevler/kategori/[id]" options={{ title: 'Kategori' }} />
                     <Stack.Screen name="gorevler/asi/[programId]" options={{ title: 'Aşı görevi' }} />
+                    <Stack.Screen name="profesyonellik/index" options={{ title: 'Profesyonellik' }} />
+                    <Stack.Screen name="profesyonellik/sistemim" options={{ title: 'Sistemimi gir' }} />
+                    <Stack.Screen name="profesyonellik/sonuc" options={{ title: 'Analiz sonucu' }} />
+                    <Stack.Screen name="profesyonellik/oneri" options={{ title: 'Üst aşama' }} />
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
