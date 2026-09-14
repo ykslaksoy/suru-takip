@@ -5,8 +5,8 @@
 ## Özet
 
 - **Tamam (kilitli):** 79
-- **Açık:** 27
-- **Toplam işlem dosyası:** 106
+- **Açık:** 28
+- **Toplam işlem dosyası:** 107
 
 ## `00-kural/`
 
@@ -50,6 +50,7 @@
 - [x] [`05-koyun-keci-tur.md`](./04-suru/05-koyun-keci-tur.md) — Tür alanı koyun/keçi 🔒
 - [x] [`06-padok-agil.md`](./04-suru/06-padok-agil.md) — Padok / ağıl grup yönetimi 🔒
 - [ ] [`07-status-etiket-saglikli.md`](./04-suru/07-status-etiket-saglikli.md) — Kart durum etiketi Sağmal → Sağlıklı
+- [ ] [`08-cinsiyet-filtre-besi.md`](./04-suru/08-cinsiyet-filtre-besi.md) — Besi filtre: Tümü · Erkek · Dişi (Kuzu yok)
 
 ## `05-kilo/`
 

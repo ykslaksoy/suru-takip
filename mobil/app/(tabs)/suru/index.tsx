@@ -13,7 +13,8 @@ import { countAnimals, getAnimals, getLatestWeight, calculateADG } from '@/kayna
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { gradeFromAdg, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 
-type Filter = 'all' | 'female' | 'male' | 'lamb';
+/** Besi: hayvan zaten kuzu — yaş sınıfı «Kuzu» filtresi yok; sadece cinsiyet */
+type Filter = 'all' | 'male' | 'female';
 type HayvanSatir = Animal & { latestWeight?: number | null; grade?: KuzuGrade };
 
 export default function FlockScreen() {
@@ -33,11 +34,6 @@ export default function FlockScreen() {
     let filtered = list;
     if (filter === 'female') filtered = list.filter((a) => a.sex === 'female');
     if (filter === 'male') filtered = list.filter((a) => a.sex === 'male');
-    if (filter === 'lamb') {
-      const cutoff = new Date();
-      cutoff.setMonth(cutoff.getMonth() - 6);
-      filtered = list.filter((a) => new Date(a.birthDate) > cutoff);
-    }
     if (padokFiltre) {
       const hedef = padokFiltre.trim().toLocaleLowerCase('tr');
       filtered = filtered.filter((a) => (a.paddock || '').trim().toLocaleLowerCase('tr') === hedef);
@@ -72,9 +68,8 @@ export default function FlockScreen() {
 
   const filters: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Tümü' },
-    { key: 'female', label: 'Dişi' },
     { key: 'male', label: 'Erkek' },
-    { key: 'lamb', label: 'Kuzu' },
+    { key: 'female', label: 'Dişi' },
   ];
 
   const limitYazi = limit === Number.POSITIVE_INFINITY ? '∞' : String(limit);

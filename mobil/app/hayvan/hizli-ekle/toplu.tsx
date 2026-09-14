@@ -16,6 +16,7 @@ import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { countAnimals, getAnimals } from '@/kaynak/cekirdek/veritabani';
+import type { AnimalSex } from '@/kaynak/cekirdek/tipler';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import { PadokButonIzgarasi } from '@/bilesenler/hizli-kuzu/PadokButonIzgarasi';
 import {
@@ -43,7 +44,6 @@ import {
   type KabulKaynakDetay,
   type KabulKaynakId,
 } from '@/kaynak/suru/kabul-kaynaklari';
-import type { AnimalSex } from '@/kaynak/cekirdek/tipler';
 
 function uyar(baslik: string, mesaj: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -83,7 +83,7 @@ export default function TopluKabulScreen() {
   const [busy, setBusy] = useState(false);
   /** Özet / onay tıklanınca inline Türkçe hata (disabled sessizliği yok) */
   const [sayiHata, setSayiHata] = useState('');
-  /** Besi kuralı: varsayılan erkek; kullanıcı dişi seçerse korunur */
+  /** Besi: varsayılan erkek; Dişi/Erkek yalnızca cinsiyet (Kuzu yaş sınıfı değil) */
   const [sex, setSex] = useState<AnimalSex>(VARSAYILAN_KABUL_CINSIYET);
 
   const listeleriYukle = useCallback(async () => {
@@ -631,7 +631,9 @@ export default function TopluKabulScreen() {
               ))}
             </View>
             <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 16 }}>
-              {adet > 0 ? `${adet} kuzu → ${padok}` : 'Aralık veya adet girin'}
+              {adet > 0
+                ? `${adet} ${sex === 'male' ? 'erkek' : 'dişi'} → ${padok}`
+                : 'Aralık veya adet girin'}
             </Text>
             {aralik ? (
               <Text style={{ color: colors.textSecondary, marginTop: 6, lineHeight: 20 }}>
@@ -680,7 +682,7 @@ export default function TopluKabulScreen() {
               </Text>
               <Text style={[styles.ozetSatir, { color: colors.text }]}>Padok: {padok}</Text>
               <Text style={[styles.ozetSatir, { color: colors.text }]}>
-                Cinsiyet: {sex === 'female' ? 'Dişi' : 'Erkek'}
+                Cinsiyet: {sex === 'male' ? 'Erkek' : 'Dişi'}
               </Text>
               <Text style={[styles.ozetSatir, { color: colors.text }]}>
                 Adet: {adet}
