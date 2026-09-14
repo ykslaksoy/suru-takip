@@ -17,7 +17,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { countAnimals } from '@/kaynak/cekirdek/veritabani';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
-import { hizliTekKuzuEkle } from '@/kaynak/suru/hizli-kuzu-kabul';
+import { hizliTekKuzuEkle, VARSAYILAN_KABUL_CINSIYET } from '@/kaynak/suru/hizli-kuzu-kabul';
 import type { AnimalSex } from '@/kaynak/cekirdek/tipler';
 
 function uyar(baslik: string, mesaj: string) {
@@ -40,7 +40,8 @@ export default function HizliTekFormScreen() {
 
   const [earTag, setEarTag] = useState('');
   const [sirtNo, setSirtNo] = useState('');
-  const [sex, setSex] = useState<AnimalSex>('male');
+  /** Besi kuralı: varsayılan erkek; dişi seçimi korunur */
+  const [sex, setSex] = useState<AnimalSex>(VARSAYILAN_KABUL_CINSIYET);
   const [busy, setBusy] = useState(false);
 
   const kaydet = async () => {
@@ -125,6 +126,9 @@ export default function HizliTekFormScreen() {
         />
 
         <Text style={[styles.label, { color: colors.text }]}>Cinsiyet</Text>
+        <Text style={{ color: colors.textSecondary, marginBottom: 8, fontWeight: '600' }}>
+          Besi varsayılanı erkek
+        </Text>
         <View style={styles.row}>
           {([
             { id: 'male' as const, label: 'Erkek' },

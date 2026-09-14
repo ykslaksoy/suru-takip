@@ -19,6 +19,8 @@ import { countAnimals, getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import { PadokButonIzgarasi } from '@/bilesenler/hizli-kuzu/PadokButonIzgarasi';
 import {
+  TOPLU_KABUL_MAX_ADET,
+  VARSAYILAN_KABUL_CINSIYET,
   VARSAYILAN_KABUL_PADOK,
   aralikAdet,
   ensureGozlemPadok,
@@ -41,6 +43,7 @@ import {
   type KabulKaynakDetay,
   type KabulKaynakId,
 } from '@/kaynak/suru/kabul-kaynaklari';
+import type { AnimalSex } from '@/kaynak/cekirdek/tipler';
 
 function uyar(baslik: string, mesaj: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -78,6 +81,10 @@ export default function TopluKabulScreen() {
   const [mevcutTags, setMevcutTags] = useState<string[]>([]);
   const [kayitliSayi, setKayitliSayi] = useState(0);
   const [busy, setBusy] = useState(false);
+  /** Özet / onay tıklanınca inline Türkçe hata (disabled sessizliği yok) */
+  const [sayiHata, setSayiHata] = useState('');
+  /** Besi kuralı: varsayılan erkek; kullanıcı dişi seçerse korunur */
+  const [sex, setSex] = useState<AnimalSex>(VARSAYILAN_KABUL_CINSIYET);
 
   const listeleriYukle = useCallback(async () => {
     const [c, f, o] = await Promise.all([
@@ -183,6 +190,36 @@ export default function TopluKabulScreen() {
     setEkleAcik(false);
   };
 
+  /** Adet/aralık geçerliyse onaya geç; değilse net Türkçe hata (buton asla sessiz ölmez) */
+  const ozetOnayaGit = () => {
+    if (!padok.trim()) {
+      const msg = 'Hedef padok seçin';
+      setSayiHata(msg);
+      uyar('Padok', msg);
+      return;
+    }
+    if (aralikMetin.trim() && !aralik) {
+      const msg = 'Küpe aralığını kontrol edin (örn. 1001–1100)';
+      setSayiHata(msg);
+      uyar('Aralık', msg);
+      return;
+    }
+    if (adet < 1) {
+      const msg = 'Kaç kuzu geldiğini yazın (adet) veya geçerli küpe aralığı girin';
+      setSayiHata(msg);
+      uyar('Adet', msg);
+      return;
+    }
+    if (adet > TOPLU_KABUL_MAX_ADET) {
+      const msg = `Bir seferde en fazla ${TOPLU_KABUL_MAX_ADET} kuzu`;
+      setSayiHata(msg);
+      uyar('Adet', msg);
+      return;
+    }
+    setSayiHata('');
+    setAdim('onay');
+  };
+
   const onayla = async () => {
     if (busy) return;
     if (!padok.trim()) {
@@ -191,6 +228,10 @@ export default function TopluKabulScreen() {
     }
     if (adet < 1) {
       uyar('Sayı', 'Küpe aralığı veya adet girin');
+      return;
+    }
+    if (adet > TOPLU_KABUL_MAX_ADET) {
+      uyar('Adet', `Bir seferde en fazla ${TOPLU_KABUL_MAX_ADET} kuzu`);
       return;
     }
     setBusy(true);
@@ -209,6 +250,7 @@ export default function TopluKabulScreen() {
         paddock: padok,
         kaynak: kaynakId,
         kaynakOzet: kaynakOzetMetni(kaynakDetay),
+        sex,
         aralik: aralik ?? undefined,
         adet: aralik ? undefined : adet,
         otomatikOnek: onek,
@@ -485,7 +527,10 @@ export default function TopluKabulScreen() {
             </Text>
             <TextInput
               value={aralikMetin}
-              onChangeText={setAralikMetin}
+              onChangeText={(t) => {
+                setAralikMetin(t);
+                setSayiHata('');
+              }}
               placeholder="1001–1100"
               placeholderTextColor={colors.textSecondary}
               style={[
@@ -509,15 +554,18 @@ export default function TopluKabulScreen() {
             </Text>
             <TextInput
               value={adetMetin}
-              onChangeText={setAdetMetin}
+              onChangeText={(t) => {
+                setAdetMetin(t);
+                setSayiHata('');
+              }}
               keyboardType="number-pad"
-              placeholder="100"
+              placeholder="örn. 100"
               placeholderTextColor={colors.textSecondary}
               editable={!aralikMetin.trim()}
               style={[
                 styles.input,
                 {
-                  borderColor: colors.border,
+                  borderColor: sayiHata && adet < 1 ? '#c62828' : colors.border,
                   color: colors.text,
                   backgroundColor: colors.card,
                   opacity: aralikMetin.trim() ? 0.5 : 1,
@@ -549,6 +597,39 @@ export default function TopluKabulScreen() {
                 />
               </>
             ) : null}
+            <Text style={[styles.label, { color: colors.text }]}>Cinsiyet</Text>
+            <Text style={{ color: colors.textSecondary, marginBottom: 6 }}>
+              Besi varsayılanı erkek — dişi seçerseniz korunur
+            </Text>
+            <View style={styles.chipWrap}>
+              {(
+                [
+                  { id: 'male' as const, label: 'Erkek' },
+                  { id: 'female' as const, label: 'Dişi' },
+                ] as const
+              ).map((s) => (
+                <Pressable
+                  key={s.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: sex === s.id }}
+                  onPress={() => setSex(s.id)}
+                  style={[
+                    styles.chip,
+                    {
+                      borderColor: sex === s.id ? colors.tint : colors.border,
+                      backgroundColor: sex === s.id ? colors.tint : colors.card,
+                    },
+                  ]}>
+                  <Text
+                    style={{
+                      color: sex === s.id ? '#fff' : colors.text,
+                      fontWeight: '800',
+                    }}>
+                    {s.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 16 }}>
               {adet > 0 ? `${adet} kuzu → ${padok}` : 'Aralık veya adet girin'}
             </Text>
@@ -567,10 +648,18 @@ export default function TopluKabulScreen() {
                 {otomatikOnizleme.etiketler[otomatikOnizleme.etiketler.length - 1]}
               </Text>
             ) : null}
+            {sayiHata ? (
+              <Text
+                accessibilityLiveRegion="polite"
+                style={{ color: '#c62828', fontWeight: '800', marginTop: 10, lineHeight: 20 }}>
+                {sayiHata}
+              </Text>
+            ) : null}
             <Pressable
-              disabled={adet < 1}
-              onPress={() => setAdim('onay')}
-              style={[styles.next, { backgroundColor: colors.tint, opacity: adet < 1 ? 0.45 : 1 }]}>
+              accessibilityRole="button"
+              accessibilityLabel="Özet onay"
+              onPress={ozetOnayaGit}
+              style={[styles.next, { backgroundColor: colors.tint }]}>
               <Text style={styles.nextText}>Özet / onay</Text>
             </Pressable>
             <Pressable onPress={() => setAdim('padok')} style={styles.backLink}>
@@ -590,6 +679,9 @@ export default function TopluKabulScreen() {
                 Kaynak: {kaynakUiEtiket(kaynakDetay)}
               </Text>
               <Text style={[styles.ozetSatir, { color: colors.text }]}>Padok: {padok}</Text>
+              <Text style={[styles.ozetSatir, { color: colors.text }]}>
+                Cinsiyet: {sex === 'female' ? 'Dişi' : 'Erkek'}
+              </Text>
               <Text style={[styles.ozetSatir, { color: colors.text }]}>
                 Adet: {adet}
                 {aralik

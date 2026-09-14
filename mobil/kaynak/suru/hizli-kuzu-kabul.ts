@@ -8,6 +8,7 @@ import { HIZLI_BESI_TAKVIM } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import { GOZLEM_PADOK_AD, addPadok, getPadokByAd } from '@/kaynak/suru/padok';
 import {
+  TOPLU_KABUL_MAX_ADET,
   aralikAdet,
   aralikEtiketleri,
   kupeAralikAyikla,
@@ -17,6 +18,7 @@ import {
 import { getAktifModId } from '@/sabitler/Modlar';
 
 export {
+  TOPLU_KABUL_MAX_ADET,
   aralikAdet,
   aralikEtiketleri,
   kupeAralikAyikla,
@@ -28,6 +30,12 @@ export {
 
 /** Yeni kabul için önerilen hedef padok */
 export const VARSAYILAN_KABUL_PADOK = GOZLEM_PADOK_AD;
+
+/**
+ * Kuzu besiciliği ürün kuralı: varsayılan cinsiyet erkek.
+ * Kullanıcı dişi seçtiyse asla zorla erkek yapma.
+ */
+export const VARSAYILAN_KABUL_CINSIYET: AnimalSex = 'male';
 
 /** Tipik alım tartım varsayımı (2–3 aylık kuzu) — rasyon başlangıcı */
 export const VARSAYILAN_GIRIS_KILO = 25;
@@ -126,7 +134,7 @@ export async function hizliTekKuzuEkle(
     name: '',
     breed: 'Merinos',
     species: 'sheep',
-    sex: girdi.sex ?? 'male',
+    sex: girdi.sex ?? VARSAYILAN_KABUL_CINSIYET,
     birthDate: girdi.birthDate ?? new Date().toISOString().slice(0, 10),
     paddock,
     status: 'healthy',
@@ -159,13 +167,17 @@ export async function topluKuzuKabul(
   if (girdi.aralik) {
     const n = aralikAdet(girdi.aralik);
     if (n < 1) throw new Error('Geçersiz küpe aralığı');
-    if (n > 500) throw new Error('En fazla 500 kuzu bir seferde');
+    if (n > TOPLU_KABUL_MAX_ADET) {
+      throw new Error(`Bir seferde en fazla ${TOPLU_KABUL_MAX_ADET} kuzu`);
+    }
     etiketler = aralikEtiketleri(girdi.aralik);
     kupeNeden = `Girdiğiniz aralık ${girdi.aralik.onek}${girdi.aralik.baslangic}–${girdi.aralik.onek}${girdi.aralik.bitis}`;
   } else {
     const adet = Math.floor(girdi.adet ?? 0);
     if (adet < 1) throw new Error('Kaç kuzu geldiğini yazın veya küpe aralığı girin');
-    if (adet > 500) throw new Error('En fazla 500 kuzu bir seferde');
+    if (adet > TOPLU_KABUL_MAX_ADET) {
+      throw new Error(`Bir seferde en fazla ${TOPLU_KABUL_MAX_ADET} kuzu`);
+    }
     const onek = (girdi.otomatikOnek ?? 'TR-').trim() || 'TR-';
     const mevcut = await getAnimals();
     const seri = otomatikKupeSerisi({
@@ -198,7 +210,7 @@ export async function topluKuzuKabul(
   const modId = opts?.modId ?? ((await getAktifModId()) as AnimalModId);
   const notes = kaynakNotMetni(girdi.kaynak, girdi.kaynakOzet);
   const birthDate = girdi.birthDate ?? new Date().toISOString().slice(0, 10);
-  const sex = girdi.sex ?? 'male';
+  const sex = girdi.sex ?? VARSAYILAN_KABUL_CINSIYET;
   const hayvanlar: KabulSonucHayvan[] = [];
 
   for (const earTag of etiketler) {

@@ -1,5 +1,8 @@
 /** Küpe aralığı ayıklama — saf fonksiyonlar (test / Node uyumlu) */
 
+/** Tek seferde güvenlik üst sınırı — 10–100 reklamı yok; saha adedi serbest */
+export const TOPLU_KABUL_MAX_ADET = 5000;
+
 export type KupeAralik = {
   onek: string;
   baslangic: number;
@@ -43,7 +46,7 @@ export function kupeAralikAyikla(ham: string, onek = ''): KupeAralik | null {
     if (ch === '–' || ch === '—') skor += 3; // tipografik aralık işareti
     if (sol.onek.length > 0 && sag.onek.length > 0) skor += 2;
     // Sayılar makul aralıkta
-    if (Math.abs(sol.n - sag.n) <= 500) skor += 1;
+    if (Math.abs(sol.n - sag.n) <= TOPLU_KABUL_MAX_ADET) skor += 1;
     adaylar.push({ sol, sag, skor });
   }
 
@@ -68,7 +71,7 @@ export function kupeAralikAyikla(ham: string, onek = ''): KupeAralik | null {
 export function aralikEtiketleri(aralik: KupeAralik): string[] {
   const out: string[] = [];
   const n = aralik.bitis - aralik.baslangic + 1;
-  if (n < 1 || n > 500) return out;
+  if (n < 1 || n > TOPLU_KABUL_MAX_ADET) return out;
   for (let i = aralik.baslangic; i <= aralik.bitis; i++) {
     out.push(`${aralik.onek}${String(i).padStart(aralik.genislik, '0')}`);
   }
