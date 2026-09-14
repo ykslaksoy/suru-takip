@@ -23,6 +23,7 @@ import {
   aralikAdet,
   ensureGozlemPadok,
   kupeAralikAyikla,
+  onekMaxNumara,
   otomatikKupeSerisi,
   topluKuzuKabul,
 } from '@/kaynak/suru/hizli-kuzu-kabul';
@@ -96,6 +97,16 @@ export default function TopluKabulScreen() {
   useEffect(() => {
     void getAnimals().then((list) => setMevcutTags(list.map((a) => a.earTag)));
   }, []);
+
+  /** Önek serisindeki max+1 — alan opsiyonel; öneri olarak doldurulur, kilitlenmez */
+  const onerilenBaslangic = useMemo(() => {
+    const { max } = onekMaxNumara(mevcutTags, onek);
+    return max + 1;
+  }, [mevcutTags, onek]);
+
+  useEffect(() => {
+    setBaslangicMetin(String(onerilenBaslangic));
+  }, [onerilenBaslangic]);
 
   const kaynakDetay: KabulKaynakDetay = useMemo(() => {
     const km = parseFloat(kmMetin.replace(',', '.'));
@@ -512,14 +523,14 @@ export default function TopluKabulScreen() {
                   Başlangıç no (opsiyonel)
                 </Text>
                 <Text style={{ color: colors.textSecondary, marginBottom: 6 }}>
-                  Boş bırakırsanız bu önekteki son küpeden sonraki numara kullanılır (sürü
-                  toplamı değil).
+                  Öneri: mevcuttan sonraki ({onerilenBaslangic}). Önek değişince güncellenir;
+                  değiştirebilir veya boş bırakabilirsiniz.
                 </Text>
                 <TextInput
                   value={baslangicMetin}
                   onChangeText={setBaslangicMetin}
                   keyboardType="number-pad"
-                  placeholder="örn. 61"
+                  placeholder={String(onerilenBaslangic)}
                   placeholderTextColor={colors.textSecondary}
                   style={[
                     styles.input,
