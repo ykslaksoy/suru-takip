@@ -29,6 +29,7 @@
 - [ ] [`05-superkuzu-vercel-root-fix.md`](./02-ekran-taslak/05-superkuzu-vercel-root-fix.md) — SuperKuzu Vercel root
 - [ ] [`06-baslangic-onek-max-oneri.md`](./02-ekran-taslak/06-baslangic-onek-max-oneri.md) — Başlangıç no önek max+1
 - [ ] [`07-toplu-onay-adet-cinsiyet.md`](./02-ekran-taslak/07-toplu-onay-adet-cinsiyet.md) — Özet/onay + adet sınırı + erkek varsayılan
+- `02-ekran-taslak/08-onay-prod-deploy.md` — prod onay undeployed + kota
 
 ## `03-cekirdek/`
 
