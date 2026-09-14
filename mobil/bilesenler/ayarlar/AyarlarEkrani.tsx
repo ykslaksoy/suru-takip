@@ -56,6 +56,7 @@ export function AyarlarEkrani() {
 
   const anaAyarlar: LinkSatir[] = [
     { baslik: 'İşletme profili', href: '/isletme-profil' },
+    { baslik: 'Profesyonellik aşamaları', href: '/profesyonellik' },
     { baslik: 'Abonelik / paket', href: '/abonelik' },
     { baslik: 'Ana ekranı planla', href: '/ana-sayfa/duzenle' },
     { baslik: 'Sesli komut', href: '/ses' },

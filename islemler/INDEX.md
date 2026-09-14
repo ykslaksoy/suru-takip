@@ -25,6 +25,7 @@
 - [x] [`01-bes-ana-ekran.md`](./02-ekran-taslak/01-bes-ana-ekran.md) — 5 ana ekran wireframe 🔒
 - [ ] [`02-akilli-kuzu-home-kilit.md`](./02-ekran-taslak/02-akilli-kuzu-home-kilit.md) — Grok kilitli ana sayfa (2026-09-07)
 - [ ] [`03-gorevler-kategori-sayfa.md`](./02-ekran-taslak/03-gorevler-kategori-sayfa.md) — Görevler kategori ayrı sayfa
+- [ ] [`04-hizli-kuzu-padok-toplu.md`](./02-ekran-taslak/04-hizli-kuzu-padok-toplu.md) — Hızlı/toplu kuzu + padok + kaynak
 
 ## `03-cekirdek/`
 
@@ -84,6 +85,7 @@
 - [x] [`06-super-kuzu-karakter.md`](./09-okul/06-super-kuzu-karakter.md) — Karakter: Süper Kuzu 🔒
 - [x] [`07-ders-listesi-kaldirildi.md`](./09-okul/07-ders-listesi-kaldirildi.md) — Ders listesi kaldırıldı — eğitim öneriyle 🔒
 - [x] [`08-akilli-vs-super-kuzu.md`](./09-okul/08-akilli-vs-super-kuzu.md) — Akıllı Kuzu = rehber · Süper Kuzu = başarı 🔒
+- [ ] [`09-bes-asama-profesyonellik.md`](./09-okul/09-bes-asama-profesyonellik.md) — Profesyonellik 5 aşama (N paket)
 
 ## `10-akilli-veteriner/`
 

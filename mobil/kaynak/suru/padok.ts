@@ -13,11 +13,15 @@ export type Padok = {
 };
 
 const VARSAYILAN: Omit<Padok, 'id'>[] = [
+  { ad: 'Gözlem', kapasite: 100, karantina: true, not: 'Yeni kabul · gözlem · yonca + su' },
   { ad: 'Padok A', kapasite: 50, karantina: false, not: '' },
   { ad: 'Padok B', kapasite: 50, karantina: false, not: '' },
   { ad: 'Padok C', kapasite: 50, karantina: false, not: '' },
   { ad: 'Karantina', kapasite: 20, karantina: true, not: 'Yeni gelenler · yonca + su' },
 ];
+
+/** Toplu kabul varsayılan hedef padok */
+export const GOZLEM_PADOK_AD = 'Gözlem';
 
 async function oku(): Promise<Padok[]> {
   const raw = await AsyncStorage.getItem(KEY);

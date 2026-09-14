@@ -18,7 +18,8 @@ suruyon/
     ├── 02-ekran-taslak/
     │   ├── [x] 01-bes-ana-ekran.md 🔒  — 5 ana ekran wireframe
     │   ├── [ ] 02-akilli-kuzu-home-kilit.md  — Grok kilitli ana sayfa (2026-09-07)
-    │   └── [ ] 03-gorevler-kategori-sayfa.md  — Görevler kategori ayrı sayfa
+    │   ├── [ ] 03-gorevler-kategori-sayfa.md  — Görevler kategori ayrı sayfa
+    │   └── [ ] 04-hizli-kuzu-padok-toplu.md  — Hızlı/toplu kuzu + padok + kaynak
     ├── 03-cekirdek/
     │   ├── [x] 01-tipler.md 🔒  — Ortak TypeScript tipleri
     │   ├── [x] 02-sqlite-native.md 🔒  — 
@@ -63,7 +64,8 @@ suruyon/
     │   ├── [x] 05-oneri-merkezi.md 🔒  — Akıllı Kuzu = öneri merkezi
     │   ├── [x] 06-super-kuzu-karakter.md 🔒  — Karakter: Süper Kuzu
     │   ├── [x] 07-ders-listesi-kaldirildi.md 🔒  — eğitim öneriyle
-    │   └── [x] 08-akilli-vs-super-kuzu.md 🔒  — Akıllı Kuzu = rehber · Süper Kuzu = başarı
+    │   ├── [x] 08-akilli-vs-super-kuzu.md 🔒  — Akıllı Kuzu = rehber · Süper Kuzu = başarı
+    │   └── [ ] 09-bes-asama-profesyonellik.md  — Profesyonellik 5 aşama (N paket)
     ├── 10-akilli-veteriner/
     │   ├── [x] 01-semptom-analiz.md 🔒  — 
     │   ├── [x] 02-disclaimer.md 🔒  — Tıbbi sorumluluk reddi

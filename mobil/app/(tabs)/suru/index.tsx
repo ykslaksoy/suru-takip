@@ -102,8 +102,8 @@ export default function FlockScreen() {
           onPress={() =>
             router.push(
               padokFiltre
-                ? ({ pathname: '/hayvan/ekle', params: { padok: padokFiltre } } as never)
-                : ('/hayvan/ekle' as never),
+                ? ({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: padokFiltre } } as never)
+                : ('/hayvan/hizli-ekle' as never),
             )
           }
           style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
