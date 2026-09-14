@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { ASI_PROGRAMI, asiDozEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
@@ -267,11 +267,11 @@ export function varsayilanTercihler(oneriler: AsiOneriKalemi[]): AsiTercih[] {
 }
 
 export async function profilKaydet(profil: AsiOrtamProfili): Promise<void> {
-  await AsyncStorage.setItem(PROFIL_KEY, JSON.stringify(profil));
+  await kaliciSetItem(PROFIL_KEY, JSON.stringify(profil));
 }
 
 export async function profilOku(): Promise<AsiOrtamProfili> {
-  const raw = await AsyncStorage.getItem(PROFIL_KEY);
+  const raw = await kaliciGetItem(PROFIL_KEY);
   if (!raw) return VARSAYILAN_PROFIL;
   try {
     return { ...VARSAYILAN_PROFIL, ...(JSON.parse(raw) as AsiOrtamProfili) };
@@ -281,11 +281,11 @@ export async function profilOku(): Promise<AsiOrtamProfili> {
 }
 
 export async function tercihKaydet(tercihler: AsiTercih[]): Promise<void> {
-  await AsyncStorage.setItem(TERCIH_KEY, JSON.stringify(tercihler));
+  await kaliciSetItem(TERCIH_KEY, JSON.stringify(tercihler));
 }
 
 export async function tercihOku(): Promise<AsiTercih[]> {
-  const raw = await AsyncStorage.getItem(TERCIH_KEY);
+  const raw = await kaliciGetItem(TERCIH_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as AsiTercih[];
@@ -297,7 +297,7 @@ export async function tercihOku(): Promise<AsiTercih[]> {
 export async function planKaydet(plan: AsiPlani): Promise<void> {
   const list = await planOku();
   list.unshift(plan);
-  await AsyncStorage.setItem(PLAN_KEY, JSON.stringify(list.slice(0, 20)));
+  await kaliciSetItem(PLAN_KEY, JSON.stringify(list.slice(0, 20)));
 }
 
 /** Mevcut planı güncelle (uygulandı işareti vb.) */
@@ -306,11 +306,11 @@ export async function planGuncelle(plan: AsiPlani): Promise<void> {
   const idx = list.findIndex((p) => p.id === plan.id);
   if (idx >= 0) list[idx] = plan;
   else list.unshift(plan);
-  await AsyncStorage.setItem(PLAN_KEY, JSON.stringify(list.slice(0, 20)));
+  await kaliciSetItem(PLAN_KEY, JSON.stringify(list.slice(0, 20)));
 }
 
 export async function planOku(): Promise<AsiPlani[]> {
-  const raw = await AsyncStorage.getItem(PLAN_KEY);
+  const raw = await kaliciGetItem(PLAN_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as AsiPlani[];

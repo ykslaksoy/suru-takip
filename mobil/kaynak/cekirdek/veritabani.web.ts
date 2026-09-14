@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import type {
   Animal,
@@ -9,6 +8,7 @@ import type {
   StockMovement,
   WeightRecord,
 } from './tipler';
+import { kaliciGetItem, kaliciRemoveItem, kaliciSetItem } from './web-kalici-depo';
 
 const KEYS = {
   animals: 'sy_animals',
@@ -22,12 +22,12 @@ const KEYS = {
 };
 
 async function read<T>(key: string): Promise<T[]> {
-  const raw = await AsyncStorage.getItem(key);
+  const raw = await kaliciGetItem(key);
   return raw ? JSON.parse(raw) : [];
 }
 
 async function write<T>(key: string, data: T[]): Promise<void> {
-  await AsyncStorage.setItem(key, JSON.stringify(data));
+  await kaliciSetItem(key, JSON.stringify(data));
 }
 
 export async function countAnimals(): Promise<number> {
@@ -351,5 +351,5 @@ export async function exportTurkvetData(): Promise<string> {
 }
 
 export async function clearAllStorage(): Promise<void> {
-  await Promise.all(Object.values(KEYS).map((k) => AsyncStorage.removeItem(k)));
+  await Promise.all(Object.values(KEYS).map((k) => kaliciRemoveItem(k)));
 }

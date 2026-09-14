@@ -36,6 +36,7 @@
 - [x] [`05-tema-renkler.md`](./03-cekirdek/05-tema-renkler.md) — Tema / renkler 🔒
 - [x] [`06-ui-buton-banner.md`](./03-cekirdek/06-ui-buton-banner.md) — UI: buton + offline banner 🔒
 - [x] [`07-context-db.md`](./03-cekirdek/07-context-db.md) — DatabaseContext 🔒
+- [ ] [`08-kuzu-kayit-kalicilik.md`](./03-cekirdek/08-kuzu-kayit-kalicilik.md) — Web kalıcı kayıt + başlangıç 61
 
 ## `04-suru/`
 

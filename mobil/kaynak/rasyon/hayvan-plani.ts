@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem, kaliciRemoveItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import type { Animal, AnimalRationPlan } from '@/kaynak/cekirdek/tipler';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { calculateRation, type RationPhase } from '@/kaynak/rasyon/hesapla';
@@ -7,12 +7,12 @@ import { ageInMonths } from '@/kaynak/kilo/kuzu-derece';
 const KEY = 'sy_animal_ration_plans';
 
 async function readAll(): Promise<AnimalRationPlan[]> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   return raw ? JSON.parse(raw) : [];
 }
 
 async function writeAll(plans: AnimalRationPlan[]): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(plans));
+  await kaliciSetItem(KEY, JSON.stringify(plans));
 }
 
 /** Hayvan durumuna göre rasyon dönemi. */
@@ -108,5 +108,5 @@ export async function applyDailyGivenToPaddock(
 }
 
 export async function clearAllRationPlans(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  await kaliciRemoveItem(KEY);
 }

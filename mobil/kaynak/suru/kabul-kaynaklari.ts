@@ -1,7 +1,7 @@
 /**
  * Toplu kabul — «şuradan geldi» kaynakları + tekrar kullanılabilir listeler.
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 
 const KEY_CAMBAZ = 'sy_kabul_cambazlar_v1';
 const KEY_CIFTLIK = 'sy_kabul_ciftlikler_v1';
@@ -54,7 +54,7 @@ export type KabulKaynakDetay = {
 };
 
 async function listeOku(key: string): Promise<string[]> {
-  const raw = await AsyncStorage.getItem(key);
+  const raw = await kaliciGetItem(key);
   if (!raw) return [];
   try {
     const list = JSON.parse(raw) as string[];
@@ -66,7 +66,7 @@ async function listeOku(key: string): Promise<string[]> {
 
 async function listeYaz(key: string, list: string[]): Promise<void> {
   const temiz = [...new Set(list.map((x) => x.trim()).filter(Boolean))];
-  await AsyncStorage.setItem(key, JSON.stringify(temiz.slice(0, 40)));
+  await kaliciSetItem(key, JSON.stringify(temiz.slice(0, 40)));
 }
 
 export async function getCambazListesi(): Promise<string[]> {

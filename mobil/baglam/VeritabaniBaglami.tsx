@@ -25,12 +25,12 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      // Boşsa 60 padok kuzu (+ geliştirmede stok); doluysa mevcut kaydı koru, sadece eksik padok merge
       if (demoSeedOtomatik()) {
         await seedDemoDataIfEmpty();
       } else {
         await ensurePadokKuzuVerisi();
       }
-      // Demo sürü ücretsiz limiti aşarsa uygun paketi aç (giriş engellenmesin)
       const hayvan = await countAnimals();
       if (hayvan > 0) {
         await limitAsimindaPaketAc(hayvan);

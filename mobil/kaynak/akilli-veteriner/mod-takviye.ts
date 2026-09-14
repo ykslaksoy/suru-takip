@@ -4,7 +4,7 @@
  * hayvan × kalem bazında yapıldı / bekliyor denetimi tutulur.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { v4 as uuidv4 } from 'uuid';
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal, AnimalModId, HealthRecord, StockItem } from '@/kaynak/cekirdek/tipler';
@@ -182,7 +182,7 @@ export async function atanmamisHayvanlariModaBagla(modId: UrunModId): Promise<nu
 }
 
 export async function planlariOku(): Promise<ModTakviyePlani[]> {
-  const raw = await AsyncStorage.getItem(PLAN_KEY);
+  const raw = await kaliciGetItem(PLAN_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as ModTakviyePlani[];
@@ -192,7 +192,7 @@ export async function planlariOku(): Promise<ModTakviyePlani[]> {
 }
 
 async function planlariYaz(list: ModTakviyePlani[]): Promise<void> {
-  await AsyncStorage.setItem(PLAN_KEY, JSON.stringify(list.slice(0, 30)));
+  await kaliciSetItem(PLAN_KEY, JSON.stringify(list.slice(0, 30)));
 }
 
 export async function planKaydet(plan: ModTakviyePlani): Promise<void> {

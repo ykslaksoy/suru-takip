@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 
 const KEY = 'sy_planlanan_gorevler';
 
@@ -15,7 +15,7 @@ export type PlanlananGorev = {
 };
 
 async function oku(): Promise<PlanlananGorev[]> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   if (!raw) return [];
   try {
     const list = JSON.parse(raw) as PlanlananGorev[];
@@ -26,7 +26,7 @@ async function oku(): Promise<PlanlananGorev[]> {
 }
 
 async function yaz(list: PlanlananGorev[]): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(list));
+  await kaliciSetItem(KEY, JSON.stringify(list));
 }
 
 export async function getPlanlananGorevler(): Promise<PlanlananGorev[]> {

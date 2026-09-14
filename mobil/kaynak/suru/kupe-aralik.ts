@@ -82,7 +82,7 @@ export function aralikAdet(aralik: KupeAralik): number {
 /**
  * Önek için mevcut küpelerden en büyük sayısal son ek.
  * Örn. önek "TR-1001", etiket "TR-10010060" → 60
- * Toplam hayvan sayısını kullanmaz (yanlış: 63 hayvan → 64 atlama).
+ * Not: önek "TR-" iken "TR-34-200001" eşleşmez (suffix saf sayı değil).
  */
 export function onekMaxNumara(
   earTags: string[],
@@ -104,11 +104,28 @@ export function onekMaxNumara(
   return { max, genislik };
 }
 
-/** Otomatik sıra: max(önek serisi)+1; seri boşsa 1. İsteğe bağlı kullanıcı başlangıcı. */
+/**
+ * Öneri başlangıç: max(önek serisi max+1, kayıtlı hayvan sayısı+1).
+ * Önek eşleşmezse (TR- vs TR-34-…) yine sürü toplamına göre 61 vb. üretir.
+ */
+export function onerilenBaslangicNo(
+  earTags: string[],
+  onek: string,
+  toplamHayvan: number,
+): number {
+  const { max } = onekMaxNumara(earTags, onek);
+  const onekSonraki = max + 1;
+  const suruSonraki = Math.max(0, Math.floor(toplamHayvan)) + 1;
+  return Math.max(onekSonraki, suruSonraki);
+}
+
+/** Otomatik sıra: max(önek max+1, sürü+1); isteğe bağlı kullanıcı başlangıcı. */
 export function otomatikKupeSerisi(opts: {
   onek: string;
   adet: number;
   mevcutEarTags: string[];
+  /** Kayıtlı hayvan sayısı — önek eşleşmese bile toplam+1 için */
+  toplamHayvan?: number;
   /** Kullanıcı açıkça başlangıç verdiyse onu kullan (çakışmada UI uyarır) */
   baslangic?: number;
 }): { etiketler: string[]; baslangic: number; bitis: number; neden: string } {
@@ -117,7 +134,11 @@ export function otomatikKupeSerisi(opts: {
   if (adet < 1) return { etiketler: [], baslangic: 0, bitis: 0, neden: '' };
 
   const { max, genislik: gMevcut } = onekMaxNumara(opts.mevcutEarTags, onek);
-  const sonraki = max + 1;
+  const toplam =
+    opts.toplamHayvan != null && Number.isFinite(opts.toplamHayvan)
+      ? Math.floor(opts.toplamHayvan)
+      : opts.mevcutEarTags.length;
+  const sonraki = onerilenBaslangicNo(opts.mevcutEarTags, onek, toplam);
   const baslangic =
     opts.baslangic != null && Number.isFinite(opts.baslangic) && opts.baslangic >= 1
       ? Math.floor(opts.baslangic)
@@ -131,8 +152,10 @@ export function otomatikKupeSerisi(opts: {
   const neden =
     opts.baslangic != null && Number.isFinite(opts.baslangic)
       ? `Girdiğiniz başlangıç ${baslangic}`
-      : max > 0
+      : max > 0 && max + 1 >= sonraki
         ? `Önek «${onek}» serisinde son küpe ${max} → sonraki ${baslangic}`
-        : `Önek «${onek}» için kayıt yok → 1’den başlar`;
+        : toplam > 0
+          ? `Kayıtlı ${toplam} hayvan → sonraki ${baslangic}`
+          : `Kayıt yok → 1’den başlar`;
   return { etiketler, baslangic, bitis, neden };
 }

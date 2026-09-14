@@ -21,6 +21,7 @@ export {
   aralikEtiketleri,
   kupeAralikAyikla,
   onekMaxNumara,
+  onerilenBaslangicNo,
   otomatikKupeSerisi,
   type KupeAralik,
 } from '@/kaynak/suru/kupe-aralik';
@@ -171,6 +172,7 @@ export async function topluKuzuKabul(
       onek,
       adet,
       mevcutEarTags: mevcut.map((a) => a.earTag),
+      toplamHayvan: mevcut.length,
       baslangic: girdi.otomatikBaslangic,
     });
     etiketler = seri.etiketler;

@@ -1,9 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   type AsamaPaketBoyutu,
   VARSAYILAN_PAKET,
 } from './asamalar';
 import type { SistemCevaplari } from './analiz';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 
 const KEY = 'sy_profesyonellik_v1';
 
@@ -31,7 +31,7 @@ function bos(): ProfesyonellikDurum {
 }
 
 export async function getProfesyonellikDurum(): Promise<ProfesyonellikDurum> {
-  const raw = await AsyncStorage.getItem(KEY);
+  const raw = await kaliciGetItem(KEY);
   if (!raw) return bos();
   try {
     const p = JSON.parse(raw) as Partial<ProfesyonellikDurum>;
@@ -49,7 +49,7 @@ export async function getProfesyonellikDurum(): Promise<ProfesyonellikDurum> {
 }
 
 async function yaz(d: ProfesyonellikDurum): Promise<void> {
-  await AsyncStorage.setItem(
+  await kaliciSetItem(
     KEY,
     JSON.stringify({ ...d, guncelleme: new Date().toISOString() })
   );

@@ -1,14 +1,10 @@
-import { v4 as uuidv4 } from 'uuid';
 import {
-  addHealthRecord,
-  addWeightRecord,
   adjustStock,
   countAnimals,
   clearAllStorage,
-  upsertAnimal,
   upsertStockItem,
 } from './veritabani';
-import { upsertRationPlanFromWeight, clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
+import { clearAllRationPlans } from '@/kaynak/rasyon/hayvan-plani';
 import { kaydetYemSayim, clearAllYemSayim } from '@/kaynak/stok/sayim';
 import { kaydetKatalogKullanim, clearKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { seedTumEslesikKuzular, ensurePadokKuzuVerisi } from './padok-b-kuzular';
@@ -27,6 +23,11 @@ export {
   PADOK_C_KUZU_ADET,
 } from './padok-b-kuzular';
 
+/**
+ * Boş depoda demo sürü: yalnızca Padok A/B/C eşleşik 60 kuzu (+ stok).
+ * Eski 3 isimli demo koyun kaldırıldı — toplam 63→64 başlangıç kaymasına yol açıyordu.
+ * Mevcut kayıtları asla silmez / üzerine yazmaz (count > 0 → sadece eksik padok merge).
+ */
 export async function seedDemoDataIfEmpty(): Promise<boolean> {
   const count = await countAnimals();
   if (count > 0) {
@@ -35,126 +36,7 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
   }
 
   const now = new Date();
-  const daysAgo = (d: number) => {
-    const date = new Date(now);
-    date.setDate(date.getDate() - d);
-    return date.toISOString().split('T')[0];
-  };
   const isoDaysAgo = (d: number) => new Date(now.getTime() - d * 86400000).toISOString();
-
-  const animals = [
-    {
-      id: uuidv4(),
-      earTag: 'TR-34-001234',
-      turkvetNo: 'TR340012345678901',
-      name: 'Kızıl',
-      breed: 'Merinos',
-      species: 'sheep' as const,
-      sex: 'female' as const,
-      birthDate: '2022-03-15',
-      paddock: 'Padok A',
-      status: 'healthy' as const,
-      motherId: null,
-      gehisId: null,
-      sirtNo: null,
-      modId: 'mod3' as const,
-      notes: 'Damızlık aday',
-      createdAt: isoDaysAgo(20),
-    },
-    {
-      id: uuidv4(),
-      earTag: 'TR-34-001235',
-      turkvetNo: 'TR340012345678902',
-      name: 'Boğa',
-      breed: 'İvesi',
-      species: 'sheep' as const,
-      sex: 'male' as const,
-      birthDate: '2024-01-10',
-      paddock: 'Padok B',
-      status: 'healthy' as const,
-      motherId: null,
-      gehisId: null,
-      sirtNo: null,
-      modId: 'mod1' as const,
-      notes: 'Besi grubu · karantina tamam',
-      createdAt: isoDaysAgo(12),
-    },
-    {
-      id: uuidv4(),
-      earTag: 'TR-34-001236',
-      turkvetNo: 'TR340012345678903',
-      name: 'Yavrucuk',
-      breed: 'Merinos',
-      species: 'sheep' as const,
-      sex: 'female' as const,
-      birthDate: daysAgo(45),
-      paddock: 'Padok A',
-      status: 'healthy' as const,
-      motherId: null,
-      gehisId: null,
-      sirtNo: null,
-      modId: 'mod1' as const,
-      notes: 'Kuzu · alım sonrası karantina',
-      createdAt: isoDaysAgo(8),
-    },
-  ];
-
-  for (const seed of animals) {
-    const saved = await upsertAnimal(seed);
-    const weights = saved.sex === 'male'
-      ? [42, 45, 48, 52]
-      : saved.name === 'Yavrucuk'
-        ? [12, 15, 18, 22]
-        : [62, 64, 66, 68];
-    for (let i = 0; i < weights.length; i++) {
-      await addWeightRecord({
-        animalId: saved.id,
-        weightKg: weights[i],
-        recordedAt: new Date(now.getTime() - (weights.length - 1 - i) * 7 * 86400000).toISOString(),
-        notes: '',
-      });
-    }
-    await upsertRationPlanFromWeight(saved, weights[weights.length - 1]);
-  }
-
-  await addHealthRecord({
-    animalId: animals[0].id,
-    recordType: 'vaccine',
-    symptoms: '',
-    diagnosis: 'Rutin aşı',
-    treatment: 'Clostridial kombine aşı',
-    medicine: 'Clostridial aşı',
-    withdrawalDays: 0,
-    vetName: 'Dr. Ahmet Yılmaz',
-    recordedAt: daysAgo(30),
-    notes: 'Yıllık aşı programı',
-  });
-
-  await addHealthRecord({
-    animalId: animals[2].id,
-    recordType: 'vaccine',
-    symptoms: '',
-    diagnosis: 'Alım sonrası aşı',
-    treatment: 'Clostridial kombine aşı',
-    medicine: 'Clostridial aşı',
-    withdrawalDays: 0,
-    vetName: 'Dr. Ahmet Yılmaz',
-    recordedAt: daysAgo(6),
-    notes: 'Karantina sonrası',
-  });
-
-  await addHealthRecord({
-    animalId: animals[1].id,
-    recordType: 'illness',
-    symptoms: 'İshal, iştahsızlık',
-    diagnosis: 'Paraziter enfeksiyon şüphesi',
-    treatment: 'Albendazol 5 gün',
-    medicine: 'Albendazol',
-    withdrawalDays: 14,
-    vetName: 'Dr. Ahmet Yılmaz',
-    recordedAt: daysAgo(5),
-    notes: 'Bekletme süresi devam ediyor',
-  });
 
   const feed = await upsertStockItem({
     name: 'Arpa kırması',
@@ -218,7 +100,6 @@ export async function seedDemoDataIfEmpty(): Promise<boolean> {
     notes: '',
   });
 
-  // Kullanım skorları — demo sıralama (çok kullanılan üstte)
   await kaydetKatalogKullanim('arpa-kirmasi', 80);
   await kaydetKatalogKullanim('yonca-kuru', 40);
   await kaydetKatalogKullanim('albendazol', 25);
