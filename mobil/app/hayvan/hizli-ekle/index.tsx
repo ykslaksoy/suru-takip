@@ -48,7 +48,7 @@ export default function HizliKuzuHubScreen() {
           ]}>
           <Text style={[styles.cardTitle, { color: colors.tint }]}>Toplu kabul</Text>
           <Text style={[styles.cardBody, { color: colors.textSecondary }]}>
-            10–100 kuzu · kaynak + padok · küpe aralığı · otomatik takvim
+            Çok kuzu · kaynak + padok · küpe aralığı · otomatik takvim
           </Text>
         </Pressable>
 

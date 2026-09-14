@@ -26,6 +26,9 @@
 - [ ] [`02-akilli-kuzu-home-kilit.md`](./02-ekran-taslak/02-akilli-kuzu-home-kilit.md) — Grok kilitli ana sayfa (2026-09-07)
 - [ ] [`03-gorevler-kategori-sayfa.md`](./02-ekran-taslak/03-gorevler-kategori-sayfa.md) — Görevler kategori ayrı sayfa
 - [ ] [`04-hizli-kuzu-padok-toplu.md`](./02-ekran-taslak/04-hizli-kuzu-padok-toplu.md) — Hızlı/toplu kuzu + padok + kaynak
+- [ ] [`05-superkuzu-vercel-root-fix.md`](./02-ekran-taslak/05-superkuzu-vercel-root-fix.md) — SuperKuzu Vercel root
+- [ ] [`06-baslangic-onek-max-oneri.md`](./02-ekran-taslak/06-baslangic-onek-max-oneri.md) — Başlangıç no önek max+1
+- [ ] [`07-toplu-onay-adet-cinsiyet.md`](./02-ekran-taslak/07-toplu-onay-adet-cinsiyet.md) — Özet/onay + adet sınırı + erkek varsayılan
 
 ## `03-cekirdek/`
 
