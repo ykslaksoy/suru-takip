@@ -1,4 +1,4 @@
-import { ASI_PROGRAMI, asiDozEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiMlDozYerEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { getKuzular, planOku, type AsiPlani, type AsiTercih } from './asi-modu';
@@ -132,14 +132,14 @@ export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise
     if (toplamMl != null) {
       durumMetni = `${hayvanSayisi} kuzu × ${formatMl(program.mlHayvan!)} ml = ${formatMl(toplamMl)} ml · ${toplamDoz} doz`;
     } else {
-      durumMetni = `${hayvanSayisi} kuzu · ${asiDozEtiketi(program)} · ${toplamDoz} doz`;
+      durumMetni = `${hayvanSayisi} kuzu · ${asiMlDozYerEtiketi(program)} · ${toplamDoz} doz`;
     }
 
     satirlar.push({
       programId: program.id,
       koruma: program.koruma,
       asiAdi: program.ad,
-      mlEtiket: asiDozEtiketi(program),
+      mlEtiket: asiMlDozYerEtiketi(program),
       hayvanSayisi,
       mlHayvan: program.mlHayvan,
       toplamMl,

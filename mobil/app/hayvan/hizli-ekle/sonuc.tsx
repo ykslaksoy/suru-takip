@@ -30,24 +30,24 @@ export default function KabulSonucScreen() {
 
   const rehber = [
     {
-      baslik: '1. Alım tartımı',
-      aciklama: '1–2. gün — seri tartım',
+      baslik: '1. Gün 1 seçimi',
+      aciklama: 'Ne yapacağını seç — tartı + aşı aynı seans olabilir',
+      href: '/gorevler/kategori/asi',
+    },
+    {
+      baslik: '2. Alım tartımı',
+      aciklama: 'Önerilen ilk adım · dozlar kiloya göre (yoksa ~20 kg)',
       href: '/seri-giris',
     },
     {
-      baslik: '2. Aşı / parazit',
-      aciklama: 'Giriş koruma + Tarım Bakanlığı aşıları',
+      baslik: '3. Aşı / parazit',
+      aciklama: 'Seçtiğin kalemler — tartarken aynı gün yapılır',
       href: '/(tabs)/veteriner',
     },
     {
-      baslik: '3. Yem planı',
+      baslik: '4. Yem planı',
       aciklama: 'Kuzu besi rasyonu',
       href: '/(tabs)/rasyon',
-    },
-    {
-      baslik: '4. Görevler',
-      aciklama: 'Satışa kadar takvim',
-      href: '/gorevler',
     },
   ];
 

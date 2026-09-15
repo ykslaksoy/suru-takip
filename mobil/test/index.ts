@@ -5,6 +5,7 @@
 
 import { calistirTestModulleri, raporYaz } from './cerceve';
 import { hizliBesiModul } from './moduller/hizli-besi';
+import { gun1SecimModul } from './moduller/gun1-secim';
 import { padokModul } from './moduller/padok';
 import { gorevlerModul } from './moduller/gorevler';
 import { dozModul } from './moduller/doz';
@@ -23,6 +24,7 @@ import { profesyonellikModul } from './moduller/profesyonellik';
 
 const MODULLER = [
   hizliBesiModul,
+  gun1SecimModul,
   padokModul,
   gorevlerModul,
   dozModul,

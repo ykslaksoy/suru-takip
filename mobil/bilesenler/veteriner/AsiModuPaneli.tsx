@@ -251,10 +251,10 @@ export function AsiModuPaneli() {
         Yer, cinse, besi şekline göre aşı ve parazit hapı önerisi; istemediklerinizi kapatın — uyarıları onaylayın.
       </Text>
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
-        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Aşı sabit ml · parazit hap/kg</Text>
+        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Doz — kilo ile</Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          Aşılar hayvan başına sabit ml (1–2 ml). Parazit hapları etiket dozu (ör. Albendazol 1 hap / 10 kg);
-          iğne parazitler kg’ye göre ml.
+          Aşılar: her kuzuya 1–2 ml. Hap/iğne: gerçek kiloya göre (henüz tartılmadıysa geçici ~20 kg;
+          gelenler ~17–24 kg). Örnek: 20 kg → her 10 kiloya yazılanın iki katı.
         </Text>
       </View>
 

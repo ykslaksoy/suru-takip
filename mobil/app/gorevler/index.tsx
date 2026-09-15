@@ -81,8 +81,8 @@ export default function GorevlerScreen() {
           ) : (
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
-                Sıralama: en yakın tarih önce; aynı günde parazit → karma → selenyum →
-                tartım → rapel. Kategoriye dokunun — liste ayrı sayfada açılır.
+                Gün gün ilaç/aşı; yem ayrı. Gün 1’de tartı önerilen ilk — tartarken aynı seans
+                diğer işler de yapılır. Satış ufku ~90 gün.
               </Text>
 
               {loading ? (
