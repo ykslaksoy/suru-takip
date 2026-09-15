@@ -25,7 +25,6 @@ export default function FlockScreen() {
   const [animals, setAnimals] = useState<HayvanSatir[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const [padokFiltre, setPadokFiltre] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
   const load = useCallback(async () => {
@@ -33,10 +32,6 @@ export default function FlockScreen() {
     let filtered = list;
     if (filter === 'female') filtered = list.filter((a) => a.sex === 'female');
     if (filter === 'male') filtered = list.filter((a) => a.sex === 'male');
-    if (padokFiltre) {
-      const hedef = padokFiltre.trim().toLocaleLowerCase('tr');
-      filtered = filtered.filter((a) => (a.paddock || '').trim().toLocaleLowerCase('tr') === hedef);
-    }
     const withWeights = await Promise.all(
       filtered.map(async (a) => {
         const latestWeight = await getLatestWeight(a.id);
@@ -50,7 +45,7 @@ export default function FlockScreen() {
     );
     setAnimals(withWeights);
     setTotal(await countAnimals());
-  }, [search, filter, padokFiltre]);
+  }, [search, filter]);
 
   useEffect(() => {
     if (ready) void load();
@@ -64,12 +59,10 @@ export default function FlockScreen() {
 
   const limitYazi = limit === Number.POSITIVE_INFINITY ? '∞' : String(limit);
 
-  const baslikAlt = useMemo(() => {
-    if (padokFiltre) {
-      return `${padokFiltre} · ${animals.length} hayvan`;
-    }
-    return `${total} hayvan · ${tierLabel} (${total}/${limitYazi})`;
-  }, [padokFiltre, animals.length, total, tierLabel, limitYazi]);
+  const baslikAlt = useMemo(
+    () => `${total} hayvan · ${tierLabel} (${total}/${limitYazi})`,
+    [total, tierLabel, limitYazi],
+  );
 
   return (
     <View style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])}>
@@ -84,38 +77,12 @@ export default function FlockScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Hayvan ekle"
-          onPress={() =>
-            router.push(
-              padokFiltre
-                ? ({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: padokFiltre } } as never)
-                : ('/hayvan/hizli-ekle' as never),
-            )
-          }
+          onPress={() => router.push('/hayvan/hizli-ekle' as never)}
           style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
           <Text style={styles.addText}>+ Ekle</Text>
         </Pressable>
       </View>
 
-      {/* Padoklar en üstte — seçince altta hayvanlar gelir */}
-      <View style={styles.padokWrap}>
-        <PadokYonetimiPaneli seciliPadok={padokFiltre} onPadokSec={setPadokFiltre} />
-      </View>
-
-      <AltButonlar
-        items={filters.map((f) => ({ key: f.key, label: f.label }))}
-        activeKey={filter}
-        onSelect={(k) => setFilter(k as Filter)}
-      />
-      <TextInput
-        placeholder="Küpe, sırt no, Aref veya TÜRKVET ara..."
-        placeholderTextColor={colors.textSecondary}
-        value={search}
-        onChangeText={setSearch}
-        style={StyleSheet.flatten([
-          styles.search,
-          { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
-        ])}
-      />
       <FlatList
         data={animals}
         keyExtractor={(item) => item.id}
@@ -129,11 +96,32 @@ export default function FlockScreen() {
           void load();
         }}
         refreshing={false}
+        ListHeaderComponent={
+          <View>
+            {/* Padoklar üstte — dokununca ayrı tam sayfa açılır */}
+            <View style={styles.padokWrap}>
+              <PadokYonetimiPaneli />
+            </View>
+            <AltButonlar
+              items={filters.map((f) => ({ key: f.key, label: f.label }))}
+              activeKey={filter}
+              onSelect={(k) => setFilter(k as Filter)}
+            />
+            <TextInput
+              placeholder="Küpe, sırt no, Aref veya TÜRKVET ara..."
+              placeholderTextColor={colors.textSecondary}
+              value={search}
+              onChangeText={setSearch}
+              style={StyleSheet.flatten([
+                styles.search,
+                { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
+              ])}
+            />
+          </View>
+        }
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 24, paddingHorizontal: 16 }}>
-            {padokFiltre
-              ? `${padokFiltre} içinde hayvan yok. + ile ekleyin.`
-              : 'Padok seçin veya Giriş’e dokunun — hayvanlar burada açılır.'}
+            Hayvan yok. Padoka Giriş veya + ile ekleyin.
           </Text>
         }
       />
@@ -162,12 +150,12 @@ const styles = StyleSheet.create({
   },
   addText: { color: '#fff', fontWeight: '800', fontSize: 15 },
   padokWrap: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingTop: 4,
     paddingBottom: 2,
   },
   search: {
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginTop: 8,
     marginBottom: 4,
     borderWidth: 1,

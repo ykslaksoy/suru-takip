@@ -24,17 +24,11 @@ function uyar(baslik: string, mesaj: string) {
 
 type PadokSatir = Padok & { hayvan: number; bos: number; dolu: boolean };
 
-type Props = {
-  /** Seçili padok adı — listedeki hayvanlar buna göre süzülür */
-  seciliPadok?: string | null;
-  onPadokSec?: (padokAd: string | null) => void;
-};
-
 /**
- * Padok listesi — üstte; satıra / Giriş’e dokununca padok açılır (hayvanlar altta).
- * Seçilince liste daralır, hayvanlar öne çıkar.
+ * Padok listesi — üstte; satıra / Giriş’e dokununca ayrı tam sayfa açılır.
+ * Inline daraltma yok (küçük alt şerit bug’ı).
  */
-export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
+export function PadokYonetimiPaneli() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refreshKey } = useDatabase();
@@ -44,8 +38,6 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
   const [karantina, setKarantina] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formAcik, setFormAcik] = useState(false);
-  /** Seçiliyken padok listesini tekrar göster */
-  const [listeAcik, setListeAcik] = useState(false);
 
   const load = useCallback(async () => {
     const padoklar = await getPadoklar();
@@ -62,11 +54,6 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
     void load();
   }, [load, refreshKey]);
 
-  useEffect(() => {
-    // Yeni seçimde listeyi kapat — hayvanlar görünsün
-    if (seciliPadok) setListeAcik(false);
-  }, [seciliPadok]);
-
   const ozet = useMemo(() => {
     const hayvan = liste.reduce((s, p) => s + p.hayvan, 0);
     const kap = liste.reduce((s, p) => s + p.kapasite, 0);
@@ -74,8 +61,10 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
   }, [liste]);
 
   const acPadok = (padokAd: string) => {
-    onPadokSec?.(padokAd);
-    setListeAcik(false);
+    router.push({
+      pathname: '/suru/padok/[ad]',
+      params: { ad: padokAd },
+    } as never);
   };
 
   const ekle = async () => {
@@ -105,7 +94,6 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
     const yap = async () => {
       try {
         await silPadok(p.id);
-        if (seciliPadok === p.ad) onPadokSec?.(null);
         await load();
       } catch (e) {
         uyar('Hata', e instanceof Error ? e.message : 'Silinemedi');
@@ -122,8 +110,6 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
     ]);
   };
 
-  const listeGoster = !seciliPadok || listeAcik;
-
   return (
     <View
       style={StyleSheet.flatten([
@@ -134,7 +120,7 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])}>Padoklar</Text>
           <Text style={StyleSheet.flatten([styles.hint, { color: colors.textSecondary }])}>
-            {ozet} · dokun → hayvanlar
+            {ozet} · dokun → ayrı sayfa
           </Text>
         </View>
         <Pressable
@@ -151,123 +137,78 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
         </Pressable>
       </View>
 
-      {seciliPadok ? (
-        <View style={styles.seciliBlok}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Tüm padokları göster"
-            onPress={() => {
-              onPadokSec?.(null);
-              setListeAcik(true);
-            }}
-            style={StyleSheet.flatten([
-              styles.seciliSerit,
-              { backgroundColor: colors.tint + '14', borderColor: colors.tint },
-            ])}>
-            <Ionicons name="arrow-back" size={18} color={colors.tint} />
-            <Text style={StyleSheet.flatten([styles.seciliYazi, { color: colors.tint }])} numberOfLines={1}>
-              {seciliPadok} · tümüne dön
-            </Text>
-            <Ionicons name="close-circle" size={22} color={colors.tint} />
-          </Pressable>
-          {!listeAcik ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Başka padok seç"
-              onPress={() => setListeAcik(true)}
+      <View style={styles.liste}>
+        {liste.map((p) => {
+          const doluluk = p.kapasite > 0 ? Math.min(1, p.hayvan / p.kapasite) : 0;
+          return (
+            <View
+              key={p.id}
               style={StyleSheet.flatten([
-                styles.degistirBtn,
-                { borderColor: colors.border, backgroundColor: colors.background },
+                styles.row,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: 'transparent',
+                },
               ])}>
-              <Text style={StyleSheet.flatten([styles.degistirText, { color: colors.text }])}>
-                Başka padok
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-      ) : null}
-
-      {listeGoster ? (
-        <View style={styles.liste}>
-          {liste.map((p) => {
-            const doluluk = p.kapasite > 0 ? Math.min(1, p.hayvan / p.kapasite) : 0;
-            const secili = seciliPadok === p.ad;
-            return (
-              <View
-                key={p.id}
-                style={StyleSheet.flatten([
-                  styles.row,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: secili ? colors.tint + '10' : 'transparent',
-                  },
-                ])}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${p.ad} padokunu aç, ${p.hayvan} hayvan`}
-                  onPress={() => acPadok(p.ad)}
-                  style={styles.satirGovde}>
-                  <Text
-                    numberOfLines={1}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.ad} padokunu aç, ${p.hayvan} hayvan`}
+                onPress={() => acPadok(p.ad)}
+                style={styles.satirGovde}>
+                <Text numberOfLines={1} style={StyleSheet.flatten([styles.padokAd, { color: colors.text }])}>
+                  {p.karantina ? '🛡 ' : ''}
+                  {p.ad}
+                </Text>
+                <View style={styles.barTrack}>
+                  <View
                     style={StyleSheet.flatten([
-                      styles.padokAd,
-                      { color: secili ? colors.tint : colors.text },
-                    ])}>
-                    {p.karantina ? '🛡 ' : ''}
-                    {p.ad}
-                  </Text>
-                  <View style={styles.barTrack}>
-                    <View
-                      style={StyleSheet.flatten([
-                        styles.barFill,
-                        {
-                          width: `${Math.round(doluluk * 100)}%`,
-                          backgroundColor: p.dolu ? colors.danger : colors.tint,
-                        },
-                      ])}
-                    />
-                  </View>
-                  <Text style={StyleSheet.flatten([styles.meta, { color: colors.textSecondary }])}>
-                    {p.hayvan}/{p.kapasite}
-                    {p.dolu ? ' · dolu' : ` · ${p.bos} boş`}
-                    {secili ? ' · açık' : ''}
-                  </Text>
-                </Pressable>
+                      styles.barFill,
+                      {
+                        width: `${Math.round(doluluk * 100)}%`,
+                        backgroundColor: p.dolu ? colors.danger : colors.tint,
+                      },
+                    ])}
+                  />
+                </View>
+                <Text style={StyleSheet.flatten([styles.meta, { color: colors.textSecondary }])}>
+                  {p.hayvan}/{p.kapasite}
+                  {p.dolu ? ' · dolu' : ` · ${p.bos} boş`}
+                </Text>
+              </Pressable>
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${p.ad} aç`}
-                  onPress={() => acPadok(p.ad)}
-                  style={StyleSheet.flatten([styles.girisBtn, { backgroundColor: colors.tint }])}>
-                  <Text style={styles.girisText}>{secili ? 'Açık' : 'Giriş'}</Text>
-                </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.ad} aç`}
+                onPress={() => acPadok(p.ad)}
+                style={StyleSheet.flatten([styles.girisBtn, { backgroundColor: colors.tint }])}>
+                <Text style={styles.girisText}>Giriş</Text>
+              </Pressable>
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${p.ad} hayvan ekle`}
-                  onPress={() =>
-                    router.push({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: p.ad } } as never)
-                  }
-                  style={StyleSheet.flatten([
-                    styles.ekleBtn,
-                    { borderColor: colors.border, backgroundColor: colors.background },
-                  ])}>
-                  <Ionicons name="add" size={22} color={colors.tint} />
-                </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.ad} hayvan ekle`}
+                onPress={() =>
+                  router.push({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: p.ad } } as never)
+                }
+                style={StyleSheet.flatten([
+                  styles.ekleBtn,
+                  { borderColor: colors.border, backgroundColor: colors.background },
+                ])}>
+                <Ionicons name="add" size={22} color={colors.tint} />
+              </Pressable>
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${p.ad} sil`}
-                  onPress={() => sil(p)}
-                  hitSlop={8}
-                  style={styles.silBtn}>
-                  <Text style={StyleSheet.flatten([styles.silText, { color: colors.danger }])}>Sil</Text>
-                </Pressable>
-              </View>
-            );
-          })}
-        </View>
-      ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.ad} sil`}
+                onPress={() => sil(p)}
+                hitSlop={8}
+                style={styles.silBtn}>
+                <Text style={StyleSheet.flatten([styles.silText, { color: colors.danger }])}>Sil</Text>
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
 
       {formAcik ? (
         <View style={StyleSheet.flatten([styles.form, { borderTopColor: colors.border }])}>
@@ -347,27 +288,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   yeniText: { fontWeight: '800', fontSize: 15 },
-  seciliBlok: { gap: 8, marginBottom: 4, marginTop: 4 },
-  seciliSerit: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    minHeight: 52,
-  },
-  seciliYazi: { flex: 1, fontWeight: '800', fontSize: 15 },
-  degistirBtn: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
-    paddingVertical: 12,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  degistirText: { fontWeight: '800', fontSize: 14 },
   liste: { gap: 0 },
   row: {
     flexDirection: 'row',
