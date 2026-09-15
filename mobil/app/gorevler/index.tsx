@@ -81,8 +81,8 @@ export default function GorevlerScreen() {
           ) : (
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
-                Sıralama: en yakın tarih önce; aynı günde parazit → karma → selenyum →
-                tartım → rapel. Kategoriye dokunun — liste ayrı sayfada açılır.
+                Sıralama: gün gün ilaç/aşı; yem ayrı kategori. Aynı günde parazit → karma →
+                selenyum → tartım → rapel. Satış ufku ~90 gün.
               </Text>
 
               {loading ? (

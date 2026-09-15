@@ -13,7 +13,7 @@ export type VitaminKalemi = {
   uygulama: VitaminUygulama;
   /**
    * Hayvan başına sabit ml (iğne / oral).
-   * null = yem karışımı / adet / etikete bak
+   * null = yem karışımı / adet / ilacın kutusuna bak
    */
   mlHayvan: number | null;
   /** mlHayvan null iken veya ek açıklama */
@@ -22,6 +22,10 @@ export type VitaminKalemi = {
   neZaman: string;
   /** Stok eşleşmesi */
   stokAnahtarlar: string[];
+  /**
+   * Uygulama yeri — çoban dili: boyun deri altı, kas içi, ağızdan.
+   */
+  uygulamaYeri?: string;
   /** false → görevde yalnızca planlı (acil/sırada değil) */
   oncelikli?: boolean;
 };
@@ -32,13 +36,28 @@ export function vitaminGorevOncelikliMi(programId: string): boolean {
   return v?.oncelikli !== false;
 }
 
-/** Ekranda "sabit 2 ml" / "yeme karışım" */
+/** Ekranda "Her kuzuya 2 ml" / "pakete göre" */
 export function vitaminDozEtiketi(v: VitaminKalemi): string {
   if (v.mlHayvan != null) {
     const ml = String(v.mlHayvan).replace('.', ',');
-    return `sabit ${ml} ml`;
+    return `Her kuzuya ${ml} ml`;
   }
-  return v.dozNotu ?? 'etikete bak';
+  return v.dozNotu ?? 'ilacın kutusuna bak';
+}
+
+/** Doz · (kaçıncı doz) · yer — çoban dili */
+export function vitaminMlDozYerEtiketi(
+  v: VitaminKalemi,
+  opts?: { dozNo?: number; toplamDoz?: number },
+): string {
+  const parts = [vitaminDozEtiketi(v)];
+  const dozNo = opts?.dozNo;
+  const toplamDoz = opts?.toplamDoz;
+  if (dozNo != null && toplamDoz != null && toplamDoz > 1) {
+    parts.push(`${dozNo}. doz (${toplamDoz}’den)`);
+  }
+  if (v.uygulamaYeri) parts.push(v.uygulamaYeri);
+  return parts.join(' · ');
 }
 
 export function vitaminTipEtiket(u: VitaminUygulama): string {
@@ -58,9 +77,10 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     detay: 'Göz · kemik · üreme',
     uygulama: 'igne',
     mlHayvan: 2,
-    dozNotu: 'Kuzu ~10 kg: 1–2 ml (etiket)',
+    dozNotu: 'Her kuzuya 1–2 ml',
     neZaman: 'Kış, kapalı besi, gebe / emziren, zayıf hayvan',
     stokAnahtarlar: ['a-d3-e', 'ad3e', 'vitamin a', 'a d3 e'],
+    uygulamaYeri: 'kas içi · boyun / omuz',
   },
   {
     id: 'b-kompleks',
@@ -68,19 +88,21 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     detay: 'İştah · stres · toparlanma',
     uygulama: 'igne',
     mlHayvan: 2,
-    dozNotu: 'Kuzu ~10 kg: 1–2 ml (etiket)',
+    dozNotu: 'Her kuzuya 1–2 ml',
     neZaman: 'İştahsızlık, stres, hastalık sonrası, nakil',
     stokAnahtarlar: ['b kompleks', 'b vitamin', 'vitamin b'],
+    uygulamaYeri: 'kas içi · boyun / omuz',
   },
   {
     id: 'selen-e',
-    ad: 'Selenyum + E',
+    ad: 'Selenyum-E',
     detay: 'Kas · beyaz kas · kilo alımı',
     uygulama: 'igne',
     mlHayvan: 1,
-    dozNotu: 'Kuzu ~10 kg: ~1 ml (ürün etiketi · aşırı doz riski)',
+    dozNotu: 'Her kuzuya ~1 ml · fazla kaçırma',
     neZaman: 'Kapalı besi, eksiklik bölgesi, zayıf kuzu, kas / büyüme desteği',
     stokAnahtarlar: ['selen', 'selenyum', 'e vitamin'],
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'e-vitamin',
@@ -90,6 +112,7 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     mlHayvan: 2,
     neZaman: 'Stres, üreme dönemi, eksiklik şüphesi',
     stokAnahtarlar: ['e vitamin', 'tokoferol'],
+    uygulamaYeri: 'kas içi',
   },
   {
     id: 'c-vitamin',
@@ -99,6 +122,7 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     mlHayvan: 2,
     neZaman: 'Ağır stres, toparlanma (vet önerisiyle)',
     stokAnahtarlar: ['c vitamin', 'askorbik'],
+    uygulamaYeri: 'kas içi',
   },
   {
     id: 'kalsiyum',
@@ -109,6 +133,7 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     dozNotu: 'Yetişkin koyun — vet talimatı şart',
     neZaman: 'Doğum sonrası düşme, süt humması şüphesi',
     stokAnahtarlar: ['kalsiyum', 'boroglukonat'],
+    uygulamaYeri: 'deri altı · yavaş',
   },
   {
     id: 'glukoz',
@@ -116,9 +141,10 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     detay: 'Enerji · zayıf kuzu',
     uygulama: 'oral',
     mlHayvan: 50,
-    dozNotu: 'Kuzu ağızdan; iğne formu vet ile',
+    dozNotu: 'Ağızdan; iğne formu vet ile',
     neZaman: 'Zayıf / emmeyen kuzu, enerji düşüklüğü',
     stokAnahtarlar: ['glukoz', 'dekstroz'],
+    uygulamaYeri: 'ağızdan',
   },
   {
     id: 'elektrolit',
@@ -126,9 +152,10 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     detay: 'Sıvı · ishal desteği',
     uygulama: 'oral',
     mlHayvan: 500,
-    dozNotu: 'Paketli ürün: etiketteki suya karıştır',
+    dozNotu: 'Paketi suya karıştır',
     neZaman: 'İshal, sıvı kaybı, sıcak stres',
     stokAnahtarlar: ['elektrolit', 'ishal destek', 'diyare'],
+    uygulamaYeri: 'ağızdan',
   },
   {
     id: 'kolostrum',
@@ -139,6 +166,7 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     dozNotu: 'Doğumdan sonra 2 saat içinde',
     neZaman: 'Yeni doğan kuzu — emmezse biberon',
     stokAnahtarlar: ['kolostrum', 'süt toz', 'ikame'],
+    uygulamaYeri: 'ağızdan · biberon',
   },
   {
     id: 'probiyotik',
@@ -146,19 +174,21 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     detay: 'Rumen / sindirim',
     uygulama: 'oral',
     mlHayvan: null,
-    dozNotu: 'Pakete göre — genelde yeme / suya',
+    dozNotu: 'pakete göre',
     neZaman: 'İshal sonrası, yem değişimi, antibiyotik sonrası',
     stokAnahtarlar: ['probiyotik', 'maya', 'rumen'],
+    uygulamaYeri: 'ağızdan / yeme',
   },
   {
     id: 'premiks',
-    ad: 'Vitamin-mineral premiks',
-    detay: 'Günlük yem takviyesi',
+    ad: 'Premiks',
+    detay: 'Rasyona vitamin-mineral',
     uygulama: 'yem',
     mlHayvan: null,
-    dozNotu: 'Yeme karışım — kg yem başına etiket',
+    dozNotu: 'yeme karışım',
     neZaman: 'Sürekli rasyon; özellikle kapalı besi',
     stokAnahtarlar: ['premiks', 'vitamin-mineral'],
+    uygulamaYeri: 'yeme karışım',
   },
   {
     id: 'mineral-yalama',
@@ -169,5 +199,6 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     dozNotu: 'Padoka bırak — adet',
     neZaman: 'Sürekli erişim; eksiklik bölgelerinde',
     stokAnahtarlar: ['yalama', 'mineral taş', 'tuz'],
+    uygulamaYeri: 'padoka serbest yalama',
   },
 ];

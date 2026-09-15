@@ -9,6 +9,7 @@ export type GorevKaynak =
   | 'stok'
   | 'saglik'
   | 'tartim'
+  | 'yem'
   | 'yolculuk'
   | 'planlanan'
   | 'is-plani';
@@ -24,6 +25,8 @@ export type Gorev = {
   tarih?: string;
   baslikIgne?: string;
   baslikMl?: string;
+  /** Girişten kaçıncı gün (aşı gün gün grup) */
+  planGun?: number;
   tamamlanabilir?: boolean;
   tamam?: boolean;
 };
@@ -36,7 +39,7 @@ export function bugunTarih(): string {
 
 /** takviye-ozet id’sinden öncelik sırası (tarih eşitse) */
 export function gorevTakviyeOncelikSira(gorevId: string): number {
-  const m = gorevId.match(/^takviye-ozet-(asi|parazit|vitamin|tartim):(.+)$/);
+  const m = gorevId.match(/^takviye-ozet-(asi|parazit|vitamin|tartim)-(.+)$/);
   if (!m) return 50;
   return takviyeGorevOncelikSira(m[1] as TakviyeTip, m[2]);
 }
@@ -45,6 +48,9 @@ export function gorevTakviyeOncelikSira(gorevId: string): number {
 export function gorevleriSirala(gorevler: Gorev[]): Gorev[] {
   const bugun = bugunTarih();
   return [...gorevler].sort((a, b) => {
+    const ga = a.planGun;
+    const gb = b.planGun;
+    if (ga != null && gb != null && ga !== gb) return ga - gb;
     const dt = (a.tarih ?? bugun).localeCompare(b.tarih ?? bugun);
     if (dt !== 0) return dt;
     const po = gorevTakviyeOncelikSira(a.id) - gorevTakviyeOncelikSira(b.id);

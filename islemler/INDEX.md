@@ -67,6 +67,10 @@
 - [x] [`01-saglik-kaydi.md`](./06-saglik/01-saglik-kaydi.md) — Hastalık/tedavi/aşı kaydı 🔒
 - [x] [`02-bekletme-suresi.md`](./06-saglik/02-bekletme-suresi.md) — Bekletme süresi uyarısı 🔒
 - [x] [`03-asi-takvimi.md`](./06-saglik/03-asi-takvimi.md) — Aşı takvimi + hatırlatıcı 🔒
+- [ ] [`05-asi-gozlem-yem-plan.md`](./06-saglik/05-asi-gozlem-yem-plan.md) — Aşı gün gün + yem ayrı + Gözlem
+- [ ] [`06-asi-doz-uygulama-yeri.md`](./06-saglik/06-asi-doz-uygulama-yeri.md) — Doz sıra + uygulama yeri (v13)
+- [ ] [`07-asi-coban-dil.md`](./06-saglik/07-asi-coban-dil.md) — Aşı doz metinleri çoban dili (Saha UX)
+- [ ] [`08-asi-tarti-gun1.md`](./06-saglik/08-asi-tarti-gun1.md) — Gün 1 önce tartı · dozlar kg’ye (v14)
 
 ## `07-stok/`
 

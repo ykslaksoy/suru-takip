@@ -28,6 +28,11 @@ export type AsiProgramKalemi = {
   devletNotu?: string;
   /** Varsayılan: aşı. Parazit hapı / iğnesi için 'parazit' */
   kategori?: AsiProgramKategori;
+  /**
+   * Uygulama yeri — çoban dili: boyun deri altı, kas içi, ağızdan.
+   * Tipik kuzu/koyun pratiği (lab kısaltması yok).
+   */
+  uygulamaYeri?: string;
   /** false → görevde yalnızca planlı (acil/sırada değil) */
   oncelikli?: boolean;
 };
@@ -38,13 +43,40 @@ export function asiGorevOncelikliMi(programId: string): boolean {
   return p?.oncelikli !== false;
 }
 
-/** Ekranda "sabit 2 ml" / "1 hap / 10 kg" */
+/** Ekranda "Her kuzuya 2 ml" / "Her 10 kiloya 0,2 ml iğne" */
 export function asiDozEtiketi(p: AsiProgramKalemi): string {
   if (p.mlHayvan != null) {
     const ml = String(p.mlHayvan).replace('.', ',');
-    return `sabit ${ml} ml`;
+    return `Her kuzuya ${ml} ml`;
   }
-  return p.dozNotu ?? 'etikete bak';
+  return p.dozNotu ?? 'ilacın kutusuna bak';
+}
+
+/** "1. doz (2’den)" — yalnızca birden fazla dozda */
+export function dozSirasiEtiketi(dozNo: number, toplamDoz: number): string {
+  if (toplamDoz <= 1) return '';
+  return `${dozNo}. doz (${toplamDoz}’den)`;
+}
+
+/**
+ * Doz · (kaçıncı doz) · yer — çoban dili
+ * örn. `Her kuzuya 2 ml · boyun deri altı`
+ * örn. `Her 10 kiloya 0,2 ml iğne · boyun deri altı`
+ * örn. `Her kuzuya 2 ml · 1. doz (2’den) · boyun deri altı`
+ */
+export function asiMlDozYerEtiketi(
+  p: AsiProgramKalemi,
+  opts?: { dozNo?: number; toplamDoz?: number },
+): string {
+  const parts = [asiDozEtiketi(p)];
+  const dozNo = opts?.dozNo;
+  const toplamDoz = opts?.toplamDoz;
+  if (dozNo != null && toplamDoz != null && toplamDoz > 1) {
+    const sira = dozSirasiEtiketi(dozNo, toplamDoz);
+    if (sira) parts.push(sira);
+  }
+  if (p.uygulamaYeri) parts.push(p.uygulamaYeri);
+  return parts.join(' · ');
 }
 
 export function asiKategori(p: AsiProgramKalemi): AsiProgramKategori {
@@ -62,6 +94,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 2,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'pasteurella',
@@ -72,6 +105,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 2,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'clostridial',
@@ -82,6 +116,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 2,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'enterotoksemi',
@@ -92,6 +127,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 21,
     dozHayvan: 1,
     mlHayvan: 1,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'septisemi',
@@ -102,6 +138,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 21,
     dozHayvan: 1,
     mlHayvan: 2,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'ektima',
@@ -112,7 +149,8 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: 'çizik (etiket)',
+    dozNotu: 'çizik',
+    uygulamaYeri: 'uyluk içi',
   },
   {
     id: 'tetanos',
@@ -123,6 +161,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 1,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'ppr',
@@ -134,6 +173,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     dozHayvan: 1,
     mlHayvan: 1,
     devletNotu: 'Tarım Bakanlığı — kuzu/oğlak destek şartı · VETBİS kaydı (Trakya muaf)',
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'cicek',
@@ -145,6 +185,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     dozHayvan: 1,
     mlHayvan: 0.5,
     devletNotu: 'Tarım Bakanlığı — kuzu/oğlak destek şartı · VETBİS kaydı (Gökçeada muaf)',
+    uygulamaYeri: 'kuyruk kıvrımı deri altı',
   },
   {
     id: 'sap',
@@ -156,6 +197,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     dozHayvan: 1,
     mlHayvan: 1,
     devletNotu: 'Tarım Bakanlığı programı — il/ilçe müdürlüğü takvimi',
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'brusella',
@@ -167,6 +209,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     dozHayvan: 1,
     mlHayvan: 1,
     devletNotu: 'Tarım Bakanlığı programı — resmi brusella (Rev1)',
+    uygulamaYeri: 'göz içi (resmi)',
   },
   {
     id: 'sarbon',
@@ -178,6 +221,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     dozHayvan: 1,
     mlHayvan: 1,
     devletNotu: 'Tarım Bakanlığı — bölgesel risk programı',
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'agalaksi',
@@ -188,6 +232,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 1,
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'topallik',
@@ -198,6 +243,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 30,
     dozHayvan: 1,
     mlHayvan: 2,
+    uygulamaYeri: 'boyun deri altı',
   },
   /** —— Parazit hapları / iğneleri —— */
   {
@@ -209,8 +255,9 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: '1 hap / 10 kg (etiket · tablet gücüne bak)',
+    dozNotu: 'Her 10 kiloya 1 hap',
     kategori: 'parazit',
+    uygulamaYeri: 'ağızdan',
   },
   {
     id: 'levamizol',
@@ -221,8 +268,9 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: "kg'ye göre hap veya ml",
+    dozNotu: 'Her 10 kiloya hap veya ml',
     kategori: 'parazit',
+    uygulamaYeri: 'ağızdan',
   },
   {
     id: 'triklabendazol',
@@ -233,8 +281,9 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 21,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: '1 hap / kg bandı (etiket)',
+    dozNotu: 'Her 10 kiloya 1 hap',
     kategori: 'parazit',
+    uygulamaYeri: 'ağızdan',
   },
   {
     id: 'oksiklozanid',
@@ -245,8 +294,9 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 21,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: "kg'ye göre ml / hap",
+    dozNotu: 'Her 10 kiloya ml veya hap',
     kategori: 'parazit',
+    uygulamaYeri: 'ağızdan',
   },
   {
     id: 'ivermektin',
@@ -257,8 +307,9 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: '0,2 ml / 10 kg (%1 iğne · etiket)',
+    dozNotu: 'Her 10 kiloya 0,2 ml iğne',
     kategori: 'parazit',
+    uygulamaYeri: 'boyun deri altı',
   },
   {
     id: 'doramektin',
@@ -269,8 +320,9 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: "kg'ye göre ml",
+    dozNotu: 'Her 10 kiloya ml iğne',
     kategori: 'parazit',
+    uygulamaYeri: 'boyun deri altı',
   },
 ];
 
@@ -290,7 +342,7 @@ export type AsiStokDurum = {
   koruma: string;
   /** Aşı adı */
   asiAdi: string;
-  /** "sabit 2 ml" */
+  /** "Her kuzuya 2 ml" */
   mlEtiket: string;
   /** Devlet / resmi program notu */
   devletNotu?: string;
@@ -423,7 +475,7 @@ export function hesaplaAsiStokDurumu(
       programId: program.id,
       koruma: program.koruma,
       asiAdi: program.ad,
-      mlEtiket: asiDozEtiketi(program),
+      mlEtiket: asiMlDozYerEtiketi(program),
       devletNotu: program.devletNotu,
       yapilacakSayisi,
       yaklasanSayisi,

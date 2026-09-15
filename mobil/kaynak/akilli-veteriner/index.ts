@@ -118,6 +118,8 @@ export {
   HIZLI_BESI_TAKVIM,
   ENTEROTOKSEMI_RAPEL_PROGRAM_ID,
   KARMA_RAPEL_PROGRAM_ID,
+  planMlDozYerEtiketi,
+  planDozSirasi,
   rapelMi,
   rapelAnaProgramId,
   takviyeGorevOncelikSira,
