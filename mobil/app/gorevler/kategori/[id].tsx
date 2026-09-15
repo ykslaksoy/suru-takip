@@ -97,7 +97,7 @@ export default function GorevKategoriScreen() {
               <>
                 <Text style={{ color: colors.textSecondary, marginBottom: 12, fontSize: 13, lineHeight: 18 }}>
                   {id === 'asi'
-                    ? 'İlk gelen (Gözlem + Padok A): ilaç/aşı gün gün · Türkçe ad (ilaç). Yem ayrı kategoride.'
+                    ? 'İlk gelen (Gözlem + Padok A): ilaç/aşı gün gün · ad (ürün) · doz · kaçıncı/toplam · uygulama yeri. Yem ayrı.'
                     : 'Yem uygulamaları aşıdan ayrı · satılana kadar milestone’lar.'}
                 </Text>
                 {gunGruplari.map((gg) => (

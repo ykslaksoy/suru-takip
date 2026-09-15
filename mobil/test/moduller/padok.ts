@@ -6,16 +6,16 @@ const TAKVIM = [
   { tip: 'asi', programId: 'karma', gun: 0 },
   { tip: 'vitamin', programId: 'ad3e', gun: 0 },
   { tip: 'vitamin', programId: 'b-kompleks', gun: 0 },
+  { tip: 'vitamin', programId: 'selen-e', gun: 0 },
   { tip: 'vitamin', programId: 'probiyotik', gun: 0 },
   { tip: 'vitamin', programId: 'premiks', gun: 0 },
   { tip: 'tartim', programId: 'tartim-giris', gun: 1 },
-  { tip: 'vitamin', programId: 'selen-e', gun: 7 },
   { tip: 'tartim', programId: 'tartim-15', gun: 15 },
   { tip: 'asi', programId: 'karma-rapel', gun: 21 },
 ] as const;
 
 const GIRIS_ASI = ['karma', 'albendazol', 'ivermektin'] as const;
-const GIRIS_VIT = ['ad3e', 'b-kompleks', 'probiyotik', 'premiks'] as const;
+const GIRIS_VIT = ['ad3e', 'b-kompleks', 'selen-e', 'probiyotik', 'premiks'] as const;
 const RAPEL = new Set(['karma-rapel']);
 
 type Durum = { yapildi: boolean; programId: string };

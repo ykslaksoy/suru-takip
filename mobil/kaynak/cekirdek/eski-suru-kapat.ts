@@ -15,12 +15,10 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import {
-  ALBENDAZOL_PEKISTIRME_ID,
   HIZLI_BESI_GIRIS_ASI_PARAZIT,
   HIZLI_BESI_GIRIS_VITAMIN,
   HIZLI_BESI_PLAN_SURUM,
   HIZLI_BESI_TAKVIM,
-  IVERMEKTIN_PEKISTIRME_ID,
   KARMA_RAPEL_PROGRAM_ID,
   rapelAnaProgramId,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
@@ -213,8 +211,6 @@ export function eskiSuruGirisProgramIds(): string[] {
     TARTIM_GIRIS_PROGRAM_ID,
     TARTIM_15_PROGRAM_ID,
     KARMA_RAPEL_PROGRAM_ID,
-    IVERMEKTIN_PEKISTIRME_ID,
-    ALBENDAZOL_PEKISTIRME_ID,
   ];
 }
 

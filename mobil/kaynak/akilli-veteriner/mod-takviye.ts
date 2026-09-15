@@ -6,7 +6,7 @@
 
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { v4 as uuidv4 } from 'uuid';
-import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, asiMlDozYerEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal, AnimalModId, HealthRecord, StockItem } from '@/kaynak/cekirdek/tipler';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import {
@@ -20,7 +20,7 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
-import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
+import { VITAMIN_PROGRAMI, vitaminDozEtiketi, vitaminMlDozYerEtiketi } from './vitamin-programi';
 import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, hizliBesiPlanGun, rapelAnaProgramId } from './hizli-besi-plani';
 import {
   TARTIM_GIRIS_PROGRAM_ID,
@@ -103,7 +103,7 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       programId: p.id,
       ad: p.koruma,
       detay: p.ad,
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: asiMlDozYerEtiketi(p, { dozNo: 1, toplamDoz: 1 }),
     };
   };
   const vit = (id: string): ModTakviyeKalemi | null => {
@@ -114,7 +114,7 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       programId: v.id,
       ad: v.detay,
       detay: v.ad,
-      mlEtiket: vitaminDozEtiketi(v),
+      mlEtiket: vitaminMlDozYerEtiketi(v, { dozNo: 1, toplamDoz: 1 }),
     };
   };
 

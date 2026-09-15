@@ -146,7 +146,6 @@ export async function seedPadokGirisAsilari(): Promise<{ yazilan: number; padok:
   for (const a of hedef) {
     const girisGunOnce = a.paddock === ESLESIK_KUZU_PADOK_B ? 30 : 60;
     const gun0 = isoOnce(now, girisGunOnce);
-    const gun7 = isoOnce(now, girisGunOnce - 7);
     const gun21 = isoOnce(now, girisGunOnce - 21);
 
     for (const programId of HIZLI_BESI_GIRIS_ASI_PARAZIT) {
@@ -171,15 +170,6 @@ export async function seedPadokGirisAsilari(): Promise<{ yazilan: number; padok:
       });
       yazilan += 1;
     }
-    await vitaminKaydiYaz({
-      animalId: a.id,
-      earTag: a.earTag,
-      programId: 'selen-e',
-      recordedAt: gun7,
-      padok: a.paddock,
-      not: '7. gün · selenyum',
-    });
-    yazilan += 1;
     await asiKaydiYaz({
       animalId: a.id,
       earTag: a.earTag,

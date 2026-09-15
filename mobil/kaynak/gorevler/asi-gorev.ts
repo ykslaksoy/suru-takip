@@ -23,6 +23,7 @@ import {
 import {
   KARMA_RAPEL_PROGRAM_ID,
   hizliBesiPlanGun,
+  planMlDozYerEtiketi,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
@@ -110,18 +111,19 @@ function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTar
       programId,
       koruma: 'Klostridiyal + pastörella pekiştirme',
       asiAdi: 'Karma aşı 2. doz',
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: planMlDozYerEtiketi('asi', programId) ?? asiDozEtiketi(p),
       tip: 'asi',
     };
   }
   const p = ASI_PROGRAMI.find((x) => x.id === programId);
   if (!p) return null;
+  const tip = asiKategori(p) === 'parazit' ? 'parazit' : 'asi';
   return {
     programId,
     koruma: p.koruma,
     asiAdi: p.ad,
-    mlEtiket: asiDozEtiketi(p),
-    tip: asiKategori(p) === 'parazit' ? 'parazit' : 'asi',
+    mlEtiket: planMlDozYerEtiketi(tip, programId) ?? asiDozEtiketi(p),
+    tip,
   };
 }
 
@@ -132,7 +134,7 @@ function vitaminMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYaki
     programId,
     koruma: v.detay,
     asiAdi: v.ad,
-    mlEtiket: vitaminDozEtiketi(v),
+    mlEtiket: planMlDozYerEtiketi('vitamin', programId) ?? vitaminDozEtiketi(v),
     tip: 'vitamin',
   };
 }

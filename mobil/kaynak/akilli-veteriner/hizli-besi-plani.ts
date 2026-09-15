@@ -2,13 +2,14 @@
  * Mod 1 — Hızlı / kapalı kuzu besi aşı · vitamin · hap · yem planı.
  * Giriş koruma + yem dönüşümü; satılana kadar (~90 gün, isteğe bağlı +30).
  *
- * Öncelik: iç-dış parazit → karma → selenyum → tartım → 21 gün karma rapel →
+ * Öncelik: iç-dış parazit → karma → selenyum (gün 0) → tartım → 21 gün karma rapel →
  * 15 günde bir tartım / yem kontrol → satış ufku.
+ * Rutin gün-90 İvermektin / Albendazol yok (klinik gerekçe olmadıkça).
  * Karma = klostridiyal + pastörella → ayrı çelertme gerekmez.
  */
 
-import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
-import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
+import { ASI_PROGRAMI, asiMlDozYerEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
+import { VITAMIN_PROGRAMI, vitaminMlDozYerEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
   TARTIM_15_PROGRAM_ID,
   TARTIM_GIRIS_PROGRAM_ID,
@@ -17,7 +18,7 @@ import {
 } from '@/kaynak/akilli-veteriner/takviye-tipler';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v12';
+export const HIZLI_BESI_PLAN_SURUM = 'v13';
 
 /** Tipik besi ufku (alım → satış) — gün */
 export const BESI_SATIS_UFUK_GUN = 90;
@@ -32,8 +33,12 @@ export const ENTEROTOKSEMI_RAPEL_PROGRAM_ID = 'enterotoksemi-rapel';
 /** 21. gün karma rapel — ayrı plan kalemi */
 export const KARMA_RAPEL_PROGRAM_ID = 'karma-rapel';
 
-/** 90. gün parazit pekiştirme (ayrı kayıt) */
+/**
+ * @deprecated v13 — rutin satış öncesi pekiştirme kaldırıldı (klinik gerekçeyle elle).
+ * Eski plan kayıtları için eşleme korunur.
+ */
 export const IVERMEKTIN_PEKISTIRME_ID = 'ivermektin-90';
+/** @deprecated v13 — rutin satış öncesi pekiştirme kaldırıldı */
 export const ALBENDAZOL_PEKISTIRME_ID = 'albendazol-90';
 
 /** Rapel / pekiştirme → ana program */
@@ -74,10 +79,11 @@ export const HIZLI_BESI_GIRIS_ASI_PARAZIT = [
   'ivermektin',
 ] as const;
 
-/** Girişte verilen vitamin / destek (B/C seed’de yapıldı) */
+/** Girişte verilen vitamin / destek (B/C seed’de yapıldı) — selenyum gün 0 */
 export const HIZLI_BESI_GIRIS_VITAMIN = [
   'ad3e',
   'b-kompleks',
+  'selen-e',
   'probiyotik',
   'premiks',
 ] as const;
@@ -87,30 +93,94 @@ export type BesiTakvimSatir = {
   programId: string;
   gun: number;
   not: string;
+  /** Kaçıncı doz (plan içi) — aşı/iğne/hap */
+  dozNo?: number;
+  /** Toplam doz sayısı (plan içi) */
+  toplamDoz?: number;
 };
 
 /**
  * Takvim: girişten satış ufkuna.
- * 0 = giriş · 1–2 = alım tartımı · 7 = selenyum · 15+ = kontrol tartım · 21 = karma rapel
+ * 0 = giriş (parazit · karma · vitamin · selenyum) · 1–2 = alım tartımı ·
+ * 15+ = kontrol tartım · 21 = karma rapel
+ * Rutin gün-90 parazit yok.
  */
 function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
   const base: BesiTakvimSatir[] = [
-    { tip: 'parazit', programId: 'ivermektin', gun: 0, not: 'İç-dış parazit iğne — önce' },
-    { tip: 'parazit', programId: 'albendazol', gun: 0, not: 'İç parazit hapı · 1 hap / 10 kg' },
+    {
+      tip: 'parazit',
+      programId: 'ivermektin',
+      gun: 0,
+      not: 'İç-dış parazit iğne — önce',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
+    {
+      tip: 'parazit',
+      programId: 'albendazol',
+      gun: 0,
+      not: 'İç parazit hapı · 1 hap / 10 kg',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
     {
       tip: 'asi',
       programId: 'karma',
       gun: 0,
       not: 'Klostridiyal + pastörella (çelertme dahil · 1. doz)',
+      dozNo: 1,
+      toplamDoz: 2,
     },
-    { tip: 'vitamin', programId: 'ad3e', gun: 0, not: 'Kapalı besi A-D3-E' },
-    { tip: 'vitamin', programId: 'b-kompleks', gun: 0, not: 'İştah · stres' },
-    { tip: 'vitamin', programId: 'probiyotik', gun: 0, not: 'Rumen / yem değişimi' },
-    { tip: 'vitamin', programId: 'premiks', gun: 0, not: 'Rasyona vitamin-mineral premiks' },
+    {
+      tip: 'vitamin',
+      programId: 'ad3e',
+      gun: 0,
+      not: 'Kapalı besi A-D3-E',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
+    {
+      tip: 'vitamin',
+      programId: 'b-kompleks',
+      gun: 0,
+      not: 'İştah · stres',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
+    {
+      tip: 'vitamin',
+      programId: 'selen-e',
+      gun: 0,
+      not: 'Kas · beyaz kas · kilo alımı — girişte',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
+    {
+      tip: 'vitamin',
+      programId: 'probiyotik',
+      gun: 0,
+      not: 'Rumen / yem değişimi',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
+    {
+      tip: 'vitamin',
+      programId: 'premiks',
+      gun: 0,
+      not: 'Rasyona vitamin-mineral premiks',
+      dozNo: 1,
+      toplamDoz: 1,
+    },
     { tip: 'tartim', programId: TARTIM_GIRIS_PROGRAM_ID, gun: 1, not: 'Alım tartımı (T1) · 1–2. gün' },
-    { tip: 'vitamin', programId: 'selen-e', gun: 7, not: 'Kas · beyaz kas · kilo alımı' },
     { tip: 'tartim', programId: TARTIM_15_PROGRAM_ID, gun: 15, not: 'Kontrol tartımı — sağlık sonrası' },
-    { tip: 'asi', programId: KARMA_RAPEL_PROGRAM_ID, gun: 21, not: 'Karma rapel (2. doz · 21 gün)' },
+    {
+      tip: 'asi',
+      programId: KARMA_RAPEL_PROGRAM_ID,
+      gun: 21,
+      not: 'Karma rapel (2. doz · 21 gün)',
+      dozNo: 2,
+      toplamDoz: 2,
+    },
   ];
 
   // 15 günde bir tartım — satış + ek süre tavanına kadar
@@ -128,25 +198,45 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     });
   }
 
-  base.push(
-    {
-      tip: 'parazit',
-      programId: IVERMEKTIN_PEKISTIRME_ID,
-      gun: BESI_SATIS_UFUK_GUN,
-      not: 'İç-dış parazit pekiştirme — satış öncesi',
-    },
-    {
-      tip: 'parazit',
-      programId: ALBENDAZOL_PEKISTIRME_ID,
-      gun: BESI_SATIS_UFUK_GUN,
-      not: 'İç parazit hapı pekiştirme — satış öncesi',
-    },
-  );
-
   return base.sort((a, b) => a.gun - b.gun || a.programId.localeCompare(b.programId));
 }
 
 export const HIZLI_BESI_TAKVIM: BesiTakvimSatir[] = olusturHizliBesiTakvim();
+
+/** Plan satırından doz sırası (rapel dahil) */
+export function planDozSirasi(programId: string): { dozNo: number; toplamDoz: number } | null {
+  const satir = HIZLI_BESI_TAKVIM.find((e) => e.programId === programId);
+  if (satir?.dozNo != null && satir.toplamDoz != null) {
+    return { dozNo: satir.dozNo, toplamDoz: satir.toplamDoz };
+  }
+  return null;
+}
+
+/** Görev / UI: doz miktarı · N/M doz · uygulama yeri */
+export function planMlDozYerEtiketi(tip: TakviyeTip | string, programId: string): string | null {
+  const doz = planDozSirasi(programId);
+  const opts = doz ? { dozNo: doz.dozNo, toplamDoz: doz.toplamDoz } : { dozNo: 1, toplamDoz: 1 };
+
+  if (programId === KARMA_RAPEL_PROGRAM_ID) {
+    const p = ASI_PROGRAMI.find((x) => x.id === 'karma');
+    return p ? asiMlDozYerEtiketi(p, { dozNo: 2, toplamDoz: 2 }) : null;
+  }
+  if (programId === IVERMEKTIN_PEKISTIRME_ID) {
+    const p = ASI_PROGRAMI.find((x) => x.id === 'ivermektin');
+    return p ? asiMlDozYerEtiketi(p, { dozNo: 2, toplamDoz: 2 }) : null;
+  }
+  if (programId === ALBENDAZOL_PEKISTIRME_ID) {
+    const p = ASI_PROGRAMI.find((x) => x.id === 'albendazol');
+    return p ? asiMlDozYerEtiketi(p, { dozNo: 2, toplamDoz: 2 }) : null;
+  }
+  if (tip === 'vitamin') {
+    const v = VITAMIN_PROGRAMI.find((x) => x.id === programId);
+    return v ? vitaminMlDozYerEtiketi(v, opts) : null;
+  }
+  const p = ASI_PROGRAMI.find((x) => x.id === programId);
+  if (!p) return null;
+  return asiMlDozYerEtiketi(p, opts);
+}
 
 /** Yem — aşı listesine karışmaz; ayrı görev kategorisi */
 export type YemTakvimSatir = {
@@ -247,7 +337,7 @@ function kalemOlustur(
       programId: KARMA_RAPEL_PROGRAM_ID,
       ad: 'Klostridiyal + pastörella pekiştirme',
       detay: 'Karma aşı 2. doz',
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: asiMlDozYerEtiketi(p, { dozNo: 2, toplamDoz: 2 }),
     };
   }
   if (programId === IVERMEKTIN_PEKISTIRME_ID) {
@@ -258,7 +348,7 @@ function kalemOlustur(
       programId: IVERMEKTIN_PEKISTIRME_ID,
       ad: 'İç-dış parazit pekiştirme',
       detay: 'İvermektin iğne',
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: asiMlDozYerEtiketi(p, { dozNo: 2, toplamDoz: 2 }),
     };
   }
   if (programId === ALBENDAZOL_PEKISTIRME_ID) {
@@ -269,7 +359,7 @@ function kalemOlustur(
       programId: ALBENDAZOL_PEKISTIRME_ID,
       ad: 'İç parazit pekiştirme',
       detay: 'Albendazol',
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: asiMlDozYerEtiketi(p, { dozNo: 2, toplamDoz: 2 }),
     };
   }
   if (programId === TARTIM_GIRIS_PROGRAM_ID) {
@@ -295,23 +385,25 @@ function kalemOlustur(
   if (tip === 'vitamin') {
     const v = VITAMIN_PROGRAMI.find((x) => x.id === programId);
     if (!v) return null;
+    const doz = planDozSirasi(programId) ?? { dozNo: 1, toplamDoz: 1 };
     return {
       tip: 'vitamin',
       programId: v.id,
       ad: v.detay,
       detay: v.ad,
-      mlEtiket: vitaminDozEtiketi(v),
+      mlEtiket: vitaminMlDozYerEtiketi(v, doz),
     };
   }
   const p = ASI_PROGRAMI.find((x) => x.id === programId);
   if (!p) return null;
   const kat = asiKategori(p);
+  const doz = planDozSirasi(programId) ?? { dozNo: 1, toplamDoz: 1 };
   return {
     tip: kat === 'parazit' ? 'parazit' : 'asi',
     programId: p.id,
     ad: p.koruma,
     detay: p.ad,
-    mlEtiket: asiDozEtiketi(p),
+    mlEtiket: asiMlDozYerEtiketi(p, doz),
   };
 }
 
@@ -341,9 +433,9 @@ export function hizliBesiPlanGun(tip: string, programId: string): number {
   const tGun = tartimKontrolGun(programId);
   if (tGun != null) return tGun;
   if (tip === 'tartim') return 15;
-  if (programId === 'selen-e') return 7;
+  if (programId === 'selen-e') return 0;
   return 0;
 }
 
 export const HIZLI_BESI_PLAN_BASLIK =
-  'Hızlı besi — giriş koruma · tartım · yem · satılana kadar (~90+30 gün)';
+  'Hızlı besi — giriş koruma (selen dahil) · tartım · yem · satılana kadar (~90+30 gün)';
