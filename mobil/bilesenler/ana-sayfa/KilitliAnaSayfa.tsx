@@ -35,13 +35,13 @@ export function KilitliAnaSayfa() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { pendingSync, ready, refreshKey } = useDatabase();
-  const { width } = useWindowDimensions();
-  const { scrollPadBottom, headerPadTop, kisa, darTelefon } = useAltGuvenliBosluk(88);
+  const { width, height } = useWindowDimensions();
+  const { scrollPadBottom, headerPadTop, kisa, darTelefon, yatay } = useAltGuvenliBosluk(88);
   const [ozet, setOzet] = useState<AnaSayfaOzet>(BOS_OZET);
   const light = scheme === 'light';
   const bg = light ? '#ffffff' : colors.background;
-  // Telefonda maskot biraz kompakt ama tam gövde; kisa ekranda daha da küçült
-  const maskotBoy = kisa ? 64 : darTelefon ? 96 : 108;
+  // Genişliğe göre maskot — kısa yükseklik yanlış pozitif vermesin
+  const maskotBoy = yatay || height < 420 ? 64 : width < 360 ? 84 : width < 520 ? 96 : 108;
 
   const load = useCallback(async () => {
     setOzet(await getAnaSayfaOzeti());
