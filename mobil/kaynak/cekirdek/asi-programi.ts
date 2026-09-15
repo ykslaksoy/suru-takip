@@ -475,7 +475,7 @@ export function hesaplaAsiStokDurumu(
       programId: program.id,
       koruma: program.koruma,
       asiAdi: program.ad,
-      mlEtiket: asiDozEtiketi(program),
+      mlEtiket: asiMlDozYerEtiketi(program),
       devletNotu: program.devletNotu,
       yapilacakSayisi,
       yaklasanSayisi,

@@ -3,7 +3,7 @@
  * Listede: tarih · ne · N kuzu — detayda kuzular.
  */
 
-import { ASI_PROGRAMI, asiDozEtiketi, asiGorevOncelikliMi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiMlDozYerEtiketi, asiGorevOncelikliMi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
@@ -17,7 +17,7 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 import {
   VITAMIN_PROGRAMI,
-  vitaminDozEtiketi,
+  vitaminMlDozYerEtiketi,
   vitaminGorevOncelikliMi,
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
@@ -111,7 +111,7 @@ function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTar
       programId,
       koruma: 'Klostridiyal + pastörella pekiştirme',
       asiAdi: 'Karma aşı 2. doz',
-      mlEtiket: planMlDozYerEtiketi('asi', programId) ?? asiDozEtiketi(p),
+      mlEtiket: planMlDozYerEtiketi('asi', programId) ?? asiMlDozYerEtiketi(p),
       tip: 'asi',
     };
   }
@@ -122,7 +122,7 @@ function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTar
     programId,
     koruma: p.koruma,
     asiAdi: p.ad,
-    mlEtiket: planMlDozYerEtiketi(tip, programId) ?? asiDozEtiketi(p),
+    mlEtiket: planMlDozYerEtiketi(tip, programId) ?? asiMlDozYerEtiketi(p),
     tip,
   };
 }
@@ -134,7 +134,7 @@ function vitaminMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYaki
     programId,
     koruma: v.detay,
     asiAdi: v.ad,
-    mlEtiket: planMlDozYerEtiketi('vitamin', programId) ?? vitaminDozEtiketi(v),
+    mlEtiket: planMlDozYerEtiketi('vitamin', programId) ?? vitaminMlDozYerEtiketi(v),
     tip: 'vitamin',
   };
 }
