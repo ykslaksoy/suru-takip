@@ -40,6 +40,7 @@
 - [x] [`06-ui-buton-banner.md`](./03-cekirdek/06-ui-buton-banner.md) — UI: buton + offline banner 🔒
 - [x] [`07-context-db.md`](./03-cekirdek/07-context-db.md) — DatabaseContext 🔒
 - [ ] [`08-kuzu-kayit-kalicilik.md`](./03-cekirdek/08-kuzu-kayit-kalicilik.md) — Web kalıcı kayıt + başlangıç 61
+- [ ] [`09-gozlem-100-seed.md`](./03-cekirdek/09-gozlem-100-seed.md) — Gözlem ~100 seed kalıcı
 
 ## `04-suru/`
 

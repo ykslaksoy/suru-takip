@@ -13,14 +13,17 @@ export {
   seedTumEslesikKuzular,
   ensurePadokKuzuVerisi,
   seedPadokAEslesikKuzular,
+  seedGozlemEslesikKuzular,
   seedPadokBEslesikKuzular,
   seedPadokBGrupKuzular,
   seedPadokCGrupKuzular,
   padokBKuzuKimlik,
   padokAKuzuKimlik,
+  padokGozlemKimlik,
   PADOK_A_KUZU_ADET,
   PADOK_B_KUZU_ADET,
   PADOK_C_KUZU_ADET,
+  GOZLEM_KUZU_ADET,
 } from './padok-b-kuzular';
 
 /**
