@@ -28,7 +28,7 @@ export function appOrtamEtiketi(): string {
   return map[appOrtam()];
 }
 
-/** İlk açılışta otomatik demo verisi (Padok A/B/C dahil) */
+/** İlk açılışta otomatik demo stok + sürü (Gözlem~80 + A/B/C). Üretimde kapalı; ensure yine eksik cohort doldurur. */
 export function demoSeedOtomatik(): boolean {
   return appOrtam() === 'gelistirme';
 }

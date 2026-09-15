@@ -25,12 +25,12 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      // Boşsa 60 padok kuzu (+ geliştirmede stok); doluysa mevcut kaydı koru, sadece eksik padok merge
+      // Demo stok/sürü (geliştirme): boşsa doldur. Her ortamda ensure: eksik Gözlem(~80)+A/B/C merge;
+      // mevcut kullanıcı kayıtlarını silmez / üzerine yazmaz.
       if (demoSeedOtomatik()) {
         await seedDemoDataIfEmpty();
-      } else {
-        await ensurePadokKuzuVerisi();
       }
+      await ensurePadokKuzuVerisi();
       const hayvan = await countAnimals();
       if (hayvan > 0) {
         await limitAsimindaPaketAc(hayvan);
