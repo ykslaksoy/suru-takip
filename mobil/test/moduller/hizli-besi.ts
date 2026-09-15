@@ -53,18 +53,24 @@ export const hizliBesiModul: TestModul = {
       ),
       test(
         'Hızlı besi planı',
-        'Selen etiket yer + 1/1 doz',
-        selenEtiket.includes('1/1 doz') && selenEtiket.includes('boyun deri altı'),
+        'Selen etiket yer (1/1 gizli)',
+        selenEtiket.includes('Her kuzuya 1 ml') &&
+          selenEtiket.includes('boyun deri altı') &&
+          !selenEtiket.includes('1/1') &&
+          !selenEtiket.includes('(SC)'),
       ),
       test(
         'Hızlı besi planı',
-        'Karma 1/2 doz + SC',
-        karmaEtiket.includes('1/2 doz') && karmaEtiket.includes('boyun deri altı'),
+        'Karma 1. doz + boyun deri altı',
+        karmaEtiket.includes('1. doz (2’den)') &&
+          karmaEtiket.includes('boyun deri altı') &&
+          !karmaEtiket.includes('sabit') &&
+          !karmaEtiket.includes('(SC)'),
       ),
       test(
         'Hızlı besi planı',
-        'Karma rapel 2/2 doz',
-        rapelEtiket.includes('2/2 doz'),
+        'Karma rapel 2. doz',
+        rapelEtiket.includes('2. doz (2’den)'),
       ),
       test(
         'Hızlı besi planı',

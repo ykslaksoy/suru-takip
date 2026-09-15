@@ -119,7 +119,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
       tip: 'parazit',
       programId: 'albendazol',
       gun: 0,
-      not: 'İç parazit hapı · 1 hap / 10 kg',
+      not: 'İç parazit hapı · her 10 kiloya 1 hap',
       dozNo: 1,
       toplamDoz: 1,
     },

@@ -33,7 +33,7 @@ export type AsiOneriKalemi = {
   koruma: string;
   /** Aşı adı — parantez içinde */
   ad: string;
-  /** "sabit 2 ml" — çoban satırı */
+  /** "Her kuzuya 2 ml" — çoban satırı */
   mlEtiket: string;
   /** Devlet / resmi program notu */
   devletNotu?: string;

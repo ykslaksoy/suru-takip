@@ -1,4 +1,4 @@
-import { ASI_PROGRAMI, asiDozEtiketi } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, asiMlDozYerEtiketi } from '@/kaynak/cekirdek/asi-programi';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import { test, type TestModul } from '../cerceve';
 
@@ -9,11 +9,21 @@ export const dozModul: TestModul = {
     const alb = ASI_PROGRAMI.find((p) => p.id === 'albendazol')!;
     const karma = ASI_PROGRAMI.find((p) => p.id === 'karma')!;
     const selen = VITAMIN_PROGRAMI.find((v) => v.id === 'selen-e')!;
+    const ivTam = asiMlDozYerEtiketi(iv, { dozNo: 1, toplamDoz: 1 });
+    const karmaTam = asiMlDozYerEtiketi(karma, { dozNo: 1, toplamDoz: 2 });
 
     return [
-      test('Doz etiketleri', 'İvermektin 0,2 ml / 10 kg', asiDozEtiketi(iv).includes('0,2 ml / 10 kg')),
-      test('Doz etiketleri', 'Albendazol 1 hap / 10 kg', asiDozEtiketi(alb).includes('1 hap / 10 kg')),
-      test('Doz etiketleri', 'Karma sabit 2 ml', asiDozEtiketi(karma) === 'sabit 2 ml'),
+      test(
+        'Doz etiketleri',
+        'İvermektin her 10 kiloya 0,2 ml',
+        asiDozEtiketi(iv).includes('Her 10 kiloya 0,2 ml'),
+      ),
+      test(
+        'Doz etiketleri',
+        'Albendazol her 10 kiloya 1 hap',
+        asiDozEtiketi(alb).includes('Her 10 kiloya 1 hap'),
+      ),
+      test('Doz etiketleri', 'Karma her kuzuya 2 ml', asiDozEtiketi(karma) === 'Her kuzuya 2 ml'),
       test(
         'Doz etiketleri',
         'Selen detay kilo alımı',
@@ -21,13 +31,13 @@ export const dozModul: TestModul = {
       ),
       test(
         'Doz etiketleri',
-        'Selen ~10 kg notu',
-        (selen.dozNotu ?? '').includes('10 kg'),
+        'Selen her kuzuya 1 ml',
+        vitaminDozEtiketi(selen) === 'Her kuzuya 1 ml',
       ),
       test(
         'Doz etiketleri',
-        'Selen uygulama yeri SC',
-        (selen.uygulamaYeri ?? '').includes('deri altı'),
+        'Selen uygulama yeri deri altı',
+        (selen.uygulamaYeri ?? '').includes('deri altı') && !(selen.uygulamaYeri ?? '').includes('SC'),
       ),
       test(
         'Doz etiketleri',
@@ -36,8 +46,26 @@ export const dozModul: TestModul = {
       ),
       test(
         'Doz etiketleri',
-        'İvermektin uygulama yeri SC',
-        (iv.uygulamaYeri ?? '').includes('deri altı'),
+        'İvermektin yer lab jargonu yok',
+        ivTam.includes('boyun deri altı') &&
+          !ivTam.includes('%1') &&
+          !ivTam.includes('etiket') &&
+          !ivTam.includes('(SC)'),
+      ),
+      test(
+        'Doz etiketleri',
+        'Albendazol tablet/etiket yok',
+        !asiMlDozYerEtiketi(alb).includes('etiket') &&
+          !asiMlDozYerEtiketi(alb).includes('tablet') &&
+          !asiMlDozYerEtiketi(alb).includes('oral'),
+      ),
+      test(
+        'Doz etiketleri',
+        'Karma 1. doz (2’den) · yer',
+        karmaTam.includes('1. doz (2’den)') &&
+          karmaTam.includes('boyun deri altı') &&
+          !karmaTam.includes('sabit') &&
+          !karmaTam.includes('(SC)'),
       ),
     ];
   },
