@@ -17,9 +17,9 @@ function gorev(id: string, tarih: string, seviye: Gorev['seviye'] = 'plan'): Gor
 export const gorevlerModul: TestModul = {
   grup: 'Görev sıralama',
   calistir() {
-    const g1 = gorev('takviye-ozet-asi:karma', '2026-09-01');
-    const g2 = gorev('takviye-ozet-parazit:ivermektin', '2026-09-01');
-    const g3 = gorev('takviye-ozet-asi:karma-rapel', '2026-09-15');
+    const g1 = gorev('takviye-ozet-asi-karma', '2026-09-01');
+    const g2 = gorev('takviye-ozet-parazit-ivermektin', '2026-09-01');
+    const g3 = gorev('takviye-ozet-asi-karma-rapel', '2026-09-15');
     const sirali = gorevleriSirala([g3, g1, g2]);
     const tarihSirali = gorevleriSirala([
       gorev('a', '2026-09-20'),

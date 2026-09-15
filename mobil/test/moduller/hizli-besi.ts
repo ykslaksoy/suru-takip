@@ -1,6 +1,7 @@
 import {
   HIZLI_BESI_PLAN_SURUM,
   HIZLI_BESI_TAKVIM,
+  HIZLI_BESI_YEM_TAKVIM,
   KARMA_RAPEL_PROGRAM_ID,
   hizliBesiPlanGun,
   takviyeGorevOncelikSira,
@@ -12,7 +13,7 @@ export const hizliBesiModul: TestModul = {
   calistir() {
     const ids = HIZLI_BESI_TAKVIM.map((t) => t.programId);
     return [
-      test('Hızlı besi planı', 'Plan sürümü v11', HIZLI_BESI_PLAN_SURUM === 'v11'),
+      test('Hızlı besi planı', 'Plan sürümü v12', HIZLI_BESI_PLAN_SURUM === 'v12'),
       test('Hızlı besi planı', 'Enterotoksemi planda yok', !ids.includes('enterotoksemi')),
       test(
         'Hızlı besi planı',
@@ -25,6 +26,17 @@ export const hizliBesiModul: TestModul = {
       test('Hızlı besi planı', '15g tartım var', ids.includes('tartim-15')),
       test('Hızlı besi planı', 'Selen gün 7', hizliBesiPlanGun('vitamin', 'selen-e') === 7),
       test('Hızlı besi planı', 'Karma rapel gün 21', hizliBesiPlanGun('asi', KARMA_RAPEL_PROGRAM_ID) === 21),
+      test(
+        'Hızlı besi planı',
+        'Satış ufku 90. gün tartım',
+        HIZLI_BESI_TAKVIM.some((t) => t.gun === 90 && t.tip === 'tartim'),
+      ),
+      test(
+        'Hızlı besi planı',
+        '90. gün parazit pekiştirme',
+        HIZLI_BESI_TAKVIM.some((t) => t.gun === 90 && t.programId.includes('ivermektin')),
+      ),
+      test('Hızlı besi planı', 'Yem takvimi ayrı (≥8)', HIZLI_BESI_YEM_TAKVIM.length >= 8),
       test(
         'Hızlı besi planı',
         'Selen açıklaması kilo alımı',

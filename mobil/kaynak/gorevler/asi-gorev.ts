@@ -22,6 +22,7 @@ import {
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
   KARMA_RAPEL_PROGRAM_ID,
+  hizliBesiPlanGun,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
@@ -174,6 +175,7 @@ function ozettenGorev(o: ProgramOzet): Gorev | null {
     href: `/gorevler/asi/${o.programId}`,
     cta: 'Kuzuları gör',
     tarih: enYakinTarih,
+    planGun: hizliBesiPlanGun(o.tip, o.programId),
   };
 }
 

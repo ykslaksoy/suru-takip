@@ -38,8 +38,12 @@ import {
   ESLESIK_KUZU_PADOK_A,
   ESLESIK_KUZU_PADOK_B,
   ESLESIK_KUZU_PADOK_C,
+  ESLESIK_KUZU_PADOK_GOZLEM,
 } from './padok-b-kuzular';
 import { hayvanAnaEtiket } from './hayvan-etiket';
+import { gozlemPadokMu } from '@/kaynak/suru/padok';
+import { eskiSuruAsiIlacKapat } from '@/kaynak/cekirdek/eski-suru-kapat';
+import { yemPlaniHayvanlaraEkle } from '@/kaynak/gorevler/yem-gorev';
 
 const PLAN_ID = `mod1-hizli-besi-plan-${HIZLI_BESI_PLAN_SURUM}`;
 
@@ -235,7 +239,7 @@ export async function seedPadokRasyonPlanlari(): Promise<number> {
   return seedPadokHayvanRasyonPlanlari();
 }
 
-/** Mod1 hızlı besi: A planlı · B/C tüm kalemler geçmiş tarihlerle yapılmış */
+/** Mod1 hızlı besi: A + Gözlem planlı · B/C eski (tamam) */
 export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   const modId = 'mod1' as const;
   const kalemler = modTakviyeSablonu(modId);
@@ -245,6 +249,8 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
       a.status !== 'sold' &&
       a.status !== 'dead' &&
       (a.paddock === ESLESIK_KUZU_PADOK_A ||
+        gozlemPadokMu(a.paddock) ||
+        a.paddock === ESLESIK_KUZU_PADOK_GOZLEM ||
         a.paddock === ESLESIK_KUZU_PADOK_B ||
         a.paddock === ESLESIK_KUZU_PADOK_C),
   );
@@ -270,7 +276,8 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
     const padokTamam = padokB || padokC;
     const girisYapildi = padokTamam;
     const yapildiAt = padokB ? girisB : padokC ? girisC : undefined;
-    const padokA = h.paddock === ESLESIK_KUZU_PADOK_A;
+    const padokAcik =
+      h.paddock === ESLESIK_KUZU_PADOK_A || gozlemPadokMu(h.paddock);
     const gecmisTarih = padokB ? tarihB : padokC ? tarihC : null;
 
     const wr = await getWeightRecords(h.id);
@@ -300,6 +307,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         k.tip === 'tartim' && k.programId === TARTIM_GIRIS_PROGRAM_ID && tartimGirisYapildi;
       const tartim15Kalemi =
         k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartim15Yapildi;
+      // Eski sürü: tüm tartım/rapel/pekiştirme de tamam
       const tartimKalemi = tartimGirisKalemi || tartim15Kalemi;
 
       const yapildi =
@@ -312,7 +320,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
       let planlananAt = onceki?.planlananAt;
       if (!yapildi) {
         const gun = hizliBesiPlanGun(k.tip, k.programId);
-        if (padokA) {
+        if (padokAcik) {
           planlananAt = onceki?.planlananAt ?? gunSonraTarih(gun, now);
         } else if (girisYapildi) {
           planlananAt = onceki?.planlananAt ?? planTarihFromGiris(h, gun, now);
@@ -365,6 +373,15 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
   for (const e of await planlariOku()) {
     if (e.modId === 'mod1' && e.id !== PLAN_ID) await planSil(e.id);
   }
+
+  // Açık planlı kuzulara yem milestone’ları
+  const acikIds = hayvanlar
+    .filter((h) => h.paddock === ESLESIK_KUZU_PADOK_A || gozlemPadokMu(h.paddock))
+    .map((h) => h.id);
+  await yemPlaniHayvanlaraEkle(acikIds, { girisTarih: now });
+
+  // Eski B/C: her uygulama ayrı sağlık kaydı (bugün)
+  await eskiSuruAsiIlacKapat();
 
   return plan;
 }
