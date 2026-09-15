@@ -299,10 +299,10 @@ async function rehberGorevleriYaz(
     },
   ];
 
-  // Gün 1: önce tartı özeti, sonra giriş ilaçları (Türkçe ad (ilaç))
+  // Gün 1: tartı önerilen ilk + aynı seans giriş ilaçları
   sonraki.push({
     baslik: 'Alım tartımı',
-    aciklama: `${gunEtiket(1)} · sabah önce — dozlar gerçek kiloya göre`,
+    aciklama: `${gunEtiket(1)} · önerilen ilk — dozlar gerçek kiloya göre (yoksa ~20 kg)`,
     href: '/(tabs)/suru',
   });
   const gun1 = HIZLI_BESI_TAKVIM.filter(
@@ -313,7 +313,7 @@ async function rehberGorevleriYaz(
     if (!p) continue;
     sonraki.push({
       baslik: asiGorunumBaslik(p.koruma, p.ad),
-      aciklama: `${gunEtiket(1)} · tartı sonrası · ${t.not}`,
+      aciklama: `${gunEtiket(1)} · tartarken aynı seans · ${t.not}`,
       href: `/gorevler/asi/${t.programId}`,
     });
   }

@@ -81,8 +81,8 @@ export default function GorevlerScreen() {
           ) : (
             <>
               <Text style={[styles.intro, { color: colors.textSecondary }]}>
-                Sıralama: gün gün ilaç/aşı; yem ayrı kategori. Aynı günde parazit → karma →
-                selenyum → tartım → rapel. Satış ufku ~90 gün.
+                Gün gün ilaç/aşı; yem ayrı. Gün 1’de tartı önerilen ilk — tartarken aynı seans
+                diğer işler de yapılır. Satış ufku ~90 gün.
               </Text>
 
               {loading ? (

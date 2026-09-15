@@ -253,7 +253,7 @@ export function AsiModuPaneli() {
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
         <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Doz — kilo ile</Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          Aşılar: her kuzuya 1–2 ml. Hap/iğne: tartıdan sonra gerçek kiloya göre (tartı yoksa geçici ~20 kg;
+          Aşılar: her kuzuya 1–2 ml. Hap/iğne: gerçek kiloya göre (henüz tartılmadıysa geçici ~20 kg;
           gelenler ~17–24 kg). Örnek: 20 kg → her 10 kiloya yazılanın iki katı.
         </Text>
       </View>

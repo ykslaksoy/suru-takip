@@ -21,7 +21,7 @@ export function VitaminListePaneli() {
     <View style={styles.kok}>
       <Text style={[styles.baslik, { color: colors.text }]}>Vitamin ve destek listesi</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginBottom: 10 }}>
-        Doz, tartıdan sonra gerçek kiloya göre. Tartı yoksa geçici ~20 kg (gelenler ~17–24 kg). Emin değilsen ilacın kutusuna ve veterinere bak.
+        Doz gerçek kiloya göre. Henüz tartılmadıysa geçici ~20 kg (gelenler ~17–24 kg). Emin değilsen ilacın kutusuna ve veterinere bak.
       </Text>
 
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
