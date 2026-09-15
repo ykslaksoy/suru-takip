@@ -52,6 +52,7 @@
 - [ ] [`07-status-etiket-saglikli.md`](./04-suru/07-status-etiket-saglikli.md) — Kart durum etiketi Sağmal → Sağlıklı
 - [ ] [`08-cinsiyet-filtre-besi.md`](./04-suru/08-cinsiyet-filtre-besi.md) — Besi filtre: Tümü · Erkek · Dişi (Kuzu yok)
 - [ ] [`09-padoklar-ustte.md`](./04-suru/09-padoklar-ustte.md) — Padoklar üstte; seçince hayvanlar
+- [ ] [`10-padok-ayri-sayfa.md`](./04-suru/10-padok-ayri-sayfa.md) — Padok seçimi ayrı tam sayfa (inline şerit yok)
 
 ## `05-kilo/`
 
