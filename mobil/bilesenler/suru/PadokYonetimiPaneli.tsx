@@ -61,10 +61,8 @@ export function PadokYonetimiPaneli() {
   }, [liste]);
 
   const acPadok = (padokAd: string) => {
-    router.push({
-      pathname: '/suru/padok/[ad]',
-      params: { ad: padokAd },
-    } as never);
+    // String href — nested stack altında güvenilir (gorevler/kategori gibi)
+    router.push(`/suru/padok/${encodeURIComponent(padokAd)}` as never);
   };
 
   const ekle = async () => {

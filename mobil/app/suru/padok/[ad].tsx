@@ -24,7 +24,12 @@ export default function PadokHayvanlariScreen() {
   const padokAd = useMemo(() => {
     const raw = params.ad;
     const v = Array.isArray(raw) ? raw[0] : raw;
-    return (v ?? '').trim();
+    if (!v) return '';
+    try {
+      return decodeURIComponent(v).trim();
+    } catch {
+      return v.trim();
+    }
   }, [params.ad]);
 
   const scheme = useColorScheme() ?? 'light';

@@ -83,6 +83,26 @@ export default function FlockScreen() {
         </Pressable>
       </View>
 
+      {/* Padoklar FlatList dışında — dokunuş web’de güvenilir; ayrı sayfaya gider */}
+      <View style={styles.padokWrap}>
+        <PadokYonetimiPaneli />
+      </View>
+
+      <AltButonlar
+        items={filters.map((f) => ({ key: f.key, label: f.label }))}
+        activeKey={filter}
+        onSelect={(k) => setFilter(k as Filter)}
+      />
+      <TextInput
+        placeholder="Küpe, sırt no, Aref veya TÜRKVET ara..."
+        placeholderTextColor={colors.textSecondary}
+        value={search}
+        onChangeText={setSearch}
+        style={StyleSheet.flatten([
+          styles.search,
+          { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
+        ])}
+      />
       <FlatList
         data={animals}
         keyExtractor={(item) => item.id}
@@ -96,29 +116,6 @@ export default function FlockScreen() {
           void load();
         }}
         refreshing={false}
-        ListHeaderComponent={
-          <View>
-            {/* Padoklar üstte — dokununca ayrı tam sayfa açılır */}
-            <View style={styles.padokWrap}>
-              <PadokYonetimiPaneli />
-            </View>
-            <AltButonlar
-              items={filters.map((f) => ({ key: f.key, label: f.label }))}
-              activeKey={filter}
-              onSelect={(k) => setFilter(k as Filter)}
-            />
-            <TextInput
-              placeholder="Küpe, sırt no, Aref veya TÜRKVET ara..."
-              placeholderTextColor={colors.textSecondary}
-              value={search}
-              onChangeText={setSearch}
-              style={StyleSheet.flatten([
-                styles.search,
-                { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
-              ])}
-            />
-          </View>
-        }
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 24, paddingHorizontal: 16 }}>
             Hayvan yok. Padoka Giriş veya + ile ekleyin.
@@ -150,12 +147,13 @@ const styles = StyleSheet.create({
   },
   addText: { color: '#fff', fontWeight: '800', fontSize: 15 },
   padokWrap: {
-    paddingHorizontal: 0,
+    paddingHorizontal: 16,
     paddingTop: 4,
     paddingBottom: 2,
+    maxHeight: '42%',
   },
   search: {
-    marginHorizontal: 0,
+    marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 4,
     borderWidth: 1,
