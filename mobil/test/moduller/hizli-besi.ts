@@ -1,4 +1,6 @@
 import {
+  HIZLI_BESI_GIRIS_VITAMIN,
+  HIZLI_BESI_OPSIYONEL_VITAMIN,
   HIZLI_BESI_PLAN_SURUM,
   HIZLI_BESI_TAKVIM,
   HIZLI_BESI_YEM_TAKVIM,
@@ -19,7 +21,7 @@ export const hizliBesiModul: TestModul = {
     const rapelEtiket = planMlDozYerEtiketi('asi', KARMA_RAPEL_PROGRAM_ID) ?? '';
     const gun1Sirali = HIZLI_BESI_TAKVIM.filter((t) => t.gun === 1);
     return [
-      test('Hızlı besi planı', 'Plan sürümü v14.2', HIZLI_BESI_PLAN_SURUM === 'v14.2'),
+      test('Hızlı besi planı', 'Plan sürümü v15', HIZLI_BESI_PLAN_SURUM === 'v15'),
       test('Hızlı besi planı', 'Enterotoksemi planda yok', !ids.includes('enterotoksemi')),
       test(
         'Hızlı besi planı',
@@ -31,6 +33,13 @@ export const hizliBesiModul: TestModul = {
       test('Hızlı besi planı', 'T1 tartım var', ids.includes(TARTIM_GIRIS_PROGRAM_ID)),
       test('Hızlı besi planı', '15g tartım var', ids.includes('tartim-15')),
       test('Hızlı besi planı', 'Selen gün 1', hizliBesiPlanGun('vitamin', 'selen-e') === 1),
+      test(
+        'Hızlı besi planı',
+        'Giriş vitamini yalnız Selenyum-E',
+        HIZLI_BESI_GIRIS_VITAMIN.length === 1 &&
+          HIZLI_BESI_GIRIS_VITAMIN[0] === 'selen-e' &&
+          (HIZLI_BESI_OPSIYONEL_VITAMIN as readonly string[]).includes('ad3e'),
+      ),
       test('Hızlı besi planı', 'İvermektin gün 1', hizliBesiPlanGun('parazit', 'ivermektin') === 1),
       test('Hızlı besi planı', 'Karma giriş gün 1', hizliBesiPlanGun('asi', 'karma') === 1),
       test(

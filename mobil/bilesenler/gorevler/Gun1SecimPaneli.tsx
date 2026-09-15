@@ -1,10 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import {
+  GUN1_MIN_STANDART_PROGRAM_IDS,
   GUN1_SECENEKLER,
+  etkinMinStandartIdsAsync,
+  eksikMinStandart,
   gun1KalemEtiketleri,
   gun1ProgramIdsForMod,
+  kalemFayda,
+  kalemLabel,
+  minStandartFaydaSatirlari,
+  minStandartTavsiyeMesaji,
   type Gun1SecimMod,
 } from '@/kaynak/gorevler/gun1-secim';
 
@@ -13,7 +20,7 @@ type ColorsT = (typeof Colors)['light'];
 type Props = {
   colors: ColorsT;
   /** Kaydedilmiş seçim özeti — gösterimde */
-  kayitOzet?: { mod: Gun1SecimMod; adet: number } | null;
+  kayitOzet?: { mod: Gun1SecimMod; adet: number; programIds?: string[] } | null;
   onKaydet: (mod: Gun1SecimMod, programIds: string[]) => void;
   onDegistir?: () => void;
   /** true = seçim formu; false = özet şeridi */
@@ -21,7 +28,7 @@ type Props = {
 };
 
 /**
- * Gün 1: önce ne yapılacağını seç — sonra yalnızca o kalemler.
+ * Gün 1: önce ne yapılacağını seç — soft min. standart tavsiyesi, engel yok.
  */
 export function Gun1SecimPaneli({
   colors,
@@ -31,10 +38,41 @@ export function Gun1SecimPaneli({
   secimAcik,
 }: Props) {
   const [mod, setMod] = useState<Gun1SecimMod | null>(null);
-  const [ozel, setOzel] = useState<Set<string>>(() => new Set([gun1ProgramIdsForMod('sadece-tartim')[0]!]));
+  const [ozel, setOzel] = useState<Set<string>>(
+    () => new Set([gun1ProgramIdsForMod('sadece-tartim')[0]!]),
+  );
+  const [standart, setStandart] = useState<string[]>([
+    ...GUN1_MIN_STANDART_PROGRAM_IDS,
+  ]);
+  const [tavsiyeOnay, setTavsiyeOnay] = useState(false);
+  const [sonEklenenFayda, setSonEklenenFayda] = useState<string | null>(null);
   const kalemler = useMemo(() => gun1KalemEtiketleri(), []);
 
+  useEffect(() => {
+    void etkinMinStandartIdsAsync().then(setStandart);
+  }, []);
+
+  const secilenIds = useMemo(() => {
+    if (!mod) return [] as string[];
+    if (mod === 'ozel') return Array.from(ozel);
+    return gun1ProgramIdsForMod(mod, undefined, standart);
+  }, [mod, ozel, standart]);
+
+  const eksikler = useMemo(
+    () => eksikMinStandart(secilenIds, standart),
+    [secilenIds, standart],
+  );
+  const tavsiye = minStandartTavsiyeMesaji(eksikler);
+
   if (!secimAcik && kayitOzet) {
+    const oncekiEksik = eksikMinStandart(
+      kayitOzet.programIds ?? [],
+      standart,
+    );
+    const faydaSatir =
+      oncekiEksik.length > 0
+        ? minStandartFaydaSatirlari(oncekiEksik)
+        : [];
     return (
       <View
         style={[
@@ -48,6 +86,22 @@ export function Gun1SecimPaneli({
         <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
           {kayitOzet.adet} adım · tartı seçildiyse önce
         </Text>
+        {oncekiEksik.length > 0 ? (
+          <View style={{ marginTop: 8 }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 17 }}>
+              Minimum paketten eksik: {oncekiEksik.map(kalemLabel).join(' · ')}.
+              İstersen sonra ekle — kazanım:
+            </Text>
+            {faydaSatir.slice(0, 3).map((s) => (
+              <Text
+                key={s}
+                style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2, lineHeight: 16 }}
+              >
+                · {s}
+              </Text>
+            ))}
+          </View>
+        ) : null}
         {onDegistir ? (
           <Pressable onPress={onDegistir} style={{ marginTop: 8 }}>
             <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 13 }}>
@@ -62,17 +116,49 @@ export function Gun1SecimPaneli({
   const toggleOzel = (id: string) => {
     setOzel((prev) => {
       const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
+      if (n.has(id)) {
+        n.delete(id);
+        setSonEklenenFayda(null);
+      } else {
+        n.add(id);
+        setSonEklenenFayda(kalemFayda(id));
+      }
       return n;
     });
+    setTavsiyeOnay(false);
   };
 
-  const basla = () => {
+  const tavsiyeEdilenleriEkle = () => {
+    if (mod === 'ozel') {
+      setOzel((prev) => {
+        const n = new Set(prev);
+        for (const id of eksikler) n.add(id);
+        return n;
+      });
+      const satirlar = minStandartFaydaSatirlari(eksikler);
+      setSonEklenenFayda(satirlar[0] ?? null);
+    } else {
+      setMod('hepsi');
+      setSonEklenenFayda(
+        minStandartFaydaSatirlari(eksikler)[0] ??
+          'Minimum standart paketi seçildi.',
+      );
+    }
+    setTavsiyeOnay(false);
+  };
+
+  const basla = (engeliAtla = false) => {
     if (!mod) return;
     const ids =
-      mod === 'ozel' ? Array.from(ozel) : gun1ProgramIdsForMod(mod);
+      mod === 'ozel'
+        ? Array.from(ozel)
+        : gun1ProgramIdsForMod(mod, undefined, standart);
     if (ids.length === 0) return;
+    const eksik = eksikMinStandart(ids, standart);
+    if (eksik.length > 0 && !engeliAtla && !tavsiyeOnay) {
+      setTavsiyeOnay(true);
+      return;
+    }
     onKaydet(mod, ids);
   };
 
@@ -82,7 +168,8 @@ export function Gun1SecimPaneli({
         Bugün ne yapacaksın?
       </Text>
       <Text style={[styles.alt, { color: colors.textSecondary }]}>
-        Tartarken aynı gün aşı/iğne de yapılır. Yem ayrı listede. Önce seç, sonra adım adım git.
+        Minimum standart: tartı · İvermektin · Albendazol · karma · Selenyum-E.
+        Tartarken aynı gün aşı/iğne de olur. Yem ayrı. A-D3-E / B yalnız gerekliyse.
       </Text>
 
       {GUN1_SECENEKLER.map((s) => {
@@ -92,7 +179,11 @@ export function Gun1SecimPaneli({
             key={s.mod}
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
-            onPress={() => setMod(s.mod)}
+            onPress={() => {
+              setMod(s.mod);
+              setTavsiyeOnay(false);
+              setSonEklenenFayda(null);
+            }}
             style={[
               styles.secenek,
               {
@@ -123,6 +214,7 @@ export function Gun1SecimPaneli({
                   {
                     borderColor: on ? colors.tint : colors.border,
                     backgroundColor: on ? colors.tint : colors.background,
+                    opacity: k.opsiyonel && !on ? 0.85 : 1,
                   },
                 ]}
               >
@@ -142,8 +234,61 @@ export function Gun1SecimPaneli({
         </View>
       ) : null}
 
+      {sonEklenenFayda ? (
+        <View
+          style={[
+            styles.faydaKutu,
+            { borderColor: colors.border, backgroundColor: colors.background },
+          ]}
+        >
+          <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 12 }}>
+            Ekleyince ne kazanırsın
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 }}>
+            {sonEklenenFayda}
+          </Text>
+        </View>
+      ) : null}
+
+      {tavsiyeOnay && tavsiye ? (
+        <View
+          style={[
+            styles.tavsiye,
+            { borderColor: colors.tint, backgroundColor: colors.background },
+          ]}
+        >
+          <Text style={{ color: colors.text, fontSize: 13, lineHeight: 18, fontWeight: '600' }}>
+            {tavsiye}
+          </Text>
+          {minStandartFaydaSatirlari(eksikler).map((s) => (
+            <Text
+              key={s}
+              style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 16 }}
+            >
+              · {s}
+            </Text>
+          ))}
+          <View style={styles.tavsiyeBtnRow}>
+            <Pressable
+              onPress={tavsiyeEdilenleriEkle}
+              style={[styles.tavsiyeBtn, { backgroundColor: colors.tint }]}
+            >
+              <Text style={styles.ctaText}>Tavsiye edilenleri ekle</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => basla(true)}
+              style={[styles.tavsiyeBtn, { borderWidth: 1, borderColor: colors.border }]}
+            >
+              <Text style={{ color: colors.text, fontWeight: '800', fontSize: 14 }}>
+                Kendi yolumla devam
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
       <Pressable
-        onPress={basla}
+        onPress={() => basla(false)}
         disabled={!mod || (mod === 'ozel' && ozel.size === 0)}
         style={[
           styles.cta,
@@ -188,6 +333,25 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
+  },
+  faydaKutu: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
+  },
+  tavsiye: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  tavsiyeBtnRow: { marginTop: 10, gap: 8 },
+  tavsiyeBtn: {
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
   },
   cta: {
     marginTop: 8,

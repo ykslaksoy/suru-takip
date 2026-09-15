@@ -78,9 +78,10 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     uygulama: 'igne',
     mlHayvan: 2,
     dozNotu: 'Her kuzuya 1–2 ml',
-    neZaman: 'Kış, kapalı besi, gebe / emziren, zayıf hayvan',
+    neZaman: 'Kış, kapalı besi, gebe / emziren, zayıf hayvan — rutin min. standart değil',
     stokAnahtarlar: ['a-d3-e', 'ad3e', 'vitamin a', 'a d3 e'],
     uygulamaYeri: 'kas içi · boyun / omuz',
+    oncelikli: false,
   },
   {
     id: 'b-kompleks',
@@ -89,9 +90,10 @@ export const VITAMIN_PROGRAMI: VitaminKalemi[] = [
     uygulama: 'igne',
     mlHayvan: 2,
     dozNotu: 'Her kuzuya 1–2 ml',
-    neZaman: 'İştahsızlık, stres, hastalık sonrası, nakil',
+    neZaman: 'İştahsızlık, stres, hastalık sonrası, nakil — rutin min. standart değil',
     stokAnahtarlar: ['b kompleks', 'b vitamin', 'vitamin b'],
     uygulamaYeri: 'kas içi · boyun / omuz',
+    oncelikli: false,
   },
   {
     id: 'selen-e',

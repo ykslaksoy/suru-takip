@@ -35,8 +35,8 @@ export const kaynakModul: TestModul = {
       ),
       test(
         'Kaynak dosya bütünlüğü',
-        'Plan v14.2 kaynakta',
-        plan.includes("HIZLI_BESI_PLAN_SURUM = 'v14.2'"),
+        'Plan v15 kaynakta',
+        plan.includes("HIZLI_BESI_PLAN_SURUM = 'v15'"),
       ),
       test(
         'Kaynak dosya bütünlüğü',
