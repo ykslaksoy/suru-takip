@@ -15,7 +15,7 @@ const TAKVIM = [
 ] as const;
 
 const GIRIS_ASI = ['karma', 'albendazol', 'ivermektin'] as const;
-const GIRIS_VIT = ['ad3e', 'b-kompleks', 'selen-e', 'probiyotik', 'premiks'] as const;
+const GIRIS_VIT = ['selen-e'] as const;
 const RAPEL = new Set(['karma-rapel']);
 
 type Durum = { yapildi: boolean; programId: string };

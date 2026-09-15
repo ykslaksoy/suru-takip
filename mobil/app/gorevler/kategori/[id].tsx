@@ -149,7 +149,7 @@ export default function GorevKategoriScreen() {
               <>
                 <Text style={{ color: colors.textSecondary, marginBottom: 12, fontSize: 13, lineHeight: 18 }}>
                   {id === 'asi'
-                    ? 'Tartarken aynı gün aşı/iğne de yapılır. Tartı önerilen ilk adım. Doz gerçek kiloya göre; henüz tartılmadıysa geçici ~20 kg (gelenler ~17–24 kg). Yem/beslenme ayrı listede.'
+                    ? 'Minimum standart: tartı · İvermektin · Albendazol · karma · Selenyum-E. Tartarken aynı seans aşı/iğne. Doz gerçek kg; yoksa ~20 kg (gelenler ~17–24 kg). A-D3-E / B yalnız gerekliyse. Yem ayrı.'
                     : 'Yem uygulamaları aşıdan ayrı · satılana kadar milestone’lar.'}
                 </Text>
                 {gun1Var ? (
@@ -158,7 +158,11 @@ export default function GorevKategoriScreen() {
                     secimAcik={secimAcik}
                     kayitOzet={
                       gun1Secim
-                        ? { mod: gun1Secim.mod, adet: gun1Secim.programIds.length }
+                        ? {
+                            mod: gun1Secim.mod,
+                            adet: gun1Secim.programIds.length,
+                            programIds: gun1Secim.programIds,
+                          }
                         : null
                     }
                     onKaydet={kaydetSecim}
