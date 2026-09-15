@@ -24,8 +24,8 @@ export {
 } from './padok-b-kuzular';
 
 /**
- * Boş depoda demo sürü: yalnızca Padok A/B/C eşleşik 60 kuzu (+ stok).
- * Eski 3 isimli demo koyun kaldırıldı — toplam 63→64 başlangıç kaymasına yol açıyordu.
+ * Boş depoda demo sürü: Padok A (20) + Gözlem (80) + B/C (40) ≈ 140 kuzu.
+ * Açık plan ~100 (A+Gözlem); eski B/C bugün ayrı kayıtlarla kapatılır.
  * Mevcut kayıtları asla silmez / üzerine yazmaz (count > 0 → sadece eksik padok merge).
  */
 export async function seedDemoDataIfEmpty(): Promise<boolean> {

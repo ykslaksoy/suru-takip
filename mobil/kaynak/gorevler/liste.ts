@@ -9,6 +9,7 @@ import {
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { asiStokUyarilari, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { takviyeTopluGorevleri } from '@/kaynak/gorevler/asi-gorev';
+import { yemTopluGorevleri } from '@/kaynak/gorevler/yem-gorev';
 import { getAktifModId, getMod } from '@/sabitler/Modlar';
 import { getMod1BirlesikIlerleme, sonrakiAcikAdim } from '@/kaynak/besi-ortak';
 import { getMod2BirlesikIlerleme, sonrakiAcikAdimMod2 } from '@/kaynak/besi-koc-kat';
@@ -201,6 +202,7 @@ export async function getGorevler(): Promise<Gorev[]> {
   }
 
   out.push(...(await takviyeTopluGorevleri()));
+  out.push(...(await yemTopluGorevleri()));
 
   const dusukTakviye = dusukTakviyeler(stock);
   const sktTakviye = sktYakinTakviyeler(stock);
