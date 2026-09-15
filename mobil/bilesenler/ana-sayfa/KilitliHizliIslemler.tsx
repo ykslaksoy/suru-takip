@@ -48,14 +48,15 @@ export function KilitliHizliIslemler() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: 10, gap: 14, marginBottom: 8 },
-  row: { flexDirection: 'row' },
+  wrap: { paddingHorizontal: 10, gap: 14, marginBottom: 16, paddingBottom: 8 },
+  row: { flexDirection: 'row', alignItems: 'flex-start' },
   cell: {
     flex: 1,
     alignItems: 'center',
     gap: 6,
     minWidth: 0,
     paddingHorizontal: 2,
+    minHeight: 88,
   },
   circle: {
     width: 56,

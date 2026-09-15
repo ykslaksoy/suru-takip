@@ -35,11 +35,12 @@ export function KilitliAnaSayfa() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { pendingSync, ready, refreshKey } = useDatabase();
-  const { height } = useWindowDimensions();
-  const { scrollPadBottom, kisa } = useAltGuvenliBosluk();
+  const { height, width } = useWindowDimensions();
+  const { scrollPadBottom, headerPadTop, kisa, darTelefon } = useAltGuvenliBosluk(88);
   const [ozet, setOzet] = useState<AnaSayfaOzet>(BOS_OZET);
   const light = scheme === 'light';
   const bg = light ? '#ffffff' : colors.background;
+  const maskotBoy = kisa ? 72 : darTelefon ? 88 : 108;
 
   const load = useCallback(async () => {
     setOzet(await getAnaSayfaOzeti());
@@ -56,13 +57,39 @@ export function KilitliAnaSayfa() {
         style={styles.scroll}
         contentContainerStyle={StyleSheet.flatten([
           styles.scrollContent,
-          { paddingBottom: scrollPadBottom, minHeight: Math.max(height * 0.55, 280) },
+          {
+            paddingBottom: scrollPadBottom,
+            // Kısa telefonda içeriği sıkıştırma — scroll ile Hızlı İşlemler açılsın
+            minHeight: Math.max(height * 0.45, 240),
+          },
         ])}
-        showsVerticalScrollIndicator={false}>
-        <View style={StyleSheet.flatten([styles.header, { paddingTop: kisa ? 4 : 10 }])}>
-          <Image source={KILITLI_MASKOT} style={styles.maskot} resizeMode="contain" accessibilityLabel="Akıllı Kuzu" />
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic">
+        <View
+          style={StyleSheet.flatten([
+            styles.header,
+            { paddingTop: headerPadTop, paddingHorizontal: darTelefon ? 14 : 16 },
+          ])}>
+          <View
+            style={StyleSheet.flatten([
+              styles.maskotWrap,
+              { width: maskotBoy, height: maskotBoy },
+            ])}>
+            <Image
+              source={KILITLI_MASKOT}
+              style={StyleSheet.flatten([styles.maskot, { width: maskotBoy, height: maskotBoy }])}
+              resizeMode="contain"
+              accessibilityLabel="Akıllı Kuzu"
+            />
+          </View>
           <View style={styles.headerMetin}>
-            <Text style={StyleSheet.flatten([styles.title, { color: colors.text }])}>{KILITLI_ANA_BASLIK}</Text>
+            <Text
+              style={StyleSheet.flatten([
+                styles.title,
+                { color: colors.text, fontSize: width < 360 ? 22 : 26 },
+              ])}>
+              {KILITLI_ANA_BASLIK}
+            </Text>
             <Text style={StyleSheet.flatten([styles.sub, { color: colors.textSecondary }])}>
               {KILITLI_SEZON_ETIKET}
             </Text>
@@ -105,7 +132,7 @@ export function KilitliAnaSayfa() {
           </Pressable>
         </View>
 
-        <View style={styles.partiRow}>
+        <View style={StyleSheet.flatten([styles.partiRow, { paddingHorizontal: darTelefon ? 14 : 18 }])}>
           {ozet.partiler.map((p) => {
             const ton = PADOK_TON[p.ton];
             return (
@@ -123,9 +150,21 @@ export function KilitliAnaSayfa() {
                 <View style={StyleSheet.flatten([styles.harf, { backgroundColor: light ? '#fff' : ton.fg + '22' }])}>
                   <Text style={StyleSheet.flatten([styles.harfText, { color: ton.fg }])}>{p.harf}</Text>
                 </View>
-                <Text style={StyleSheet.flatten([styles.partiAd, { color: colors.text }])}>{p.ad}</Text>
+                <Text
+                  style={StyleSheet.flatten([styles.partiAd, { color: colors.text }])}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}>
+                  {p.ad}
+                </Text>
                 <Text style={StyleSheet.flatten([styles.partiBas, { color: colors.text }])}>{p.bas} Baş</Text>
-                <Text style={StyleSheet.flatten([styles.partiYas, { color: colors.textSecondary }])}>{p.yasEtiket}</Text>
+                <Text
+                  style={StyleSheet.flatten([styles.partiYas, { color: colors.textSecondary }])}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}>
+                  {p.yasEtiket}
+                </Text>
               </Pressable>
             );
           })}
@@ -153,6 +192,8 @@ export function KilitliAnaSayfa() {
 
         <Text style={StyleSheet.flatten([styles.bolum, styles.bolumPad, { color: colors.text }])}>Hızlı İşlemler</Text>
         <KilitliHizliIslemler />
+        {/* Alt dock üstünde net boşluk — son sıra etiketleri kesilmesin */}
+        <View style={{ height: darTelefon ? 12 : 4 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       </ScrollView>
     </View>
   );
@@ -245,15 +286,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    gap: 8,
+    gap: 10,
+    overflow: 'visible',
   },
-  maskot: { width: 108, height: 108 },
+  maskotWrap: {
+    overflow: 'visible',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  maskot: {
+    width: 108,
+    height: 108,
+    maxWidth: '100%',
+    maxHeight: '100%',
+    // RN Web: cover varsayılanı bacakları kesebiliyordu
+    ...({ objectFit: 'contain' } as object),
+  },
   headerMetin: {
     flex: 1,
     minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 8,
+    paddingRight: 4,
   },
   title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.2, textAlign: 'center' },
   sub: { fontSize: 14, fontWeight: '600', marginTop: 2, textAlign: 'center' },
@@ -292,12 +347,12 @@ const styles = StyleSheet.create({
   bolum: { fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
   bolumPad: { paddingHorizontal: 16, marginBottom: 10, marginTop: 6 },
   link: { fontSize: 13, fontWeight: '700' },
-  partiRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 16 },
+  partiRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 16 },
   partiKart: {
     flex: 1,
     borderRadius: 16,
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     alignItems: 'center',
     minWidth: 0,
   },

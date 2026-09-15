@@ -27,10 +27,15 @@ export default function Root({ children }: { children: ReactNode }) {
 }
 
 const webStyles = `
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body, #root {
   height: 100%;
   height: 100dvh;
   max-height: 100dvh;
+  box-sizing: border-box;
 }
 
 html {
@@ -49,6 +54,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* padding + 100dvh content-box altı kesiyordu — border-box ile içerik sığar */
+  box-sizing: border-box;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -93,9 +100,9 @@ body {
 /* Gerçek telefonda tam ekran + çentik / Safari toolbar payı */
 @media (max-width: 519px) {
   #root {
-    padding-top: env(safe-area-inset-top, 0px);
-    /* Tarayıcı alt çubuğu için minimum pay — içerik kesilmesin */
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+    padding-top: max(env(safe-area-inset-top, 0px), 8px);
+    /* Alt dock + tarayıcı chrome — box-sizing:border-box ile yükseklik içinde */
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
   }
 }
 

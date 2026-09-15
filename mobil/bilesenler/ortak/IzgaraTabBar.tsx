@@ -49,12 +49,13 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
   const { state, navigation } = props as IzgaraTabBarProps;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { tabBarPadBottom, kisa } = useAltGuvenliBosluk();
+  const { tabBarPadBottom, kisa, darTelefon } = useAltGuvenliBosluk(88);
   const aktifHam = state.routes[state.index]?.name ?? 'index';
   const aktifAd = routeAd(aktifHam);
   const gizlenenAktif = !KILITLI_DOCK_ADLARI.includes(aktifAd) && !KILITLI_DOCK_ADLARI.includes(aktifHam);
 
-  const shellPadBottom = Platform.OS === 'web' ? Math.max(tabBarPadBottom, 16) : tabBarPadBottom;
+  const shellPadBottom =
+    Platform.OS === 'web' ? Math.max(tabBarPadBottom, darTelefon ? 20 : 16) : tabBarPadBottom;
 
   return (
     <View
