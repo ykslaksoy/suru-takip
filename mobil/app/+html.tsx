@@ -1,6 +1,31 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import type { ReactNode } from 'react';
 
+/**
+ * Mobil Safari: 100dvh ilk paint’te görünür alandan büyük → üst kırpılır, altta boşluk.
+ * visualViewport yüksekliğini ilk script’te sabitle → FOUC / hydrate kayması olmaz.
+ */
+const appHeightScript = `
+(function () {
+  function setAppHeight() {
+    var h = window.visualViewport && window.visualViewport.height
+      ? window.visualViewport.height
+      : window.innerHeight;
+    if (!h || h < 1) h = window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+    window.visualViewport.addEventListener('scroll', setAppHeight);
+  }
+  window.addEventListener('resize', setAppHeight);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(setAppHeight, 50);
+  });
+})();
+`;
+
 export default function Root({ children }: { children: ReactNode }) {
   return (
     <html lang="tr">
@@ -20,6 +45,7 @@ export default function Root({ children }: { children: ReactNode }) {
 
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: webStyles }} />
+        <script dangerouslySetInnerHTML={{ __html: appHeightScript }} />
       </head>
       <body>{children}</body>
     </html>
@@ -31,10 +57,17 @@ const webStyles = `
   box-sizing: border-box;
 }
 
+:root {
+  /* Script gelmeden önce: küçük viewport — Safari chrome ile ilk paint uyumlu */
+  --app-height: 100svh;
+}
+
 html, body, #root {
   height: 100%;
-  height: 100dvh;
-  max-height: 100dvh;
+  height: 100svh;
+  height: var(--app-height, 100svh);
+  max-height: 100svh;
+  max-height: var(--app-height, 100svh);
   box-sizing: border-box;
 }
 
@@ -48,14 +81,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   overscroll-behavior: none;
+  margin: 0;
 }
 
 #root {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* padding + 100dvh content-box altı kesiyordu — border-box ile içerik sığar */
   box-sizing: border-box;
+}
+
+/* RN Web Image varsayılan object-fit:fill maskotu kırpabiliyor */
+img {
+  object-fit: contain !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -73,6 +111,8 @@ body {
     justify-content: center;
     min-height: 100vh;
     min-height: 100dvh;
+    height: auto;
+    max-height: none;
     padding: 28px 16px;
     overflow: auto;
   }
@@ -88,6 +128,8 @@ body {
       0 0 0 1px rgba(255, 255, 255, 0.12),
       0 30px 90px rgba(0, 0, 0, 0.45);
     background-color: #f4f7f0;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -97,25 +139,27 @@ body {
   }
 }
 
-/* Gerçek telefonda tam ekran + çentik / Safari toolbar payı */
+/* Gerçek telefonda: çentik CSS’ten; tarayıcı chrome --app-height / svh ile */
 @media (max-width: 519px) {
   #root {
-    padding-top: max(env(safe-area-inset-top, 0px), 8px);
-    /* Alt dock + tarayıcı chrome — box-sizing:border-box ile yükseklik içinde */
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+    /* İlk paint’ten görünür — JS inset beklenmez (FOUC yok) */
+    padding-top: max(env(safe-area-inset-top, 0px), 12px);
+    /* Sadece home indicator — ekstra px Safari üstünde beyaz boşluk yapıyordu */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
 @media (orientation: landscape) and (max-width: 900px) {
   html, body, #root {
     height: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: 100svh;
+    height: var(--app-height, 100svh);
+    max-height: var(--app-height, 100svh);
   }
 
   #root {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+    padding-top: max(env(safe-area-inset-top, 0px), 8px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 `;

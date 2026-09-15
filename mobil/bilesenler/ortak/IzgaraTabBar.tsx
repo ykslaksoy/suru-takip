@@ -49,13 +49,13 @@ export function IzgaraTabBar(props: IzgaraTabBarProps | Record<string, unknown>)
   const { state, navigation } = props as IzgaraTabBarProps;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { tabBarPadBottom, kisa, darTelefon } = useAltGuvenliBosluk(88);
+  const { tabBarPadBottom, kisa } = useAltGuvenliBosluk(72);
   const aktifHam = state.routes[state.index]?.name ?? 'index';
   const aktifAd = routeAd(aktifHam);
   const gizlenenAktif = !KILITLI_DOCK_ADLARI.includes(aktifAd) && !KILITLI_DOCK_ADLARI.includes(aktifHam);
 
-  const shellPadBottom =
-    Platform.OS === 'web' ? Math.max(tabBarPadBottom, darTelefon ? 20 : 16) : tabBarPadBottom;
+  // CSS #root zaten safe-area-bottom; ekstra min pad Safari üstünde boşluk yapıyordu
+  const shellPadBottom = tabBarPadBottom;
 
   return (
     <View
