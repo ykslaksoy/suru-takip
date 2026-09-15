@@ -11,15 +11,15 @@ kilitli: false
 
 ## Durum
 
-- Özet/onay bug’ı kodda düzelmiş; prod eski / şu an **quota probe** stub
-- Hobby `api-deployments-free-per-day` = 0 → #9 deploy **402**
-- Kanıt: project store `internal/onay-deploy-status.md` + `media/fix-onay-*.png`
+- **2026-09-15 ~16:52 UTC:** https://superkuzu.vercel.app canlı — hub **Çok kuzu**; Özet/onay boş adette Türkçe hata; adet=2 → onay adımı (E2E OK)
+- Önceki kök neden: #9 undeployed + Hobby kota; stub temizlendi / git deploy success
+- Kanıt: store `internal/onay-deploy-status.md` + `media/prod-*-20260915.png`
 
-## Ne yapılacak (kullanıcı / sonraki ajan)
+## Ne yapılacak (kullanıcı)
 
-1. Vercel Instant Rollback → stub’dan kurtul
-2. Kota reset (~2026-09-15 17:39 UTC) veya Pro → `main` redeploy
-3. Hub’da **Çok kuzu**; toplu Özet/onay boş adette Türkçe hata
+1. Hard-refresh https://superkuzu.vercel.app/hayvan/hizli-ekle
+2. Toplu kabul → padok → sayı → boş adet ile **Özet / onay** (Türkçe hata)
+3. Adet `2` → onayla
 
 ## Tamamlandı mı?
 
