@@ -70,10 +70,10 @@ export const TAKVIYE_KATALOGU: StokKatalogKalemi[] = [
 
 /** İlaçlar — yaygın kullanım (reçete / vet önerisiyle) */
 export const ILAC_KATALOGU: StokKatalogKalemi[] = [
-  k('albendazol', 'Albendazol hap', 'medicine', 'adet', 50, 'İç parazit · 1 hap / 10 kg'),
-  k('ivermectin', 'İvermektin', 'medicine', 'ml', 100, 'İç-dış parazit iğne · kg ml'),
-  k('doramectin', 'Doramektin', 'medicine', 'ml', 50, 'Parazit iğne · kg ml'),
-  k('levamizol', 'Levamizol', 'medicine', 'ml', 50, 'İç parazit · hap/ml'),
+  k('albendazol', 'Albendazol hap', 'medicine', 'adet', 50, 'İç parazit · her 10 kiloya 1 hap'),
+  k('ivermectin', 'İvermektin', 'medicine', 'ml', 100, 'İç-dış parazit · her 10 kiloya 0,2 ml iğne'),
+  k('doramectin', 'Doramektin', 'medicine', 'ml', 50, 'Parazit · her 10 kiloya ml iğne'),
+  k('levamizol', 'Levamizol', 'medicine', 'ml', 50, 'İç parazit · her 10 kiloya hap veya ml'),
   k('oksiklozanid', 'Oksiklozanid', 'medicine', 'ml', 50, 'Karaciğer kelebeği'),
   k('triklabendazol', 'Triklabendazol', 'medicine', 'ml', 50, 'Kelebek hapı / solüsyon'),
   k('oksiteirasiklin', 'Oksitetrasiklin', 'medicine', 'ml', 50, 'Antibiyotik'),
@@ -92,22 +92,22 @@ export const ILAC_KATALOGU: StokKatalogKalemi[] = [
   k('diyare', 'İshal destek (elektrolit)', 'medicine', 'paket', 10, 'Sıvı-elektrolit'),
 ];
 
-/** Aşılar — ASI_PROGRAMI ile uyumlu; doz hayvan başına sabit ml */
+/** Aşılar — ASI_PROGRAMI ile uyumlu; doz her kuzuya ml */
 export const ASI_KATALOGU: StokKatalogKalemi[] = [
-  k('karma', 'Karma aşı', 'vaccine', 'doz', 20, 'Sabit 2 ml · klostridiyal + pastörella'),
-  k('pasteurella', 'Solunum (Pastörella)', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
-  k('clostridial', 'Klostridiyal (Clostridial)', 'vaccine', 'doz', 20, 'Sabit 2 ml'),
-  k('enterotoksemi', 'Enterotoksemi (Çelertme)', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
-  k('septisemi', 'Septisemi', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
-  k('ektima', 'Ektima (ORF)', 'vaccine', 'doz', 10, 'Çizik (etiket)'),
-  k('tetanos', 'Tetanoz', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
+  k('karma', 'Karma aşı', 'vaccine', 'doz', 20, 'Her kuzuya 2 ml · klostridiyal + pastörella'),
+  k('pasteurella', 'Solunum (Pastörella)', 'vaccine', 'doz', 10, 'Her kuzuya 2 ml'),
+  k('clostridial', 'Klostridiyal (Clostridial)', 'vaccine', 'doz', 20, 'Her kuzuya 2 ml'),
+  k('enterotoksemi', 'Enterotoksemi (Çelertme)', 'vaccine', 'doz', 10, 'Her kuzuya 1 ml'),
+  k('septisemi', 'Septisemi', 'vaccine', 'doz', 10, 'Her kuzuya 2 ml'),
+  k('ektima', 'Ektima (ORF)', 'vaccine', 'doz', 10, 'Çizik · uyluk içi'),
+  k('tetanos', 'Tetanoz', 'vaccine', 'doz', 10, 'Her kuzuya 1 ml'),
   k('ppr', 'Veba (PPR)', 'vaccine', 'doz', 10, 'Devlet · destek şartı · VETBİS'),
   k('cicek', 'Çiçek', 'vaccine', 'doz', 10, 'Devlet · destek şartı · VETBİS'),
   k('sap', 'Şap', 'vaccine', 'doz', 10, 'Devlet programı'),
   k('brusella', 'Brusella', 'vaccine', 'doz', 10, 'Devlet programı'),
   k('sarbon', 'Şarbon', 'vaccine', 'doz', 10, 'Devlet · bölgesel'),
-  k('agalaksi', 'Süt kesen (Agalaksi)', 'vaccine', 'doz', 10, 'Sabit 1 ml'),
-  k('topallik', 'Topallık (Ayak)', 'vaccine', 'doz', 10, 'Sabit 2 ml'),
+  k('agalaksi', 'Süt kesen (Agalaksi)', 'vaccine', 'doz', 10, 'Her kuzuya 1 ml'),
+  k('topallik', 'Topallık (Ayak)', 'vaccine', 'doz', 10, 'Her kuzuya 2 ml'),
 ];
 
 /** Parazit kalemleri — ILAC içinden (ASI_PROGRAMI ile aynı id/ad) */

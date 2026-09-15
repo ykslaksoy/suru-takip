@@ -1,5 +1,5 @@
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
-import { ASI_PROGRAMI, asiDozEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiMlDozYerEtiketi, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 
@@ -33,7 +33,7 @@ export type AsiOneriKalemi = {
   koruma: string;
   /** Aşı adı — parantez içinde */
   ad: string;
-  /** "sabit 2 ml" — çoban satırı */
+  /** "Her kuzuya 2 ml" — çoban satırı */
   mlEtiket: string;
   /** Devlet / resmi program notu */
   devletNotu?: string;
@@ -170,7 +170,7 @@ export function olusturAsiOnerileri(profil: AsiOrtamProfili): AsiOneriKalemi[] {
       programId: p.id,
       koruma: p.koruma,
       ad: p.ad,
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: asiMlDozYerEtiketi(p),
       devletNotu: p.devletNotu,
       oncelik: s.oncelik,
       neden: s.nedenler.join(' · ') || 'Genel program',

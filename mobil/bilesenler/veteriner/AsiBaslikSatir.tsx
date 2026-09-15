@@ -7,13 +7,13 @@ type Props = {
   koruma: string;
   /** İğne / ürün adı — parantez içinde küçük */
   asiAdi: string;
-  /** sabit 2 ml */
+  /** Her kuzuya 2 ml · boyun deri altı */
   mlEtiket: string;
   /** Devlet / resmi program notu */
   devletNotu?: string;
 };
 
-/** Klostridiyal + pastörella (Karma aşı) sabit 2 ml */
+/** Klostridiyal + pastörella (Karma aşı) her kuzuya 2 ml */
 export function AsiBaslikSatir({ koruma, asiAdi, mlEtiket, devletNotu }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];

@@ -3,7 +3,7 @@
  * Listede: tarih · ne · N kuzu — detayda kuzular.
  */
 
-import { ASI_PROGRAMI, asiDozEtiketi, asiGorevOncelikliMi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiMlDozYerEtiketi, asiGorevOncelikliMi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
@@ -17,11 +17,13 @@ import {
 } from '@/kaynak/akilli-veteriner/mod-takviye';
 import {
   VITAMIN_PROGRAMI,
-  vitaminDozEtiketi,
+  vitaminMlDozYerEtiketi,
   vitaminGorevOncelikliMi,
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import {
   KARMA_RAPEL_PROGRAM_ID,
+  hizliBesiPlanGun,
+  planMlDozYerEtiketi,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
@@ -109,18 +111,19 @@ function asiMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYakinTar
       programId,
       koruma: 'Klostridiyal + pastörella pekiştirme',
       asiAdi: 'Karma aşı 2. doz',
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: planMlDozYerEtiketi('asi', programId) ?? asiMlDozYerEtiketi(p),
       tip: 'asi',
     };
   }
   const p = ASI_PROGRAMI.find((x) => x.id === programId);
   if (!p) return null;
+  const tip = asiKategori(p) === 'parazit' ? 'parazit' : 'asi';
   return {
     programId,
     koruma: p.koruma,
     asiAdi: p.ad,
-    mlEtiket: asiDozEtiketi(p),
-    tip: asiKategori(p) === 'parazit' ? 'parazit' : 'asi',
+    mlEtiket: planMlDozYerEtiketi(tip, programId) ?? asiMlDozYerEtiketi(p),
+    tip,
   };
 }
 
@@ -131,7 +134,7 @@ function vitaminMeta(programId: string): Omit<ProgramOzet, 'hayvanlar' | 'enYaki
     programId,
     koruma: v.detay,
     asiAdi: v.ad,
-    mlEtiket: vitaminDozEtiketi(v),
+    mlEtiket: planMlDozYerEtiketi('vitamin', programId) ?? vitaminMlDozYerEtiketi(v),
     tip: 'vitamin',
   };
 }
@@ -174,6 +177,7 @@ function ozettenGorev(o: ProgramOzet): Gorev | null {
     href: `/gorevler/asi/${o.programId}`,
     cta: 'Kuzuları gör',
     tarih: enYakinTarih,
+    planGun: hizliBesiPlanGun(o.tip, o.programId),
   };
 }
 

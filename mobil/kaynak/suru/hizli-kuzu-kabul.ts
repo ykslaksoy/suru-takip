@@ -1,12 +1,23 @@
+/**
+ * Kabul sonrası: satış ufkuna kadar aşı + yem planı (stub değil).
+ */
+
 import { v4 as uuidv4 } from 'uuid';
 import type { Animal, AnimalModId, AnimalSex } from '@/kaynak/cekirdek/tipler';
 import { getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { ASI_PROGRAMI } from '@/kaynak/cekirdek/asi-programi';
-import { addPlanlananGorev } from '@/kaynak/gorevler/planlanan';
 import { olusturModTakviyePlani } from '@/kaynak/akilli-veteriner/mod-takviye';
-import { HIZLI_BESI_TAKVIM } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
+import {
+  BESI_PLAN_TAVAN_GUN,
+  BESI_SATIS_UFUK_GUN,
+  HIZLI_BESI_TAKVIM,
+  HIZLI_BESI_YEM_TAKVIM,
+  asiGorunumBaslik,
+  gunEtiket,
+} from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import { GOZLEM_PADOK_AD, addPadok, getPadokByAd } from '@/kaynak/suru/padok';
+import { yemPlaniHayvanlaraEkle } from '@/kaynak/gorevler/yem-gorev';
 import {
   TOPLU_KABUL_MAX_ADET,
   aralikAdet,
@@ -145,11 +156,12 @@ export async function hizliTekKuzuEkle(
 
   await upsertRationPlanFromWeight(animal, VARSAYILAN_GIRIS_KILO);
   const plan = await olusturModTakviyePlani({ modId });
+  await yemPlaniHayvanlaraEkle([animal.id]);
   const sonraki = await rehberGorevleriYaz(1, paddock);
 
   return {
     hayvanlar: [{ id: animal.id, earTag: animal.earTag, paddock: animal.paddock }],
-    planMesaj: plan.message,
+    planMesaj: `${plan.message} · Yem planı satılana kadar (~${BESI_SATIS_UFUK_GUN}+${BESI_PLAN_TAVAN_GUN - BESI_SATIS_UFUK_GUN}g)`,
     sonrakiAdimlar: sonraki,
   };
 }
@@ -196,7 +208,6 @@ export async function topluKuzuKabul(
     throw new Error(`Paket limiti ${opts.limit} hayvan. Önce aboneliği yükseltin.`);
   }
 
-  // Çakışan küpe var mı?
   const mevcutSet = new Set(
     (await getAnimals()).map((a) => a.earTag.trim().toLocaleUpperCase('tr-TR')),
   );
@@ -212,6 +223,7 @@ export async function topluKuzuKabul(
   const birthDate = girdi.birthDate ?? new Date().toISOString().slice(0, 10);
   const sex = girdi.sex ?? VARSAYILAN_KABUL_CINSIYET;
   const hayvanlar: KabulSonucHayvan[] = [];
+  const ids: string[] = [];
 
   for (const earTag of etiketler) {
     const animal = await hayvanKaydet({
@@ -233,14 +245,16 @@ export async function topluKuzuKabul(
     });
     await upsertRationPlanFromWeight(animal, VARSAYILAN_GIRIS_KILO);
     hayvanlar.push({ id: animal.id, earTag: animal.earTag, paddock: animal.paddock });
+    ids.push(animal.id);
   }
 
   const plan = await olusturModTakviyePlani({ modId });
+  await yemPlaniHayvanlaraEkle(ids);
   const sonraki = await rehberGorevleriYaz(hayvanlar.length, paddock);
 
   return {
     hayvanlar,
-    planMesaj: plan.message,
+    planMesaj: `${plan.message} · Yem planı satılana kadar (~${BESI_SATIS_UFUK_GUN}g)`,
     sonrakiAdimlar: sonraki,
     kupeNeden,
   };
@@ -259,73 +273,54 @@ export async function ensureGozlemPadok(): Promise<string> {
   return GOZLEM_PADOK_AD;
 }
 
-/** Kabul sonrası saha rehberi — görevler + Tarım Bakanlığı aşıları */
+/**
+ * Kabul sonrası saha özeti — tam takvim (satışa kadar), aşı ve yem ayrı.
+ * Plan asıl kaynak: mod takviye + yem-gorev; burada kullanıcıya gün gün özet.
+ */
 async function rehberGorevleriYaz(
   adet: number,
   paddock: string,
 ): Promise<{ baslik: string; aciklama: string; href: string }[]> {
-  const bugun = new Date();
-  const iso = (gun: number) => {
-    const d = new Date(bugun);
-    d.setDate(d.getDate() + gun);
-    return d.toISOString().slice(0, 10);
-  };
+  const asiGunler = [...new Set(HIZLI_BESI_TAKVIM.filter((t) => t.tip !== 'tartim').map((t) => t.gun))].sort(
+    (a, b) => a - b,
+  );
+  const yemGunler = HIZLI_BESI_YEM_TAKVIM.map((y) => y.gun);
 
-  const adimlar: { baslik: string; aciklama: string; href: string; tarih: string }[] = [
+  const sonraki: { baslik: string; aciklama: string; href: string }[] = [
     {
-      baslik: 'Alım tartımı (T1)',
-      aciklama: `${adet} kuzu · ${paddock} — 1–2. gün tartın`,
-      href: '/seri-giris',
-      tarih: iso(1),
+      baslik: `Aşı / ilaç — gün gün (satış ~${BESI_SATIS_UFUK_GUN}g)`,
+      aciklama: `${adet} kuzu · ${paddock} · ${asiGunler.map((g) => gunEtiket(g)).join(' → ')}`,
+      href: '/gorevler/kategori/asi',
     },
     {
-      baslik: 'Giriş koruma — aşı / parazit',
-      aciklama: HIZLI_BESI_TAKVIM.filter((t) => t.gun === 0)
-        .map((t) => t.not)
-        .slice(0, 3)
-        .join(' · '),
-      href: '/(tabs)/veteriner',
-      tarih: iso(0),
-    },
-    {
-      baslik: 'Beslenme — kuzu besi rasyonu',
-      aciklama: `Günlük yem planı açıldı (~${VARSAYILAN_GIRIS_KILO} kg varsayım). Tartımdan sonra güncelleyin.`,
-      href: '/(tabs)/rasyon',
-      tarih: iso(0),
+      baslik: `Yem — ayrı liste (satışa kadar)`,
+      aciklama: `${HIZLI_BESI_YEM_TAKVIM.length} kontrol · gün ${yemGunler.join(', ')}`,
+      href: '/gorevler/kategori/yem',
     },
   ];
 
-  // Tarım Bakanlığı (devlet) aşıları — kullanıcıya “ekle” demeden etiketle
+  // Gün 0 ilaç özeti (Türkçe ad (ilaç))
+  const gun0 = HIZLI_BESI_TAKVIM.filter((t) => t.gun === 0 && (t.tip === 'asi' || t.tip === 'parazit'));
+  for (const t of gun0) {
+    const p = ASI_PROGRAMI.find((x) => x.id === t.programId);
+    if (!p) continue;
+    sonraki.push({
+      baslik: asiGorunumBaslik(p.koruma, p.ad),
+      aciklama: `${gunEtiket(0)} · ${t.not}`,
+      href: `/gorevler/asi/${t.programId}`,
+    });
+  }
+
+  // Tarım Bakanlığı — etiketli (ekle demeden)
   for (const id of ['ppr', 'cicek', 'sap'] as const) {
     const p = ASI_PROGRAMI.find((x) => x.id === id);
     if (!p) continue;
-    const etiket =
-      p.devletNotu?.startsWith('Tarım')
-        ? p.devletNotu
-        : (p.devletNotu?.replace(/^Devlet/, 'Tarım Bakanlığı') ?? 'Tarım Bakanlığı');
-    adimlar.push({
-      baslik: `${p.ad} · Tarım Bakanlığı`,
-      aciklama: `${p.koruma} — ${etiket}`,
+    sonraki.push({
+      baslik: asiGorunumBaslik(p.koruma, p.ad),
+      aciklama: `Tarım Bakanlığı · ${p.devletNotu ?? 'resmi program'}`,
       href: `/gorevler/asi/${p.id}`,
-      tarih: iso(7),
     });
   }
 
-  adimlar.push({
-    baslik: '15 günlük kontrol tartımı',
-    aciklama: 'Sağlık sonrası kilo takibi — satışa kadar tekrarlanır',
-    href: '/seri-giris',
-    tarih: iso(15),
-  });
-
-  for (const a of adimlar) {
-    await addPlanlananGorev({
-      baslik: a.baslik,
-      aciklama: a.aciklama,
-      tarih: a.tarih,
-      href: a.href,
-    });
-  }
-
-  return adimlar.map(({ baslik, aciklama, href }) => ({ baslik, aciklama, href }));
+  return sonraki;
 }

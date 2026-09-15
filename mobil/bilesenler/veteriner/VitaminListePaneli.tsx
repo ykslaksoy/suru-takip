@@ -1,6 +1,6 @@
 /**
  * Vitamin listesi — açıklama önde, ürün/iğne parantezde küçük:
- * Kas · beyaz kas hastalığı (Selenyum + E) sabit 1 ml
+ * Kas · beyaz kas hastalığı (Selenyum-E) her kuzuya 1 ml
  */
 
 import { StyleSheet, Text, View } from 'react-native';
@@ -9,7 +9,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import Colors from '@/sabitler/Renkler';
 import {
   VITAMIN_PROGRAMI,
-  vitaminDozEtiketi,
+  vitaminMlDozYerEtiketi,
   vitaminTipEtiket,
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 
@@ -21,15 +21,14 @@ export function VitaminListePaneli() {
     <View style={styles.kok}>
       <Text style={[styles.baslik, { color: colors.text }]}>Vitamin ve destek listesi</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginBottom: 10 }}>
-        Hayvan başına tipik ml — şişe etiketine ve veteriner talimatına uyun. Koyun için bazı ürünlerde doz
-        artar.
+        Doz, kuzunun kilosuna göre. Örnek: 20 kg → iki katı. Emin değilsen ilacın kutusuna ve veterinere bak.
       </Text>
 
       <View style={[styles.bilgi, { backgroundColor: colors.tint + '12', borderColor: colors.tint }]}>
-        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Sabit ml notu</Text>
+        <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>Her kuzuya ml</Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          İğne ve ağızdan verilenler hayvan başına ml ile yazılır (antibiyotik gibi kg hesabı değil). Yem
-          takviyelerinde karışım oranına bakın.
+          İğne ve ağızdan verilenler genelde her kuzuya ml ile yazılır. Yem takviyelerinde karışım oranına
+          bakın.
         </Text>
       </View>
 
@@ -40,7 +39,7 @@ export function VitaminListePaneli() {
               <AsiBaslikSatir
                 koruma={v.detay}
                 asiAdi={`${v.ad} · ${vitaminTipEtiket(v.uygulama)}`}
-                mlEtiket={vitaminDozEtiketi(v)}
+                mlEtiket={vitaminMlDozYerEtiketi(v, { dozNo: 1, toplamDoz: 1 })}
               />
             </View>
           </View>

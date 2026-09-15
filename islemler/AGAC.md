@@ -47,7 +47,10 @@ suruyon/
     ├── 06-saglik/
     │   ├── [x] 01-saglik-kaydi.md 🔒  — Hastalık/tedavi/aşı kaydı
     │   ├── [x] 02-bekletme-suresi.md 🔒  — Bekletme süresi uyarısı
-    │   └── [x] 03-asi-takvimi.md 🔒  — Aşı takvimi + hatırlatıcı
+    │   ├── [x] 03-asi-takvimi.md 🔒  — Aşı takvimi + hatırlatıcı
+    │   ├── [ ] 05-asi-gozlem-yem-plan.md  — Aşı gün gün + yem ayrı + Gözlem
+    │   ├── [ ] 06-asi-doz-uygulama-yeri.md  — Doz sıra + uygulama yeri (v13)
+    │   └── [ ] 07-asi-coban-dil.md  — Aşı doz metinleri çoban dili
     ├── 07-stok/
     │   ├── [x] 01-stok-listesi.md 🔒  — Stok listesi + filtre
     │   ├── [x] 02-stok-giris-cikis.md 🔒  — Stok giriş/çıkış
