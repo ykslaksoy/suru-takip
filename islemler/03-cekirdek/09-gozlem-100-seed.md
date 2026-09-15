@@ -6,16 +6,15 @@ kilitli: false
 # [ ] Gözlem ~100 seed kalıcı
 
 **Klasör:** `03-cekirdek`  
-**Kod:** `mobil/kaynak/cekirdek/padok-b-kuzular.ts`, `VeritabaniBaglami.tsx`
+**Kod:** `padok-b-kuzular.ts`, `VeritabaniBaglami.tsx` · [PR #21](https://github.com/ykslaksoy/suru-takip/pull/21)
 
-## Ne
-Kalıcı `superkuzu.vercel.app` Gözlem’de ~100 kuzu (80 Gözlem + 20 Padok A açık plan).
+## Durum
+- `main`: Gözlem 80 + Padok A 20 (#17) + her boot ensure (#21) ✅
+- Local/uretim export: **Gözlem 80 / toplam 140** ✅
+- https://superkuzu.vercel.app: bundle **eski** (`gozlem-kuzu` yok) — Hobby rate-limit ❌
 
 ## Kök neden
-1. Canlı bundle hâlâ `#17` öncesi (`gozlem-kuzu` yok) — Hobby rate-limit.
-2. Web: `localStorage` / hesap bulutu yok; boş tarayıcı boş sürü.
-3. `ensurePadokKuzuVerisi` eksik `gozlem-kuzu-*` doldurur (silmez).
+localStorage + stale prod build (seed zaten main’de).
 
-## Yapılan
-- Her boot’ta `ensurePadokKuzuVerisi()` (üretimde de).
-- Seed main’de: `GOZLEM_KUZU_ADET=80` + A20 ≈ 100.
+## Sonraki
+Rate-limit bitince SuperKuzu production redeploy; hard-refresh.
