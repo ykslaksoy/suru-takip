@@ -2,10 +2,10 @@
  * Mod 1 — Hızlı / kapalı kuzu besi aşı · vitamin · hap · yem planı.
  * Giriş koruma + yem dönüşümü; satılana kadar (~90 gün, isteğe bağlı +30).
  *
- * Öncelik: Gün 1 tartı önerilen ilk adım; aynı seans aşı/iğne/yem de yapılır
- * (kg varsa gerçek, yoksa ~20 kg geçici) → 21 gün karma rapel → 15 günde bir
- * tartım / yem kontrol → satış ufku.
- * Rutin gün-90 İvermektin / Albendazol yok (klinik gerekçe olmadıkça).
+ * Minimum standart (Yüksel onay): tartı · İvermektin · Albendazol · karma · Selenyum-E.
+ * A-D3-E / B kompleks rutin değil — zayıf/stres/iştah yoksa (AI veya elle “gerekli”).
+ * Öncelik: Gün 1 tartı önerilen ilk; aynı seans aşı/iğne (kg yoksa ~20 kg, tipik 17–24 kg)
+ * → 21 gün karma 2/2 → 15 günde bir tartım. Rutin gün-90 İvermektin/Albendazol yok.
  * Karma = klostridiyal + pastörella → ayrı çelertme gerekmez.
  */
 
@@ -19,7 +19,7 @@ import {
 } from '@/kaynak/akilli-veteriner/takviye-tipler';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v14.2';
+export const HIZLI_BESI_PLAN_SURUM = 'v15';
 
 /** Tipik besi ufku (alım → satış) — gün */
 export const BESI_SATIS_UFUK_GUN = 90;
@@ -80,14 +80,33 @@ export const HIZLI_BESI_GIRIS_ASI_PARAZIT = [
   'ivermektin',
 ] as const;
 
-/** Giriş paketi vitamin / destek (B/C seed’de yapıldı) — selenyum gün 1, tartı ile aynı seans */
-export const HIZLI_BESI_GIRIS_VITAMIN = [
-  'ad3e',
-  'b-kompleks',
-  'selen-e',
-  'probiyotik',
-  'premiks',
+/**
+ * Minimum standart giriş paketi (bizim varsayılan).
+ * Kullanıcı kendi standardını kaydederse o geçerlidir (gün 1 seçici).
+ */
+export const HIZLI_BESI_MIN_STANDART_ASI_PARAZIT = [
+  'ivermektin',
+  'albendazol',
+  'karma',
 ] as const;
+
+/** Tek standart vitamin/destek iğnesi — Selenyum-E */
+export const HIZLI_BESI_MIN_STANDART_VITAMIN = ['selen-e'] as const;
+
+/**
+ * Giriş paketi vitamin / destek (B/C seed’de yapıldı).
+ * v15: yalnız Selenyum-E. A-D3-E / B / yem destekleri rutin girişte değil.
+ */
+export const HIZLI_BESI_GIRIS_VITAMIN = [...HIZLI_BESI_MIN_STANDART_VITAMIN] as const;
+
+/**
+ * Opsiyonel gün-1 vitaminler — checklist’te durur, “hepsi”/varsayılan pakette yok.
+ * AI veya çoban “gerekli” (zayıf / stres / iştah yok) işaretlerse eklenir.
+ */
+export const HIZLI_BESI_OPSIYONEL_VITAMIN = ['ad3e', 'b-kompleks'] as const;
+
+/** Yem/beslenme — gün 1 seçicide yok; planda ayrı (yem listesi) */
+export const HIZLI_BESI_BESLENME_PROGRAM = ['probiyotik', 'premiks'] as const;
 
 export type BesiTakvimSatir = {
   tip: 'asi' | 'parazit' | 'vitamin' | 'tartim';
@@ -142,7 +161,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
       tip: 'vitamin',
       programId: 'ad3e',
       gun: 1,
-      not: 'Kapalı besi A-D3-E',
+      not: 'Opsiyonel · zayıf / kapalı / iştah yoksa (gerekli işaretlenince)',
       dozNo: 1,
       toplamDoz: 1,
     },
@@ -150,7 +169,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
       tip: 'vitamin',
       programId: 'b-kompleks',
       gun: 1,
-      not: 'İştah · stres',
+      not: 'Opsiyonel · stres / nakil / iştah yoksa (gerekli işaretlenince)',
       dozNo: 1,
       toplamDoz: 1,
     },
@@ -158,7 +177,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
       tip: 'vitamin',
       programId: 'selen-e',
       gun: 1,
-      not: 'Kas · beyaz kas · kilo alımı — tartı ile aynı seans',
+      not: 'Kas · beyaz kas · kilo alımı — minimum standart · tartı ile aynı seans',
       dozNo: 1,
       toplamDoz: 1,
     },
@@ -166,7 +185,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
       tip: 'vitamin',
       programId: 'probiyotik',
       gun: 1,
-      not: 'Rumen / yem değişimi',
+      not: 'Beslenme · yem listesinde (gün 1 seçicide yok)',
       dozNo: 1,
       toplamDoz: 1,
     },
@@ -174,7 +193,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
       tip: 'vitamin',
       programId: 'premiks',
       gun: 1,
-      not: 'Rasyona vitamin-mineral premiks',
+      not: 'Beslenme · yem listesinde (gün 1 seçicide yok)',
       dozNo: 1,
       toplamDoz: 1,
     },
@@ -451,4 +470,4 @@ export function hizliBesiPlanGun(tip: string, programId: string): number | null 
 }
 
 export const HIZLI_BESI_PLAN_BASLIK =
-  'Hızlı besi — gün 1 tartı + aynı seans giriş koruma · yem · satılana kadar (~90+30 gün)';
+  'Hızlı besi — min. standart: tartı · İvermektin · Albendazol · karma · Selenyum-E · ~90+30 gün';
