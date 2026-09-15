@@ -7,6 +7,7 @@ import {
   planMlDozYerEtiketi,
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
+import { TARTIM_GIRIS_PROGRAM_ID } from '@/kaynak/akilli-veteriner/takviye-tipler';
 import { test, type TestModul } from '../cerceve';
 
 export const hizliBesiModul: TestModul = {
@@ -16,8 +17,9 @@ export const hizliBesiModul: TestModul = {
     const selenEtiket = planMlDozYerEtiketi('vitamin', 'selen-e') ?? '';
     const karmaEtiket = planMlDozYerEtiketi('asi', 'karma') ?? '';
     const rapelEtiket = planMlDozYerEtiketi('asi', KARMA_RAPEL_PROGRAM_ID) ?? '';
+    const gun1Sirali = HIZLI_BESI_TAKVIM.filter((t) => t.gun === 1);
     return [
-      test('Hızlı besi planı', 'Plan sürümü v13', HIZLI_BESI_PLAN_SURUM === 'v13'),
+      test('Hızlı besi planı', 'Plan sürümü v14', HIZLI_BESI_PLAN_SURUM === 'v14'),
       test('Hızlı besi planı', 'Enterotoksemi planda yok', !ids.includes('enterotoksemi')),
       test(
         'Hızlı besi planı',
@@ -26,9 +28,27 @@ export const hizliBesiModul: TestModul = {
       ),
       test('Hızlı besi planı', 'Karma giriş var', ids.includes('karma')),
       test('Hızlı besi planı', 'Karma rapel var', ids.includes(KARMA_RAPEL_PROGRAM_ID)),
-      test('Hızlı besi planı', 'T1 tartım var', ids.includes('tartim-giris')),
+      test('Hızlı besi planı', 'T1 tartım var', ids.includes(TARTIM_GIRIS_PROGRAM_ID)),
       test('Hızlı besi planı', '15g tartım var', ids.includes('tartim-15')),
-      test('Hızlı besi planı', 'Selen gün 0', hizliBesiPlanGun('vitamin', 'selen-e') === 0),
+      test('Hızlı besi planı', 'Selen gün 1', hizliBesiPlanGun('vitamin', 'selen-e') === 1),
+      test('Hızlı besi planı', 'İvermektin gün 1', hizliBesiPlanGun('parazit', 'ivermektin') === 1),
+      test('Hızlı besi planı', 'Karma giriş gün 1', hizliBesiPlanGun('asi', 'karma') === 1),
+      test(
+        'Hızlı besi planı',
+        'Gün 0 aşı/iğne yok',
+        !HIZLI_BESI_TAKVIM.some((t) => t.gun === 0),
+      ),
+      test(
+        'Hızlı besi planı',
+        'Gün 1 önce tartı',
+        gun1Sirali[0]?.programId === TARTIM_GIRIS_PROGRAM_ID,
+      ),
+      test(
+        'Hızlı besi planı',
+        'Tartı önceliği ilaçlardan önce',
+        takviyeGorevOncelikSira('tartim', TARTIM_GIRIS_PROGRAM_ID) <
+          takviyeGorevOncelikSira('parazit', 'ivermektin'),
+      ),
       test('Hızlı besi planı', 'Karma rapel gün 21', hizliBesiPlanGun('asi', KARMA_RAPEL_PROGRAM_ID) === 21),
       test(
         'Hızlı besi planı',

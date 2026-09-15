@@ -2,8 +2,8 @@
  * Mod 1 — Hızlı / kapalı kuzu besi aşı · vitamin · hap · yem planı.
  * Giriş koruma + yem dönüşümü; satılana kadar (~90 gün, isteğe bağlı +30).
  *
- * Öncelik: iç-dış parazit → karma → selenyum (gün 0) → tartım → 21 gün karma rapel →
- * 15 günde bir tartım / yem kontrol → satış ufku.
+ * Öncelik: Gün 1 sabah tartı → sonra giriş aşı/iğne (kg’ye göre) →
+ * 21 gün karma rapel → 15 günde bir tartım / yem kontrol → satış ufku.
  * Rutin gün-90 İvermektin / Albendazol yok (klinik gerekçe olmadıkça).
  * Karma = klostridiyal + pastörella → ayrı çelertme gerekmez.
  */
@@ -18,7 +18,7 @@ import {
 } from '@/kaynak/akilli-veteriner/takviye-tipler';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v13';
+export const HIZLI_BESI_PLAN_SURUM = 'v14';
 
 /** Tipik besi ufku (alım → satış) — gün */
 export const BESI_SATIS_UFUK_GUN = 90;
@@ -79,7 +79,7 @@ export const HIZLI_BESI_GIRIS_ASI_PARAZIT = [
   'ivermektin',
 ] as const;
 
-/** Girişte verilen vitamin / destek (B/C seed’de yapıldı) — selenyum gün 0 */
+/** Giriş paketi vitamin / destek (B/C seed’de yapıldı) — selenyum gün 1, tartı sonrası */
 export const HIZLI_BESI_GIRIS_VITAMIN = [
   'ad3e',
   'b-kompleks',
@@ -101,24 +101,30 @@ export type BesiTakvimSatir = {
 
 /**
  * Takvim: girişten satış ufkuna.
- * 0 = giriş (parazit · karma · vitamin · selenyum) · 1–2 = alım tartımı ·
+ * Gün 1 sabah = alım tartımı → aynı gün giriş aşı/iğne (kg) ·
  * 15+ = kontrol tartım · 21 = karma rapel
  * Rutin gün-90 parazit yok.
  */
 function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
   const base: BesiTakvimSatir[] = [
     {
+      tip: 'tartim',
+      programId: TARTIM_GIRIS_PROGRAM_ID,
+      gun: 1,
+      not: 'Alım tartımı (T1) · sabah önce — dozlar buna göre',
+    },
+    {
       tip: 'parazit',
       programId: 'ivermektin',
-      gun: 0,
-      not: 'İç-dış parazit iğne — önce',
+      gun: 1,
+      not: 'İç-dış parazit iğne — tartı sonrası önce',
       dozNo: 1,
       toplamDoz: 1,
     },
     {
       tip: 'parazit',
       programId: 'albendazol',
-      gun: 0,
+      gun: 1,
       not: 'İç parazit hapı · her 10 kiloya 1 hap',
       dozNo: 1,
       toplamDoz: 1,
@@ -126,7 +132,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     {
       tip: 'asi',
       programId: 'karma',
-      gun: 0,
+      gun: 1,
       not: 'Klostridiyal + pastörella (çelertme dahil · 1. doz)',
       dozNo: 1,
       toplamDoz: 2,
@@ -134,7 +140,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     {
       tip: 'vitamin',
       programId: 'ad3e',
-      gun: 0,
+      gun: 1,
       not: 'Kapalı besi A-D3-E',
       dozNo: 1,
       toplamDoz: 1,
@@ -142,7 +148,7 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     {
       tip: 'vitamin',
       programId: 'b-kompleks',
-      gun: 0,
+      gun: 1,
       not: 'İştah · stres',
       dozNo: 1,
       toplamDoz: 1,
@@ -150,15 +156,15 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     {
       tip: 'vitamin',
       programId: 'selen-e',
-      gun: 0,
-      not: 'Kas · beyaz kas · kilo alımı — girişte',
+      gun: 1,
+      not: 'Kas · beyaz kas · kilo alımı — tartı sonrası',
       dozNo: 1,
       toplamDoz: 1,
     },
     {
       tip: 'vitamin',
       programId: 'probiyotik',
-      gun: 0,
+      gun: 1,
       not: 'Rumen / yem değişimi',
       dozNo: 1,
       toplamDoz: 1,
@@ -166,12 +172,11 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     {
       tip: 'vitamin',
       programId: 'premiks',
-      gun: 0,
+      gun: 1,
       not: 'Rasyona vitamin-mineral premiks',
       dozNo: 1,
       toplamDoz: 1,
     },
-    { tip: 'tartim', programId: TARTIM_GIRIS_PROGRAM_ID, gun: 1, not: 'Alım tartımı (T1) · 1–2. gün' },
     { tip: 'tartim', programId: TARTIM_15_PROGRAM_ID, gun: 15, not: 'Kontrol tartımı — sağlık sonrası' },
     {
       tip: 'asi',
@@ -198,7 +203,11 @@ function olusturHizliBesiTakvim(): BesiTakvimSatir[] {
     });
   }
 
-  return base.sort((a, b) => a.gun - b.gun || a.programId.localeCompare(b.programId));
+  return base.sort(
+    (a, b) =>
+      a.gun - b.gun ||
+      takviyeGorevOncelikSira(a.tip, a.programId) - takviyeGorevOncelikSira(b.tip, b.programId),
+  );
 }
 
 export const HIZLI_BESI_TAKVIM: BesiTakvimSatir[] = olusturHizliBesiTakvim();
@@ -256,7 +265,7 @@ function olusturYemTakvim(): YemTakvimSatir[] {
       gun: 0,
       koruma: 'Besi rasyonu başlat',
       urun: 'Hazır kuzu yemi + arpa + yonca + saman',
-      not: 'Gözlem/giriş — günlük karışım; tartımdan sonra kg güncelle',
+      not: 'Gözlem/giriş — günlük karışım; gün 1 tartıdan sonra kg güncelle',
     },
     {
       id: 'yem-hafta1',
@@ -285,9 +294,9 @@ function olusturYemTakvim(): YemTakvimSatir[] {
 
 export const HIZLI_BESI_YEM_TAKVIM: YemTakvimSatir[] = olusturYemTakvim();
 
-/** Görev listesi sırası — düşük = önce */
+/** Görev listesi sırası — düşük = önce (gün 1: tartı en önce) */
 export function takviyeGorevOncelikSira(tip: TakviyeTip, programId: string): number {
-  if (programId === TARTIM_GIRIS_PROGRAM_ID) return 20;
+  if (programId === TARTIM_GIRIS_PROGRAM_ID) return 0;
   if (programId === TARTIM_15_PROGRAM_ID) return 93;
   if (programId === KARMA_RAPEL_PROGRAM_ID) return 94;
   if (programId === IVERMEKTIN_PEKISTIRME_ID) return 95;
@@ -318,8 +327,8 @@ export function asiGorunumBaslik(koruma: string, asiAdi: string): string {
 }
 
 export function gunEtiket(gun: number): string {
-  if (gun <= 0) return 'Gün 0 — Giriş';
-  if (gun === 1) return 'Gün 1–2 — Alım';
+  if (gun <= 0) return 'Gün 0 — Giriş (gözlem)';
+  if (gun === 1) return 'Gün 1 — Önce tartı, sonra aşı/iğne';
   if (gun === BESI_SATIS_UFUK_GUN) return `Gün ${gun} — Satış ufku`;
   if (gun === BESI_PLAN_TAVAN_GUN) return `Gün ${gun} — Ek süre sonu`;
   return `Gün ${gun}`;
@@ -367,8 +376,8 @@ function kalemOlustur(
       tip: 'tartim',
       programId: TARTIM_GIRIS_PROGRAM_ID,
       ad: 'Alım tartımı',
-      detay: 'T1 · 1–2. gün',
-      mlEtiket: '1–2. gün',
+      detay: 'T1 · gün 1 sabah önce',
+      mlEtiket: 'Önce tartı',
     };
   }
   const tGun = tartimKontrolGun(programId);
@@ -433,9 +442,9 @@ export function hizliBesiPlanGun(tip: string, programId: string): number {
   const tGun = tartimKontrolGun(programId);
   if (tGun != null) return tGun;
   if (tip === 'tartim') return 15;
-  if (programId === 'selen-e') return 0;
-  return 0;
+  if (programId === 'selen-e') return 1;
+  return 1;
 }
 
 export const HIZLI_BESI_PLAN_BASLIK =
-  'Hızlı besi — giriş koruma (selen dahil) · tartım · yem · satılana kadar (~90+30 gün)';
+  'Hızlı besi — gün 1 tartı sonra giriş koruma · yem · satılana kadar (~90+30 gün)';

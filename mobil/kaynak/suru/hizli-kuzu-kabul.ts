@@ -299,14 +299,21 @@ async function rehberGorevleriYaz(
     },
   ];
 
-  // Gün 0 ilaç özeti (Türkçe ad (ilaç))
-  const gun0 = HIZLI_BESI_TAKVIM.filter((t) => t.gun === 0 && (t.tip === 'asi' || t.tip === 'parazit'));
-  for (const t of gun0) {
+  // Gün 1: önce tartı özeti, sonra giriş ilaçları (Türkçe ad (ilaç))
+  sonraki.push({
+    baslik: 'Alım tartımı',
+    aciklama: `${gunEtiket(1)} · sabah önce — dozlar gerçek kiloya göre`,
+    href: '/(tabs)/suru',
+  });
+  const gun1 = HIZLI_BESI_TAKVIM.filter(
+    (t) => t.gun === 1 && (t.tip === 'asi' || t.tip === 'parazit'),
+  );
+  for (const t of gun1) {
     const p = ASI_PROGRAMI.find((x) => x.id === t.programId);
     if (!p) continue;
     sonraki.push({
       baslik: asiGorunumBaslik(p.koruma, p.ad),
-      aciklama: `${gunEtiket(0)} · ${t.not}`,
+      aciklama: `${gunEtiket(1)} · tartı sonrası · ${t.not}`,
       href: `/gorevler/asi/${t.programId}`,
     });
   }

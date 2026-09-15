@@ -1,15 +1,15 @@
 import { test, type TestModul } from '../cerceve';
 
 const TAKVIM = [
-  { tip: 'parazit', programId: 'ivermektin', gun: 0 },
-  { tip: 'parazit', programId: 'albendazol', gun: 0 },
-  { tip: 'asi', programId: 'karma', gun: 0 },
-  { tip: 'vitamin', programId: 'ad3e', gun: 0 },
-  { tip: 'vitamin', programId: 'b-kompleks', gun: 0 },
-  { tip: 'vitamin', programId: 'selen-e', gun: 0 },
-  { tip: 'vitamin', programId: 'probiyotik', gun: 0 },
-  { tip: 'vitamin', programId: 'premiks', gun: 0 },
   { tip: 'tartim', programId: 'tartim-giris', gun: 1 },
+  { tip: 'parazit', programId: 'ivermektin', gun: 1 },
+  { tip: 'parazit', programId: 'albendazol', gun: 1 },
+  { tip: 'asi', programId: 'karma', gun: 1 },
+  { tip: 'vitamin', programId: 'ad3e', gun: 1 },
+  { tip: 'vitamin', programId: 'b-kompleks', gun: 1 },
+  { tip: 'vitamin', programId: 'selen-e', gun: 1 },
+  { tip: 'vitamin', programId: 'probiyotik', gun: 1 },
+  { tip: 'vitamin', programId: 'premiks', gun: 1 },
   { tip: 'tartim', programId: 'tartim-15', gun: 15 },
   { tip: 'asi', programId: 'karma-rapel', gun: 21 },
 ] as const;

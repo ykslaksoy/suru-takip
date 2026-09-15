@@ -31,12 +31,12 @@ export default function KabulSonucScreen() {
   const rehber = [
     {
       baslik: '1. Alım tartımı',
-      aciklama: '1–2. gün — seri tartım',
+      aciklama: 'Gün 1 sabah — önce tartı (dozlar buna göre)',
       href: '/seri-giris',
     },
     {
       baslik: '2. Aşı / parazit',
-      aciklama: 'Giriş koruma + Tarım Bakanlığı aşıları',
+      aciklama: 'Gün 1 tartı sonrası — giriş koruma (kg’ye göre)',
       href: '/(tabs)/veteriner',
     },
     {

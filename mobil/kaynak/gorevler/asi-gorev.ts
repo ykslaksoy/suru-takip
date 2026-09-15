@@ -86,7 +86,7 @@ function seviyeBelirle(
   programId?: string,
   tip?: TakviyeTip,
 ): GorevSeviye {
-  // 15g tartım rozette öne çıkmasın; alım tartımı (1–2. gün) normal öncelik
+  // 15g tartım rozette öne çıkmasın; alım tartımı (gün 1) normal öncelik
   if (tip === 'tartim' && programId !== TARTIM_GIRIS_PROGRAM_ID) return 'plan';
   if (programId && tip && !takviyeGorevOncelikliMi(programId, tip)) return 'plan';
   if (planliMi && kalan != null && kalan > 7) return 'plan';
@@ -243,8 +243,8 @@ export async function takviyeGorevProgramHaritasi(): Promise<Map<string, Program
         programId,
         koruma:
           programId === TARTIM_GIRIS_PROGRAM_ID ? 'Alım tartımı' : '15 günde bir tartım',
-        asiAdi: programId === TARTIM_GIRIS_PROGRAM_ID ? 'T1 · 1–2. gün' : 'Kontrol tartımı',
-        mlEtiket: programId === TARTIM_GIRIS_PROGRAM_ID ? '1–2. gün' : '15 gün',
+        asiAdi: programId === TARTIM_GIRIS_PROGRAM_ID ? 'T1 · gün 1 sabah önce' : 'Kontrol tartımı',
+        mlEtiket: programId === TARTIM_GIRIS_PROGRAM_ID ? 'Önce tartı' : '15 gün',
         tip: 'tartim',
         hayvanlar: new Map(),
       };

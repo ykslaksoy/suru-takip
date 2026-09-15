@@ -40,6 +40,8 @@ export type GorevGruplarSonuc = {
 export function gorevKategorisi(g: Gorev): GorevKategoriId | 'diger' {
   if (g.kaynak === 'yem' || g.id.startsWith('yem-ozet-')) return 'yem';
   if (g.id.startsWith('takviye-ozet-vitamin-')) return 'asi';
+  // Alım tartımı (gün 1) aşı gün-gün listesinde — önce tartı, sonra doz
+  if (g.id === 'takviye-ozet-tartim-tartim-giris') return 'asi';
   if (g.kaynak === 'stok') return 'stok';
   if (g.kaynak === 'tartim') return 'tartim';
   if (g.kaynak === 'saglik' || g.kaynak === 'bekletme') return 'saglik';
