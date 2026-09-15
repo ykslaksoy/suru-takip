@@ -19,7 +19,7 @@ export const hizliBesiModul: TestModul = {
     const rapelEtiket = planMlDozYerEtiketi('asi', KARMA_RAPEL_PROGRAM_ID) ?? '';
     const gun1Sirali = HIZLI_BESI_TAKVIM.filter((t) => t.gun === 1);
     return [
-      test('Hızlı besi planı', 'Plan sürümü v14', HIZLI_BESI_PLAN_SURUM === 'v14'),
+      test('Hızlı besi planı', 'Plan sürümü v14.1', HIZLI_BESI_PLAN_SURUM === 'v14.1'),
       test('Hızlı besi planı', 'Enterotoksemi planda yok', !ids.includes('enterotoksemi')),
       test(
         'Hızlı besi planı',

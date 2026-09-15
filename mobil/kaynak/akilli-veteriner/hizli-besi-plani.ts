@@ -18,7 +18,7 @@ import {
 } from '@/kaynak/akilli-veteriner/takviye-tipler';
 
 /** Plan kimliği — şablon değişince seed yeniler */
-export const HIZLI_BESI_PLAN_SURUM = 'v14';
+export const HIZLI_BESI_PLAN_SURUM = 'v14.1';
 
 /** Tipik besi ufku (alım → satış) — gün */
 export const BESI_SATIS_UFUK_GUN = 90;
