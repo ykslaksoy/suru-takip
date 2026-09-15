@@ -35,12 +35,13 @@ export function KilitliAnaSayfa() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { pendingSync, ready, refreshKey } = useDatabase();
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const { scrollPadBottom, headerPadTop, kisa, darTelefon } = useAltGuvenliBosluk(88);
   const [ozet, setOzet] = useState<AnaSayfaOzet>(BOS_OZET);
   const light = scheme === 'light';
   const bg = light ? '#ffffff' : colors.background;
-  const maskotBoy = kisa ? 72 : darTelefon ? 88 : 108;
+  // Telefonda maskot biraz kompakt ama tam gövde; kisa ekranda daha da küçült
+  const maskotBoy = kisa ? 64 : darTelefon ? 96 : 108;
 
   const load = useCallback(async () => {
     setOzet(await getAnaSayfaOzeti());
@@ -58,12 +59,12 @@ export function KilitliAnaSayfa() {
         contentContainerStyle={StyleSheet.flatten([
           styles.scrollContent,
           {
-            paddingBottom: scrollPadBottom,
-            // Kısa telefonda içeriği sıkıştırma — scroll ile Hızlı İşlemler açılsın
-            minHeight: Math.max(height * 0.45, 240),
+            // Dock üstünde net boşluk — flexGrow yok (alt sırayı sıkıştırmasın)
+            paddingBottom: Math.max(scrollPadBottom, 120),
           },
         ])}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="automatic">
         <View
           style={StyleSheet.flatten([
@@ -192,8 +193,8 @@ export function KilitliAnaSayfa() {
 
         <Text style={StyleSheet.flatten([styles.bolum, styles.bolumPad, { color: colors.text }])}>Hızlı İşlemler</Text>
         <KilitliHizliIslemler />
-        {/* Alt dock üstünde net boşluk — son sıra etiketleri kesilmesin */}
-        <View style={{ height: darTelefon ? 12 : 4 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        {/* Sticky dock + home indicator — son sıra etiketleri için sabit pay */}
+        <View style={{ height: darTelefon ? 28 : 16 }} collapsable={false} />
       </ScrollView>
     </View>
   );
@@ -280,7 +281,7 @@ function OzetSayiKart({
 const styles = StyleSheet.create({
   shell: { flex: 1, width: '100%' },
   scroll: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
+  scrollContent: { flexGrow: 0, paddingTop: 4 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

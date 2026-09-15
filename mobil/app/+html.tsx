@@ -58,6 +58,11 @@ body {
   box-sizing: border-box;
 }
 
+/* RN Web Image varsayılan object-fit:fill maskotu kırpabiliyor */
+img {
+  object-fit: contain !important;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #1a241a;

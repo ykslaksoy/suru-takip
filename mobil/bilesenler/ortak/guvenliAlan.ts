@@ -50,7 +50,7 @@ export function useAltGuvenliBosluk(tabBarYukseklik = 72) {
     tabBarPadBottom: Math.round(tabBarPad),
     scrollPadBottom: Math.round(scrollPad),
     headerPadTop: Math.round(
-      Math.max(insetTop, Platform.OS === 'web' && darTelefon ? 12 : 0) + (kisa ? 6 : 12),
+      Math.max(insetTop, Platform.OS === 'web' && darTelefon ? 16 : 0) + (kisa ? 8 : 14),
     ),
     tarayiciPayi: Math.round(tarayiciPayi),
   };
