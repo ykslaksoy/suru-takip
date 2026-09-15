@@ -23,6 +23,17 @@ const VARSAYILAN: Omit<Padok, 'id'>[] = [
 /** Toplu kabul varsayılan hedef padok */
 export const GOZLEM_PADOK_AD = 'Gözlem';
 
+/** Gözlem / Gözetleme / gozlem — ilk gelen padok eşlemesi */
+export function gozlemPadokMu(ad: string | null | undefined): boolean {
+  const n = (ad ?? '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i');
+  return n === 'gozlem' || n === 'gozetleme' || n.includes('gozlem') || n.includes('gozetleme');
+}
+
 async function oku(): Promise<Padok[]> {
   const raw = await kaliciGetItem(KEY);
   if (!raw) return [];

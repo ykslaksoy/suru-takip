@@ -6,7 +6,7 @@
 
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { v4 as uuidv4 } from 'uuid';
-import { ASI_PROGRAMI, asiDozEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
+import { ASI_PROGRAMI, asiDozEtiketi, asiMlDozYerEtiketi, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal, AnimalModId, HealthRecord, StockItem } from '@/kaynak/cekirdek/tipler';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import {
@@ -20,8 +20,8 @@ import {
 } from '@/kaynak/cekirdek/veritabani';
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
-import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from './vitamin-programi';
-import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, rapelAnaProgramId } from './hizli-besi-plani';
+import { VITAMIN_PROGRAMI, vitaminDozEtiketi, vitaminMlDozYerEtiketi } from './vitamin-programi';
+import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, hizliBesiPlanGun, rapelAnaProgramId } from './hizli-besi-plani';
 import {
   TARTIM_GIRIS_PROGRAM_ID,
   TARTIM_15_PROGRAM_ID,
@@ -103,7 +103,7 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       programId: p.id,
       ad: p.koruma,
       detay: p.ad,
-      mlEtiket: asiDozEtiketi(p),
+      mlEtiket: asiMlDozYerEtiketi(p, { dozNo: 1, toplamDoz: 1 }),
     };
   };
   const vit = (id: string): ModTakviyeKalemi | null => {
@@ -114,7 +114,7 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       programId: v.id,
       ad: v.detay,
       detay: v.ad,
-      mlEtiket: vitaminDozEtiketi(v),
+      mlEtiket: vitaminMlDozYerEtiketi(v, { dozNo: 1, toplamDoz: 1 }),
     };
   };
 
@@ -243,10 +243,10 @@ function durumMatrisi(
   hayvanlar: Animal[],
   kalemler: ModTakviyeKalemi[],
   onceki?: HayvanKalemDurum[],
-  opts?: { asiPlanGun?: number },
+  opts?: { asiPlanGun?: number; modId?: UrunModId },
 ): HayvanKalemDurum[] {
   const asiPlanGun = opts?.asiPlanGun ?? ASI_PLAN_GUN;
-  const planlanan = gunSonraTarih(asiPlanGun);
+  const mod1 = opts?.modId === 'mod1';
   const map = new Map(
     (onceki ?? []).map((d) => [`${d.animalId}|${kalemAnahtar(d.tip, d.programId)}`, d]),
   );
@@ -256,13 +256,16 @@ function durumMatrisi(
       const key = `${h.id}|${kalemAnahtar(k.tip, k.programId)}`;
       const eski = map.get(key);
       const etiket = hayvanAnaEtiket(h);
-      const asiParazit = k.tip === 'asi' || k.tip === 'parazit';
+      const gun = mod1 ? hizliBesiPlanGun(k.tip, k.programId) : asiPlanGun;
+      const planlanan = gunSonraTarih(gun);
+      const planlanabilir =
+        k.tip === 'asi' || k.tip === 'parazit' || k.tip === 'vitamin' || k.tip === 'tartim';
       if (eski) {
         out.push({
           ...eski,
           earTag: etiket,
           planlananAt:
-            eski.yapildi || !asiParazit
+            eski.yapildi || !planlanabilir
               ? eski.planlananAt
               : eski.planlananAt ?? planlanan,
         });
@@ -273,7 +276,7 @@ function durumMatrisi(
           tip: k.tip,
           programId: k.programId,
           yapildi: false,
-          planlananAt: asiParazit ? planlanan : undefined,
+          planlananAt: planlanabilir ? planlanan : undefined,
         });
       }
     }
@@ -427,7 +430,7 @@ export async function olusturModTakviyePlani(opts?: {
   }
 
   const durumlar = await durumlariKayitlarlaBirlestir(
-    durumMatrisi(hayvanlar, kalemler, mevcut?.durumlar),
+    durumMatrisi(hayvanlar, kalemler, mevcut?.durumlar, { modId }),
     health,
   );
 
@@ -470,7 +473,9 @@ export async function planaYeniHayvanlariEkle(planId: string): Promise<{ eklenen
   const guncel: ModTakviyePlani = {
     ...plan,
     hayvanIds: mevcutHayvanlar.map((h) => h.id),
-    durumlar: durumMatrisi(mevcutHayvanlar, plan.kalemler, plan.durumlar),
+    durumlar: durumMatrisi(mevcutHayvanlar, plan.kalemler, plan.durumlar, {
+      modId: plan.modId,
+    }),
   };
   await planGuncelle(guncel);
   return { eklenen: yeniler.length, plan: guncel };

@@ -9,7 +9,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import Colors from '@/sabitler/Renkler';
 import {
   VITAMIN_PROGRAMI,
-  vitaminDozEtiketi,
+  vitaminMlDozYerEtiketi,
   vitaminTipEtiket,
 } from '@/kaynak/akilli-veteriner/vitamin-programi';
 
@@ -40,7 +40,7 @@ export function VitaminListePaneli() {
               <AsiBaslikSatir
                 koruma={v.detay}
                 asiAdi={`${v.ad} · ${vitaminTipEtiket(v.uygulama)}`}
-                mlEtiket={vitaminDozEtiketi(v)}
+                mlEtiket={vitaminMlDozYerEtiketi(v, { dozNo: 1, toplamDoz: 1 })}
               />
             </View>
           </View>

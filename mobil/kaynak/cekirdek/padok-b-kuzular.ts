@@ -8,7 +8,7 @@
 
 import { addWeightRecord, getAnimals, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
-import { ensureVarsayilanPadoklar } from '@/kaynak/suru/padok';
+import { ensureVarsayilanPadoklar, GOZLEM_PADOK_AD } from '@/kaynak/suru/padok';
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { seedPadokHayvanKayitlari } from './padok-kuzu-kayitlar';
 import { padokAgirlikGun, padokBeklenenArtisKg, padokRasyonNotu } from './padok-rasyon';
@@ -34,9 +34,12 @@ async function yazTartimEgerYok(
 export const PADOK_A_KUZU_ADET = 20;
 export const PADOK_B_KUZU_ADET = 20;
 export const PADOK_C_KUZU_ADET = 20;
+/** Gözlem ilk gelen — A (20) + Gözlem (80) ≈ 100 açık plan */
+export const GOZLEM_KUZU_ADET = 80;
 export const ESLESIK_KUZU_PADOK_A = 'Padok A';
 export const ESLESIK_KUZU_PADOK_B = 'Padok B';
 export const ESLESIK_KUZU_PADOK_C = 'Padok C';
+export const ESLESIK_KUZU_PADOK_GOZLEM = GOZLEM_PADOK_AD;
 
 /** @deprecated Eski ad — Padok A */
 export const PADOK_B_AD = ESLESIK_KUZU_PADOK_A;
@@ -118,6 +121,65 @@ export async function seedPadokAEslesikKuzular(): Promise<{ adet: number; padok:
   }
 
   return { adet: PADOK_A_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_A };
+}
+
+/** Gözlem — ilk gelen açık plan (~80; A ile birlikte ~100) */
+export function padokGozlemKimlik(sira: number) {
+  if (sira < 1 || sira > GOZLEM_KUZU_ADET) throw new Error(`Sıra 1–${GOZLEM_KUZU_ADET}`);
+  const t = oran(sira, GOZLEM_KUZU_ADET);
+  const yasGun = Math.round(60 + t * 20);
+  const weightKg = Math.round((17 + t * 7) * 10) / 10;
+  const alimFiyat = Math.round((9000 + t * 3000) / 50) * 50;
+  const pad = String(sira).padStart(2, '0');
+  return {
+    id: `gozlem-kuzu-${pad}`,
+    sirtNo: String(100 + sira),
+    earTag: `TR-34-${String(400000 + sira)}`,
+    arefId: `AREF${String(400 + sira).padStart(12, '0')}`,
+    turkvetNo: `TR34${String(9200000000000 + sira)}`,
+    yasGun,
+    weightKg,
+    alimFiyat,
+  };
+}
+
+export async function seedGozlemEslesikKuzular(): Promise<{ adet: number; padok: string }> {
+  await ensureVarsayilanPadoklar();
+  const now = new Date();
+
+  for (let sira = 1; sira <= GOZLEM_KUZU_ADET; sira++) {
+    const k = padokGozlemKimlik(sira);
+    const sex = sira % 2 === 0 ? 'male' : 'female';
+    await upsertAnimal({
+      id: k.id,
+      earTag: k.earTag,
+      turkvetNo: k.turkvetNo,
+      name: hayvanKayitAdi({ earTag: k.earTag, sirtNo: k.sirtNo }),
+      breed: 'Merinos',
+      species: 'sheep',
+      sex,
+      birthDate: gunOnce(now, k.yasGun),
+      paddock: ESLESIK_KUZU_PADOK_GOZLEM,
+      status: 'healthy',
+      motherId: null,
+      gehisId: k.arefId,
+      sirtNo: k.sirtNo,
+      modId: 'mod1',
+      notes:
+        `Gözlem ilk gelen: Sırt ${k.sirtNo} · Küpe ${k.earTag} · ` +
+        `${k.weightKg} kg · Alım ${k.alimFiyat.toLocaleString('tr-TR')} ₺ · ` +
+        `Açık aşı/yem planı satılana kadar`,
+    });
+    await yazTartimEgerYok({
+      id: `${k.id}-alim-tartim`,
+      animalId: k.id,
+      weightKg: k.weightKg,
+      recordedAt: now.toISOString(),
+      notes: `Alım tartımı · Gözlem · ${k.alimFiyat} ₺`,
+    });
+  }
+
+  return { adet: GOZLEM_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_GOZLEM };
 }
 
 /** @deprecated Eski ad — Padok A */
@@ -333,9 +395,10 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
   return { adet: PADOK_C_KUZU_ADET, padok: ESLESIK_KUZU_PADOK_C };
 }
 
-/** Padok A + B + C + aşı/tartım/FCR — mevcut tartımları yeniden yazmaz */
+/** Padok A + Gözlem + B + C + aşı/tartım/FCR — mevcut tartımları yeniden yazmaz */
 export async function seedTumEslesikKuzular(): Promise<void> {
   await seedPadokAEslesikKuzular();
+  await seedGozlemEslesikKuzular();
   await seedPadokBGrupKuzular();
   await seedPadokCGrupKuzular();
   await seedPadokHayvanKayitlari({ forcePlan: true });
@@ -369,6 +432,7 @@ export async function ensurePadokKuzuVerisi(): Promise<void> {
   };
 
   if (eksik('padok-a-kuzu-', PADOK_A_KUZU_ADET)) await seedPadokAEslesikKuzular();
+  if (eksik('gozlem-kuzu-', GOZLEM_KUZU_ADET)) await seedGozlemEslesikKuzular();
   if (eksik('padok-b-grup-', PADOK_B_KUZU_ADET)) await seedPadokBGrupKuzular();
   else {
     await padokGuncelTartimRevizeEt(padokBGrupKimlik, seedPadokBGrupKuzular);

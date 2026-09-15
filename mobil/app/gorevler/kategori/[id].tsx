@@ -7,10 +7,12 @@ import { GorevSatiri } from '@/bilesenler/gorevler/GorevSatiri';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import {
   GOREV_KATEGORI_SIRASI,
+  asiGorevleriniGuneGore,
   getGorevGruplari,
   setPlanlananTamam,
   setIsPlaniTamam,
   type GorevGrup,
+  type GorevGunGrup,
   type GorevKategoriId,
 } from '@/kaynak/gorevler';
 
@@ -32,6 +34,7 @@ export default function GorevKategoriScreen() {
   const colors = Colors[scheme];
   const { ready, refreshKey } = useDatabase();
   const [grup, setGrup] = useState<GorevGrup | null>(null);
+  const [gunGruplari, setGunGruplari] = useState<GorevGunGrup[]>([]);
   const [loading, setLoading] = useState(true);
 
   const meta = isKategoriId(id) ? GOREV_KATEGORI_SIRASI.find((k) => k.id === id)! : null;
@@ -39,13 +42,18 @@ export default function GorevKategoriScreen() {
   const load = useCallback(async () => {
     if (!isKategoriId(id)) {
       setGrup(null);
+      setGunGruplari([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
       const { gruplar } = await getGorevGruplari();
-      setGrup(gruplar.find((g) => g.id === id) ?? null);
+      const g = gruplar.find((x) => x.id === id) ?? null;
+      setGrup(g);
+      if (id === 'asi' && g) setGunGruplari(asiGorevleriniGuneGore(g.gorevler));
+      else if (id === 'yem' && g) setGunGruplari(asiGorevleriniGuneGore(g.gorevler));
+      else setGunGruplari([]);
     } finally {
       setLoading(false);
     }
@@ -63,6 +71,7 @@ export default function GorevKategoriScreen() {
   };
 
   const baslik = meta ? `${meta.icon} ${meta.label}` : 'Kategori';
+  const gunlukMu = id === 'asi' || id === 'yem';
 
   return (
     <>
@@ -84,14 +93,37 @@ export default function GorevKategoriScreen() {
               <Text style={[styles.detayTitle, { color: colors.text }]}>{baslik}</Text>
               <Text style={{ color: colors.textSecondary }}>{grup.adet} görev</Text>
             </View>
-            {grup.gorevler.map((g) => (
-              <GorevSatiri
-                key={g.id}
-                g={g}
-                colors={colors}
-                onTamamla={g.tamamlanabilir ? () => tamamlaVeYenile(g.id) : undefined}
-              />
-            ))}
+            {gunlukMu ? (
+              <>
+                <Text style={{ color: colors.textSecondary, marginBottom: 12, fontSize: 13, lineHeight: 18 }}>
+                  {id === 'asi'
+                    ? 'İlk gelen (Gözlem + Padok A): ilaç/aşı gün gün · ad (ürün) · doz · kaçıncı/toplam · uygulama yeri. Yem ayrı.'
+                    : 'Yem uygulamaları aşıdan ayrı · satılana kadar milestone’lar.'}
+                </Text>
+                {gunGruplari.map((gg) => (
+                  <View key={`gun-${gg.gun}`} style={{ marginBottom: 12 }}>
+                    <Text style={[styles.gunBaslik, { color: colors.tint }]}>{gg.baslik}</Text>
+                    {gg.gorevler.map((g) => (
+                      <GorevSatiri
+                        key={g.id}
+                        g={g}
+                        colors={colors}
+                        onTamamla={g.tamamlanabilir ? () => tamamlaVeYenile(g.id) : undefined}
+                      />
+                    ))}
+                  </View>
+                ))}
+              </>
+            ) : (
+              grup.gorevler.map((g) => (
+                <GorevSatiri
+                  key={g.id}
+                  g={g}
+                  colors={colors}
+                  onTamamla={g.tamamlanabilir ? () => tamamlaVeYenile(g.id) : undefined}
+                />
+              ))
+            )}
             <Pressable onPress={() => router.push(grup.href as never)} style={{ marginTop: 8 }}>
               <Text style={{ color: colors.tint, fontWeight: '800' }}>
                 {grup.label} ekranına git →
@@ -119,4 +151,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detayTitle: { fontSize: 17, fontWeight: '800' },
+  gunBaslik: {
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginTop: 4,
+    marginBottom: 4,
+  },
 });

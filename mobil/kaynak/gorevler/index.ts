@@ -14,8 +14,10 @@ export {
   GOREV_KATEGORI_SIRASI,
   getGorevGruplari,
   gorevKategorisi,
+  asiGorevleriniGuneGore,
   type GorevGrup,
   type GorevGruplarSonuc,
+  type GorevGunGrup,
   type GorevKategoriId,
   type GorevKategoriMeta,
 } from './kategoriler';
@@ -36,6 +38,13 @@ export {
   type TakviyeGorevDetay,
   type TakviyeGorevHayvan,
 } from './asi-gorev';
+export {
+  yemTopluGorevleri,
+  getYemGorevDetay,
+  yemPlaniHayvanlaraEkle,
+  type YemGorevDetay,
+  type YemGorevHayvan,
+} from './yem-gorev';
 export {
   IS_PLANI_META,
   IS_PLANI_TURLER,

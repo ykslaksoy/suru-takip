@@ -26,8 +26,18 @@ export const dozModul: TestModul = {
       ),
       test(
         'Doz etiketleri',
+        'Selen uygulama yeri SC',
+        (selen.uygulamaYeri ?? '').includes('deri altı'),
+      ),
+      test(
+        'Doz etiketleri',
         'Karma koruma açıklama önce',
         karma.koruma.includes('Klostridiyal'),
+      ),
+      test(
+        'Doz etiketleri',
+        'İvermektin uygulama yeri SC',
+        (iv.uygulamaYeri ?? '').includes('deri altı'),
       ),
     ];
   },
