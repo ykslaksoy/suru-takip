@@ -294,7 +294,10 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
         k.tip === 'vitamin' &&
         (HIZLI_BESI_GIRIS_VITAMIN as readonly string[]).includes(k.programId);
       const tartimGirisKalemi =
-        k.tip === 'tartim' && k.programId === TARTIM_GIRIS_PROGRAM_ID && tartimGirisYapildi;
+        k.tip === 'tartim' &&
+        k.programId === TARTIM_GIRIS_PROGRAM_ID &&
+        tartimGirisYapildi &&
+        !padokAcik; // açık alım: T1 görev kalsın (gün 1 önce tartı)
       const tartim15Kalemi =
         k.tip === 'tartim' && k.programId === TARTIM_15_PROGRAM_ID && tartim15Yapildi;
       // Eski sürü: tüm tartım/rapel/pekiştirme de tamam
@@ -309,7 +312,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
 
       let planlananAt = onceki?.planlananAt;
       if (!yapildi) {
-        const gun = hizliBesiPlanGun(k.tip, k.programId);
+        const gun = hizliBesiPlanGun(k.tip, k.programId) ?? 1;
         if (padokAcik) {
           planlananAt = onceki?.planlananAt ?? gunSonraTarih(gun, now);
         } else if (girisYapildi) {
@@ -328,7 +331,7 @@ export async function seedMod1PadokTakviyePlani(): Promise<ModTakviyePlani> {
               : undefined);
 
       if (!yapildiAtKayit && padokTamam && gecmisTarih) {
-        const gun = hizliBesiPlanGun(k.tip, k.programId);
+        const gun = hizliBesiPlanGun(k.tip, k.programId) ?? 0;
         yapildiAtKayit = gecmisTarih(gun);
       }
 

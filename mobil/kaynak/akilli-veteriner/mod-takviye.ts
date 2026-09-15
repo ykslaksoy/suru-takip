@@ -257,7 +257,7 @@ function durumMatrisi(
       const eski = map.get(key);
       const etiket = hayvanAnaEtiket(h);
       const gun = mod1 ? hizliBesiPlanGun(k.tip, k.programId) : asiPlanGun;
-      const planlanan = gunSonraTarih(gun);
+      const planlanan = gunSonraTarih(gun ?? 0);
       const planlanabilir =
         k.tip === 'asi' || k.tip === 'parazit' || k.tip === 'vitamin' || k.tip === 'tartim';
       if (eski) {

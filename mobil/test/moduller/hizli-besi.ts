@@ -49,6 +49,11 @@ export const hizliBesiModul: TestModul = {
         takviyeGorevOncelikSira('tartim', TARTIM_GIRIS_PROGRAM_ID) <
           takviyeGorevOncelikSira('parazit', 'ivermektin'),
       ),
+      test(
+        'Hızlı besi planı',
+        'Plan dışı aşı gün 1’e düşmez',
+        hizliBesiPlanGun('asi', 'pasteurella') == null,
+      ),
       test('Hızlı besi planı', 'Karma rapel gün 21', hizliBesiPlanGun('asi', KARMA_RAPEL_PROGRAM_ID) === 21),
       test(
         'Hızlı besi planı',

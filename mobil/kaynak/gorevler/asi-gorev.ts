@@ -177,7 +177,7 @@ function ozettenGorev(o: ProgramOzet): Gorev | null {
     href: `/gorevler/asi/${o.programId}`,
     cta: 'Kuzuları gör',
     tarih: enYakinTarih,
-    planGun: hizliBesiPlanGun(o.tip, o.programId),
+    planGun: hizliBesiPlanGun(o.tip, o.programId) ?? undefined,
   };
 }
 

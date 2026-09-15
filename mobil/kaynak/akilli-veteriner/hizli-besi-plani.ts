@@ -434,8 +434,11 @@ export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
   return out;
 }
 
-/** Padok A / Gözlem (yeni alım): HIZLI_BESI_TAKVIM’den plan günü */
-export function hizliBesiPlanGun(tip: string, programId: string): number {
+/**
+ * Padok A / Gözlem (yeni alım): HIZLI_BESI_TAKVIM’den plan günü.
+ * Planda yoksa null — görev “Diğer”e düşer (pasteurella vb. gün 1’e yapışmasın).
+ */
+export function hizliBesiPlanGun(tip: string, programId: string): number | null {
   const satir = HIZLI_BESI_TAKVIM.find((e) => e.programId === programId);
   if (satir) return satir.gun;
   if (programId === TARTIM_GIRIS_PROGRAM_ID) return 1;
@@ -443,7 +446,7 @@ export function hizliBesiPlanGun(tip: string, programId: string): number {
   if (tGun != null) return tGun;
   if (tip === 'tartim') return 15;
   if (programId === 'selen-e') return 1;
-  return 1;
+  return null;
 }
 
 export const HIZLI_BESI_PLAN_BASLIK =
