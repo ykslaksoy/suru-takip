@@ -1,9 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { GirisYontemiFormu } from '@/bilesenler/giris-yontemi/GirisYontemiFormu';
 import { useGirisYontemi } from '@/baglam/GirisYontemiBaglami';
 
 export default function GirisYontemiKurulumScreen() {
   const { tercih, kurulumTamamla } = useGirisYontemi();
+  const [anaSayfayaGit, setAnaSayfayaGit] = useState(false);
+
+  useEffect(() => {
+    if (!anaSayfayaGit || !tercih.kurulumTamam) return;
+    router.replace('/(tabs)' as never);
+  }, [anaSayfayaGit, tercih.kurulumTamam]);
 
   return (
     <>
@@ -16,7 +23,7 @@ export default function GirisYontemiKurulumScreen() {
         kaydetMetin="Kaydet ve başla"
         onKaydet={async (kuzu, tartim) => {
           await kurulumTamamla(kuzu, tartim);
-          router.replace('/(tabs)' as never);
+          setAnaSayfayaGit(true);
         }}
       />
     </>
