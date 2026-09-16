@@ -23,9 +23,9 @@ const DOCK_HREF: Record<string, string> = {
 export function SabitAltDock() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { tabBarPadBottom, kisa } = useAltGuvenliBosluk();
+  const { tabBarPadBottom, kisa } = useAltGuvenliBosluk(72);
   const pathname = usePathname() ?? '';
-  const shellPadBottom = Platform.OS === 'web' ? Math.max(tabBarPadBottom, 16) : tabBarPadBottom;
+  const shellPadBottom = tabBarPadBottom;
 
   return (
     <View
