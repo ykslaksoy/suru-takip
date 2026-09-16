@@ -35,12 +35,13 @@ export function KilitliAnaSayfa() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { pendingSync, ready, refreshKey } = useDatabase();
-  const { height, width } = useWindowDimensions();
-  const { scrollPadBottom, headerPadTop, kisa, darTelefon } = useAltGuvenliBosluk(88);
+  const { width, height } = useWindowDimensions();
+  const { scrollPadBottom, headerPadTop, darTelefon, yatay } = useAltGuvenliBosluk(72);
   const [ozet, setOzet] = useState<AnaSayfaOzet>(BOS_OZET);
   const light = scheme === 'light';
   const bg = light ? '#ffffff' : colors.background;
-  const maskotBoy = kisa ? 72 : darTelefon ? 88 : 108;
+  // Genişliğe göre — kısa height (ilk frame 0) maskotu küçültüp zıplatmasın
+  const maskotBoy = yatay || (height > 0 && height < 420) ? 64 : width < 360 ? 84 : width < 520 ? 96 : 108;
 
   const load = useCallback(async () => {
     setOzet(await getAnaSayfaOzeti());
@@ -58,13 +59,12 @@ export function KilitliAnaSayfa() {
         contentContainerStyle={StyleSheet.flatten([
           styles.scrollContent,
           {
-            paddingBottom: scrollPadBottom,
-            // Kısa telefonda içeriği sıkıştırma — scroll ile Hızlı İşlemler açılsın
-            minHeight: Math.max(height * 0.45, 240),
+            // Dock Expo Tabs’ta ayrı; yine de son sıra etiketleri için sabit pay
+            paddingBottom: Math.max(scrollPadBottom, darTelefon ? 36 : 24),
           },
         ])}
         showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior="automatic">
+        keyboardShouldPersistTaps="handled">
         <View
           style={StyleSheet.flatten([
             styles.header,
@@ -192,8 +192,8 @@ export function KilitliAnaSayfa() {
 
         <Text style={StyleSheet.flatten([styles.bolum, styles.bolumPad, { color: colors.text }])}>Hızlı İşlemler</Text>
         <KilitliHizliIslemler />
-        {/* Alt dock üstünde net boşluk — son sıra etiketleri kesilmesin */}
-        <View style={{ height: darTelefon ? 12 : 4 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        {/* Sticky Ana Sayfa dock — son sıra etiketleri net görünsün */}
+        <View style={{ height: darTelefon ? 24 : 12 }} collapsable={false} />
       </ScrollView>
     </View>
   );
@@ -280,7 +280,7 @@ function OzetSayiKart({
 const styles = StyleSheet.create({
   shell: { flex: 1, width: '100%' },
   scroll: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
+  scrollContent: { flexGrow: 0 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

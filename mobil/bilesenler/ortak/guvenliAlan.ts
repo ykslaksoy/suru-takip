@@ -1,57 +1,45 @@
 import { Platform, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Safari / tarayıcı alt çubuğu + sekme dock için dinamik alt boşluk.
- * PWA dışı mobil web'de env(safe-area-inset) çoğu zaman yetersiz kalır.
+ * Dock + scroll boşlukları.
  *
- * Not: Expo Tabs içeriği dock üstünde tutar; yine de mobil web’de dock
- * veya tarayıcı chrome içerik üstüne binebildiği için ekstra pay şart.
+ * Önemli (mobil web FOUC):
+ * - useSafeAreaInsets() ilk frame’de 0 → sonra dolar; üst/alt pad kaydırır.
+ * - Üst safe-area yalnızca CSS `#root` padding-top (env) — burada ekleme.
+ * - Tarayıcı chrome `--app-height` / 100svh ile dışarıda; dock’a ekstra
+ *   “tarayıcı payı” eklemek Safari üstünde beyaz boşluk yaratır.
+ * - Expo Tabs içeriği dock’un üstünde; scrollPad yalnızca son satır nefes payı.
  */
 export function useAltGuvenliBosluk(tabBarYukseklik = 72) {
   const { height, width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const yatay = width > height;
-  const kisa = height < 480 || yatay;
+  // height henüz 0 iken kisa=true olmasın → maskot/pad zıplamasın
+  const olculu = height >= 100;
+  const kisa = olculu && (height < 480 || yatay);
   const darTelefon = width > 0 && width < 520;
 
-  // Mobil web: tarayıcı toolbar + home indicator; dikeyde daha fazla pay
-  const tarayiciPayi =
-    Platform.OS === 'web'
-      ? kisa
-        ? Math.max(36, Math.round(height * 0.08))
-        : darTelefon
-          ? Math.max(72, Math.round(height * 0.12))
-          : Math.max(48, Math.round(height * 0.08))
-      : 0;
+  // Dock alt: yalnızca ince nefes — home indicator CSS #root’ta
+  const tabBarPad = Platform.OS === 'web' ? (kisa ? 6 : 10) : kisa ? 8 : 12;
 
-  const insetBottom = Math.max(insets.bottom, 0);
-  const insetTop = Math.max(insets.top, 0);
-
-  // Dock: ikon + etiket + pad (~64–88) — varsayılan 72
-  const tabBarPad =
-    Platform.OS === 'web'
-      ? (kisa ? 12 : 18) + Math.round(tarayiciPayi * 0.2) + Math.max(insetBottom, darTelefon ? 8 : 0)
-      : (kisa ? 8 : 12) + insetBottom;
-
+  // Tabs zaten dock yüksekliğini ayırır; yine de mobil web’de son sıra
+  // etiketleri dock’a yapışmasın diye orta pay (eski 144+ tarayıcı payı yok)
   const scrollPad =
-    tabBarYukseklik +
-    tarayiciPayi +
-    (kisa ? 20 : darTelefon ? 40 : 28) +
-    insetBottom +
-    (Platform.OS === 'web' && darTelefon ? 24 : 0);
+    Platform.OS === 'web'
+      ? (darTelefon ? 56 : 32) + (kisa ? 8 : 0)
+      : tabBarYukseklik + (kisa ? 12 : 20);
+
+  // Üst: sabit küçük pad — CSS safe-area ile çiftlenmesin, inset beklemesin
+  const headerPadTop = kisa ? 6 : darTelefon ? 10 : 12;
 
   return {
     yatay,
     kisa,
     darTelefon,
-    insetTop,
-    insetBottom,
+    insetTop: 0,
+    insetBottom: 0,
     tabBarPadBottom: Math.round(tabBarPad),
     scrollPadBottom: Math.round(scrollPad),
-    headerPadTop: Math.round(
-      Math.max(insetTop, Platform.OS === 'web' && darTelefon ? 12 : 0) + (kisa ? 6 : 12),
-    ),
-    tarayiciPayi: Math.round(tarayiciPayi),
+    headerPadTop: Math.round(headerPadTop),
+    tarayiciPayi: 0,
   };
 }

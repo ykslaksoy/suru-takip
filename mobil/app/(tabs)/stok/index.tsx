@@ -1,16 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StokKarti } from '@/bilesenler/stok/StokKarti';
+import { StokGirisCikisModal } from '@/bilesenler/stok/StokGirisCikisModal';
+import { StokKayitModal } from '@/bilesenler/stok/StokKayitModal';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
@@ -26,7 +18,6 @@ import {
 } from '@/kaynak/stok';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
-import { terim } from '@/sabitler/Metinler';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -211,82 +202,25 @@ export default function StockScreen() {
         />
       </View>
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}>
-            <View style={[styles.modal, { backgroundColor: colors.card }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Stok kaydı</Text>
-              {(['name', 'quantity', 'minQuantity', 'unit', 'expiryDate'] as const).map((field) => (
-                <TextInput
-                  key={field}
-                  placeholder={
-                    field === 'name'
-                      ? 'Ad'
-                      : field === 'quantity'
-                        ? 'Miktar'
-                        : field === 'minQuantity'
-                          ? 'Minimum stok'
-                          : field === 'unit'
-                            ? 'Birim'
-                            : `${terim('SKT')} (YYYY-MM-DD)`
-                  }
-                  value={form[field]}
-                  onChangeText={(v) => setForm({ ...form, [field]: v })}
-                  style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                />
-              ))}
-              <View style={styles.typeRow}>
-                {STOCK_TYPE_ORDER.map((t) => (
-                  <Pressable
-                    key={t}
-                    onPress={() => setForm({ ...form, type: t })}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor: form.type === t ? colors.tint : colors.background,
-                        borderColor: colors.border,
-                      },
-                    ]}>
-                    <Text style={{ color: form.type === t ? '#fff' : colors.text }}>
-                      {STOCK_TYPE_LABELS[t]}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <AnaButon title="Kaydet" onPress={saveItem} />
-              <AnaButon title="İptal" variant="secondary" onPress={() => setModalVisible(false)} />
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
+      <StokKayitModal
+        visible={modalVisible}
+        form={form}
+        onFormChange={setForm}
+        onKaydet={saveItem}
+        onIptal={() => setModalVisible(false)}
+      />
 
-      <Modal visible={adjustModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modal, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Giriş/Çıkış — {adjustItem?.name}
-            </Text>
-            <TextInput
-              placeholder={`Miktar (${adjustItem?.unit ?? ''})`}
-              keyboardType="decimal-pad"
-              value={adjustQty}
-              onChangeText={setAdjustQty}
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-            />
-            {adjustItem?.type === 'feed' ? (
-              <TextInput
-                placeholder="Padok (opsiyonel — FCR paylaşımı için)"
-                value={adjustPadok}
-                onChangeText={setAdjustPadok}
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              />
-            ) : null}
-            <AnaButon title="Giriş (+)" onPress={() => doAdjust('in')} />
-            <AnaButon title="Çıkış (-)" variant="danger" onPress={() => doAdjust('out')} />
-            <AnaButon title="İptal" variant="secondary" onPress={() => setAdjustModal(false)} />
-          </View>
-        </View>
-      </Modal>
+      <StokGirisCikisModal
+        visible={adjustModal}
+        item={adjustItem}
+        miktar={adjustQty}
+        padok={adjustPadok}
+        onMiktarChange={setAdjustQty}
+        onPadokChange={setAdjustPadok}
+        onGiris={() => doAdjust('in')}
+        onCikis={() => doAdjust('out')}
+        onIptal={() => setAdjustModal(false)}
+      />
     </View>
   );
 }
@@ -306,10 +240,4 @@ const styles = StyleSheet.create({
   },
   hint: { marginBottom: 10, fontSize: 12, fontWeight: '600' },
   footer: { padding: 16, position: 'absolute', left: 0, right: 0, bottom: 0 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },
-  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
 });

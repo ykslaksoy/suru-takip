@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { TurSecici } from '@/bilesenler/suru/TurSecici';
 import { PadokSecici } from '@/bilesenler/suru/PadokSecici';
-import { OkuyucuDurumu } from '@/bilesenler/rfid/OkuyucuDurumu';
+import { KuzuSecimPaneli } from '@/bilesenler/giris-yontemi/KuzuSecimPaneli';
+import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -13,8 +14,6 @@ import { useSubscription } from '@/baglam/AbonelikBaglami';
 import { useMod } from '@/baglam/ModBaglami';
 import { countAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { validateGehisId, validateTurkvetNo } from '@/kaynak/turkvet/dogrula';
-import { rfidOku } from '@/kaynak/rfid';
-import { ocrKupeFotodan, ocrKupeNormalize, ocrSirtNormalize } from '@/kaynak/ocr';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import type { AnimalSex, AnimalSpecies, AnimalStatus } from '@/kaynak/cekirdek/tipler';
 import { VARSAYILAN_KABUL_CINSIYET } from '@/kaynak/suru/hizli-kuzu-kabul';
@@ -41,11 +40,9 @@ export default function AddAnimalScreen() {
   const params = useLocalSearchParams<{ padok?: string }>();
   const padokParam = typeof params.padok === 'string' ? params.padok : '';
 
+  const [kimlik, setKimlik] = useState({ earTag: '', sirtNo: '', gehisId: undefined as string | undefined });
   const [form, setForm] = useState({
-    earTag: '',
     turkvetNo: '',
-    gehisId: '',
-    sirtNo: '',
     name: '',
     breed: 'Merinos',
     species: 'sheep' as AnimalSpecies,
@@ -56,48 +53,12 @@ export default function AddAnimalScreen() {
     motherId: '',
     notes: '',
   });
-  const [ocrMetin, setOcrMetin] = useState('');
-  const [ocrSirtMetin, setOcrSirtMetin] = useState('');
 
   useEffect(() => {
     if (padokParam) {
       setForm((f) => ({ ...f, paddock: padokParam }));
     }
   }, [padokParam]);
-
-  const rfidOkut = async () => {
-    const r = await rfidOku();
-    if (!r.ok) {
-      uyar('RFID', r.message);
-      return;
-    }
-    setForm((f) => ({
-      ...f,
-      earTag: r.earTagOneri || f.earTag,
-      gehisId: r.gehisIdOneri || f.gehisId,
-    }));
-    uyar('RFID', r.message);
-  };
-
-  const ocrUygula = async () => {
-    const r = ocrMetin.trim() ? ocrKupeNormalize(ocrMetin) : await ocrKupeFotodan({});
-    if (!r.ok) {
-      uyar('OCR', r.message);
-      return;
-    }
-    setForm((f) => ({ ...f, earTag: r.earTag || f.earTag }));
-    uyar('OCR', r.message);
-  };
-
-  const ocrSirtUygula = () => {
-    const r = ocrSirtNormalize(ocrSirtMetin);
-    if (!r.ok) {
-      uyar('OCR', r.message);
-      return;
-    }
-    setForm((f) => ({ ...f, sirtNo: r.sirtNo || f.sirtNo }));
-    uyar('OCR', r.message);
-  };
 
   const save = async () => {
     const count = await countAnimals();
@@ -114,7 +75,7 @@ export default function AddAnimalScreen() {
       }
       uyar('Paket açıldı', ac.message);
     }
-    if (!form.earTag.trim()) {
+    if (!kimlik.earTag.trim()) {
       uyar('Hata', 'Kulak küpe numarası zorunlu');
       return;
     }
@@ -123,7 +84,7 @@ export default function AddAnimalScreen() {
       uyar('Hata', tv.message);
       return;
     }
-    const gh = validateGehisId(form.gehisId);
+    const gh = validateGehisId(kimlik.gehisId ?? '');
     if (!gh.valid) {
       uyar('Hata', gh.message);
       return;
@@ -131,10 +92,10 @@ export default function AddAnimalScreen() {
 
     await upsertAnimal({
       id: uuidv4(),
-      earTag: form.earTag.trim(),
+      earTag: kimlik.earTag.trim(),
       turkvetNo: form.turkvetNo.replace(/\s/g, '').toUpperCase(),
-      gehisId: form.gehisId.replace(/\s/g, '') || null,
-      sirtNo: form.sirtNo.trim() || null,
+      gehisId: kimlik.gehisId?.replace(/\s/g, '') || null,
+      sirtNo: kimlik.sirtNo.trim() || null,
       name: form.name.trim(),
       breed: form.breed.trim(),
       species: form.species,
@@ -151,10 +112,7 @@ export default function AddAnimalScreen() {
   };
 
   const fields: { key: keyof typeof form; label: string; placeholder: string }[] = [
-    { key: 'earTag', label: 'Kulak Küpe No *', placeholder: 'TR-34-001234' },
-    { key: 'sirtNo', label: 'Sırt No', placeholder: '87' },
     { key: 'turkvetNo', label: 'TÜRKVET Kimlik No', placeholder: 'TR340012345678901' },
-    { key: 'gehisId', label: 'Aref / GEKİS Elektronik Kimlik', placeholder: 'AREF000000000001' },
     { key: 'name', label: 'İsim', placeholder: 'Koyun adı (opsiyonel)' },
     { key: 'breed', label: 'Irk', placeholder: 'Merinos, İvesi, Sakız...' },
     { key: 'birthDate', label: 'Doğum Tarihi', placeholder: 'YYYY-MM-DD' },
@@ -171,39 +129,8 @@ export default function AddAnimalScreen() {
       </Text>
 
       <View style={styles.field}>
-        <OkuyucuDurumu />
-        <AnaButon title="RFID / GEKİS okut (simülasyon)" variant="secondary" onPress={() => void rfidOkut()} />
-      </View>
-
-      <View style={styles.field}>
-        <Text style={StyleSheet.flatten([styles.label, { color: colors.text }])}>
-          OCR — küpe metni (yapıştır / oku)
-        </Text>
-        <TextInput
-          value={ocrMetin}
-          onChangeText={setOcrMetin}
-          placeholder="Etiketten okunan veya yapıştırılan metin"
-          placeholderTextColor={colors.textSecondary}
-          style={StyleSheet.flatten([
-            styles.input,
-            { borderColor: colors.border, color: colors.text, backgroundColor: colors.card },
-          ])}
-        />
-        <AnaButon title="OCR ile küpe doldur" variant="secondary" onPress={() => void ocrUygula()} />
-        <Text style={StyleSheet.flatten([styles.label, { color: colors.text, marginTop: 12 }])}>
-          OCR — sırt no
-        </Text>
-        <TextInput
-          value={ocrSirtMetin}
-          onChangeText={setOcrSirtMetin}
-          placeholder="Sırt boyasından okunan / yapıştırılan"
-          placeholderTextColor={colors.textSecondary}
-          style={StyleSheet.flatten([
-            styles.input,
-            { borderColor: colors.border, color: colors.text, backgroundColor: colors.card },
-          ])}
-        />
-        <AnaButon title="OCR ile sırt doldur" variant="secondary" onPress={ocrSirtUygula} />
+        <YontemOzeti ayarlarLink />
+        <KuzuSecimPaneli value={kimlik} onChange={setKimlik} yeniKayit />
       </View>
 
       {fields.map((f) => (
