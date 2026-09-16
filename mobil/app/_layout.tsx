@@ -11,6 +11,7 @@ import { SubscriptionProvider } from '@/baglam/AbonelikBaglami';
 import { AnaSayfaProvider } from '@/baglam/AnaSayfaBaglami';
 import { ModProvider } from '@/baglam/ModBaglami';
 import { AyarlarProvider } from '@/baglam/AyarlarBaglami';
+import { GirisYontemiProvider } from '@/baglam/GirisYontemiBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
 
@@ -44,6 +45,7 @@ export default function RootLayout() {
         <SubscriptionProvider>
           <AnaSayfaProvider>
             <ModProvider>
+              <GirisYontemiProvider>
               <AyarlarProvider>
                 <View style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
                   <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
@@ -68,6 +70,8 @@ export default function RootLayout() {
                     <Stack.Screen name="profesyonellik/oneri" options={{ title: 'Üst aşama' }} />
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
+                    <Stack.Screen name="giris-yontemi/kurulum" options={{ title: 'Giriş yöntemi kurulumu' }} />
+                    <Stack.Screen name="giris-yontemi/index" options={{ title: 'Kuzu seçim & tartım' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
                     <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />
                     <Stack.Screen name="sistem-kontrol/index" options={{ title: 'Sistem kontrolü' }} />
@@ -78,6 +82,7 @@ export default function RootLayout() {
                   <AyarlarKaplama />
                 </View>
               </AyarlarProvider>
+              </GirisYontemiProvider>
             </ModProvider>
           </AnaSayfaProvider>
         </SubscriptionProvider>

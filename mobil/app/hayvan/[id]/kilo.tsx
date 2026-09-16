@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Modal, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { PerformansMetrikleri } from '@/bilesenler/kilo/PerformansMetrikleri';
+import { TartimFormu } from '@/bilesenler/kilo/TartimFormu';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
+import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -42,7 +44,7 @@ export default function WeightScreen() {
   }, [load, refreshKey]);
 
   const save = async () => {
-    const w = parseFloat(weight);
+    const w = parseFloat(weight.replace(',', '.'));
     if (!id || isNaN(w) || w <= 0) {
       Alert.alert('Hata', 'Geçerli bir kilo girin');
       return;
@@ -91,18 +93,12 @@ export default function WeightScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modal, { backgroundColor: colors.card }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Yeni Tartım</Text>
-            <TextInput
-              placeholder="Kilo (kg)"
-              keyboardType="decimal-pad"
-              value={weight}
-              onChangeText={setWeight}
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-            />
-            <TextInput
-              placeholder="Not (opsiyonel)"
-              value={notes}
-              onChangeText={setNotes}
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            <YontemOzeti ayarlarLink />
+            <TartimFormu
+              weight={weight}
+              notes={notes}
+              onWeightChange={setWeight}
+              onNotesChange={setNotes}
             />
             <AnaButon title="Kaydet" onPress={save} />
             <AnaButon title="İptal" variant="secondary" onPress={() => setModal(false)} />
@@ -125,5 +121,4 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },
 });
