@@ -40,7 +40,8 @@ export function KilitliAnaSayfa() {
   const [ozet, setOzet] = useState<AnaSayfaOzet>(BOS_OZET);
   const light = scheme === 'light';
   const bg = light ? '#ffffff' : colors.background;
-  const maskotBoy = kisa ? 72 : darTelefon ? 88 : 108;
+  // Kuzu büyütüldü — tabs/safe-area bozulmasın diye kademeli (kısa / dar / normal)
+  const maskotBoy = kisa ? 104 : darTelefon ? 128 : 156;
 
   const load = useCallback(async () => {
     setOzet(await getAnaSayfaOzeti());
@@ -296,8 +297,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   maskot: {
-    width: 108,
-    height: 108,
+    width: 156,
+    height: 156,
     maxWidth: '100%',
     maxHeight: '100%',
     // RN Web: cover varsayılanı bacakları kesebiliyordu
