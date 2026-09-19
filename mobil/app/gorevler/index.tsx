@@ -97,7 +97,11 @@ export default function GorevlerScreen() {
                     {gruplar.map((g) => (
                       <Pressable
                         key={g.id}
-                        onPress={() => router.push(`/gorevler/kategori/${g.id}` as never)}
+                        onPress={() =>
+                          router.push(
+                            (g.id === 'asi' ? '/gorevler/asi' : `/gorevler/kategori/${g.id}`) as never,
+                          )
+                        }
                         style={[
                           styles.kategoriBtn,
                           {
