@@ -1,23 +1,24 @@
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-/**
- * Masaüstünde dikey önizleme çerçevesi.
- * Yatay / kısa ekranda çerçeve kapalı — içerik gerçek genişliği kullanır.
- */
+/** SuperAraç tarzı masaüstü telefon kolonu: geniş ekranda ~390px, çerçeve her zaman görünür. */
+const TELEFON_GENISLIK = 390;
+
 export function WebOnizlemeCercevesi({ children }: { children: React.ReactNode }) {
   const { width, height } = useWindowDimensions();
-  const yatay = width > height;
-  const kisa = height < 520;
-  const masaustuDikey =
-    Platform.OS === 'web' && width >= 560 && !yatay && !kisa;
+  // Yatay masaüstünde de açık kalsın (SuperAraç gibi); sadece gerçek dar telefon/tablet tam ekran.
+  const masaustuGenis = Platform.OS === 'web' && width >= 520;
 
-  if (!masaustuDikey) {
+  if (!masaustuGenis) {
     return <View style={styles.tamEkran}>{children}</View>;
   }
 
+  const telefonYukseklik = Math.min(844, Math.max(560, height - 32));
+
   return (
     <View style={styles.dis}>
-      <View style={[styles.telefon, { maxHeight: Math.min(920, height - 48) }]}>{children}</View>
+      <View style={[styles.telefon, { height: telefonYukseklik, maxHeight: height - 24 }]}>
+        {children}
+      </View>
     </View>
   );
 }
@@ -30,31 +31,32 @@ const styles = StyleSheet.create({
   },
   dis: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1a2e1a',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    backgroundColor: '#e8ecee',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   telefon: {
-    width: '100%',
-    maxWidth: 430,
-    flex: 1,
-    borderRadius: 32,
+    width: TELEFON_GENISLIK,
+    maxWidth: '100%',
+    borderRadius: 28,
     overflow: 'hidden',
     backgroundColor: '#f4f7f0',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(17, 24, 39, 0.08)',
     ...Platform.select({
       web: {
-        boxShadow: '0 30px 90px rgba(0,0,0,0.45)',
+        boxShadow: '0 8px 32px rgba(17, 24, 39, 0.12)',
       },
       default: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 30 },
-        shadowOpacity: 0.45,
-        shadowRadius: 40,
-        elevation: 24,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 8,
       },
     }),
   },
