@@ -26,6 +26,7 @@ export default function Root({ children }: { children: ReactNode }) {
   );
 }
 
+/** SuperAraç ile aynı fikir: masaüstünde 390px telefon kolonu, çerçeve görünür. */
 const webStyles = `
 *, *::before, *::after {
   box-sizing: border-box;
@@ -48,52 +49,40 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   overscroll-behavior: none;
+  margin: 0;
 }
 
 #root {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* padding + 100dvh content-box altı kesiyordu — border-box ile içerik sığar */
   box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #1a241a;
-  }
-}
-
-/* Masaüstünde telefon çerçevesi — uygulama hissi */
+/* Masaüstü / geniş ekran: SuperAraç tarzı telefon kolonu (yatay dahil) */
 @media (min-width: 520px) {
   body {
-    background: linear-gradient(145deg, #1a2e1a 0%, #2d6a4f 45%, #40916c 100%);
+    background: #e8ecee;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: 28px 16px;
+    padding: 12px;
     overflow: auto;
   }
 
   #root {
     width: 100%;
-    max-width: 430px;
-    height: min(920px, calc(100dvh - 56px));
-    max-height: 920px;
-    border-radius: 32px;
+    max-width: 390px;
+    height: min(844px, calc(100dvh - 24px));
+    max-height: calc(100dvh - 24px);
+    border-radius: 28px;
     overflow: hidden;
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.12),
-      0 30px 90px rgba(0, 0, 0, 0.45);
+      0 0 0 1px rgba(17, 24, 39, 0.08),
+      0 8px 32px rgba(17, 24, 39, 0.12);
     background-color: #f4f7f0;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #root {
-      background-color: #1a241a;
-    }
   }
 }
 
@@ -101,21 +90,7 @@ body {
 @media (max-width: 519px) {
   #root {
     padding-top: max(env(safe-area-inset-top, 0px), 8px);
-    /* Alt dock + tarayıcı chrome — box-sizing:border-box ile yükseklik içinde */
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
-  }
-}
-
-@media (orientation: landscape) and (max-width: 900px) {
-  html, body, #root {
-    height: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
-  }
-
-  #root {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
   }
 }
 `;
