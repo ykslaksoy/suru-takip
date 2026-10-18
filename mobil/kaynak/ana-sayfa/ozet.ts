@@ -139,6 +139,7 @@ export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
   const dusukStok = await getLowStockItems().catch(() => []);
   const oneriler = getSmartSuggestions({
     lowStock: dusukStok.length > 0,
+    lowStockAdlar: dusukStok.map((s) => s.name),
     adgGrams: ortAdg == null ? null : Math.round(ortAdg),
   });
   return {

@@ -5,7 +5,8 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { dusumMiktari, stokKalemiEslestir } from '@/kaynak/stok/eslesme';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { HealthRecord } from '@/kaynak/cekirdek/tipler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
@@ -53,6 +54,17 @@ export default function AnimalHealthScreen() {
       recordedAt: new Date().toISOString(),
       notes: form.notes.trim(),
     });
+    // Aşı / tedavi: ilaç adı stok kalemiyle eşleşirse 1 doz düş
+    let stokMesaj = '';
+    if ((form.recordType === 'vaccine' || form.recordType === 'treatment') && form.medicine.trim()) {
+      const item = stokKalemiEslestir(form.medicine, await getStockItems());
+      if (item) {
+        const { dus, eksik } = dusumMiktari(1, 1, item.quantity);
+        if (dus > 0) await adjustStock(item.id, 'out', dus, `Sağlık kaydı · ${animal?.earTag ?? ''}`);
+        stokMesaj = eksik ? `${item.name}: stok yetersiz, düşülemedi` : `${item.name}: stoktan 1 düşüldü`;
+      }
+    }
+    if (stokMesaj) Alert.alert('Kaydedildi', stokMesaj);
     if (form.recordType === 'illness') {
       const animal = await getAnimal(id);
       if (animal) await upsertAnimal({ ...animal, status: 'sick' });

@@ -24,6 +24,7 @@ import { profesyonellikModul } from './moduller/profesyonellik';
 import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
+import { stokEslesmeModul } from './moduller/stok-eslesme';
 
 const MODULLER = [
   hizliBesiModul,
@@ -46,6 +47,7 @@ const MODULLER = [
   topluModul,
   planTakvimModul,
   hizliTartimModul,
+  stokEslesmeModul,
 ];
 
 async function main() {

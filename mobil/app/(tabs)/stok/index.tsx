@@ -17,7 +17,10 @@ import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { adjustStock, getStockItems, getStockMovements, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
+import { dusukStokMu } from '@/kaynak/stok/eslesme';
+import type { StockMovement } from '@/kaynak/cekirdek/tipler';
 import { kaydetYemSayim } from '@/kaynak/stok/sayim';
 import {
   getSiraliStokListesi,
@@ -63,6 +66,8 @@ export default function StockScreen() {
         s.aciklama.toLocaleLowerCase('tr-TR').includes(q)
     );
   }, [satirlar, arama]);
+
+  const dusukler = useMemo(() => satirlar.filter((s) => s.item && dusukStokMu(s.item)), [satirlar]);
 
   const openFromSatir = (satir: StokListeSatiri) => {
     if (satir.item) {
@@ -112,11 +117,20 @@ export default function StockScreen() {
   const [adjustQty, setAdjustQty] = useState('');
   const [adjustItem, setAdjustItem] = useState<StockItem | null>(null);
   const [adjustPadok, setAdjustPadok] = useState('');
+  const [adjustFiyat, setAdjustFiyat] = useState('');
+  const [hareketler, setHareketler] = useState<StockMovement[]>([]);
+  const [fiyatlar, setFiyatlar] = useState<Record<string, number>>({});
 
   const openAdjust = (item: StockItem) => {
     setAdjustItem(item);
     setAdjustQty('');
     setAdjustPadok('');
+    setAdjustFiyat('');
+    setHareketler([]);
+    getStockMovements({ stockId: item.id })
+      .then((m) => setHareketler(m.filter((x) => x.stockId === item.id).slice(0, 8)))
+      .catch(() => {});
+    getBirimFiyatlar().then(setFiyatlar).catch(() => {});
     setAdjustModal(true);
   };
 
@@ -129,7 +143,14 @@ export default function StockScreen() {
     }
     const notes =
       adjustItem.type === 'feed' && adjustPadok.trim() ? adjustPadok.trim() : '';
-    await adjustStock(adjustItem.id, movementType, q, notes);
+    const fiyat = parseFloat(adjustFiyat.replace(',', '.'));
+    await adjustStock(
+      adjustItem.id,
+      movementType,
+      q,
+      movementType === 'in' && Number.isFinite(fiyat) && fiyat > 0 ? `${notes ? `${notes} · ` : ''}Alış ${fiyat} ₺/${adjustItem.unit}` : notes,
+    );
+    if (movementType === 'in' && Number.isFinite(fiyat) && fiyat > 0) await setBirimFiyat(adjustItem.id, fiyat);
     if (movementType === 'out') {
       await kaydetKatalogKullanim(adjustItem.name, Math.max(1, Math.round(q)));
     }
@@ -183,9 +204,19 @@ export default function StockScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         renderItem={({ item }) => <StokKarti satir={item} onPress={() => openFromSatir(item)} />}
         ListHeaderComponent={
-          <Text style={[styles.hint, { color: colors.textSecondary }]}>
-            {filtered.length} kalem · çıkış yaptıkça sıra yükselir
-          </Text>
+          <>
+            {dusukler.length ? (
+              <View style={[styles.uyari, { borderColor: colors.warning, backgroundColor: colors.card }]}>
+                <Text style={{ color: colors.warning, fontWeight: '800' }}>⚠ {dusukler.length} kalem minimumun altında</Text>
+                <Text style={{ color: colors.text, marginTop: 2, fontSize: 13 }}>
+                  {dusukler.slice(0, 4).map((d) => `${d.ad} (${d.item?.quantity ?? 0} ${d.item?.unit ?? ''})`).join(' · ')}
+                </Text>
+              </View>
+            ) : null}
+            <Text style={[styles.hint, { color: colors.textSecondary }]}>
+              {filtered.length} kalem · aşı/ilaç kaydı girildikçe stoktan otomatik düşer
+            </Text>
+          </>
         }
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 24 }}>
@@ -281,9 +312,31 @@ export default function StockScreen() {
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
               />
             ) : null}
+            <TextInput
+              placeholder={`Birim alış fiyatı ₺/${adjustItem?.unit ?? ''} (giriş için, opsiyonel)`}
+              keyboardType="decimal-pad"
+              value={adjustFiyat}
+              onChangeText={setAdjustFiyat}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
+              Mevcut: {adjustItem?.quantity ?? 0} {adjustItem?.unit} · minimum {adjustItem?.minQuantity ?? 0}
+              {adjustItem && fiyatlar[adjustItem.id] ? ` · son alış ${fiyatlar[adjustItem.id]} ₺/${adjustItem.unit}` : ''}
+            </Text>
             <AnaButon title="Giriş (+)" onPress={() => doAdjust('in')} />
             <AnaButon title="Çıkış (-)" variant="danger" onPress={() => doAdjust('out')} />
             <AnaButon title="İptal" variant="secondary" onPress={() => setAdjustModal(false)} />
+            {hareketler.length ? (
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontWeight: '800', fontSize: 12, marginBottom: 4 }}>SON HAREKETLER</Text>
+                {hareketler.map((h) => (
+                  <Text key={h.id} style={{ color: colors.text, fontSize: 13, marginBottom: 2 }}>
+                    {h.movementType === 'in' ? '＋' : '－'} {h.quantity} {adjustItem?.unit} · {new Date(h.recordedAt).toLocaleDateString('tr-TR')}
+                    {h.notes ? ` · ${h.notes}` : ''}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
           </View>
         </View>
       </Modal>
@@ -292,6 +345,7 @@ export default function StockScreen() {
 }
 
 const styles = StyleSheet.create({
+  uyari: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 10 },
   container: { flex: 1 },
   pageHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   pageTitle: { fontSize: 26, fontWeight: '800' },
