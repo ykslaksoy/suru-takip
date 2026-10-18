@@ -27,6 +27,12 @@ import {
   takviyeGorevOncelikSira,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
 import type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/liste';
+import type { HealthRecord } from '@/kaynak/cekirdek/tipler';
+import { getEtkinPlan, getPlanZaman } from '@/kaynak/gorevler/saglik-plani';
+import { planVadeleri } from '@/kaynak/gorevler/plan-takvim';
+
+/** Plan dozu bu kadar gün kala görevlere düşer */
+const PLAN_HATIRLATMA_GUN = 3;
 
 export type TakviyeGorevHayvan = {
   animalId: string;
@@ -290,6 +296,26 @@ export async function takviyeGorevProgramHaritasi(): Promise<Map<string, Program
         planDurumEkle(d, k);
       }
     }
+  }
+
+  // Önleyici Sağlık Planı (Kendi planım; önerilen yalnız erişim açıksa) — girişe göre otomatik takvim
+  const [etkinPlan, planZaman] = await Promise.all([getEtkinPlan(), getPlanZaman()]);
+  for (const v of planVadeleri({ animals, health: health as HealthRecord[], plan: etkinPlan, zaman: planZaman })) {
+    if (v.kalanGun > PLAN_HATIRLATMA_GUN) continue;
+    const tip: TakviyeTip = v.bolum === 'vitamin' ? 'vitamin' : v.bolum === 'parazit' ? 'parazit' : 'asi';
+    const o = ensure(v.programId, tip);
+    if (!o || o.hayvanlar.has(v.animalId)) continue;
+    const a = byId.get(v.animalId);
+    if (!a) continue;
+    hayvanEkle(o, {
+      animalId: v.animalId,
+      etiket: hayvanAnaEtiket(a),
+      altEtiket: hayvanAltEtiket(a),
+      paddock: a.paddock,
+      planlananAt: v.vade,
+      kalanGun: v.kalanGun,
+      durum: v.kalanGun > 0 ? 'yaklasiyor' : 'yapilacak',
+    });
   }
 
   // Takvim aşıları — planda olmayan / farklı hayvanlar

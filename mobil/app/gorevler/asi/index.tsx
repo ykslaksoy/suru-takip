@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { ASI_PROGRAMI } from '@/kaynak/cekirdek/asi-programi';
@@ -12,6 +12,10 @@ import {
   type SaglikPlani,
   type SaglikPlaniBolum,
 } from '@/kaynak/gorevler/saglik-plani';
+import { getAnimals, getAllHealthRecordsForAsi } from '@/kaynak/cekirdek/veritabani';
+import type { Animal, HealthRecord } from '@/kaynak/cekirdek/tipler';
+import { kalemZamani, planVadeleri, vadeOzeti, zamanEtiketi } from '@/kaynak/gorevler/plan-takvim';
+import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
 
 const BOLUM_BASLIK: Record<SaglikPlaniBolum, string> = {
   asi: 'Aşılar',
@@ -47,13 +51,46 @@ function kalemler(ids: string[]): Kalem[] {
 export default function KuzuSaglikPlaniScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { hazir, onerilenAcik, onerilen, kendi, mod, setMod, ekle, cikar, sifirla } = useSaglikPlani();
+  const { hazir, onerilenAcik, onerilen, kendi, mod, setMod, ekle, cikar, sifirla, zaman, setZaman } = useSaglikPlani();
+  const [veri, setVeri] = useState<{ animals: Animal[]; health: HealthRecord[] } | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let iptal = false;
+      Promise.all([getAnimals(), getAllHealthRecordsForAsi()])
+        .then(([animals, health]) => {
+          if (!iptal) setVeri({ animals, health });
+        })
+        .catch(() => {});
+      return () => {
+        iptal = true;
+      };
+    }, []),
+  );
   const [duzenle, setDuzenle] = useState(false);
   const [acikEkle, setAcikEkle] = useState<SaglikPlaniBolum | null>(null);
 
   const onerilenGoster = onerilenAcik && mod === 'onerilen' && onerilen != null;
   const plan: SaglikPlani = onerilenGoster ? onerilen! : kendi;
   const duzenlenebilir = !onerilenGoster;
+  const vadeler = useMemo(
+    () => (veri ? planVadeleri({ animals: veri.animals, health: veri.health, plan, zaman }) : []),
+    [veri, plan, zaman],
+  );
+  const ozet = useMemo(() => vadeOzeti(vadeler), [vadeler]);
+  const toplamBugun = vadeler.filter((v) => v.kalanGun === 0).length;
+  const toplamGeciken = vadeler.filter((v) => v.kalanGun < 0).length;
+  const toplamYaklasan = vadeler.filter((v) => v.kalanGun > 0 && v.kalanGun <= 7).length;
+
+  const durumMetni = (id: string): { metin: string; renk: string } => {
+    const o = ozet.get(id);
+    if (!veri) return { metin: 'Hesaplanıyor…', renk: colors.textSecondary };
+    if (!o) return { metin: 'Tüm kuzular tamam', renk: colors.tint };
+    if (o.geciken) return { metin: `${o.geciken} kuzu gecikti${o.bugun ? ` · ${o.bugun} bugün` : ''}`, renk: colors.warning };
+    if (o.bugun) return { metin: `Bugün ${o.bugun} kuzu`, renk: colors.warning };
+    if (o.yaklasan) return { metin: `7 gün içinde ${o.yaklasan} kuzu`, renk: colors.tint };
+    return { metin: `Sıradaki: ${o.enYakin ? gorevTarihMetni(o.enYakin) : '—'}`, renk: colors.textSecondary };
+  };
+
   const onerilenSet = new Set(onerilen ? SAGLIK_PLANI_BOLUMLER.flatMap((b) => onerilen[b]) : []);
 
   // Detay ekranı (/gorevler/asi/[programId]) aşı, parazit ve vitamin kalemlerini birlikte açar.
@@ -73,7 +110,46 @@ export default function KuzuSaglikPlaniScreen() {
           {neden ? (
             <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 4 }}>{neden}</Text>
           ) : null}
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Durum: sırada</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+            {zamanEtiketi(kalemZamani(zaman, p.id))}
+          </Text>
+          {duzenlenebilir && duzenle ? (
+            <View style={styles.zamanSatir}>
+              {(
+                [
+                  ['gunSonra', 'Gün sonra', 0],
+                  ['tekrarGun', 'Tekrar (gün)', 0],
+                ] as const
+              ).map(([alan, etiket]) => {
+                const z = kalemZamani(zaman, p.id);
+                const deger = alan === 'gunSonra' ? z.gunSonra : z.tekrarGun ?? 0;
+                const degistir = (d: number) => {
+                  const yeni = Math.max(0, deger + d);
+                  setZaman(p.id, alan === 'gunSonra' ? { ...z, gunSonra: yeni } : { ...z, tekrarGun: yeni || null });
+                };
+                return (
+                  <View key={alan} style={styles.zamanKutu}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{etiket}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Pressable onPress={() => degistir(alan === 'tekrarGun' ? -7 : -1)} style={[styles.adim, { borderColor: colors.border }]}>
+                        <Text style={{ color: colors.text, fontWeight: '800' }}>−</Text>
+                      </Pressable>
+                      <Text style={{ color: colors.text, fontWeight: '800', minWidth: 28, textAlign: 'center' }}>
+                        {alan === 'tekrarGun' && !deger ? 'yok' : deger}
+                      </Text>
+                      <Pressable onPress={() => degistir(alan === 'tekrarGun' ? 7 : 1)} style={[styles.adim, { borderColor: colors.border }]}>
+                        <Text style={{ color: colors.text, fontWeight: '800' }}>+</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={{ color: durumMetni(p.id).renk, fontSize: 12, fontWeight: '700', marginTop: 2 }}>
+              {durumMetni(p.id).metin}
+            </Text>
+          )}
         </View>
         {duzenlenebilir && duzenle ? (
           <Pressable
@@ -134,6 +210,24 @@ export default function KuzuSaglikPlaniScreen() {
             })}
           </View>
         ) : null}
+
+        <View style={[styles.ozetKart, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {(
+            [
+              ['Geciken', toplamGeciken, colors.warning],
+              ['Bugün', toplamBugun, colors.warning],
+              ['7 gün içinde', toplamYaklasan, colors.tint],
+            ] as const
+          ).map(([etiket, sayi, renk]) => (
+            <View key={etiket} style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ color: sayi ? renk : colors.textSecondary, fontSize: 22, fontWeight: '900' }}>{sayi}</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{etiket} doz</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 12 }}>
+          Plan, her kuzunun giriş tarihine göre kendiliğinden takvime yazılır. Yapıldı işaretlenince sıradaki tekrar planlanır.
+        </Text>
 
         <Text style={[styles.katmanBaslik, { color: colors.text }]}>Önleyici Sağlık Planı</Text>
         <Text style={[styles.katmanNot, { color: colors.tint }]}>Her kuzuya istisnasız rutin uygulanır.</Text>
@@ -254,6 +348,10 @@ const styles = StyleSheet.create({
   intro: { lineHeight: 20, marginBottom: 12, fontSize: 14 },
   katmanBaslik: { fontSize: 17, fontWeight: '800', marginTop: 4 },
   katmanNot: { fontSize: 13, fontWeight: '700', marginTop: 2, marginBottom: 8 },
+  ozetKart: { flexDirection: 'row', borderWidth: 1, borderRadius: 14, paddingVertical: 12, marginBottom: 6 },
+  zamanSatir: { flexDirection: 'row', gap: 14, marginTop: 8 },
+  zamanKutu: { gap: 2 },
+  adim: { width: 28, height: 28, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   tedaviKart: { borderWidth: 1, borderRadius: 14, padding: 14, marginTop: 24 },
   segment: {
     flexDirection: 'row',

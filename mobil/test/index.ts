@@ -22,6 +22,7 @@ import { anaSayfaKilitModul } from './moduller/ana-sayfa-kilit';
 import { hizliKuzuModul } from './moduller/hizli-kuzu';
 import { profesyonellikModul } from './moduller/profesyonellik';
 import { topluModul } from './moduller/toplu';
+import { planTakvimModul } from './moduller/plan-takvim';
 
 const MODULLER = [
   hizliBesiModul,
@@ -42,6 +43,7 @@ const MODULLER = [
   hizliKuzuModul,
   profesyonellikModul,
   topluModul,
+  planTakvimModul,
 ];
 
 async function main() {

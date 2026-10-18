@@ -1,4 +1,4 @@
-import { calculateADG, getAnimals, getLatestWeight } from '@/kaynak/cekirdek/veritabani';
+import { calculateADG, getAnimals, getLatestWeight, getLowStockItems } from '@/kaynak/cekirdek/veritabani';
 import { getBugunGorevleri, type Gorev } from '@/kaynak/gorevler/liste';
 import { getSmartSuggestions, type SmartSuggestion } from '@/kaynak/akilli-kuzu/oneri';
 
@@ -107,13 +107,7 @@ export const KILITLI_PADOKLAR: Omit<AnaSayfaParti, 'bas'>[] = [
   { harf: 'C', ad: 'Padok C', yasEtiket: '4,5 aylık', ton: 'c' },
 ];
 
-/** Akıllı Kuzu sekmesi ile aynı demo bağlamı — Kritik 1 / Aksiyon 2 */
-const KILITLI_ONERI_CTX = {
-  quarantineDay: 2,
-  quarantineTotal: 5,
-  needsVaccine: true,
-  lowStock: true,
-};
+
 
 const PADOK_KUZU_ON_EK: Record<string, string> = {
   'Padok A': 'padok-a-kuzu-',
@@ -141,7 +135,12 @@ export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
   const sezonKuzulari = KILITLI_PADOKLAR.flatMap((p) => aktif(p.ad));
   const adgler = await Promise.all(sezonKuzulari.map((a) => calculateADG(a.id).catch(() => null)));
   const ortAdg = ortalama(adgler);
-  const oneriler = getSmartSuggestions(KILITLI_ONERI_CTX);
+  // Gerçek veriden bağlam (eski sabit demo bağlamı yerine): düşük stok + ortalama günlük artış
+  const dusukStok = await getLowStockItems().catch(() => []);
+  const oneriler = getSmartSuggestions({
+    lowStock: dusukStok.length > 0,
+    adgGrams: ortAdg == null ? null : Math.round(ortAdg),
+  });
   return {
     hayvanSayisi: partiler.reduce((s, p) => s + p.bas, 0),
     gorevSayisi: gorevler.length,

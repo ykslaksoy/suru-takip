@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ASI_PROGRAMI, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import { VITAMIN_PROGRAMI } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import { kaliciGetItem, kaliciSetItem, kaliciRemoveItem } from '@/kaynak/cekirdek/web-kalici-depo';
+import type { PlanZaman } from './plan-takvim';
 
 export type SaglikPlaniBolum = 'asi' | 'parazit' | 'vitamin';
 export type SaglikPlani = Record<SaglikPlaniBolum, string[]>;
@@ -18,6 +19,33 @@ export const SAGLIK_PLANI_BOLUMLER: SaglikPlaniBolum[] = ['asi', 'parazit', 'vit
 
 const KEY_KENDI = 'sy_saglik_plani_kendi_v1';
 const KEY_MOD = 'sy_saglik_plani_mod_v1';
+const KEY_ZAMAN = 'sy_saglik_plani_zaman_v1';
+
+/** Kalem başına zamanlama (gün sonra / tekrar) — boşsa varsayılan */
+export async function getPlanZaman(): Promise<PlanZaman> {
+  const raw = await kaliciGetItem(KEY_ZAMAN);
+  if (!raw) return {};
+  try {
+    const o = JSON.parse(raw) as PlanZaman;
+    return o && typeof o === 'object' ? o : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function savePlanZaman(z: PlanZaman): Promise<void> {
+  await kaliciSetItem(KEY_ZAMAN, JSON.stringify(z));
+}
+
+/** Takvimde kullanılacak etkin plan: önerilen yalnız erişim açık + mod önerilen iken. */
+export async function getEtkinPlan(): Promise<SaglikPlani> {
+  const [acik, mod] = await Promise.all([onerilenPlanAcikMi(), getPlanModu()]);
+  if (acik && mod === 'onerilen') {
+    const o = await getOnerilenPlan();
+    if (o) return o;
+  }
+  return getKendiPlan();
+}
 
 /** Mod 1 (Kuzu alarak besi) önerilen plan — yalnız erişim açıkken kullanılır. */
 const ONERILEN_PLAN: SaglikPlani = {
@@ -106,16 +134,19 @@ export function useSaglikPlani() {
   const [onerilen, setOnerilen] = useState<SaglikPlani | null>(null);
   const [kendi, setKendi] = useState<SaglikPlani>(bosPlan());
   const [mod, setModState] = useState<SaglikPlaniModu>('kendi');
+  const [zaman, setZamanState] = useState<PlanZaman>({});
 
   useEffect(() => {
     let iptal = false;
     (async () => {
-      const [acik, o, k, m] = await Promise.all([
+      const [acik, o, k, m, z] = await Promise.all([
         onerilenPlanAcikMi(),
         getOnerilenPlan(),
         getKendiPlan(),
         getPlanModu(),
+        getPlanZaman(),
       ]);
+      setZamanState(z);
       if (iptal) return;
       setOnerilenAcik(acik);
       setOnerilen(o);
@@ -161,5 +192,13 @@ export function useSaglikPlani() {
     setKendi(await kendiPlanSifirla());
   }, []);
 
-  return { hazir, onerilenAcik, onerilen, kendi, mod, setMod, ekle, cikar, sifirla };
+  const setZaman = useCallback((id: string, z: { gunSonra: number; tekrarGun: number | null }) => {
+    setZamanState((onceki) => {
+      const yeni = { ...onceki, [id]: z };
+      savePlanZaman(yeni).catch(() => {});
+      return yeni;
+    });
+  }, []);
+
+  return { hazir, onerilenAcik, onerilen, kendi, mod, setMod, ekle, cikar, sifirla, zaman, setZaman };
 }
