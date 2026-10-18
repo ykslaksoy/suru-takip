@@ -10,7 +10,7 @@ export async function grupHayvanSayisi(e: GrupAsiKomutu): Promise<number> {
   return topluSec(await getAnimals(), e.grup).secilen.length;
 }
 
-async function hayvanBul(arama: string) {
+export async function hayvanBul(arama: string) {
   const term = arama.trim();
   if (!term) return null;
   const list = await getAnimals({ search: term });

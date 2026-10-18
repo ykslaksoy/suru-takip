@@ -23,6 +23,7 @@ import { hizliKuzuModul } from './moduller/hizli-kuzu';
 import { profesyonellikModul } from './moduller/profesyonellik';
 import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
+import { hizliTartimModul } from './moduller/hizli-tartim';
 
 const MODULLER = [
   hizliBesiModul,
@@ -44,6 +45,7 @@ const MODULLER = [
   profesyonellikModul,
   topluModul,
   planTakvimModul,
+  hizliTartimModul,
 ];
 
 async function main() {
