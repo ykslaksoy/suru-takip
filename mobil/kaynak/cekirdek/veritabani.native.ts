@@ -131,7 +131,14 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
 function rowToAnimal(row: Record<string, unknown>): Animal {
   const rawMod = row.mod_id as string | null | undefined;
   const modId =
-    rawMod === 'mod1' || rawMod === 'mod2' || rawMod === 'mod3' || rawMod === 'mod4' ? rawMod : null;
+    rawMod === 'mod1' ||
+    rawMod === 'mod2' ||
+    rawMod === 'mod3' ||
+    rawMod === 'mod4' ||
+    rawMod === 'mod5' ||
+    rawMod === 'mod6'
+      ? rawMod
+      : null;
   return {
     id: row.id as string,
     earTag: row.ear_tag as string,

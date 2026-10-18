@@ -17,8 +17,8 @@ export {
 export type SyncStatus = 'synced' | 'pending' | 'error';
 export type RationPhase = 'maintenance' | 'pregnant' | 'lactating' | 'lamb_fattening' | 'dry';
 
-/** Ürün modu — hangi işletme hattına kayıtlı (mod1–mod4) */
-export type AnimalModId = 'mod1' | 'mod2' | 'mod3' | 'mod4';
+/** Ürün modu — hangi işletme hattına kayıtlı (bkz. sabitler/ModlarSabit; mod2 eski kayıt) */
+export type AnimalModId = 'mod1' | 'mod2' | 'mod3' | 'mod4' | 'mod5' | 'mod6';
 
 export interface Animal {
   id: string;

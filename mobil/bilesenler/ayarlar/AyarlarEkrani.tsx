@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -36,13 +36,13 @@ export function AyarlarEkrani() {
 
   const sec = async (id: UrunModId) => {
     const mod = await secMod(id);
-    if (mod.href) {
-      git(mod.href);
+    if (!mod.hazir) {
+      const mesaj = `${mod.baslik} modu yakında açılacak.`;
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(`Yakında\n\n${mesaj}`);
+      else Alert.alert('Yakında', mesaj);
       return;
     }
-    if (!mod.hazir) {
-      Alert.alert('Yakında', `${mod.baslik} yolculuğu yakında açılacak.`);
-    }
+    if (mod.href) git(mod.href);
   };
 
   const satirStil = useMemo(

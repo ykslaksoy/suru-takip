@@ -41,9 +41,12 @@ export function ModProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const secMod = useCallback(async (id: UrunModId) => {
-    await setAktifModId(id);
-    setAktifId(id);
-    return getMod(id);
+    const mod = getMod(id);
+    // "Yakında" modlar aktif edilmez — çalışan mod bozulmasın
+    if (!mod.hazir) return mod;
+    await setAktifModId(mod.id);
+    setAktifId(mod.id);
+    return mod;
   }, []);
 
   const aktifMod = useMemo(() => getMod(aktifId), [aktifId]);

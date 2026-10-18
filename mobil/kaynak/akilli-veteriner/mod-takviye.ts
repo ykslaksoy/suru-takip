@@ -144,6 +144,15 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       asilar: ['agalaksi', 'karma', 'pasteurella', 'clostridial', 'albendazol', 'triklabendazol'],
       vitaminler: ['ad3e', 'kalsiyum', 'b-kompleks', 'mineral-yalama', 'premiks'],
     },
+    // Yakında — taslak şablon (mod seçilemez; yalnız tip bütünlüğü için)
+    mod5: {
+      asilar: ['agalaksi', 'karma', 'pasteurella', 'clostridial', 'ppr', 'cicek', 'albendazol', 'ivermektin'],
+      vitaminler: ['ad3e', 'kalsiyum', 'selen-e', 'premiks'],
+    },
+    mod6: {
+      asilar: ['agalaksi', 'karma', 'brusella', 'tetanos', 'pasteurella', 'clostridial', 'albendazol'],
+      vitaminler: ['ad3e', 'b-kompleks', 'premiks', 'selen-e'],
+    },
   };
 
   if (modId === 'mod1') {

@@ -1,6 +1,22 @@
-export type UrunModId = 'mod1' | 'mod2' | 'mod3' | 'mod4';
+/**
+ * Ürün (üretim) modları — 5 mod, ekranda `no` sırasıyla listelenir.
+ *
+ * Kimlikler (id) kayıtlı verilerle uyum için sabit tutuldu; `no` ekrandaki sıradır:
+ *   no 1 · mod1 · Kuzu Besi                              (tam — eski "Kuzu alarak besi")
+ *   no 2 · mod3 · Damızlık Et Kuzusu Yetiştiriciliği     (yakında — eski "Damızlık kuzu")
+ *   no 3 · mod6 · Damızlık Süt Kuzusu Yetiştiriciliği    (yakında — yeni)
+ *   no 4 · mod4 · Süt Koyunculuğu                        (yakında — eski "Süt koyunculuğu")
+ *   no 5 · mod5 · Süt Koyunculuğu + Kuzu Besi            (yakında — yeni)
+ *
+ * mod2 (eski "Koç katarak besi") artık seçilemez. Kayıtlı mod2 değeri mod1'e (Kuzu Besi)
+ * çözülür: koç katımın sonu besidir ve çalışan tek besi hattı mod1'dir.
+ */
+export type UrunModId = 'mod1' | 'mod2' | 'mod3' | 'mod4' | 'mod5' | 'mod6';
 
-/** mod1 tam · mod2–4 pilot · yakinda kilitli */
+/** Listeden kaldırılmış, yalnız eski kayıt uyumu için tanınan kimlikler */
+export const ESKI_MOD_ESLEME: Partial<Record<UrunModId, UrunModId>> = { mod2: 'mod1' };
+
+/** tam = çalışıyor · pilot = deneme · yakinda = henüz yok, seçilemez */
 export type ModSeviye = 'tam' | 'pilot' | 'yakinda';
 
 export type UrunMod = {
@@ -19,8 +35,8 @@ export const URUN_MODLARI: UrunMod[] = [
   {
     id: 'mod1',
     no: 1,
-    baslik: 'Kuzu alarak besi',
-    kisa: 'Satın al → besi',
+    baslik: 'Kuzu Besi',
+    kisa: 'Kuzu al → besi',
     aciklama: '2–3 aylık kuzu al, karantina, aşı, tartım, rasyon.',
     icon: '🛒',
     hazir: true,
@@ -28,40 +44,71 @@ export const URUN_MODLARI: UrunMod[] = [
     href: '/(tabs)/yolculuk',
   },
   {
-    id: 'mod2',
+    id: 'mod3',
     no: 2,
-    baslik: 'Koç katarak besi',
-    kisa: 'Kuzulat → besi',
-    aciklama: 'Kendi koyununa koç kat, kuzulat, sonra besiye al. (Pilot)',
-    icon: '🐏',
-    hazir: true,
-    seviye: 'pilot',
-    href: '/(tabs)/yolculuk',
+    baslik: 'Damızlık Et Kuzusu Yetiştiriciliği',
+    kisa: 'Etçi damızlık · seleksiyon',
+    aciklama: 'Etçi ırklarda damızlık kuzu yetiştirme, şecere ve seleksiyon. (Yakında)',
+    icon: '🏆',
+    hazir: false,
+    seviye: 'yakinda',
+    href: null,
   },
   {
-    id: 'mod3',
+    id: 'mod6',
     no: 3,
-    baslik: 'Damızlık kuzu',
-    kisa: 'Genetik / yetiştirme',
-    aciklama: 'Damızlık kalite, şecere ve seleksiyon odaklı. (Pilot)',
-    icon: '🏆',
-    hazir: true,
-    seviye: 'pilot',
-    href: '/(tabs)/yolculuk',
+    baslik: 'Damızlık Süt Kuzusu Yetiştiriciliği',
+    kisa: 'Sütçü damızlık · seleksiyon',
+    aciklama: 'Sütçü ırklarda damızlık kuzu yetiştirme ve verim seleksiyonu. (Yakında)',
+    icon: '🍼',
+    hazir: false,
+    seviye: 'yakinda',
+    href: null,
   },
   {
     id: 'mod4',
     no: 4,
-    baslik: 'Süt koyunculuğu',
+    baslik: 'Süt Koyunculuğu',
     kisa: 'Sağım / laktasyon',
-    aciklama: 'Sağmal sürü, sağım kaydı ve süt rasyonu. (Pilot)',
+    aciklama: 'Sağmal sürü, sağım kaydı, meme sağlığı ve süt rasyonu. (Yakında)',
     icon: '🥛',
-    hazir: true,
-    seviye: 'pilot',
-    href: '/(tabs)/yolculuk',
+    hazir: false,
+    seviye: 'yakinda',
+    href: null,
+  },
+  {
+    id: 'mod5',
+    no: 5,
+    baslik: 'Süt Koyunculuğu + Kuzu Besi',
+    kisa: 'Sağım + kuzuyu besiye al',
+    aciklama: 'Sağmal sürü ve doğan kuzuların besiye alınması bir arada. (Yakında)',
+    icon: '🥛🐑',
+    hazir: false,
+    seviye: 'yakinda',
+    href: null,
   },
 ];
 
+/** Bilinen bir kimlik mi (listede ya da eski eşlemede) */
+export function modIdGecerli(raw: unknown): raw is UrunModId {
+  return (
+    typeof raw === 'string' &&
+    (URUN_MODLARI.some((m) => m.id === raw) || Object.prototype.hasOwnProperty.call(ESKI_MOD_ESLEME, raw))
+  );
+}
+
+/**
+ * Aktif olabilecek moda çöz: eski kimlik eşlenir, hazır olmayan (yakında) mod mod1'e düşer.
+ * Kayıtlı değer silinmez; mod hazır olunca kendiliğinden geri gelir.
+ */
+export function aktifModaCoz(raw: unknown): UrunModId {
+  if (!modIdGecerli(raw)) return 'mod1';
+  const id = ESKI_MOD_ESLEME[raw] ?? raw;
+  const mod = URUN_MODLARI.find((m) => m.id === id);
+  return mod?.hazir ? mod.id : 'mod1';
+}
+
 export function getMod(id: UrunModId): UrunMod {
-  return URUN_MODLARI.find((m) => m.id === id) ?? URUN_MODLARI[0];
+  const gercek = ESKI_MOD_ESLEME[id] ?? id;
+  return URUN_MODLARI.find((m) => m.id === gercek) ?? URUN_MODLARI[0];
 }
