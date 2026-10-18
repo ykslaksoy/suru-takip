@@ -7,33 +7,17 @@ import {
   asiKategori,
   type AsiProgramKalemi,
 } from '@/kaynak/cekirdek/asi-programi';
+import { VITAMIN_PROGRAMI } from '@/kaynak/akilli-veteriner/vitamin-programi';
 
-/** Gösterim önceliği (yüksek → düşük). Katalog dışına çıkmadan sıralar. */
-const ASI_ONCELIK_SIRA: string[] = [
-  'karma',
-  'cicek',
-  'ppr',
-  'pasteurella',
-  'sarbon',
-  'brusella',
-  'sap',
-  'clostridial',
-  'enterotoksemi',
-  'septisemi',
-  'ektima',
-  'tetanos',
-  'agalaksi',
-  'topallik',
-];
+/**
+ * Mod 1 (Kuzu alarak besi) planı — yalnız planlanan kalemler, bu sırayla.
+ * Katalogdaki diğer kalemler bu listede gösterilmez.
+ */
+const MOD1_ASI_SIRA: string[] = ['karma', 'cicek', 'ppr', 'pasteurella', 'sarbon', 'brusella', 'sap'];
 
-const PARAZIT_ONCELIK_SIRA: string[] = [
-  'ivermektin',
-  'albendazol',
-  'levamizol',
-  'triklabendazol',
-  'oksiklozanid',
-  'doramektin',
-];
+const MOD1_PARAZIT_SIRA: string[] = ['ivermektin', 'albendazol'];
+
+const MOD1_VITAMIN_SIRA: string[] = ['selen-e'];
 
 const NEDEN: Record<string, string> = {
   karma: 'Birinci öncelik · klostridiyal + pastörella (pratikte karma)',
@@ -43,51 +27,44 @@ const NEDEN: Record<string, string> = {
   sarbon: 'Bölgesel risk',
   brusella: 'Damızlık programı',
   sap: 'Kampanya / resmi program',
-  clostridial: 'Klostridiyal koruma (karma yoksa)',
-  enterotoksemi: 'İsteğe bağlı · pratikte karma tercih',
-  septisemi: 'İsteğe bağlı / riskli dönem',
-  ektima: 'ORF · sürü riskine göre',
-  tetanos: 'Yara / işlem riskine göre',
-  agalaksi: 'Süt sürüleri',
-  topallik: 'Ayak sağlığı',
   ivermektin: 'Gün 1 min. paket · parazit',
   albendazol: 'Gün 1 min. paket · parazit',
-  levamizol: 'Parazit alternatifi',
-  triklabendazol: 'Karaciğer kelebeği',
-  oksiklozanid: 'Kelebek / parazit',
-  doramektin: 'Parazit alternatifi',
+  'selen-e': 'Beyaz kas hastalığı önlemi — Gün 1',
 };
 
-function sirala(ids: string[], items: AsiProgramKalemi[]): AsiProgramKalemi[] {
+/** Listede gösterilecek ortak satır (aşı / parazit / vitamin). */
+type PlanSatir = { id: string; ad: string; aciklama: string };
+
+/** Yalnız verilen id'leri, verilen sırayla döndürür (katalog geri kalanı eklenmez). */
+function sadeceSirali<T extends { id: string }>(ids: string[], items: T[]): T[] {
   const map = new Map(items.map((p) => [p.id, p]));
-  const out: AsiProgramKalemi[] = [];
-  for (const id of ids) {
-    const p = map.get(id);
-    if (p) {
-      out.push(p);
-      map.delete(id);
-    }
-  }
-  for (const p of items) {
-    if (map.has(p.id)) out.push(p);
-  }
-  return out;
+  return ids.map((id) => map.get(id)).filter((p): p is T => p != null);
+}
+
+function asiSatir(p: AsiProgramKalemi): PlanSatir {
+  return { id: p.id, ad: p.ad, aciklama: p.koruma };
 }
 
 export default function AsiListeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
 
-  const asilar = sirala(
-    ASI_ONCELIK_SIRA,
+  const asilar: PlanSatir[] = sadeceSirali(
+    MOD1_ASI_SIRA,
     ASI_PROGRAMI.filter((p) => asiKategori(p) === 'asi'),
-  );
-  const parazitler = sirala(
-    PARAZIT_ONCELIK_SIRA,
+  ).map(asiSatir);
+  const parazitler: PlanSatir[] = sadeceSirali(
+    MOD1_PARAZIT_SIRA,
     ASI_PROGRAMI.filter((p) => asiKategori(p) === 'parazit'),
-  );
+  ).map(asiSatir);
+  const vitaminler: PlanSatir[] = sadeceSirali(MOD1_VITAMIN_SIRA, VITAMIN_PROGRAMI).map((v) => ({
+    id: v.id,
+    ad: v.ad,
+    aciklama: v.detay,
+  }));
 
-  const renderSatir = (p: AsiProgramKalemi, sira: number) => (
+  // Detay ekranı (/gorevler/asi/[programId]) aşı, parazit ve vitamin kalemlerini birlikte açar.
+  const renderSatir = (p: PlanSatir, sira: number) => (
     <Pressable
       key={p.id}
       onPress={() => router.push(`/gorevler/asi/${p.id}` as never)}
@@ -97,9 +74,9 @@ export default function AsiListeScreen() {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.ad, { color: colors.text }]}>{p.ad}</Text>
-        <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>{p.koruma}</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>{p.aciklama}</Text>
         <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 4 }}>
-          {NEDEN[p.id] ?? 'Katalog kalemi'}
+          {NEDEN[p.id] ?? 'Plan kalemi'}
         </Text>
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Durum: sırada</Text>
       </View>
@@ -113,8 +90,9 @@ export default function AsiListeScreen() {
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.scroll}>
+        <Text style={[styles.planBaslik, { color: colors.text }]}>Kuzu besi (Mod 1) planı</Text>
         <Text style={[styles.intro, { color: colors.textSecondary }]}>
-          Öncelik sırasına göre aşılar. Gecikmiş ve yakında olanlar üstte tutulur; pratikte{' '}
+          Yalnız planladığımız aşı, ilaç ve vitaminler, öncelik sırasıyla. Pratikte{' '}
           <Text style={{ fontWeight: '800', color: colors.text }}>Karma aşı</Text> kullanılır
           (tek başına enterotoksemi değil).
         </Text>
@@ -124,6 +102,9 @@ export default function AsiListeScreen() {
 
         <Text style={[styles.bolum, { color: colors.textSecondary, marginTop: 16 }]}>Parazit</Text>
         {parazitler.map((p, i) => renderSatir(p, asilar.length + i + 1))}
+
+        <Text style={[styles.bolum, { color: colors.textSecondary, marginTop: 16 }]}>Vitamin</Text>
+        {vitaminler.map((p, i) => renderSatir(p, asilar.length + parazitler.length + i + 1))}
 
         <Pressable
           onPress={() => router.push('/gorevler/kategori/asi' as never)}
@@ -141,6 +122,7 @@ export default function AsiListeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 16, paddingBottom: 40 },
+  planBaslik: { fontSize: 18, fontWeight: '800', marginBottom: 6 },
   intro: { lineHeight: 20, marginBottom: 16, fontSize: 14 },
   bolum: {
     fontSize: 12,
