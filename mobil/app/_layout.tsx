@@ -60,7 +60,7 @@ export default function RootLayout() {
                     <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
                     <Stack.Screen name="gorevler/index" options={{ title: 'Görevler' }} />
                     <Stack.Screen name="gorevler/kategori/[id]" options={{ title: 'Kategori' }} />
-                    <Stack.Screen name="gorevler/asi/index" options={{ title: 'Aşı ve İlaç Planı' }} />
+                    <Stack.Screen name="gorevler/asi/index" options={{ title: 'Kuzu Sağlık Planı' }} />
                     <Stack.Screen name="gorevler/asi/[programId]" options={{ title: 'Aşı görevi' }} />
                     <Stack.Screen name="gorevler/yem/[yemId]" options={{ title: 'Yem görevi' }} />
                     <Stack.Screen name="profesyonellik/index" options={{ title: 'Profesyonellik' }} />
