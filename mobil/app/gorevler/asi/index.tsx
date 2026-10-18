@@ -94,11 +94,11 @@ export default function KuzuSaglikPlaniScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Kuzu Sağlığı' }} />
+      <Stack.Screen options={{ title: 'Aşı ve İlaç' }} />
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.scroll}>
-        <Text style={[styles.planBaslik, { color: colors.text }]}>Kuzu Sağlığı</Text>
+        <Text style={[styles.planBaslik, { color: colors.text }]}>Aşı ve İlaç</Text>
         {onerilenGoster ? (
           <Text style={[styles.planAlt, { color: colors.tint }]}>Kuzu besi (Mod 1)</Text>
         ) : null}

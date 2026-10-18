@@ -1,5 +1,5 @@
 /**
- * Kuzu Sağlık Planı — önerilen plan (SuperKuzu) + çiftçinin kendi planı.
+ * Aşı ve İlaç — önerilen plan (SuperKuzu) + çiftçinin kendi planı.
  *
  * Önerilen plan herkese açık DEĞİL: `onerilenPlanAcikMi()` varsayılan olarak kapalı döner.
  * Kapalıyken kendi plan BOŞ başlar (önerilen id’ler tohumlamada kullanılmaz).
