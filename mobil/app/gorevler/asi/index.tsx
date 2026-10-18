@@ -86,11 +86,12 @@ export default function AsiListeScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Aşı listesi' }} />
+      <Stack.Screen options={{ title: 'Aşı ve İlaç Planı' }} />
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.scroll}>
-        <Text style={[styles.planBaslik, { color: colors.text }]}>Kuzu besi (Mod 1) planı</Text>
+        <Text style={[styles.planBaslik, { color: colors.text }]}>Aşı ve İlaç Planı</Text>
+        <Text style={[styles.planAlt, { color: colors.tint }]}>Kuzu besi (Mod 1)</Text>
         <Text style={[styles.intro, { color: colors.textSecondary }]}>
           Yalnız planladığımız aşı, ilaç ve vitaminler, öncelik sırasıyla. Pratikte{' '}
           <Text style={{ fontWeight: '800', color: colors.text }}>Karma aşı</Text> kullanılır
@@ -122,7 +123,8 @@ export default function AsiListeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 16, paddingBottom: 40 },
-  planBaslik: { fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  planBaslik: { fontSize: 18, fontWeight: '800', marginBottom: 2 },
+  planAlt: { fontSize: 13, fontWeight: '700', marginBottom: 8 },
   intro: { lineHeight: 20, marginBottom: 16, fontSize: 14 },
   bolum: {
     fontSize: 12,
