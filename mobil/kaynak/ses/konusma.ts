@@ -55,20 +55,63 @@ export function konusmaDurumu(): KonusmaDurumu {
   };
 }
 
-/** Geri okuma metnini seslendir (mümkünse) */
-export function metniSeslendir(metin: string): void {
+/**
+ * Metni seslendir (mümkünse). `onBitti` konuşma bitince (veya TTS yoksa hemen) çağrılır.
+ * iOS Safari bazen `onend` göndermez — süre tahminli yedek zamanlayıcı vardır.
+ */
+export function metniSeslendir(metin: string, opts?: { onBitti?: () => void }): void {
   const { synth } = webApis();
-  if (!synth || !metin.trim()) return;
+  let bitti = false;
+  const bitir = () => {
+    if (bitti) return;
+    bitti = true;
+    opts?.onBitti?.();
+  };
+  if (!synth || !metin.trim()) {
+    bitir();
+    return;
+  }
   try {
     synth.cancel();
     const Utterance = (globalThis as any).SpeechSynthesisUtterance;
-    if (!Utterance) return;
+    if (!Utterance) {
+      bitir();
+      return;
+    }
     const u = new Utterance(metin);
     u.lang = 'tr-TR';
     u.rate = 0.95;
+    const trSes = (synth.getVoices?.() ?? []).find((v: any) =>
+      String(v?.lang ?? '').toLowerCase().startsWith('tr'),
+    );
+    if (trSes) u.voice = trSes;
+    u.onend = bitir;
+    u.onerror = bitir;
+    synth.speak(u);
+    if (opts?.onBitti) {
+      // ~14 karakter/sn + pay; onend gelmezse yine devam et
+      setTimeout(bitir, Math.min(15000, 1500 + metin.length * 75));
+    }
+  } catch {
+    bitir();
+  }
+}
+
+/**
+ * iOS Safari: konuşma ilk kez bir dokunuşla (kullanıcı hareketi) başlatılmalı.
+ * Dinle / Gönder dokunuşunda senkron çağır — sonraki otomatik okumalar çalışır.
+ */
+export function seslendirmeKilidiAc(): void {
+  const { synth } = webApis();
+  const Utterance = (globalThis as any).SpeechSynthesisUtterance;
+  if (!synth || !Utterance) return;
+  try {
+    const u = new Utterance(' ');
+    u.volume = 0;
+    u.lang = 'tr-TR';
     synth.speak(u);
   } catch {
-    /* sessiz düş */
+    /* ignore */
   }
 }
 
@@ -91,8 +134,11 @@ export type DinlemeKontrol = {
  */
 export function dinlemeyiBaslat(opts: {
   onSonuc: (metin: string) => void;
-  onHata?: (mesaj: string) => void;
+  /** kod: tarayıcı hata kodu (örn. 'not-allowed' — iOS’ta dokunuşsuz başlatma engeli) */
+  onHata?: (mesaj: string, kod?: string) => void;
   onBasladi?: () => void;
+  /** Sonuç gelmeden dinleme bittiğinde */
+  onBitti?: () => void;
 }): DinlemeKontrol | null {
   const { Rec } = webApis();
   if (!Rec) {
@@ -109,16 +155,24 @@ export function dinlemeyiBaslat(opts: {
   rec.continuous = false;
 
   rec.onstart = () => opts.onBasladi?.();
-  rec.onerror = () => opts.onHata?.('Dinleme başarısız. Metin ile deneyin.');
+  let sonucGeldi = false;
+  rec.onerror = (ev: any) =>
+    opts.onHata?.('Dinleme başarısız. Metin ile deneyin.', String(ev?.error ?? ''));
   rec.onresult = (ev: any) => {
     const text = String(ev?.results?.[0]?.[0]?.transcript ?? '').trim();
-    if (text) opts.onSonuc(text);
+    if (text) {
+      sonucGeldi = true;
+      opts.onSonuc(text);
+    }
+  };
+  rec.onend = () => {
+    if (!sonucGeldi) opts.onBitti?.();
   };
 
   try {
     rec.start();
-  } catch {
-    opts.onHata?.('Mikrofon başlatılamadı.');
+  } catch (e: any) {
+    opts.onHata?.('Mikrofon başlatılamadı.', String(e?.name ?? 'start-failed'));
     return null;
   }
 

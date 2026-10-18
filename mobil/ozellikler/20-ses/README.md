@@ -8,6 +8,8 @@
 
 ```
 Konuş → Ayıkla → Sesle oku → "tamam" bekle → Uygula
+                       ↳ "dur / yanlış / hayır / iptal / değil" → kaydetme, düzeltme iste (yeni küpe → tekrar oku)
+                       ↳ eksik alan (örn. sadece "1200") → "Kilo kaç?" sor
 ```
 
 ## Kod yolları
@@ -27,6 +29,8 @@ Konuş → Ayıkla → Sesle oku → "tamam" bekle → Uygula
 | `oturum.ts` | SesKomutOturumu |
 | `uygula.ts` | Onay sonrası DB |
 | `konusma.ts` | TTS / STT adaptörü (web Speech API) |
+| `sayi-oku.ts` | Sesli okuma: sayı → Türkçe, küpe rakam rakam |
+| `tercih.ts` | «Sesli tekrar» aç/kapa (kalıcı) |
 | `index.ts` | Public API |
 | ekran | `mobil/app/ses/index.tsx` — ahır modu + dinle |
 | seri ahır | `mobil/kaynak/seri-giris/` — toplu satır → aynı komut motoru |

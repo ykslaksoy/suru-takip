@@ -6,7 +6,11 @@ export type SesOturumAsamasi =
   | 'onay_bekliyor'
   | 'uygulandi'
   | 'iptal'
-  | 'anlasilmadi';
+  | 'anlasilmadi'
+  /** Kayıt için bir alan eksik (örn. küpe var, kilo yok) — soru soruldu */
+  | 'eksik_bilgi'
+  /** Kullanıcı "dur / yanlış" dedi — kaydedilmedi, düzeltme bekleniyor */
+  | 'duzeltme';
 
 export interface TartimKomutu {
   tur: 'tartim';
@@ -36,4 +40,10 @@ export interface SesKomutSonucu {
   okumaMetni: string;
   /** Onay beklerken dolu; uygulandıktan sonra null */
   bekleyenEylem: SesKomutEylemi | null;
+  /** Sesli söylenecek cümle (yoksa okumaMetni söylenir) */
+  konusmaMetni?: string;
+  /** Düzeltme için metin kutusuna önceden doldurulacak komut */
+  duzeltmeMetni?: string;
+  /** Sistem kullanıcıdan cevap bekliyor mu (otomatik dinleme için) */
+  cevapBekleniyor?: boolean;
 }
