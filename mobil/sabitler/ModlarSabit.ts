@@ -1,20 +1,21 @@
 /**
- * Ürün (üretim) modları — 5 mod, ekranda `no` sırasıyla listelenir.
+ * Ürün (üretim) modları — 6 mod, ekranda `no` sırasıyla listelenir.
  *
  * Kimlikler (id) kayıtlı verilerle uyum için sabit tutuldu; `no` ekrandaki sıradır:
  *   no 1 · mod1 · Kuzu Besi                              (tam — eski "Kuzu alarak besi")
- *   no 2 · mod3 · Damızlık Et Kuzusu Yetiştiriciliği     (yakında — eski "Damızlık kuzu")
- *   no 3 · mod6 · Damızlık Süt Kuzusu Yetiştiriciliği    (yakında — yeni)
- *   no 4 · mod4 · Süt Koyunculuğu                        (yakında — eski "Süt koyunculuğu")
- *   no 5 · mod5 · Süt Koyunculuğu + Kuzu Besi            (yakında — yeni)
+ *   no 2 · mod2 · Etçi Koyunculuk + Kuzu Besi            (yakında — eski "Koç katarak besi";
+ *                                                         eski mod2 yolculuk/şablonları bu modun temeli)
+ *   no 3 · mod3 · Damızlık Et Kuzusu Yetiştiriciliği     (yakında — eski "Damızlık kuzu")
+ *   no 4 · mod6 · Damızlık Süt Kuzusu Yetiştiriciliği    (yakında — yeni)
+ *   no 5 · mod4 · Süt Koyunculuğu                        (yakında — eski "Süt koyunculuğu")
+ *   no 6 · mod5 · Süt Koyunculuğu + Kuzu Besi            (yakında — yeni)
  *
- * mod2 (eski "Koç katarak besi") artık seçilemez. Kayıtlı mod2 değeri mod1'e (Kuzu Besi)
- * çözülür: koç katımın sonu besidir ve çalışan tek besi hattı mod1'dir.
+ * Kayıtlı değer "Yakında" bir moddaysa aktif mod mod1 (Kuzu Besi) açılır; değer silinmez.
  */
 export type UrunModId = 'mod1' | 'mod2' | 'mod3' | 'mod4' | 'mod5' | 'mod6';
 
-/** Listeden kaldırılmış, yalnız eski kayıt uyumu için tanınan kimlikler */
-export const ESKI_MOD_ESLEME: Partial<Record<UrunModId, UrunModId>> = { mod2: 'mod1' };
+/** Listeden kaldırılmış, yalnız eski kayıt uyumu için tanınan kimlikler (şu an yok) */
+export const ESKI_MOD_ESLEME: Partial<Record<UrunModId, UrunModId>> = {};
 
 /** tam = çalışıyor · pilot = deneme · yakinda = henüz yok, seçilemez */
 export type ModSeviye = 'tam' | 'pilot' | 'yakinda';
@@ -44,8 +45,19 @@ export const URUN_MODLARI: UrunMod[] = [
     href: '/(tabs)/yolculuk',
   },
   {
-    id: 'mod3',
+    id: 'mod2',
     no: 2,
+    baslik: 'Etçi Koyunculuk + Kuzu Besi',
+    kisa: 'Koç kat → kuzulat → besi',
+    aciklama: 'Etçi sürüde koç katımı, kuzulama ve doğan kuzuların besiye alınması. (Yakında)',
+    icon: '🐏',
+    hazir: false,
+    seviye: 'yakinda',
+    href: null,
+  },
+  {
+    id: 'mod3',
+    no: 3,
     baslik: 'Damızlık Et Kuzusu Yetiştiriciliği',
     kisa: 'Etçi damızlık · seleksiyon',
     aciklama: 'Etçi ırklarda damızlık kuzu yetiştirme, şecere ve seleksiyon. (Yakında)',
@@ -56,7 +68,7 @@ export const URUN_MODLARI: UrunMod[] = [
   },
   {
     id: 'mod6',
-    no: 3,
+    no: 4,
     baslik: 'Damızlık Süt Kuzusu Yetiştiriciliği',
     kisa: 'Sütçü damızlık · seleksiyon',
     aciklama: 'Sütçü ırklarda damızlık kuzu yetiştirme ve verim seleksiyonu. (Yakında)',
@@ -67,7 +79,7 @@ export const URUN_MODLARI: UrunMod[] = [
   },
   {
     id: 'mod4',
-    no: 4,
+    no: 5,
     baslik: 'Süt Koyunculuğu',
     kisa: 'Sağım / laktasyon',
     aciklama: 'Sağmal sürü, sağım kaydı, meme sağlığı ve süt rasyonu. (Yakında)',
@@ -78,7 +90,7 @@ export const URUN_MODLARI: UrunMod[] = [
   },
   {
     id: 'mod5',
-    no: 5,
+    no: 6,
     baslik: 'Süt Koyunculuğu + Kuzu Besi',
     kisa: 'Sağım + kuzuyu besiye al',
     aciklama: 'Sağmal sürü ve doğan kuzuların besiye alınması bir arada. (Yakında)',
