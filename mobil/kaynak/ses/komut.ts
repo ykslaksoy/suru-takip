@@ -1,4 +1,5 @@
 import type { SesKomutEylemi } from './tipler';
+import { grupKomutAyikla } from './grup';
 
 function normalize(metin: string): string {
   return metin.trim().replace(/\s+/g, ' ');
@@ -128,7 +129,7 @@ export function komutAyikla(metin: string): SesKomutEylemi | null {
   const n = normalize(metin);
   if (!n) return null;
 
-  return parseTartim(n) ?? parseAsi(n) ?? parseStok(n);
+  return grupKomutAyikla(n) ?? parseTartim(n) ?? parseAsi(n) ?? parseStok(n);
 }
 
 /** Bir alanı eksik kayıt — kullanıcıya soru sorulur */

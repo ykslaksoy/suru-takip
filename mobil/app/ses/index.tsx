@@ -35,6 +35,8 @@ const IOS_IPUCU =
 const ORNEKLER = [
   'küpe 1234, 68 kilo',
   'küpe TR-34-001235 aşı çiçek',
+  '3. parti karma aşısı yapıldı',
+  'tüm kuzular ivermektin',
   'stok giriş yem 50 kg',
   'tamam',
 ];

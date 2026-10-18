@@ -1,7 +1,14 @@
 import { addHealthRecord, addWeightRecord, adjustStock, getAnimals, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { v4 as uuidv4 } from 'uuid';
-import type { SesKomutEylemi } from './tipler';
+import type { GrupAsiKomutu, SesKomutEylemi } from './tipler';
+import { topluSec } from '@/kaynak/toplu/secim';
+import { topluUygula } from '@/kaynak/toplu/uygula';
+
+/** Grup komutundaki aktif kuzu sayısı (geri okuma için) */
+export async function grupHayvanSayisi(e: GrupAsiKomutu): Promise<number> {
+  return topluSec(await getAnimals(), e.grup).secilen.length;
+}
 
 async function hayvanBul(arama: string) {
   const term = arama.trim();
@@ -59,6 +66,12 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         recordedAt: new Date().toISOString().split('T')[0],
         notes: `Sesli komut · ${hayvanAnaEtiket(animal)}`,
       });
+      return { ok: true };
+    }
+    case 'grup_asi': {
+      const { secilen } = topluSec(await getAnimals(), eylem.grup);
+      if (secilen.length === 0) return { ok: false, hata: 'Bu grupta kuzu bulunamadı.' };
+      await topluUygula({ hayvanlar: secilen, programId: eylem.programId, programTur: eylem.programTur, kaynak: 'Sesli komut' });
       return { ok: true };
     }
     case 'stok': {

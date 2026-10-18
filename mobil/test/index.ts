@@ -21,6 +21,7 @@ import { uremeModul } from './moduller/ureme';
 import { anaSayfaKilitModul } from './moduller/ana-sayfa-kilit';
 import { hizliKuzuModul } from './moduller/hizli-kuzu';
 import { profesyonellikModul } from './moduller/profesyonellik';
+import { topluModul } from './moduller/toplu';
 
 const MODULLER = [
   hizliBesiModul,
@@ -40,6 +41,7 @@ const MODULLER = [
   anaSayfaKilitModul,
   hizliKuzuModul,
   profesyonellikModul,
+  topluModul,
 ];
 
 async function main() {

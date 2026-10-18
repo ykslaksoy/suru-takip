@@ -7,6 +7,9 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { getTakviyeGorevDetay, type TakviyeGorevDetay } from '@/kaynak/gorevler/asi-gorev';
 import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
 import { takviyeTipEtiket } from '@/kaynak/akilli-veteriner/mod-takviye';
+import TopluHayvanSecici from '@/bilesenler/ortak/TopluHayvanSecici';
+import { getAnimals } from '@/kaynak/cekirdek/veritabani';
+import { topluUygula } from '@/kaynak/toplu/uygula';
 
 function durumEtiket(h: TakviyeGorevDetay['hayvanlar'][0]): string {
   if (h.planlananAt && h.kalanGun != null && h.kalanGun > 0) {
@@ -23,12 +26,20 @@ export default function AsiGorevDetayScreen() {
   const { ready, refreshKey } = useDatabase();
   const [detay, setDetay] = useState<TakviyeGorevDetay | null>(null);
   const [loading, setLoading] = useState(true);
+  const [secili, setSecili] = useState<Set<string>>(new Set());
+  const [kupeHaritasi, setKupeHaritasi] = useState<Record<string, string>>({});
+  const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [sonuc, setSonuc] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!programId) return;
     setLoading(true);
     try {
-      setDetay(await getTakviyeGorevDetay(programId));
+      const d = await getTakviyeGorevDetay(programId);
+      setDetay(d);
+      setSecili(new Set(d?.hayvanlar.map((h) => h.animalId) ?? []));
+      const hepsi = await getAnimals();
+      setKupeHaritasi(Object.fromEntries(hepsi.map((a) => [a.id, a.earTag])));
     } finally {
       setLoading(false);
     }
@@ -39,6 +50,25 @@ export default function AsiGorevDetayScreen() {
       if (ready) load();
     }, [ready, load, refreshKey]),
   );
+
+  const topluKaydet = async () => {
+    if (!detay || secili.size === 0) return;
+    setKaydediliyor(true);
+    try {
+      const hepsi = await getAnimals();
+      const hayvanlar = hepsi.filter((a) => secili.has(a.id));
+      const r = await topluUygula({
+        hayvanlar,
+        programId: detay.programId,
+        programTur: detay.tip === 'vitamin' ? 'vitamin' : 'asi',
+        kaynak: 'Toplu görev kaydı',
+      });
+      setSonuc(`✓ ${r.mesaj}`);
+      await load();
+    } finally {
+      setKaydediliyor(false);
+    }
+  };
 
   const tarihTam = detay?.planlananAt
     ? gorevTarihMetni(detay.planlananAt, { yil: true })
@@ -67,7 +97,7 @@ export default function AsiGorevDetayScreen() {
           <ActivityIndicator color={colors.tint} style={{ marginVertical: 32 }} />
         ) : !detay ? (
           <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 32 }}>
-            Bu kalem için bekleyen kuzu bulunamadı.
+            {sonuc ? `${sonuc}\nBu kalemde bekleyen kuzu kalmadı.` : 'Bu kalem için bekleyen kuzu bulunamadı.'}
           </Text>
         ) : (
           <>
@@ -100,39 +130,52 @@ export default function AsiGorevDetayScreen() {
               Yapılacak kuzular ({detay.hayvanSayisi})
             </Text>
 
-            {detay.hayvanlar.map((h) => (
-              <Pressable
-                key={h.animalId}
-                onPress={() =>
-                  router.push(
-                    detay.tip === 'tartim'
-                      ? `/hayvan/${h.animalId}/kilo`
-                      : `/hayvan/${h.animalId}/saglik`,
-                  )
-                }
-                style={[styles.satir, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.text, fontWeight: '700' }}>{h.etiket}</Text>
-                  {h.altEtiket ? (
-                    <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
-                      {h.altEtiket}
+            {detay.tip === 'tartim' ? (
+              detay.hayvanlar.map((h) => (
+                <Pressable
+                  key={h.animalId}
+                  onPress={() => router.push(`/hayvan/${h.animalId}/kilo`)}
+                  style={[styles.satir, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontWeight: '700' }}>{h.etiket}</Text>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
+                      {h.paddock} · {durumEtiket(h)}
                     </Text>
-                  ) : null}
-                  <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
-                    {h.paddock} · {durumEtiket(h)}
+                  </View>
+                  <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>Tartım →</Text>
+                </Pressable>
+              ))
+            ) : (
+              <>
+                <TopluHayvanSecici
+                  hayvanlar={detay.hayvanlar.map((h) => ({
+                    id: h.animalId,
+                    etiket: h.etiket,
+                    altEtiket: h.altEtiket,
+                    paddock: h.paddock,
+                    kupe: kupeHaritasi[h.animalId] ?? h.etiket,
+                    durum: durumEtiket(h),
+                  }))}
+                  secili={secili}
+                  onChange={setSecili}
+                  onSatir={(id) => router.push(`/hayvan/${id}`)}
+                />
+                {sonuc ? (
+                  <Text style={{ color: colors.tint, fontWeight: '700', marginTop: 4 }}>{sonuc}</Text>
+                ) : null}
+                <Pressable
+                  disabled={secili.size === 0 || kaydediliyor}
+                  onPress={topluKaydet}
+                  style={[styles.cta, { backgroundColor: colors.tint, opacity: secili.size === 0 || kaydediliyor ? 0.5 : 1 }]}>
+                  <Text style={styles.ctaText}>
+                    {kaydediliyor ? 'Kaydediliyor…' : `Seçilen ${secili.size} kuzuya yapıldı olarak kaydet (bugün)`}
                   </Text>
-                </View>
-                <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 12 }}>
-                  {detay.tip === 'tartim' ? 'Tartım →' : 'Kayıt →'}
+                </Pressable>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center', marginBottom: 24 }}>
+                  Her kuzuya ayrı kayıt açılır, stoktan doz düşülür. Sesle: “2. parti {detay.asiAdi || 'karma'} yapıldı”.
                 </Text>
-              </Pressable>
-            ))}
-
-            <Pressable
-              onPress={() => router.push('/(tabs)/veteriner')}
-              style={[styles.cta, { backgroundColor: colors.tint }]}>
-              <Text style={styles.ctaText}>Mod planından uygula →</Text>
-            </Pressable>
+              </>
+            )}
           </>
         )}
       </ScrollView>

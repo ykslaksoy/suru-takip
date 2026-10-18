@@ -19,7 +19,7 @@ import {
   uygulandiMetni,
 } from './geri-okuma';
 import { duzeltmeIstegiMi, kesinOnayMi, tamIptalMi } from './onay';
-import { komutuUygula } from './uygula';
+import { grupHayvanSayisi, komutuUygula } from './uygula';
 import type { SesKomutEylemi, SesKomutSonucu } from './tipler';
 
 type Durum =
@@ -125,6 +125,25 @@ export class SesKomutOturumu {
 
   /** STT/transkript veya yazılan metin geldiğinde çağır */
   async metinAl(metin: string): Promise<SesKomutSonucu> {
+    const r = await this.metinAlIc(metin);
+    const e = r.bekleyenEylem;
+    if (e?.tur === 'grup_asi' && e.hayvanSayisi == null && (this.durum.tip === 'onay' || this.durum.tip === 'duzeltme')) {
+      const sayi = await grupHayvanSayisi(e);
+      if (sayi === 0) {
+        this.durum = { tip: 'bos' };
+        return { asama: 'anlasilmadi', okumaMetni: 'Bu grupta kayıtlı kuzu bulunamadı. Parti numarasını kontrol edin.', bekleyenEylem: null };
+      }
+      const zengin = { ...e, hayvanSayisi: sayi };
+      this.durum = { ...this.durum, eylem: zengin };
+      if (r.asama === 'onay_bekliyor') {
+        return { ...r, bekleyenEylem: zengin, okumaMetni: geriOkumaMetni(zengin), konusmaMetni: onayCumlesi(zengin) };
+      }
+      return { ...r, bekleyenEylem: zengin };
+    }
+    return r;
+  }
+
+  private async metinAlIc(metin: string): Promise<SesKomutSonucu> {
     const trimmed = metin.trim();
     if (!trimmed) return this.anlasilmadi();
 
