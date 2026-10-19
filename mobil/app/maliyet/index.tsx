@@ -7,15 +7,14 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { Stack, useFocusEffect } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { getAnimals, getLatestWeight, getStockItems, getStockMovements, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
-import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
-import { alisTahmini, etkinFiyatlar, oneriMetni, type FiyatDurum } from '@/kaynak/maliyet/tahmini-fiyat';
+import { setBirimFiyat } from '@/kaynak/stok/fiyat';
+import { oneriMetni, type FiyatDurum } from '@/kaynak/maliyet/tahmini-fiyat';
 import { CANLI_KUZU_KG, referansTarihMetni } from '@/kaynak/maliyet/fiyat-referans';
 import { fiyatSorusunuGec, getGecilenFiyatSorulari } from '@/kaynak/maliyet/fiyat-sorusu';
 import { FiyatSorKarti } from '@/bilesenler/maliyet/FiyatSorKarti';
-import { partiMaliyetleri, tl, type MaliyetAyar, type PartiMaliyet } from '@/kaynak/maliyet/hesap';
-import { getMaliyetAyar, saveMaliyetAyar } from '@/kaynak/maliyet/depo';
-import { getPoliceler, hayvanPrimPaylari } from '@/kaynak/sigorta';
+import { tl, type MaliyetAyar, type PartiMaliyet } from '@/kaynak/maliyet/hesap';
+import { saveMaliyetAyar } from '@/kaynak/maliyet/depo';
+import { maliyetTopla } from '@/kaynak/maliyet/topla';
 
 type Alan = 'alisBasFiyat' | 'satisKgFiyat' | 'gercekSatisTutar';
 
@@ -30,32 +29,11 @@ export default function MaliyetScreen() {
   const [acik, setAcik] = useState<string | null>(null);
 
   const hesapla = useCallback(async (a?: MaliyetAyar) => {
-    const [animals, items, movements, gercekFiyatlar, kayitli, gec, policeler] = await Promise.all([
-      getAnimals(),
-      getStockItems(),
-      getStockMovements(),
-      getBirimFiyatlar(),
-      a ? Promise.resolve(a) : getMaliyetAyar(),
-      getGecilenFiyatSorulari(),
-      getPoliceler().catch(() => []),
-    ]);
-    const sonKg: Record<string, number | null> = {};
-    const alisTahminleri: Record<string, number> = {};
-    await Promise.all(
-      animals.map(async (x) => {
-        sonKg[x.id] = await getLatestWeight(x.id).catch(() => null);
-        const wr = await getWeightRecords(x.id).catch(() => []);
-        const t = alisTahmini(wr.length ? wr[wr.length - 1].weightKg : null);
-        if (t != null) alisTahminleri[x.id] = t;
-      }),
-    );
-    // Yalnızca çıkışı olan (maliyete giren) kalemler; tahmini fiyat onaysız uygulanır
-    const kullanilan = new Set(movements.filter((m) => m.movementType === 'out').map((m) => m.stockId));
-    const { fiyatlar, durumlar: d } = etkinFiyatlar(items.filter((i) => kullanilan.has(i.id)), gercekFiyatlar);
+    const [{ satirlar: st, durumlar: d, ayar: kayitli }, gec] = await Promise.all([maliyetTopla(a), getGecilenFiyatSorulari()]);
     setAyar(kayitli);
     setGecilen(gec);
     setDurumlar(d);
-    setSatirlar(partiMaliyetleri({ animals, sonKg, items, movements, fiyatlar, ayar: kayitli, alisTahminleri, sigortaPrimleri: hayvanPrimPaylari(policeler) }));
+    setSatirlar(st);
   }, []);
 
   useFocusEffect(
