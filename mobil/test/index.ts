@@ -35,6 +35,7 @@ import { sigortaModul } from './moduller/sigorta';
 import { sayimModul } from './moduller/sayim';
 import { arinmaModul } from './moduller/arinma';
 import { sablonModul } from './moduller/sablon';
+import { takvimModul } from './moduller/takvim';
 
 const MODULLER = [
   hizliBesiModul,
@@ -68,6 +69,7 @@ const MODULLER = [
   sayimModul,
   arinmaModul,
   sablonModul,
+  takvimModul,
 ];
 
 async function main() {

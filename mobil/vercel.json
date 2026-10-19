@@ -8,31 +8,31 @@
   "rewrites": [
     {
       "source": "/hayvan/:id/kilo",
-      "destination": "/hayvan/[id]/kilo"
+      "destination": "/hayvan/%5Bid%5D/kilo"
     },
     {
       "source": "/hayvan/:id/saglik",
-      "destination": "/hayvan/[id]/saglik"
+      "destination": "/hayvan/%5Bid%5D/saglik"
     },
     {
       "source": "/hayvan/:id/dogum",
-      "destination": "/hayvan/[id]/dogum"
+      "destination": "/hayvan/%5Bid%5D/dogum"
     },
     {
       "source": "/hayvan/:id",
-      "destination": "/hayvan/[id]"
+      "destination": "/hayvan/%5Bid%5D"
     },
     {
       "source": "/gorevler/asi/:programId",
-      "destination": "/gorevler/asi/[programId]"
+      "destination": "/gorevler/asi/%5BprogramId%5D"
     },
     {
       "source": "/gorevler/kategori/:id",
-      "destination": "/gorevler/kategori/[id]"
+      "destination": "/gorevler/kategori/%5Bid%5D"
     },
     {
       "source": "/gorevler/yem/:yemId",
-      "destination": "/gorevler/yem/[yemId]"
+      "destination": "/gorevler/yem/%5ByemId%5D"
     }
   ]
 }

@@ -242,6 +242,13 @@ export async function getWeightRecords(animalId: string): Promise<WeightRecord[]
   return rows.map((row) => ({ id: row.id as string, animalId: row.animal_id as string, weightKg: row.weight_kg as number, recordedAt: row.recorded_at as string, notes: row.notes as string }));
 }
 
+/** Tüm tartım kayıtları (takvim, dışa aktarma) — yeni → eski */
+export async function getAllWeightRecords(): Promise<WeightRecord[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<Record<string, unknown>>('SELECT * FROM weight_records ORDER BY recorded_at DESC');
+  return rows.map((row) => ({ id: row.id as string, animalId: row.animal_id as string, weightKg: row.weight_kg as number, recordedAt: row.recorded_at as string, notes: row.notes as string }));
+}
+
 export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: string }): Promise<WeightRecord> {
   const database = await getDatabase();
   const full: WeightRecord = { ...record, id: record.id ?? uuidv4() };

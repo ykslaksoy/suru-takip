@@ -98,6 +98,11 @@ export async function getWeightRecords(animalId: string): Promise<WeightRecord[]
     .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
 }
 
+/** Tüm tartım kayıtları (takvim, dışa aktarma) — yeni → eski */
+export async function getAllWeightRecords(): Promise<WeightRecord[]> {
+  return (await read<WeightRecord>(KEYS.weights)).sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+}
+
 export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: string }): Promise<WeightRecord> {
   const full: WeightRecord = { ...record, id: record.id ?? uuidv4() };
   const weights = await read<WeightRecord>(KEYS.weights);
