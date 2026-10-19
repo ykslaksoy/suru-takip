@@ -60,6 +60,7 @@ export async function dogumKaydet(girdi: DogumKayitGirdi): Promise<DogumKayitSon
       paddock: padok,
       status: 'healthy',
       motherId: anne.id,
+      fatherId: girdi.babaId ?? null,
       modId: anne.modId,
       notes: notParts.join(' · '),
     });

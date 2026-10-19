@@ -24,7 +24,7 @@ export async function iceAktarUygula(o: Onizleme, politika: TekrarPolitika): Pro
   let tartim = 0;
 
   // Önce hepsini yaz ki dosyadaki ana küpeleri de bulabilelim
-  const yazilan: { a: Animal; motherTag?: string; kiloKg?: number; kiloTarih?: string }[] = [];
+  const yazilan: { a: Animal; motherTag?: string; fatherTag?: string; kiloKg?: number; kiloTarih?: string }[] = [];
   for (const s of secilen) {
     const v = s.veri;
     const anahtar = kupeAnahtar(v.earTag!);
@@ -66,12 +66,16 @@ export async function iceAktarUygula(o: Onizleme, politika: TekrarPolitika): Pro
     kupeyeGore.set(anahtar, kayit);
     if (eski) guncellenen += 1;
     else eklenen += 1;
-    yazilan.push({ a: kayit, motherTag: v.motherTag, kiloKg: v.kiloKg, kiloTarih: v.kiloTarih });
+    yazilan.push({ a: kayit, motherTag: v.motherTag, fatherTag: v.fatherTag, kiloKg: v.kiloKg, kiloTarih: v.kiloTarih });
   }
   for (const y of yazilan) {
     if (y.motherTag) {
       const ana = kupeyeGore.get(kupeAnahtar(y.motherTag));
-      if (ana && ana.id !== y.a.id && y.a.motherId !== ana.id) await upsertAnimal({ ...y.a, motherId: ana.id });
+      if (ana && ana.id !== y.a.id && y.a.motherId !== ana.id) y.a = await upsertAnimal({ ...y.a, motherId: ana.id });
+    }
+    if (y.fatherTag) {
+      const baba = kupeyeGore.get(kupeAnahtar(y.fatherTag));
+      if (baba && baba.id !== y.a.id && y.a.fatherId !== baba.id) y.a = await upsertAnimal({ ...y.a, fatherId: baba.id });
     }
     if (y.kiloKg) {
       await addWeightRecord({

@@ -17,6 +17,7 @@ export type HedefAlan =
   | 'paddock'
   | 'status'
   | 'motherTag'
+  | 'fatherTag'
   | 'kiloKg'
   | 'kiloTarih'
   | 'notes';
@@ -36,6 +37,7 @@ export const HEDEF_ALANLAR: AlanTanim[] = [
   { id: 'paddock', ad: 'Padok / parti', ornek: 'Padok A', esAnlam: ['padok', 'parti', 'grup', 'bölme', 'ağıl', 'agil', 'paddock', 'lot'] },
   { id: 'status', ad: 'Durum', ornek: 'Sağlıklı', esAnlam: ['durum', 'sağlık', 'status'] },
   { id: 'motherTag', ad: 'Ana küpe', ornek: 'TR34…', esAnlam: ['ana', 'anne', 'ana küpe', 'anne küpe', 'anneid', 'ana no', 'dam', 'mother'] },
+  { id: 'fatherTag', ad: 'Baba küpe', ornek: 'TR34…', esAnlam: ['baba', 'baba küpe', 'baba no', 'koç küpe', 'baba koç', 'sire', 'father'] },
   { id: 'kiloKg', ad: 'Kilo (kg)', ornek: '24,5', esAnlam: ['kilo', 'kg', 'ağırlık', 'agirlik', 'canlı ağırlık', 'weight', 'tartım', 'giriş kilo'] },
   { id: 'kiloTarih', ad: 'Tartım tarihi', ornek: '01.10.2026', esAnlam: ['tartım tarihi', 'tartim tarihi', 'kilo tarihi', 'tarih'] },
   { id: 'notes', ad: 'Not', ornek: '', esAnlam: ['not', 'notlar', 'açıklama', 'aciklama', 'notes', 'not / açıklama'] },
@@ -188,6 +190,7 @@ export type OnizlemeSatir = {
     paddock: string;
     status: AnimalStatus;
     motherTag: string;
+    fatherTag: string;
     kiloKg: number;
     kiloTarih: string;
     notes: string;
@@ -277,7 +280,7 @@ export function sablonTablosu(): string[][] {
   const alanlar = HEDEF_ALANLAR.filter((a) => a.id !== 'gehisId');
   return [
     alanlar.map((a) => a.ad),
-    ['TR340000012345', '', '1', '', 'Koyun', 'Merinos', 'E', '15.03.2026', 'Padok A', 'Sağlıklı', '', '24,5', '01.10.2026', ''],
+    ['TR340000012345', '', '1', '', 'Koyun', 'Merinos', 'E', '15.03.2026', 'Padok A', 'Sağlıklı', '', '', '24,5', '01.10.2026', ''],
   ].map((r) => r.slice(0, alanlar.length));
 }
 

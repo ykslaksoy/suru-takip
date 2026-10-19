@@ -38,12 +38,13 @@ function sonTartimlar(tartimlar: WeightRecord[]): Map<string, WeightRecord> {
 export function suruTablosu(hayvanlar: Animal[], tartimlar: WeightRecord[]): Hucre[][] {
   const id2 = new Map(hayvanlar.map((a) => [a.id, a]));
   const son = sonTartimlar(tartimlar);
-  const bas = ['Küpe no', 'TÜRKVET no', 'Sırt no', 'Aref / RFID', 'İsim', 'Tür', 'Irk', 'Cinsiyet', 'Doğum tarihi', 'Padok / parti', 'Durum', 'Ana küpe', 'Kilo (kg)', 'Tartım tarihi', 'Not'];
+  const bas = ['Küpe no', 'TÜRKVET no', 'Sırt no', 'Aref / RFID', 'İsim', 'Tür', 'Irk', 'Cinsiyet', 'Doğum tarihi', 'Padok / parti', 'Durum', 'Ana küpe', 'Baba küpe', 'Kilo (kg)', 'Tartım tarihi', 'Not'];
   const satirlar = [...hayvanlar]
     .sort((a, b) => (a.paddock || '').localeCompare(b.paddock || '', 'tr') || (a.earTag || '').localeCompare(b.earTag || '', 'tr'))
     .map((a) => {
       const w = son.get(a.id);
       const ana = a.motherId ? id2.get(a.motherId) : undefined;
+      const baba = a.fatherId ? id2.get(a.fatherId) : undefined;
       return [
         a.earTag,
         a.turkvetNo,
@@ -57,6 +58,7 @@ export function suruTablosu(hayvanlar: Animal[], tartimlar: WeightRecord[]): Huc
         a.paddock,
         a.status === 'lactating' ? 'Sağmal' : ANIMAL_STATUS_LABELS[a.status] ?? a.status,
         ana?.earTag ?? '',
+        baba?.earTag ?? '',
         w ? w.weightKg : '',
         w ? trTarih(w.recordedAt) : '',
         a.notes,

@@ -76,6 +76,7 @@ export async function upsertAnimal(
     modId: animal.modId !== undefined ? animal.modId : existing?.modId ?? null,
     sirtNo: animal.sirtNo !== undefined ? animal.sirtNo : existing?.sirtNo ?? null,
     gehisId: animal.gehisId !== undefined ? animal.gehisId : existing?.gehisId ?? null,
+    fatherId: animal.fatherId !== undefined ? animal.fatherId : existing?.fatherId ?? null,
     createdAt: existing?.createdAt ?? animal.createdAt ?? now,
     updatedAt: now,
     syncStatus: 'pending',

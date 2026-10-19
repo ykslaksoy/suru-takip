@@ -128,6 +128,11 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
   } catch {
     /* sütun zaten var */
   }
+  try {
+    await database.execAsync(`ALTER TABLE animals ADD COLUMN father_id TEXT`);
+  } catch {
+    /* sütun zaten var */
+  }
 }
 
 function rowToAnimal(row: Record<string, unknown>): Animal {
@@ -153,6 +158,7 @@ function rowToAnimal(row: Record<string, unknown>): Animal {
     paddock: row.paddock as string,
     status: row.status as Animal['status'],
     motherId: (row.mother_id as string) || null,
+    fatherId: (row.father_id as string) || null,
     gehisId: (row.gehis_id as string) || null,
     sirtNo: (row.sirt_no as string) || null,
     modId,
@@ -201,12 +207,13 @@ export async function upsertAnimal(animal: Omit<Animal, 'createdAt' | 'updatedAt
     modId: animal.modId !== undefined ? animal.modId : existing?.modId ?? null,
     sirtNo: animal.sirtNo !== undefined ? animal.sirtNo : existing?.sirtNo ?? null,
     gehisId: animal.gehisId !== undefined ? animal.gehisId : existing?.gehisId ?? null,
+    fatherId: animal.fatherId !== undefined ? animal.fatherId : existing?.fatherId ?? null,
     createdAt: existing?.createdAt ?? animal.createdAt ?? now,
     updatedAt: now,
     syncStatus: 'pending',
   };
   await database.runAsync(
-    `INSERT OR REPLACE INTO animals (id, ear_tag, turkvet_no, name, breed, species, sex, birth_date, paddock, status, mother_id, gehis_id, sirt_no, notes, created_at, updated_at, sync_status, mod_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT OR REPLACE INTO animals (id, ear_tag, turkvet_no, name, breed, species, sex, birth_date, paddock, status, mother_id, gehis_id, sirt_no, notes, created_at, updated_at, sync_status, mod_id, father_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.id,
       record.earTag,
@@ -226,6 +233,7 @@ export async function upsertAnimal(animal: Omit<Animal, 'createdAt' | 'updatedAt
       record.updatedAt,
       record.syncStatus,
       record.modId,
+      record.fatherId ?? null,
     ]
   );
   await enqueueSync('animals', record.id, existing ? 'update' : 'create', record);

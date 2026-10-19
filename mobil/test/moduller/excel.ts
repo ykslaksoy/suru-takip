@@ -73,9 +73,9 @@ export const excelModul: TestModul = {
     const e2 = eslesmeDegistir(e, 6, 'earTag');
     t('bir alan tek sütuna: yeniden eşleme eskisini boşaltır', e2[6] === 'earTag' && e2[0] === null);
     const geriEsle = otomatikEslesme(suruTablosu([hayvan({})], [])[0].map(String));
-    t('dışa aktarılan sürü başlıkları birebir geri eşlenir', ['earTag', 'turkvetNo', 'sirtNo', 'gehisId', 'name', 'species', 'breed', 'sex', 'birthDate', 'paddock', 'status', 'motherTag', 'kiloKg', 'kiloTarih', 'notes'].every((a, i) => geriEsle[i] === a));
+    t('dışa aktarılan sürü başlıkları birebir geri eşlenir', ['earTag', 'turkvetNo', 'sirtNo', 'gehisId', 'name', 'species', 'breed', 'sex', 'birthDate', 'paddock', 'status', 'motherTag', 'fatherTag', 'kiloKg', 'kiloTarih', 'notes'].every((a, i) => geriEsle[i] === a));
     t('şablon başlıkları da eşlenir', Object.values(otomatikEslesme(sablonTablosu()[0])).filter(Boolean).length === sablonTablosu()[0].length);
-    t('şablon satırı başlıkla aynı uzunlukta', sablonTablosu()[0].length === sablonTablosu()[1].length && HEDEF_ALANLAR.length === 15);
+    t('şablon satırı başlıkla aynı uzunlukta', sablonTablosu()[0].length === sablonTablosu()[1].length && HEDEF_ALANLAR.length === 16);
 
     // önizleme + mükerrer
     const tablo = [
@@ -110,7 +110,7 @@ export const excelModul: TestModul = {
     const st = suruTablosu([a2, a1], w);
     const r1 = st.find((r) => r[0] === 'TR1')!;
     const r2 = st.find((r) => r[0] === 'TR2')!;
-    t('sürü tablosu: son kilo + tarih', r1[12] === 25 && r1[13] === '01.10.2026');
+    t('sürü tablosu: son kilo + tarih', r1[13] === 25 && r1[14] === '01.10.2026');
     t('sürü tablosu: ana küpe, cinsiyet, durum Türkçe', r2[11] === 'TR1' && r2[7] === 'Dişi' && r2[10] === 'Gebe');
     t('tartım tablosu yeni → eski', tartimTablosu([a1], w)[1][4] === 25);
     const tt = tedaviTablosu([a1], [{ id: 'h', animalId: 'a1', recordType: 'treatment', symptoms: '', diagnosis: 'Pnömoni', treatment: '', medicine: 'Oksitetrasiklin', withdrawalDays: 28, vetName: '', recordedAt: '2026-10-10T00:00:00Z', notes: '' }]);

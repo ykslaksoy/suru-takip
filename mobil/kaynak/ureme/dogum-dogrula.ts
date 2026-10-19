@@ -11,6 +11,8 @@ export type DogumKuzuGirdi = {
 
 export type DogumKayitGirdi = {
   anneId: string;
+  /** Baba koç id'si (opsiyonel) */
+  babaId?: string | null;
   /** YYYY-MM-DD */
   birthDate: string;
   kuzular: DogumKuzuGirdi[];

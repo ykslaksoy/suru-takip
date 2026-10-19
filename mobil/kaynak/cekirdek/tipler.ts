@@ -32,6 +32,8 @@ export interface Animal {
   paddock: string;
   status: AnimalStatus;
   motherId: string | null;
+  /** Baba (koç) hayvan id'si — opsiyonel, soy ağacı için */
+  fatherId?: string | null;
   /** GEKİS / Aref elektronik kimlik (RFID) */
   gehisId: string | null;
   /** Sırt boya / padok numarası — küpe ve Aref ile eşleşir */

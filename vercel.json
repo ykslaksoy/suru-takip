@@ -8,6 +8,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/hayvan/:id/soy",
+      "destination": "/hayvan/_id/soy"
+    },
+    {
       "source": "/hayvan/:id/galeri",
       "destination": "/hayvan/_id/galeri"
     },
