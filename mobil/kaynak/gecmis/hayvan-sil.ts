@@ -20,6 +20,9 @@ import { denetimYaz } from '@/kaynak/cekirdek/denetim';
 import { copeAt, coptenCikar, getCopKutusu, islemKaydet } from './gunluk';
 import { COP_TUR_ETIKET, hayvanCopVerisi } from './cop';
 import { rasyonGeriYukle } from '@/kaynak/yem/kayit';
+import { fotoGeriYukle, metaOku, metaYaz } from '@/kaynak/galeri/meta';
+import { gorselSil } from '@/kaynak/galeri/gorsel';
+import type { FotoKaydi } from '@/kaynak/galeri/hesap';
 import { silinenDemoIsaretle } from '@/kaynak/cekirdek/demo-silinen';
 import type { PartiRasyonu } from '@/kaynak/yem/hesap';
 import type { CopKaydi, CopTur } from './tipler';
@@ -80,6 +83,8 @@ export async function copGeriYukle(id: string): Promise<CopKaydi | null> {
     await policeGeriYukle(k.veri as SigortaPolice);
   } else if (k.tur === 'sablon') {
     await sablonGeriYukle(k.veri as KayitSablonu);
+  } else if (k.tur === 'foto' && !yukleyiciler.foto) {
+    await fotoGeriYukle(k.veri as FotoKaydi);
   } else if (k.tur === 'yem' && !yukleyiciler.yem) {
     await rasyonGeriYukle(k.veri as PartiRasyonu);
   } else {
@@ -102,6 +107,11 @@ export async function copKaliciSil(id: string): Promise<CopKaydi | null> {
   yetkiGerekli('silme');
   const k = await coptenCikar(id);
   if (!k) return null;
+  if (k.tur === 'foto') {
+    const f = k.veri as FotoKaydi;
+    await gorselSil(f).catch(() => undefined);
+    await metaYaz((await metaOku()).filter((x) => x.id !== f.id));
+  }
   denetimYaz({ eylem: 'kalici_silme', tablo: 'diger', kayitId: id, animalId: k.animalId, ozet: `${COP_TUR_ETIKET[k.tur]} kalıcı silindi · ${k.etiket}` });
   return k;
 }

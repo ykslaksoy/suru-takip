@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { KuzuFotoSeridi } from '@/bilesenler/galeri/KuzuFotoSeridi';
 import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -322,6 +323,8 @@ export default function AnimalDetailScreen() {
           <Text style={StyleSheet.flatten([styles.actionText, { color: colors.text }])}>💊 Sağlık</Text>
         </Pressable>
       </View>
+
+      <KuzuFotoSeridi animalId={animal.id} />
 
       {animal.sex === 'female' && animal.status !== 'sold' && animal.status !== 'dead' ? (
         <View style={[styles.actions, { marginTop: 10 }]}>

@@ -40,6 +40,7 @@ import { geriDonusumModul } from './moduller/geri-donusum';
 import { excelModul } from './moduller/excel';
 import { yemModul } from './moduller/yem';
 import { ekipModul } from './moduller/ekip';
+import { galeriModul } from './moduller/galeri';
 
 const MODULLER = [
   hizliBesiModul,
@@ -78,6 +79,7 @@ const MODULLER = [
   excelModul,
   yemModul,
   ekipModul,
+  galeriModul,
 ];
 
 async function main() {

@@ -7,6 +7,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/hayvan/:id/galeri",
+      "destination": "/hayvan/_id/galeri"
+    },
+    {
       "source": "/hayvan/:id/kilo",
       "destination": "/hayvan/_id/kilo"
     },
