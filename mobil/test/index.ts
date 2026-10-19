@@ -34,6 +34,7 @@ import { asiTabancasiModul } from './moduller/asi-tabancasi';
 import { sigortaModul } from './moduller/sigorta';
 import { sayimModul } from './moduller/sayim';
 import { arinmaModul } from './moduller/arinma';
+import { sablonModul } from './moduller/sablon';
 
 const MODULLER = [
   hizliBesiModul,
@@ -66,6 +67,7 @@ const MODULLER = [
   sigortaModul,
   sayimModul,
   arinmaModul,
+  sablonModul,
 ];
 
 async function main() {

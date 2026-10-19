@@ -4,5 +4,35 @@
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/hayvan/:id/kilo",
+      "destination": "/hayvan/[id]/kilo"
+    },
+    {
+      "source": "/hayvan/:id/saglik",
+      "destination": "/hayvan/[id]/saglik"
+    },
+    {
+      "source": "/hayvan/:id/dogum",
+      "destination": "/hayvan/[id]/dogum"
+    },
+    {
+      "source": "/hayvan/:id",
+      "destination": "/hayvan/[id]"
+    },
+    {
+      "source": "/gorevler/asi/:programId",
+      "destination": "/gorevler/asi/[programId]"
+    },
+    {
+      "source": "/gorevler/kategori/:id",
+      "destination": "/gorevler/kategori/[id]"
+    },
+    {
+      "source": "/gorevler/yem/:yemId",
+      "destination": "/gorevler/yem/[yemId]"
+    }
+  ]
 }

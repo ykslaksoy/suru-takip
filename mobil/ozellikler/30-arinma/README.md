@@ -6,4 +6,5 @@
 - **Ekranlar:** `app/arinma/index.tsx` (Daha → İlaç arınma süreleri: arınmadaki kuzular + düzenlenebilir tablo), `app/satis/index.tsx` (Daha → Satış / çıkış: toplu Satış / Kesim / Ölüm; arınmadakiler için kırmızı uyarı, “Arınmadakileri çıkar” veya onaylı “Yine de hepsini kaydet”)
 - **Kuzu kartı:** “🚫 GG.AA.YYYY tarihine kadar kesilemez · ilaç · N gün” + “Satış / çıkış” düğmesi
 - **Görevler / Bugün:** her arınmadaki kuzu bir satır; Bugün’de “🚫 Arınma süresi” özeti. Sağlık sekmesi “Arınma”.
+- Vercel: dinamik rotalar (`/hayvan/:id` vb.) için `vercel.json` rewrites eklendi — doğrudan açılan kuzu kartı linki artık 404 vermez.
 - Test: `test/moduller/arinma.ts`
