@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import { fotografAnalizi, type FotoTur, type VakaFotografi } from './fotograf';
 import type { VetCevaplar } from './netlestirme';
 import type { VetSuggestion } from '@/kaynak/cekirdek/tipler';
+import { cevrimiciMi } from '@/kaynak/cevrimdisi/durum';
 
 export type VisionAnalizGirdi = {
   fotograflar: VakaFotografi[];
@@ -82,6 +83,8 @@ export function visionOfflineAnaliz(girdi: VisionAnalizGirdi): VisionAnalizSonuc
 export async function visionUzakAnaliz(girdi: VisionAnalizGirdi): Promise<VisionAnalizSonuc | null> {
   const url = visionUrl();
   if (!url || girdi.fotograflar.length === 0) return null;
+  // Çevrimdışı: deneme bile yapma, yerel kural motoru hemen yanıtlasın
+  if (!cevrimiciMi()) return null;
 
   try {
     const ctrl = new AbortController();

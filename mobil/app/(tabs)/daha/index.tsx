@@ -7,6 +7,7 @@ import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 import { useAyarlar } from '@/baglam/AyarlarBaglami';
 import { DAHA_MENUSU } from '@/sabitler/HizliIslemler';
 import { AktifKullaniciRozeti } from '@/bilesenler/ekip/YetkiKapisi';
+import { CevrimdisiHazirSatiri } from '@/bilesenler/ortak/BaglantiSeridi';
 
 export default function DahaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -24,6 +25,7 @@ export default function DahaScreen() {
           Diğer ekranlar ve ayarlar
         </Text>
         <AktifKullaniciRozeti />
+        <CevrimdisiHazirSatiri />
         <View style={styles.liste}>
           {DAHA_MENUSU.map((item) => (
             <Pressable

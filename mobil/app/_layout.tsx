@@ -13,6 +13,7 @@ import { ModProvider } from '@/baglam/ModBaglami';
 import { AyarlarProvider } from '@/baglam/AyarlarBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
+import { BaglantiSeridi } from '@/bilesenler/ortak/BaglantiSeridi';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -92,6 +93,7 @@ export default function RootLayout() {
                     <Stack.Screen name="yasal/gizlilik" options={{ title: 'KVKK' }} />
                     <Stack.Screen name="yasal/kullanim" options={{ title: 'Kullanım koşulları' }} />
                   </Stack>
+                  <BaglantiSeridi />
                   <AyarlarKaplama />
                 </View>
               </AyarlarProvider>

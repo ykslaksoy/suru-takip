@@ -17,6 +17,8 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="SürüYön" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="description" content="SürüYön — koyun ve kuzu sürü yönetimi" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/ikon/apple-touch-icon.png" />
 
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: webStyles }} />

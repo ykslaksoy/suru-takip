@@ -43,6 +43,7 @@ import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
 import { ciftlesmeModul } from './moduller/ciftlesme';
+import { cevrimdisiModul } from './moduller/cevrimdisi';
 
 const MODULLER = [
   hizliBesiModul,
@@ -84,6 +85,7 @@ const MODULLER = [
   galeriModul,
   soyModul,
   ciftlesmeModul,
+  cevrimdisiModul,
 ];
 
 async function main() {

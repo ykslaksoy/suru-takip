@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "EXPO_PUBLIC_ORTAM=uretim npx expo export -p web && node scripts/vercel-dinamik.js",
+  "buildCommand": "EXPO_PUBLIC_ORTAM=uretim npx expo export -p web && node scripts/vercel-dinamik.js && node scripts/sw-olustur.js",
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
@@ -41,6 +41,30 @@
     {
       "source": "/gorevler/yem/:yemId",
       "destination": "/gorevler/yem/_yemId"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
     }
   ]
 }
