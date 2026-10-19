@@ -108,3 +108,14 @@ export function gorselSec(kaynak: 'kamera' | 'dosya'): Promise<Blob[]> {
     inp.click();
   });
 }
+
+/** Bulut senkronu için ham görüntü (tam boy) oku */
+export async function gorselHamOku(id: string): Promise<Blob | null> {
+  const v = (await islem('readonly', (s) => s.get(id))) as { tam: Blob; kucuk: Blob } | undefined;
+  return v?.tam ?? null;
+}
+
+/** Buluttan inen görüntüyü yerel depoya yaz (küçük resim olarak da aynı blob) */
+export async function gorselHamYaz(id: string, blob: Blob): Promise<void> {
+  await islem('readwrite', (s) => s.put({ tam: blob, kucuk: blob }, id));
+}

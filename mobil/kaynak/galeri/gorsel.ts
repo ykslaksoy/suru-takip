@@ -40,3 +40,11 @@ export async function gorselSec(kaynak: 'kamera' | 'dosya'): Promise<Secilen[]> 
   if (r.canceled) return [];
   return r.assets.map((a) => ({ uri: a.uri, width: a.width, height: a.height, fileSize: a.fileSize }));
 }
+
+/** Bulut foto senkronu şimdilik yalnız web'de (native dosya URI'leri) */
+export async function gorselHamOku(_id: string): Promise<Blob | null> {
+  return null;
+}
+export async function gorselHamYaz(_id: string, _blob: Blob): Promise<void> {
+  /* native: sonraki sürüm */
+}

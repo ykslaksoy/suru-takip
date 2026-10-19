@@ -14,6 +14,7 @@ import { AyarlarProvider } from '@/baglam/AyarlarBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
 import { BaglantiSeridi } from '@/bilesenler/ortak/BaglantiSeridi';
+import { bulutBaslat } from '@/kaynak/bulut/servis';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -36,6 +37,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
+
+  // Bulut eşitleme: env yoksa hiçbir şey yapmaz
+  useEffect(() => {
+    bulutBaslat();
+  }, []);
 
   if (!loaded) return null;
 
@@ -85,6 +91,7 @@ export default function RootLayout() {
                     <Stack.Screen name="yem/index" options={{ title: 'Yem ve rasyon' }} />
                     <Stack.Screen name="ekip/index" options={{ title: 'Ekip ve yetkiler' }} />
                     <Stack.Screen name="sayim/index" options={{ title: 'Sayım listesi' }} />
+                    <Stack.Screen name="bulut/index" options={{ title: 'Bulut eşitleme' }} />
                     <Stack.Screen name="gecmis/index" options={{ title: 'İşlem geçmişi' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
                     <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />
