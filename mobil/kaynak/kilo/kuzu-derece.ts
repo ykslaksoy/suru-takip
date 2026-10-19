@@ -21,11 +21,16 @@ export interface KuzuGrade {
   color: string;
   short: string;
   hint: string;
+  /** Rozet görseli dosya adı — varliklar/images/rozet/<gorsel>.jpg (UI: RozetGorseli) */
+  gorsel: KuzuRozetGorsel;
 }
+
+export type KuzuRozetGorsel = 'olculmedi' | 'zayif' | 'normal' | 'iyi' | 'cok-iyi' | 'super-kuzu';
 
 export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
   bilinmiyor: {
     id: 'bilinmiyor',
+    gorsel: 'olculmedi',
     level: 0,
     label: 'Ölçülmedi',
     emoji: '⚪',
@@ -35,6 +40,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
   },
   zayif: {
     id: 'zayif',
+    gorsel: 'zayif',
     level: 1,
     label: 'Zayıf',
     emoji: '🔴',
@@ -44,6 +50,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
   },
   fit: {
     id: 'fit',
+    gorsel: 'normal',
     level: 2,
     label: 'Normal',
     emoji: '🟢',
@@ -53,6 +60,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
   },
   sportmen: {
     id: 'sportmen',
+    gorsel: 'iyi',
     level: 3,
     label: 'İyi',
     emoji: '🥉',
@@ -62,6 +70,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
   },
   kasli: {
     id: 'kasli',
+    gorsel: 'cok-iyi',
     level: 4,
     label: 'Çok iyi',
     emoji: '🥈',
@@ -72,6 +81,7 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
 
   super_kuzu: {
     id: 'super_kuzu',
+    gorsel: 'super-kuzu',
     level: 5,
     label: 'Süper Kuzu',
     emoji: '🏆',

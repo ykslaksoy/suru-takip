@@ -13,10 +13,11 @@ import { getPadoklar } from '@/kaynak/suru/padok';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
-import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
+import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, KUZU_GRADES, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
 import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import { RozetGorseli } from '@/bilesenler/kilo/RozetGorseli';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 import { hayvanSinifEtiketi, turEmoji } from '@/kaynak/suru/tur';
@@ -43,6 +44,7 @@ export default function AnimalDetailScreen() {
   const [resmiAcik, setResmiAcik] = useState(false);
   const [padoklar, setPadoklar] = useState<string[]>([]);
   const [padokAcik, setPadokAcik] = useState(false);
+  const [skalaAcik, setSkalaAcik] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -112,12 +114,14 @@ export default function AnimalDetailScreen() {
             borderWidth: grade && grade.level >= 4 ? 2 : 1,
           },
         ]}>
-        <Text style={{ fontSize: 52, textAlign: 'center' }}>{avatar}</Text>
         {grade ? (
-          <View style={{ alignItems: 'center', marginBottom: 8 }}>
+          <View style={styles.rozetSatir}>
+            <RozetGorseli grade={grade} boyut={72} />
             <DereceRozeti grade={grade} />
           </View>
-        ) : null}
+        ) : (
+          <Text style={{ fontSize: 52, textAlign: 'center' }}>{avatar}</Text>
+        )}
         <Text style={[styles.tag, { color: colors.tint }]}>{anaEtiket}</Text>
         {altEtiket ? (
           <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 14 }}>
@@ -228,6 +232,31 @@ export default function AnimalDetailScreen() {
         <Text style={[styles.sectionTitle, { color: colors.tint }]}>Performans</Text>
         <InfoRow label="Yaş bandı" value={ageLabel} colors={colors} />
         <InfoRow label="Derece" value={grade ? dereceEtiket(grade) : '—'} colors={colors} />
+        <Pressable onPress={() => setSkalaAcik((v) => !v)} hitSlop={6}>
+          <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13, paddingVertical: 4 }}>
+            Derece skalası {skalaAcik ? '▲' : '▼'}
+          </Text>
+        </Pressable>
+        {skalaAcik ? (
+          <View style={{ gap: 6, marginBottom: 6 }}>
+            {[KUZU_GRADES.bilinmiyor, KUZU_GRADES.zayif, KUZU_GRADES.fit, KUZU_GRADES.sportmen, KUZU_GRADES.kasli, KUZU_GRADES.super_kuzu].map((g) => (
+              <View
+                key={g.id}
+                style={[
+                  styles.skalaSatir,
+                  { borderColor: grade?.id === g.id ? g.color : 'transparent', backgroundColor: grade?.id === g.id ? g.color + '14' : 'transparent' },
+                ]}>
+                <RozetGorseli grade={g} boyut={56} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: g.color, fontWeight: '800' }}>
+                    {g.emoji} {g.label}
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{g.short}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
         <InfoRow label="Son tartım" value={weight != null ? `${weight} kg` : '—'} colors={colors} />
         <View style={{ marginTop: 8 }}>
           <YemAdgTablosu gunlukYemKg={dailyRation} adgGram={adg} />
@@ -341,5 +370,7 @@ const styles = StyleSheet.create({
   actionText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   notes: { padding: 16, fontStyle: 'italic' },
   olay: { flexDirection: 'row', gap: 8 },
+  rozetSatir: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 8 },
+  skalaSatir: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 4, borderRadius: 12, borderWidth: 1.5 },
   olayCizgi: { width: 2, flex: 1, marginTop: 2 },
 });

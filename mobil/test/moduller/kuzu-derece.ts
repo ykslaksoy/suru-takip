@@ -1,5 +1,7 @@
 import { KUZU_GRADES, dereceEtiket } from '@/kaynak/kilo/kuzu-derece';
 import { TERIMLER } from '@/sabitler/Metinler';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { test, type TestModul } from '../cerceve';
 
 const G = 'Kuzu derecesi';
@@ -28,6 +30,16 @@ export const kuzuDereceModul: TestModul = {
       test(G, 'dereceEtiket = label', tum.every((x) => dereceEtiket(x) === x.label)),
       test(G, 'FIT/SPORTMEN terimleri kaldırıldı', !('FIT' in TERIMLER) && !('SPORTMEN' in TERIMLER)),
       test(G, 'Seviye sırası korunur', sira.every((x, i) => x.level === i)),
+      test(
+        G,
+        'Rozet görselleri sırayla eşlenir',
+        sira.map((x) => x.gorsel).join('|') === 'olculmedi|zayif|normal|iyi|cok-iyi|super-kuzu',
+      ),
+      test(
+        G,
+        'Rozet görsel dosyaları var',
+        sira.every((x) => existsSync(join(__dirname, '..', '..', 'varliklar', 'images', 'rozet', `${x.gorsel}.jpg`))),
+      ),
     ];
   },
 };
