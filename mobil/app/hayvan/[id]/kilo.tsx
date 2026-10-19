@@ -11,6 +11,7 @@ import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/ka
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import {
   analizOzeti,
   referansKg,
@@ -70,6 +71,7 @@ export default function WeightScreen() {
     });
     const animal = await getAnimal(id);
     if (animal) await upsertRationPlanFromWeight(animal, w);
+    await islemKaydet({ tur: 'tartim', ozet: `${animal ? hayvanAnaEtiket(animal) : id} · ${w} kg`, animalId: id });
     setModal(false);
     setWeight('');
     setNotes('');

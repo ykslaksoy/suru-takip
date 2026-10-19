@@ -12,6 +12,7 @@ import { addWeightRecord, getWeightRecords } from '@/kaynak/cekirdek/veritabani'
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { hayvanBul } from '@/kaynak/ses/uygula';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import {
   analizOzeti,
   tartimAnaliz,
@@ -69,6 +70,7 @@ export function HizliTartim() {
     const analiz = tartimAnaliz(onceki, { kg, at }, ayar);
     await addWeightRecord({ animalId: animal.id, weightKg: kg, recordedAt: at, notes: 'Hızlı tartım' });
     await upsertRationPlanFromWeight(animal, kg).catch(() => {});
+    void islemKaydet({ tur: 'tartim', ozet: `${hayvanAnaEtiket(animal)} · ${kg} kg`, detay: 'Hızlı tartım', animalId: animal.id });
     setSonuclar((s) => [{ id: `${Date.now()}`, animalId: animal.id, etiket: hayvanAnaEtiket(animal), analiz }, ...s].slice(0, 30));
     setKupe('');
     setKilo('');

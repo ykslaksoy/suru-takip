@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { calculateADG, deleteAnimal, getAnimal, getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { calculateADG, getAnimal, getHealthRecords, getLatestWeight, getWeightRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { hayvanZamanCizelgesi, olayIkonu, type ZamanOlayi } from '@/kaynak/gecmis/zaman-cizelgesi';
+import { getIslemler, islemKaydet } from '@/kaynak/gecmis/gunluk';
+import { hayvanSilGeriAlinabilir } from '@/kaynak/gecmis/hayvan-sil';
+import { getPadoklar } from '@/kaynak/suru/padok';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
@@ -34,6 +38,11 @@ export default function AnimalDetailScreen() {
   const [dailyRation, setDailyRation] = useState<number | null>(null);
   const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
   const [anneEtiket, setAnneEtiket] = useState<string | null>(null);
+  const [olaylar, setOlaylar] = useState<ZamanOlayi[]>([]);
+  const [tumOlaylar, setTumOlaylar] = useState(false);
+  const [resmiAcik, setResmiAcik] = useState(false);
+  const [padoklar, setPadoklar] = useState<string[]>([]);
+  const [padokAcik, setPadokAcik] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -47,6 +56,13 @@ export default function AnimalDetailScreen() {
         const fcr = await hesaplaFcr(a, records);
         const plan = await ensureRationPlan(a, w);
         setWeightRecords(records);
+        const [health, islemler, pl] = await Promise.all([
+          getHealthRecords(a.id).catch(() => []),
+          getIslemler(),
+          getPadoklar().catch(() => []),
+        ]);
+        setOlaylar(hayvanZamanCizelgesi({ animal: a, weights: records, health, islemler }));
+        setPadoklar(pl.map((x) => x.ad));
         setWeight(w);
         setAdg(g);
         setFcrValue(fcr?.fcr ?? null);
@@ -128,7 +144,72 @@ export default function AnimalDetailScreen() {
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.tint }]}>Resmi Kayıt (TÜRKVET / GEKİS)</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={[styles.sectionTitle, { color: colors.tint, marginBottom: 0, flex: 1 }]}>Zaman çizelgesi</Text>
+          <Pressable onPress={() => setPadokAcik((v) => !v)} hitSlop={8}>
+            <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Parti değiştir</Text>
+          </Pressable>
+        </View>
+        {padokAcik ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {padoklar.map((p) => (
+              <Pressable
+                key={p}
+                disabled={p === animal.paddock}
+                onPress={async () => {
+                  const eski = animal.paddock;
+                  await upsertAnimal({ ...animal, paddock: p });
+                  await islemKaydet({ tur: 'padok', ozet: `Parti: ${eski || '—'} → ${p}`, animalId: animal.id });
+                  setPadokAcik(false);
+                  refresh();
+                }}
+                style={{
+                  borderWidth: 1,
+                  borderRadius: 999,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderColor: p === animal.paddock ? colors.tint : colors.border,
+                  backgroundColor: p === animal.paddock ? colors.tint : 'transparent',
+                }}>
+                <Text style={{ color: p === animal.paddock ? '#fff' : colors.text, fontSize: 13, fontWeight: '600' }}>{p}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+        {olaylar.length === 0 ? (
+          <Text style={{ color: colors.textSecondary }}>Henüz kayıt yok.</Text>
+        ) : (
+          (tumOlaylar ? olaylar : olaylar.slice(0, 6)).map((o, i, arr) => (
+            <View key={o.id} style={styles.olay}>
+              <View style={{ alignItems: 'center', width: 28 }}>
+                <Text style={{ fontSize: 16 }}>{olayIkonu(o.tur)}</Text>
+                {i < arr.length - 1 ? <View style={[styles.olayCizgi, { backgroundColor: colors.border }]} /> : null}
+              </View>
+              <View style={{ flex: 1, paddingBottom: 10 }}>
+                <Text style={{ color: colors.text, fontWeight: '700' }}>{o.baslik}</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 1 }}>
+                  {new Date(o.zaman).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {o.detay ? ` · ${o.detay}` : ''}
+                </Text>
+              </View>
+            </View>
+          ))
+        )}
+        {olaylar.length > 6 ? (
+          <Pressable onPress={() => setTumOlaylar((v) => !v)}>
+            <Text style={{ color: colors.tint, fontWeight: '700' }}>{tumOlaylar ? 'Daha az göster' : `Tümünü göster (${olaylar.length})`}</Text>
+          </Pressable>
+        ) : null}
+      </View>
+
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Pressable onPress={() => setResmiAcik((v) => !v)}>
+          <Text style={[styles.sectionTitle, { color: colors.tint, marginBottom: resmiAcik ? 12 : 0 }]}>
+            Resmi Kayıt (TÜRKVET / GEKİS) {resmiAcik ? '▲' : '▼'}
+          </Text>
+        </Pressable>
+        {resmiAcik ? (
+        <>
         <InfoRow label={TURKVET_FIELD_LABELS.turkvetNo} value={animal.turkvetNo || '—'} colors={colors} />
         <InfoRow label="Kulak küpe" value={animal.earTag || '—'} colors={colors} />
         <InfoRow label="Sırt no" value={animal.sirtNo || '—'} colors={colors} />
@@ -139,6 +220,8 @@ export default function AnimalDetailScreen() {
           value={anneEtiket || animal.motherId || '—'}
           colors={colors}
         />
+        </>
+        ) : null}
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -205,13 +288,24 @@ export default function AnimalDetailScreen() {
           title="Hayvanı Sil"
           variant="danger"
           onPress={() => {
-            Alert.alert('Sil', 'Bu hayvan kaydını silmek istediğinize emin misiniz?', [
+            const mesaj = 'Kayıt çöp kutusuna taşınır; İşlem geçmişi ekranından geri alabilirsin.';
+            if (Platform.OS === 'web') {
+              // RN-web Alert butonları göstermez — tarayıcı onayı
+              if (typeof window !== 'undefined' && window.confirm(`Sil? ${mesaj}`)) {
+                void hayvanSilGeriAlinabilir(animal.id).then(() => {
+                  refresh();
+                  router.back();
+                });
+              }
+              return;
+            }
+            Alert.alert('Sil', mesaj, [
               { text: 'İptal', style: 'cancel' },
               {
                 text: 'Sil',
                 style: 'destructive',
                 onPress: async () => {
-                  await deleteAnimal(animal.id);
+                  await hayvanSilGeriAlinabilir(animal.id);
                   refresh();
                   router.back();
                 },
@@ -246,4 +340,6 @@ const styles = StyleSheet.create({
   actionBtn: { flex: 1, minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   actionText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   notes: { padding: 16, fontStyle: 'italic' },
+  olay: { flexDirection: 'row', gap: 8 },
+  olayCizgi: { width: 2, flex: 1, marginTop: 2 },
 });

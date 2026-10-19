@@ -7,6 +7,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { dusumMiktari, stokKalemiEslestir } from '@/kaynak/stok/eslesme';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { HealthRecord } from '@/kaynak/cekirdek/tipler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
@@ -65,6 +66,12 @@ export default function AnimalHealthScreen() {
       }
     }
     if (stokMesaj) Alert.alert('Kaydedildi', stokMesaj);
+    await islemKaydet({
+      tur: form.recordType === 'vaccine' ? 'asi' : 'ilac',
+      ozet: `${animal ? hayvanAnaEtiket(animal) : ''} · ${form.medicine.trim() || form.diagnosis.trim() || 'Sağlık kaydı'}`,
+      detay: stokMesaj || undefined,
+      animalId: id,
+    });
     if (form.recordType === 'illness') {
       const animal = await getAnimal(id);
       if (animal) await upsertAnimal({ ...animal, status: 'sick' });

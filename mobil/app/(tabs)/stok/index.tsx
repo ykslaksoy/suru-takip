@@ -21,6 +21,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { adjustStock, getStockItems, getStockMovements, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
 import { dusukStokMu } from '@/kaynak/stok/eslesme';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import type { StockMovement } from '@/kaynak/cekirdek/tipler';
 import { kaydetYemSayim } from '@/kaynak/stok/sayim';
 import {
@@ -152,6 +153,7 @@ export default function StockScreen() {
       movementType === 'in' && Number.isFinite(fiyat) && fiyat > 0 ? `${notes ? `${notes} · ` : ''}Alış ${fiyat} ₺/${adjustItem.unit}` : notes,
     );
     if (movementType === 'in' && Number.isFinite(fiyat) && fiyat > 0) await setBirimFiyat(adjustItem.id, fiyat);
+    await islemKaydet({ tur: 'stok', ozet: `${adjustItem.name} ${movementType === 'in' ? '+' : '−'}${q} ${adjustItem.unit}` });
     if (movementType === 'out') {
       await kaydetKatalogKullanim(adjustItem.name, Math.max(1, Math.round(q)));
     }

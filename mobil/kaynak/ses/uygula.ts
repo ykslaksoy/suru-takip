@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { GrupAsiKomutu, SesKomutEylemi } from './tipler';
 import { topluSec } from '@/kaynak/toplu/secim';
 import { topluUygula } from '@/kaynak/toplu/uygula';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 
 /** Grup komutundaki aktif kuzu sayısı (geri okuma için) */
 export async function grupHayvanSayisi(e: GrupAsiKomutu): Promise<number> {
@@ -46,6 +47,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         recordedAt: new Date().toISOString(),
         notes: 'Sesli komut',
       });
+      await islemKaydet({ tur: 'tartim', ozet: `${hayvanAnaEtiket(animal)} · ${eylem.kiloKg} kg`, detay: 'Sesli komut', animalId: animal.id });
       return { ok: true };
     }
     case 'asi': {
@@ -66,6 +68,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         recordedAt: new Date().toISOString().split('T')[0],
         notes: `Sesli komut · ${hayvanAnaEtiket(animal)}`,
       });
+      await islemKaydet({ tur: 'asi', ozet: `${hayvanAnaEtiket(animal)} · ${eylem.asiAdi}`, detay: 'Sesli komut', animalId: animal.id });
       return { ok: true };
     }
     case 'grup_asi': {
@@ -82,6 +85,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         return { ok: false, hata: 'Eşleşen stok kalemi bulunamadı.' };
       }
       await adjustStock(item.id, eylem.yon === 'giris' ? 'in' : 'out', eylem.miktar, 'Sesli komut');
+      await islemKaydet({ tur: 'stok', ozet: `${item.name} ${eylem.yon === 'giris' ? '+' : '−'}${eylem.miktar} ${item.unit}`, detay: 'Sesli komut' });
       return { ok: true };
     }
     default:

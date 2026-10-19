@@ -8,6 +8,8 @@ import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { addHealthRecord, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { uygulaAsiHayvana } from '@/kaynak/akilli-veteriner/asi-uygula';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
+import { ASI_PROGRAMI } from '@/kaynak/cekirdek/asi-programi';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 
 export type TopluUygulaSonuc = { kayit: number; stokDusum: number; mesaj: string };
 
@@ -32,6 +34,8 @@ export async function topluUygula(opts: {
       if (/stok −/.test(r.message)) stokDusum += 1;
       else stokYetersiz += 1;
     }
+    const p = ASI_PROGRAMI.find((x) => x.id === opts.programId);
+    await islemKaydet({ tur: 'asi', ozet: `${p?.ad ?? opts.programId} · ${kayit} kuzu`, detay: opts.kaynak, adet: kayit });
     return {
       kayit,
       stokDusum,
@@ -63,5 +67,6 @@ export async function topluUygula(opts: {
     stokDusum = Math.min(item.quantity, kayit);
     if (stokDusum > 0) await adjustStock(item.id, 'out', stokDusum, `Toplu vitamin · ${kayit} kuzu`);
   }
+  await islemKaydet({ tur: 'ilac', ozet: `${v.ad} · ${kayit} kuzu`, detay: opts.kaynak, adet: kayit });
   return { kayit, stokDusum, mesaj: `${kayit} kuzuya ${v.ad} kaydı yapıldı${stokDusum ? ` · stok −${stokDusum}` : ''}` };
 }
