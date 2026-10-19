@@ -40,6 +40,7 @@ import { takvimModul } from './moduller/takvim';
 import { geriDonusumModul } from './moduller/geri-donusum';
 import { excelModul } from './moduller/excel';
 import { yemModul } from './moduller/yem';
+import { rasyonFormulModul } from './moduller/rasyon-formul';
 import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
@@ -82,6 +83,7 @@ const MODULLER = [
   geriDonusumModul,
   excelModul,
   yemModul,
+  rasyonFormulModul,
   ekipModul,
   galeriModul,
   soyModul,
