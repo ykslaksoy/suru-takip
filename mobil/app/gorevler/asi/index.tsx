@@ -190,6 +190,9 @@ export default function KuzuSaglikPlaniScreen() {
         {onerilenGoster ? (
           <Text style={[styles.planAlt, { color: colors.tint }]}>Kuzu besi (Mod 1)</Text>
         ) : null}
+        <Pressable onPress={() => router.push('/saglik-programi' as never)} style={{ marginBottom: 8 }}>
+          <Text style={{ color: colors.tint, fontWeight: '800' }}>📍 Bölge ve ırka göre program →</Text>
+        </Pressable>
 
         {onerilenAcik ? (
           <View style={[styles.segment, { borderColor: colors.border, backgroundColor: colors.card }]}>

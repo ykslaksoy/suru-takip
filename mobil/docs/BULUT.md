@@ -11,7 +11,11 @@ Bulut, **Supabase ortam değişkenleri** tanımlı olduğunda açılır. Değiş
 
 ### Vercel (superkuzu)
 
-Supabase ↔ Vercel entegrasyonu (proje ref `eferktaopilgoeetgggk`) varsayılan olarak `SUPABASE_URL` ve `SUPABASE_PUBLISHABLE_KEY` (veya `SUPABASE_ANON_KEY`) ekler. Web derlemede `mobil/scripts/supabase-expo-public.js` bunları `EXPO_PUBLIC_SUPABASE_*` olarak Expo'ya aktarır — elle kopyalamaya gerek yok.
+Supabase ↔ Vercel entegrasyonu (proje ref `eferktaopilgoeetgggk`) varsayılan olarak `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `POSTGRES_URL_NON_POOLING` vb. ekler. Her production/preview **build** öncesi:
+
+1. `mobil/scripts/bulut-build-oncesi.js` — `schema.sql` migrasyonu (yalnız `eferktaopilgoeetgggk`; `ssminvxldxaqnzizbrfy` asla)
+2. İsteğe bağlı auth şablonu: `SUPABASE_ACCESS_TOKEN` (Supabase PAT, `auth_config_write`) varsa Management API ile site URL + redirect + TR e-posta
+3. `mobil/scripts/supabase-expo-public.js` — `EXPO_PUBLIC_SUPABASE_*` doldurur
 
 **SuperAri** (`ssminvxldxaqnzizbrfy`) projesine dokunmayın; yalnız SuperKuzu Supabase projesi kullanılır.
 

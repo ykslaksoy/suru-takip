@@ -4,6 +4,7 @@
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
 import { bulutModul } from './moduller/bulut';
+import { supabaseGuvenlikModul } from './moduller/supabase-guvenlik';
 import { calistirTestModulleri, raporYaz } from './cerceve';
 import { hizliBesiModul } from './moduller/hizli-besi';
 import { gun1SecimModul } from './moduller/gun1-secim';
@@ -33,6 +34,7 @@ import { besiCinsiyetModul } from './moduller/besi-cinsiyet';
 import { tahminiFiyatModul } from './moduller/tahmini-fiyat';
 import { asiTabancasiModul } from './moduller/asi-tabancasi';
 import { sigortaModul } from './moduller/sigorta';
+import { saglikProgramiModul } from './moduller/saglik-programi';
 import { sayimModul } from './moduller/sayim';
 import { arinmaModul } from './moduller/arinma';
 import { sablonModul } from './moduller/sablon';
@@ -40,6 +42,7 @@ import { takvimModul } from './moduller/takvim';
 import { geriDonusumModul } from './moduller/geri-donusum';
 import { excelModul } from './moduller/excel';
 import { yemModul } from './moduller/yem';
+import { rasyonFormulModul } from './moduller/rasyon-formul';
 import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
@@ -75,6 +78,7 @@ const MODULLER = [
   tahminiFiyatModul,
   asiTabancasiModul,
   sigortaModul,
+  saglikProgramiModul,
   sayimModul,
   arinmaModul,
   sablonModul,
@@ -82,11 +86,13 @@ const MODULLER = [
   geriDonusumModul,
   excelModul,
   yemModul,
+  rasyonFormulModul,
   ekipModul,
   galeriModul,
   soyModul,
   ciftlesmeModul,
   cevrimdisiModul,
+  supabaseGuvenlikModul,
   bulutModul,
 ];
 

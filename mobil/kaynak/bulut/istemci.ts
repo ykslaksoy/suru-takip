@@ -13,7 +13,11 @@ export class BulutIstemci {
   constructor(private ayar: BulutAyar, private f: Fetch = (...a) => fetch(...a)) {}
 
   private basliklar(token?: string, ek: Record<string, string> = {}): Record<string, string> {
-    return { apikey: this.ayar.anonKey, Authorization: `Bearer ${token ?? this.ayar.anonKey}`, 'Content-Type': 'application/json', ...ek };
+    // Yeni "sb_publishable_" anahtarları JWT değildir: kullanıcı jetonu yoksa Authorization gönderme
+    const h: Record<string, string> = { apikey: this.ayar.anonKey, 'Content-Type': 'application/json', ...ek };
+    if (token) h.Authorization = `Bearer ${token}`;
+    else if (this.ayar.anonKey.startsWith('eyJ')) h.Authorization = `Bearer ${this.ayar.anonKey}`;
+    return h;
   }
 
   private async iste<T>(yol: string, init: RequestInit & { token?: string; ek?: Record<string, string> } = {}): Promise<T> {

@@ -48,3 +48,12 @@ export async function sablonGeriYukle(s: KayitSablonu): Promise<void> {
   const l = await getSablonlar();
   await yaz([...l.filter((x) => x.id !== s.id), s]);
 }
+
+/** Sabit id'li şablonu ekle/güncelle (ör. sağlık programından türetilen “Program: giriş günü”). */
+export async function sablonYerlestir(g: { id: string; ad: string; adimlar: SablonAdim[] }): Promise<void> {
+  const l = await getSablonlar();
+  const now = new Date().toISOString();
+  const eski = l.find((s) => s.id === g.id);
+  const s: KayitSablonu = { id: g.id, ad: g.ad, adimlar: adimlariTemizle(g.adimlar), varsayilan: true, createdAt: eski?.createdAt ?? now, updatedAt: now };
+  await yaz(eski ? l.map((x) => (x.id === g.id ? s : x)) : [...l, s]);
+}
