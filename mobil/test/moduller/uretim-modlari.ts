@@ -1,5 +1,5 @@
 import { ONERILEN_PLANLAR } from '@/kaynak/gorevler/saglik-plani-paketleri';
-import { onerilenPlanAcikMi } from '@/kaynak/gorevler/saglik-plani-mod';
+import { onerilenPlanAcikMiSync } from '@/kaynak/gorevler/saglik-plani-mod';
 import { aktifModaCoz, getMod } from '@/sabitler/ModlarSabit';
 import { test, type TestModul } from '../cerceve';
 
@@ -17,7 +17,8 @@ export const uretimModlariModul: TestModul = {
     const plan5 = ONERILEN_PLANLAR.mod5;
     const plan6 = ONERILEN_PLANLAR.mod6;
     return [
-      test('Mod 1', 'Önerilen plan kapalı (hızlı besi)', !(await onerilenPlanAcikMi())),
+      test('Mod 1', 'Önerilen plan kapalı (hızlı besi)', !onerilenPlanAcikMiSync('mod1')),
+      test('Mod 2', 'Önerilen plan açık', onerilenPlanAcikMiSync('mod2')),
       test('Mod 2', 'Hazır ve tam', m2.hazir && m2.seviye === 'tam'),
       test(
         'Mod 2',

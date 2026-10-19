@@ -9,11 +9,14 @@ import { ONERILEN_PLANLAR, VETERINER_ONERI_NOTU, onerilenPlanModEtiketi } from '
 export { VETERINER_ONERI_NOTU, ONERILEN_PLANLAR, onerilenPlanModEtiketi } from './saglik-plani-paketleri';
 
 /** Mod 1 hızlı besi ayrı; diğer hazır modlarda önerilen plan açık. */
-export async function onerilenPlanAcikMi(): Promise<boolean> {
-  const modId = await getAktifModId();
+export function onerilenPlanAcikMiSync(modId: UrunModId): boolean {
   if (modId === 'mod1') return false;
   const mod = getMod(modId);
   return mod.hazir && mod.seviye === 'tam';
+}
+
+export async function onerilenPlanAcikMi(): Promise<boolean> {
+  return onerilenPlanAcikMiSync(await getAktifModId());
 }
 
 export async function getOnerilenPlanByMod(modId: UrunModId): Promise<SaglikPlani | null> {
