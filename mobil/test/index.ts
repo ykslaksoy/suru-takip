@@ -25,6 +25,7 @@ import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
+import { maliyetModul } from './moduller/maliyet';
 
 const MODULLER = [
   hizliBesiModul,
@@ -48,6 +49,7 @@ const MODULLER = [
   planTakvimModul,
   hizliTartimModul,
   stokEslesmeModul,
+  maliyetModul,
 ];
 
 async function main() {

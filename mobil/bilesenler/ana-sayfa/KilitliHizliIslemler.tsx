@@ -26,6 +26,10 @@ const BUYUK_ISLEMLER: BuyukIslem[] = [
 
 /** "Tümü" altında kalanlar — FCR GCA ana sayfada "Yem verimi" adıyla */
 const DIGER_IDLER: KilitliHizliIslemId[] = ['rasyon', 'veteriner', 'stok', 'fcr-gca', 'gorevler'];
+/** "Tümü" altında PNG ikonu olmayan ek ekranlar */
+const EK_SATIRLAR: { id: string; label: string; href: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'maliyet', label: 'Maliyet ve Kâr', href: '/maliyet', icon: 'cash-outline' },
+];
 const ETIKET_DUZELT: Partial<Record<KilitliHizliIslemId, string>> = { 'fcr-gca': 'Yem verimi' };
 
 export function KilitliHizliIslemler({ yatayPad = 16 }: { yatayPad?: number } = {}) {
@@ -104,6 +108,25 @@ export function KilitliHizliIslemler({ yatayPad = 16 }: { yatayPad?: number } = 
               <Text style={StyleSheet.flatten([styles.digerLabel, { color: colors.text }])}>
                 {ETIKET_DUZELT[item.id] ?? item.label}
               </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+            </Pressable>
+          ))}
+          {EK_SATIRLAR.map((item) => (
+            <Pressable
+              key={item.id}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              onPress={() => router.push(item.href as never)}
+              style={({ pressed }) =>
+                StyleSheet.flatten([
+                  styles.digerRow,
+                  { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, opacity: pressed ? 0.7 : 1 },
+                ])
+              }>
+              <View style={StyleSheet.flatten([styles.digerIcon, { backgroundColor: light ? '#f4f7f0' : '#ffffff14' }])}>
+                <Ionicons name={item.icon} size={20} color={colors.tint} />
+              </View>
+              <Text style={StyleSheet.flatten([styles.digerLabel, { color: colors.text }])}>{item.label}</Text>
               <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
             </Pressable>
           ))}

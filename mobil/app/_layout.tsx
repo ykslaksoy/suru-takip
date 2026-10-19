@@ -69,6 +69,7 @@ export default function RootLayout() {
                     <Stack.Screen name="profesyonellik/oneri" options={{ title: 'Üst aşama' }} />
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
+                    <Stack.Screen name="maliyet/index" options={{ title: 'Maliyet ve Kâr' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
                     <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />
                     <Stack.Screen name="sistem-kontrol/index" options={{ title: 'Sistem kontrolü' }} />

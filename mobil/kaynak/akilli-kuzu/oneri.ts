@@ -113,7 +113,7 @@ export function getSmartSuggestions(ctx?: {
       id: 'stock',
       title: ctx.lowStockAdlar?.length ? `Stok azaldı (${ctx.lowStockAdlar.length} kalem)` : 'Yem stoku kritik',
       body: ctx.lowStockAdlar?.length
-        ? `${ctx.lowStockAdlar.slice(0, 3).join(', ')}${ctx.lowStockAdlar.length > 3 ? '…' : ''} minimumun altında`
+        ? `${ctx.lowStockAdlar.slice(0, 2).join(', ')}${ctx.lowStockAdlar.length > 2 ? ` +${ctx.lowStockAdlar.length - 2}` : ''} azaldı`
         : 'Stok minimum seviyenin altında',
       voice: `Besi döneminde yem kesintisi performans kaybına yol açar. Eksik kalemleri tamamlayın ve minimum stok eşiğini güncelleyin.`,
       urgency: 'alert',

@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { router } from 'expo-router';
 import { StokKarti } from '@/bilesenler/stok/StokKarti';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
@@ -179,6 +180,9 @@ export default function StockScreen() {
         <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
           Tüm liste · çok kullanılan üstte
         </Text>
+        <Pressable onPress={() => router.push('/maliyet' as never)} hitSlop={8}>
+          <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 4 }}>Maliyet ve kâr →</Text>
+        </Pressable>
       </View>
       <AltButonlar
         items={types.map((t) => ({
