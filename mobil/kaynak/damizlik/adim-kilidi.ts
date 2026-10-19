@@ -23,7 +23,7 @@ export const MOD3_ADIMLAR: Mod3Adim[] = [
     sira: 0,
     baslik: 'Damızlık aday',
     aciklama: 'Üstün genotip / ırk tipi adayları seç.',
-    href: '/(tabs)/suru',
+    href: '/ciftlesme',
   },
   {
     id: 'kimlik',

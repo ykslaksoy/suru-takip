@@ -18,6 +18,8 @@ import { kalemZamani, planVadeleri, vadeOzeti, zamanEtiketi } from '@/kaynak/gor
 import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
 import TabancaAyarKarti from '@/bilesenler/veteriner/TabancaAyarKarti';
 import { getTabancaDurum, setTabancaTercih, type TabancaDurum } from '@/kaynak/akilli-veteriner/tabanca-ayar';
+import { useMod } from '@/baglam/ModBaglami';
+import { VETERINER_ONERI_NOTU, onerilenPlanModEtiketi } from '@/kaynak/gorevler/saglik-plani-mod';
 
 const BOLUM_BASLIK: Record<SaglikPlaniBolum, string> = {
   asi: 'Aşılar',
@@ -37,6 +39,8 @@ const NEDEN: Record<string, string> = {
   ivermektin: 'Gün 1 min. paket · parazit',
   albendazol: 'Gün 1 min. paket · parazit',
   'selen-e': 'Beyaz kas hastalığı önlemi — Gün 1',
+  agalaksi: 'Süt sürüsü — süt kesen önlemi',
+  ektima: 'ORF (ektima) — sürü bulaşı riski',
 };
 
 type Kalem = { id: string; ad: string; aciklama: string };
@@ -53,6 +57,7 @@ function kalemler(ids: string[]): Kalem[] {
 export default function KuzuSaglikPlaniScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { aktifId } = useMod();
   const { hazir, onerilenAcik, onerilen, kendi, mod, setMod, ekle, cikar, sifirla, zaman, setZaman } = useSaglikPlani();
   const [veri, setVeri] = useState<{ animals: Animal[]; health: HealthRecord[] } | null>(null);
   const [tabanca, setTabanca] = useState<TabancaDurum | null>(null);
@@ -188,11 +193,14 @@ export default function KuzuSaglikPlaniScreen() {
         contentContainerStyle={styles.scroll}>
         <Text style={[styles.planBaslik, { color: colors.text }]}>Aşı ve İlaç</Text>
         {onerilenGoster ? (
-          <Text style={[styles.planAlt, { color: colors.tint }]}>Kuzu besi (Mod 1)</Text>
+          <Text style={[styles.planAlt, { color: colors.tint }]}>{onerilenPlanModEtiketi(aktifId)}</Text>
         ) : null}
         <Pressable onPress={() => router.push('/saglik-programi' as never)} style={{ marginBottom: 8 }}>
           <Text style={{ color: colors.tint, fontWeight: '800' }}>📍 Bölge ve ırka göre program →</Text>
         </Pressable>
+        {onerilenAcik ? (
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>{VETERINER_ONERI_NOTU}</Text>
+        ) : null}
 
         {onerilenAcik ? (
           <View style={[styles.segment, { borderColor: colors.border, backgroundColor: colors.card }]}>

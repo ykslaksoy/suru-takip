@@ -137,6 +137,38 @@ async function yolculukGorevi(): Promise<Gorev | null> {
       cta: 'Yolculuğa git',
     };
   }
+  if (modId === 'mod6') {
+    const { getMod6BirlesikIlerleme, sonrakiAcikAdimMod6 } = await import('@/kaynak/damizlik-sut');
+    const m = await getMod6BirlesikIlerleme();
+    const sonraki = sonrakiAcikAdimMod6(m.tamamlanan);
+    if (!sonraki) return null;
+    const kanit = m.kanitlar.find((k) => k.id === sonraki.id);
+    return {
+      id: `yolculuk-${sonraki.id}`,
+      seviye: 'sira',
+      kaynak: 'yolculuk',
+      baslik: `${mod.icon} ${sonraki.baslik}`,
+      aciklama: kanit?.kanit ?? sonraki.aciklama,
+      href: '/(tabs)/yolculuk',
+      cta: 'Yolculuğa git',
+    };
+  }
+  if (modId === 'mod5') {
+    const { getMod5BirlesikIlerleme, sonrakiAcikAdimMod5 } = await import('@/kaynak/sut-besi');
+    const m = await getMod5BirlesikIlerleme();
+    const sonraki = sonrakiAcikAdimMod5(m.tamamlanan);
+    if (!sonraki) return null;
+    const kanit = m.kanitlar.find((k) => k.id === sonraki.id);
+    return {
+      id: `yolculuk-${sonraki.id}`,
+      seviye: 'sira',
+      kaynak: 'yolculuk',
+      baslik: `${mod.icon} ${sonraki.baslik}`,
+      aciklama: kanit?.kanit ?? sonraki.aciklama,
+      href: '/(tabs)/yolculuk',
+      cta: 'Yolculuğa git',
+    };
+  }
   return null;
 }
 

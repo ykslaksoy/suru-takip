@@ -133,25 +133,24 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       vitaminler: [],
     },
     mod2: {
-      asilar: ['karma', 'pasteurella', 'clostridial', 'ppr', 'cicek', 'albendazol', 'ivermektin'],
-      vitaminler: ['ad3e', 'b-kompleks', 'kolostrum', 'selen-e'],
+      asilar: ['karma', 'cicek', 'ppr', 'brusella', 'ivermektin', 'albendazol'],
+      vitaminler: ['selen-e'],
     },
     mod3: {
-      asilar: ['karma', 'brusella', 'tetanos', 'pasteurella', 'clostridial', 'albendazol'],
-      vitaminler: ['ad3e', 'b-kompleks', 'premiks', 'selen-e'],
+      asilar: ['karma', 'cicek', 'ppr', 'brusella', 'ivermektin', 'albendazol'],
+      vitaminler: ['selen-e'],
     },
     mod4: {
-      asilar: ['agalaksi', 'karma', 'pasteurella', 'clostridial', 'albendazol', 'triklabendazol'],
-      vitaminler: ['ad3e', 'kalsiyum', 'b-kompleks', 'mineral-yalama', 'premiks'],
+      asilar: ['karma', 'cicek', 'ppr', 'pasteurella', 'agalaksi', 'ektima', 'ivermektin', 'albendazol'],
+      vitaminler: ['selen-e'],
     },
-    // Yakında — taslak şablon (mod seçilemez; yalnız tip bütünlüğü için)
     mod5: {
-      asilar: ['agalaksi', 'karma', 'pasteurella', 'clostridial', 'ppr', 'cicek', 'albendazol', 'ivermektin'],
-      vitaminler: ['ad3e', 'kalsiyum', 'selen-e', 'premiks'],
+      asilar: ['karma', 'cicek', 'ppr', 'pasteurella', 'agalaksi', 'ektima', 'ivermektin', 'albendazol'],
+      vitaminler: ['selen-e'],
     },
     mod6: {
-      asilar: ['agalaksi', 'karma', 'brusella', 'tetanos', 'pasteurella', 'clostridial', 'albendazol'],
-      vitaminler: ['ad3e', 'b-kompleks', 'premiks', 'selen-e'],
+      asilar: ['karma', 'cicek', 'ppr', 'brusella', 'ivermektin', 'albendazol'],
+      vitaminler: ['selen-e'],
     },
   };
 

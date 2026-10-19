@@ -15,29 +15,30 @@ export const modlarModul: TestModul = {
   calistir() {
     const mod1 = URUN_MODLARI.find((m) => m.id === 'mod1')!;
     const sirali = [...URUN_MODLARI].sort((a, b) => a.no - b.no);
+
     return [
       test('Ürün modları', 'Altı mod tanımlı', URUN_MODLARI.length === 6),
       test(
         'Ürün modları',
-        'Mod adları ve sırası',
-        sirali.every((m, i) => m.baslik === BEKLENEN[i] && m.no === i + 1),
+        'Ekran sırası no 1–6',
+        sirali.every((m, i) => m.no === i + 1 && m.baslik === BEKLENEN[i]),
       ),
       test('Ürün modları', 'Mod1 Kuzu Besi tam', mod1.no === 1 && mod1.seviye === 'tam' && mod1.hazir),
       test(
         'Ürün modları',
-        'Mod 2–6 yakında, seçilemez',
-        URUN_MODLARI.filter((m) => m.id !== 'mod1').every((m) => m.seviye === 'yakinda' && !m.hazir),
+        'Mod 2–6 tam ve seçilebilir',
+        URUN_MODLARI.filter((m) => m.id !== 'mod1').every((m) => m.seviye === 'tam' && m.hazir),
       ),
       test(
         'Ürün modları',
-        'mod2 = Etçi Koyunculuk + Kuzu Besi (2. sıra, yakında)',
-        getMod('mod2').id === 'mod2' && getMod('mod2').no === 2 && getMod('mod2').baslik === BEKLENEN[1] && !getMod('mod2').hazir,
+        'mod2 = Etçi Koyunculuk + Kuzu Besi (2. sıra)',
+        getMod('mod2').id === 'mod2' && getMod('mod2').no === 2 && getMod('mod2').baslik === BEKLENEN[1] && getMod('mod2').hazir,
       ),
-      test('Ürün modları', 'Kayıtlı mod2 → Kuzu Besi açılır', aktifModaCoz('mod2') === 'mod1'),
+      test('Ürün modları', 'Kayıtlı mod2 → mod2', aktifModaCoz('mod2') === 'mod2'),
       test(
         'Ürün modları',
-        'Yakında / bilinmeyen kayıt → mod1',
-        aktifModaCoz('mod3') === 'mod1' && aktifModaCoz('mod5') === 'mod1' && aktifModaCoz('xyz') === 'mod1' && aktifModaCoz(null) === 'mod1',
+        'Bilinmeyen kayıt → mod1',
+        aktifModaCoz('xyz') === 'mod1' && aktifModaCoz(null) === 'mod1',
       ),
       test('Ürün modları', 'Eski Damızlık kuzu id korunur', getMod('mod3').baslik === BEKLENEN[2] && getMod('mod3').no === 3),
       test('Ürün modları', 'mod6 4. · mod5 6. sırada', getMod('mod6').no === 4 && getMod('mod5').no === 6),
