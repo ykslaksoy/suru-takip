@@ -9,7 +9,8 @@ import { VITAMIN_PROGRAMI } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import type { Animal, HealthRecord } from '@/kaynak/cekirdek/tipler';
 import type { SaglikPlani, SaglikPlaniBolum } from './saglik-plani';
 
-export type KalemZaman = { gunSonra: number; tekrarGun: number | null };
+/** padoklar: doluysa kalem yalnız bu padoklardaki kuzulara planlanır (sağlık programı, parti ırkı). */
+export type KalemZaman = { gunSonra: number; tekrarGun: number | null; padoklar?: string[] };
 export type PlanZaman = Record<string, KalemZaman>;
 
 const GUN = 86400000;
@@ -102,6 +103,7 @@ export function planVadeleri(opts: {
     for (const b of bolumler) {
       for (const id of opts.plan[b]) {
         const z = kalemZamani(opts.zaman, id);
+        if (z.padoklar?.length && !z.padoklar.includes(a.paddock)) continue;
         const { son, sayi: dozSayisi } = kayitlar(a.id, id, opts.health);
         let vade: number;
         if (!son) vade = giris + z.gunSonra * GUN;

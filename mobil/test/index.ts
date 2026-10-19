@@ -33,6 +33,7 @@ import { besiCinsiyetModul } from './moduller/besi-cinsiyet';
 import { tahminiFiyatModul } from './moduller/tahmini-fiyat';
 import { asiTabancasiModul } from './moduller/asi-tabancasi';
 import { sigortaModul } from './moduller/sigorta';
+import { saglikProgramiModul } from './moduller/saglik-programi';
 import { sayimModul } from './moduller/sayim';
 import { arinmaModul } from './moduller/arinma';
 import { sablonModul } from './moduller/sablon';
@@ -76,6 +77,7 @@ const MODULLER = [
   tahminiFiyatModul,
   asiTabancasiModul,
   sigortaModul,
+  saglikProgramiModul,
   sayimModul,
   arinmaModul,
   sablonModul,
