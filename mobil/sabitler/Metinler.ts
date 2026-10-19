@@ -18,8 +18,6 @@ export const TERIMLER = {
   GEKIS: { kisa: 'GEKİS', aciklama: 'elektronik hayvan kimlik sistemi' },
   TURKVET: { kisa: 'TÜRKVET', aciklama: 'ulusal hayvan tanımlama ve kayıt sistemi' },
   JSON: { kisa: 'JSON', aciklama: 'veri dosyası formatı' },
-  FIT: { kisa: 'Fit', aciklama: 'form tutuyor (derece)' },
-  SPORTMEN: { kisa: 'Sportmen', aciklama: 'formda (derece)' },
 } as const;
 
 export type TerimAnahtar = keyof typeof TERIMLER;

@@ -27,6 +27,8 @@ import { hizliTartimModul } from './moduller/hizli-tartim';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
+import { kuzuDereceModul } from './moduller/kuzu-derece';
+import { besiCinsiyetModul } from './moduller/besi-cinsiyet';
 
 const MODULLER = [
   hizliBesiModul,
@@ -52,6 +54,8 @@ const MODULLER = [
   stokEslesmeModul,
   maliyetModul,
   zamanCizelgesiModul,
+  kuzuDereceModul,
+  besiCinsiyetModul,
 ];
 
 async function main() {

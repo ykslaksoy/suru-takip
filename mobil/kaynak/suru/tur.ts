@@ -23,3 +23,18 @@ export function normalizeSpecies(raw?: string | null): AnimalSpecies {
   if (raw === 'goat' || raw === 'caprine') return 'goat';
   return 'sheep';
 }
+
+/**
+ * Kartta gösterilecek tür/sınıf: erkek koyun "Koyun" yazılmaz.
+ * Erkek koyun: 12 aydan küçük (veya yaş bilinmiyor) → "Kuzu", büyük → "Koç".
+ * Dişi ve keçi: tür adı (Koyun / Keçi) — diğer modlar değişmez.
+ */
+export function hayvanSinifEtiketi(
+  species: AnimalSpecies | undefined | null,
+  sex: 'male' | 'female',
+  yasAy: number | null,
+): string {
+  const tur = species ?? 'sheep';
+  if (tur === 'sheep' && sex === 'male') return yasAy != null && yasAy >= 12 ? 'Koç' : 'Kuzu';
+  return turEtiketi(tur);
+}

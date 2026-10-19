@@ -5,10 +5,11 @@
  * Aynı ADG, farklı yaş bandında farklı derece olabilir.
  *
  * Bilimsel taban: yaş bandı + ADG + opsiyonel BCS/FCR/hedef.
- * Marka dili: Zayıf → Fit → Sportmen → Kaslı → Süper Kuzu
+ * Ekran dili: Ölçülmedi → Zayıf → Normal → İyi → Çok iyi → Süper Kuzu
+ * (iç id'ler değişmez: bilinmiyor, zayif, fit, sportmen, kasli, super_kuzu)
  */
 
-import { terim, type TerimAnahtar } from '@/sabitler/Metinler';
+import { terim } from '@/sabitler/Metinler';
 
 export type KuzuGradeId = 'zayif' | 'fit' | 'sportmen' | 'kasli' | 'super_kuzu' | 'bilinmiyor';
 
@@ -26,8 +27,8 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
   bilinmiyor: {
     id: 'bilinmiyor',
     level: 0,
-    label: 'Ölçülsün',
-    emoji: '❔',
+    label: 'Ölçülmedi',
+    emoji: '⚪',
     color: '#8a9a8a',
     short: 'Henüz tartım yok',
     hint: 'İlk tartımı al; Akıllı Kuzu yaşa göre derecelendirsin.',
@@ -36,59 +37,53 @@ export const KUZU_GRADES: Record<KuzuGradeId, KuzuGrade> = {
     id: 'zayif',
     level: 1,
     label: 'Zayıf',
-    emoji: '😟🐑',
+    emoji: '🔴',
     color: '#c1121f',
-    short: 'Gelişim zayıf / risk',
+    short: 'Beklenenin altında',
     hint: 'Bu ay için beklenenin altında — padok, yem, sağlık kontrol.',
   },
   fit: {
     id: 'fit',
     level: 2,
-    label: 'Fit',
-    emoji: '🌱🐑',
-    color: '#e09f3e',
-    short: 'Form tutuyor',
+    label: 'Normal',
+    emoji: '🟢',
+    color: '#2d6a4f',
+    short: 'Yaşına göre normal gelişim',
     hint: 'Bu aya göre yolunda — düzenli tartım sürdür.',
   },
   sportmen: {
     id: 'sportmen',
     level: 3,
-    label: 'Sportmen',
-    emoji: '💪🐑',
-    color: '#2d6a4f',
-    short: 'Formda (yaşına göre)',
+    label: 'İyi',
+    emoji: '🥉',
+    color: '#cd7f32',
+    short: 'Yaşına göre iyi gelişim',
     hint: `Bu ay için iyi tempo. ${terim('FCR')} değerini de izle.`,
   },
   kasli: {
     id: 'kasli',
     level: 4,
-    label: 'Kaslı',
-    emoji: '🥇🐑',
-    color: '#1b4332',
-    short: 'Kas durumu güçlü (yaşına göre)',
-    hint: 'Yaş bandının üstünde, kas yapısı iyi — Süper Kuzu eşiğine yakın.',
+    label: 'Çok iyi',
+    emoji: '🥈',
+    color: '#8a8d91',
+    short: 'Yaşına göre çok iyi gelişim',
+    hint: 'Yaş bandının üstünde — Süper Kuzu eşiğine çok yakın.',
   },
 
   super_kuzu: {
     id: 'super_kuzu',
     level: 5,
     label: 'Süper Kuzu',
-    emoji: '🏆🐑',
+    emoji: '🏆',
     color: '#b8860b',
     short: 'En üst verim',
     hint: `Yaşına göre zirve + hedef · ${terim('FCR')} — tebrikler!`,
   },
 };
 
-const DERECE_TERIM: Partial<Record<KuzuGradeId, TerimAnahtar>> = {
-  fit: 'FIT',
-  sportmen: 'SPORTMEN',
-};
-
-/** Fit / Sportmen gibi kısa derece adları açıklamalı gösterilir. */
+/** Derece adı — etiketler artık kendini anlatıyor (ek terim açıklaması yok). */
 export function dereceEtiket(grade: KuzuGrade): string {
-  const key = DERECE_TERIM[grade.id];
-  return key ? terim(key) : grade.label;
+  return grade.label;
 }
 
 /** Yaş bandı (ay) — besi kuzusu için geçici beklenti ADG (g/gün) */
@@ -96,12 +91,12 @@ export interface AgeBand {
   minMonth: number;
   maxMonth: number;
   label: string;
-  /** Bu bandda Zayıf / Fit / Sportmen / Kaslı eşikleri (ADG g/gün) */
+  /** Bu bandda Zayıf / Normal / İyi / Çok iyi eşikleri (ADG g/gün) */
   thresholds: {
     zayifBelow: number;
     fitBelow: number;
     sportmenBelow: number;
-    /** sportmenBelow ve üzeri → Kaslı adayı; Süper Kuzu ek şart */
+    /** sportmenBelow ve üzeri → Çok iyi ('kasli') adayı; Süper Kuzu ek şart */
   };
 }
 
@@ -204,7 +199,7 @@ export function gradeLamb(input: GradeInput): KuzuGrade {
   }
 
   const fcrOk = fcr == null || (fcr > 0 && fcr <= 4.5);
-  // Süper Kuzu: yaş bandında Kaslı seviyesinde ADG + hedef + FCR
+  // Süper Kuzu: yaş bandında Çok iyi ('kasli') seviyesinde ADG + hedef + FCR
   if (adgGrams >= t.sportmenBelow && targetReached && fcrOk && !isSick && (bcs == null || bcs >= 2.5)) {
     id = 'super_kuzu';
   }

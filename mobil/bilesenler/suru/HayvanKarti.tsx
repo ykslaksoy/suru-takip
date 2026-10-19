@@ -21,7 +21,7 @@ export function HayvanKarti({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const sexIcon = animal.sex === 'female' ? '♀' : '♂';
-  const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
+  const avatar = grade && grade.level >= 3 ? grade.emoji : turEmoji(animal.species ?? 'sheep'); // kupa: bronz/gümüş/altın
   const anaEtiket = hayvanAnaEtiket(animal);
   const altEtiket = hayvanAltEtiket(animal);
 
