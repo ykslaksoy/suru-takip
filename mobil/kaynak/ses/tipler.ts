@@ -41,6 +41,8 @@ export interface GrupAsiKomutu {
   programTur: 'asi' | 'vitamin';
   /** Geri okumadan önce veritabanından doldurulur */
   hayvanSayisi?: number;
+  /** Tabanca açıksa ayar (ml) — geri okumada söylenir, kayıtta iğne ucu düşülür */
+  tabancaMl?: number;
 }
 
 export type SesKomutEylemi = TartimKomutu | AsiKomutu | StokKomutu | GrupAsiKomutu;

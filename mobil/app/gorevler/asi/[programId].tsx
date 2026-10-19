@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -10,6 +10,15 @@ import { takviyeTipEtiket } from '@/kaynak/akilli-veteriner/mod-takviye';
 import TopluHayvanSecici from '@/bilesenler/ortak/TopluHayvanSecici';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { topluUygula } from '@/kaynak/toplu/uygula';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
+import TabancaAyarKarti from '@/bilesenler/veteriner/TabancaAyarKarti';
+import {
+  getTabancaDurum,
+  setTabancaTercih,
+  tabancaAyariGetir,
+  type TabancaDurum,
+} from '@/kaynak/akilli-veteriner/tabanca-ayar';
+import type { TabancaAyari, TabancaUygunDegil } from '@/kaynak/akilli-veteriner/asi-tabancasi';
 
 function durumEtiket(h: TakviyeGorevDetay['hayvanlar'][0]): string {
   if (h.planlananAt && h.kalanGun != null && h.kalanGun > 0) {
@@ -30,6 +39,9 @@ export default function AsiGorevDetayScreen() {
   const [kupeHaritasi, setKupeHaritasi] = useState<Record<string, string>>({});
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [sonuc, setSonuc] = useState<string | null>(null);
+  const [hayvanListesi, setHayvanListesi] = useState<Animal[]>([]);
+  const [tabanca, setTabanca] = useState<TabancaDurum | null>(null);
+  const [tabancaAyar, setTabancaAyar] = useState<TabancaAyari | TabancaUygunDegil | null>(null);
 
   const load = useCallback(async () => {
     if (!programId) return;
@@ -40,6 +52,8 @@ export default function AsiGorevDetayScreen() {
       setSecili(new Set(d?.hayvanlar.map((h) => h.animalId) ?? []));
       const hepsi = await getAnimals();
       setKupeHaritasi(Object.fromEntries(hepsi.map((a) => [a.id, a.earTag])));
+      setHayvanListesi(hepsi);
+      setTabanca(await getTabancaDurum());
     } finally {
       setLoading(false);
     }
@@ -51,6 +65,27 @@ export default function AsiGorevDetayScreen() {
     }, [ready, load, refreshKey]),
   );
 
+  // Seçim / tabanca değişince ayar satırını yeniden hesapla
+  useEffect(() => {
+    let iptal = false;
+    if (!detay || detay.tip === 'tartim' || !tabanca?.aktif) {
+      setTabancaAyar(null);
+      return;
+    }
+    const secilenler = hayvanListesi.filter((a) => secili.has(a.id));
+    tabancaAyariGetir(detay.programId, secilenler, tabanca.kapasite).then((a) => {
+      if (!iptal) setTabancaAyar(a);
+    });
+    return () => {
+      iptal = true;
+    };
+  }, [detay, tabanca, secili, hayvanListesi]);
+
+  const tabancaGuncelle = async (t: { kullan?: boolean; kapasite?: number }) => {
+    await setTabancaTercih(t);
+    setTabanca(await getTabancaDurum());
+  };
+
   const topluKaydet = async () => {
     if (!detay || secili.size === 0) return;
     setKaydediliyor(true);
@@ -61,7 +96,8 @@ export default function AsiGorevDetayScreen() {
         hayvanlar,
         programId: detay.programId,
         programTur: detay.tip === 'vitamin' ? 'vitamin' : 'asi',
-        kaynak: 'Toplu görev kaydı',
+        kaynak: tabanca?.aktif ? 'Toplu görev kaydı · tabanca' : 'Toplu görev kaydı',
+        tabanca: !!tabanca?.aktif && !!tabancaAyar?.uygun,
       });
       setSonuc(`✓ ${r.mesaj}`);
       await load();
@@ -147,6 +183,14 @@ export default function AsiGorevDetayScreen() {
               ))
             ) : (
               <>
+                {tabanca ? (
+                  <TabancaAyarKarti
+                    durum={tabanca}
+                    ayar={tabancaAyar}
+                    onKullan={(kullan) => tabancaGuncelle({ kullan })}
+                    onKapasite={(kapasite) => tabancaGuncelle({ kapasite })}
+                  />
+                ) : null}
                 <TopluHayvanSecici
                   hayvanlar={detay.hayvanlar.map((h) => ({
                     id: h.animalId,

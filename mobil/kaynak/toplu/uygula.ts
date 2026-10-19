@@ -10,6 +10,8 @@ import { uygulaAsiHayvana } from '@/kaynak/akilli-veteriner/asi-uygula';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import { ASI_PROGRAMI } from '@/kaynak/cekirdek/asi-programi';
 import { islemKaydet } from '@/kaynak/gecmis/gunluk';
+import { tabancaDozTipi } from '@/kaynak/akilli-veteriner/asi-tabancasi';
+import { igneUcuDus } from '@/kaynak/akilli-veteriner/tabanca-ayar';
 
 export type TopluUygulaSonuc = { kayit: number; stokDusum: number; mesaj: string };
 
@@ -17,11 +19,21 @@ function norm(s: string): string {
   return s.toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
 }
 
+/** Tabancayla yapıldıysa iğne ucunu stoktan düş; mesaja eklenecek metin döner */
+async function tabancaIgneUcu(opts: { programId: string; tabanca?: boolean }, kayit: number, ad: string): Promise<string> {
+  if (!opts.tabanca || kayit === 0 || tabancaDozTipi(opts.programId).tur === 'uygun_degil') return '';
+  const r = await igneUcuDus(kayit, `${ad} · ${kayit} kuzu`);
+  if (r.dusulen > 0) return ` · iğne ucu −${r.dusulen}${r.stokYok ? ' (stok yetmedi)' : ''}`;
+  return r.stokYok ? ' · iğne ucu stokta yok' : '';
+}
+
 export async function topluUygula(opts: {
   hayvanlar: Animal[];
   programId: string;
   programTur: 'asi' | 'vitamin';
   kaynak?: string;
+  /** Otomatik aşı tabancasıyla yapıldı → iğne ucu düşülür */
+  tabanca?: boolean;
 }): Promise<TopluUygulaSonuc> {
   const bugun = new Date().toISOString().slice(0, 10);
   let kayit = 0;
@@ -36,10 +48,11 @@ export async function topluUygula(opts: {
     }
     const p = ASI_PROGRAMI.find((x) => x.id === opts.programId);
     await islemKaydet({ tur: 'asi', ozet: `${p?.ad ?? opts.programId} · ${kayit} kuzu`, detay: opts.kaynak, adet: kayit });
+    const igne = await tabancaIgneUcu(opts, kayit, p?.ad ?? opts.programId);
     return {
       kayit,
       stokDusum,
-      mesaj: `${kayit} kuzuya kayıt yapıldı${stokYetersiz ? ` · ${stokYetersiz} kuzu için stok düşülemedi (stok yok/yetersiz)` : ' · stoktan düşüldü'}`,
+      mesaj: `${kayit} kuzuya kayıt yapıldı${stokYetersiz ? ` · ${stokYetersiz} kuzu için stok düşülemedi (stok yok/yetersiz)` : ' · stoktan düşüldü'}${igne}`,
     };
   }
   const v = VITAMIN_PROGRAMI.find((x) => x.id === opts.programId);
@@ -68,5 +81,6 @@ export async function topluUygula(opts: {
     if (stokDusum > 0) await adjustStock(item.id, 'out', stokDusum, `Toplu vitamin · ${kayit} kuzu`);
   }
   await islemKaydet({ tur: 'ilac', ozet: `${v.ad} · ${kayit} kuzu`, detay: opts.kaynak, adet: kayit });
-  return { kayit, stokDusum, mesaj: `${kayit} kuzuya ${v.ad} kaydı yapıldı${stokDusum ? ` · stok −${stokDusum}` : ''}` };
+  const igne = await tabancaIgneUcu(opts, kayit, v.ad);
+  return { kayit, stokDusum, mesaj: `${kayit} kuzuya ${v.ad} kaydı yapıldı${stokDusum ? ` · stok −${stokDusum}` : ''}${igne}` };
 }

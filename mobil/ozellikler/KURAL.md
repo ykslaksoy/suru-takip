@@ -40,4 +40,4 @@ python3 islemler/scripts/kilit.py tamamla islemler/XX-.../YY-dosya.md
 
 - Kullanıcıya görünen **tüm** metinler Türkçe olmalı (buton, uyarı, yer tutucu, sekme, başlık).
 - Kısa terimler (ADG, FCR, T1, SKT, GEKİS, JSON vb.) **kısaltma + parantez içinde açıklama** ile gösterilir — `mobil/sabitler/Metinler.ts` → `terim()`.
-- Marka dereceleri Fit / Sportmen de aynı kurala tabidir.
+- Kuzu dereceleri düz Türkçe: Ölçülmedi / Zayıf / Normal / İyi / Çok iyi / Süper Kuzu (ek açıklama gerekmez).

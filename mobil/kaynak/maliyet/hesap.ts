@@ -14,6 +14,8 @@ export type PartiMaliyet = {
   bas: number;
   alis: number;
   alisEksikBas: number;
+  /** Alış fiyatı tahmini (canlı kuzu ₺/kg × ilk kg) kullanılan kuzu sayısı */
+  alisTahminiBas: number;
   yem: number;
   ilac: number;
   toplam: number;
@@ -46,6 +48,8 @@ export function partiMaliyetleri(opts: {
   movements: StockMovement[];
   fiyatlar: Record<string, number>;
   ayar: MaliyetAyar;
+  /** Gerçek alış fiyatı olmayan kuzular için tahmini alış (hayvan id → ₺) */
+  alisTahminleri?: Record<string, number>;
 }): PartiMaliyet[] {
   const aktif = opts.animals.filter((a) => a.status !== 'dead' && a.paddock);
   const partiAdlari = [...new Set(aktif.map((a) => a.paddock))].sort((a, b) => a.localeCompare(b, 'tr'));
@@ -82,14 +86,19 @@ export function partiMaliyetleri(opts: {
     const pa = opts.ayar.partiler[p] ?? {};
     let alis = 0;
     let alisEksikBas = 0;
+    let alisTahminiBas = 0;
     let toplamKg = 0;
     for (const a of hayvanlar) {
       const f =
         opts.ayar.hayvanAlis[a.id] ??
         pa.alisBasFiyat ??
         nottanAlisFiyati(`${a.notes} ${opts.alimNotlari?.[a.id] ?? ''}`);
+      const t = f == null ? opts.alisTahminleri?.[a.id] : undefined;
       if (f != null) alis += f;
-      else alisEksikBas += 1;
+      else if (t != null) {
+        alis += t;
+        alisTahminiBas += 1;
+      } else alisEksikBas += 1;
       if (a.status !== 'sold') toplamKg += opts.sonKg[a.id] ?? 0;
     }
     const toplam = alis + (yem[p] ?? 0) + (ilac[p] ?? 0);
@@ -100,6 +109,7 @@ export function partiMaliyetleri(opts: {
       bas: hayvanlar.length,
       alis: yuvarla(alis),
       alisEksikBas,
+      alisTahminiBas,
       yem: yuvarla(yem[p] ?? 0),
       ilac: yuvarla(ilac[p] ?? 0),
       toplam: yuvarla(toplam),

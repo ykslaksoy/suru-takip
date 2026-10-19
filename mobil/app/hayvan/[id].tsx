@@ -19,7 +19,7 @@ import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
-import { turEtiketi, turEmoji } from '@/kaynak/suru/tur';
+import { hayvanSinifEtiketi, turEmoji } from '@/kaynak/suru/tur';
 import { terim, fcrDeger } from '@/sabitler/Metinler';
 import { gebeIsaretle } from '@/kaynak/ureme';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
@@ -93,7 +93,7 @@ export default function AnimalDetailScreen() {
   }
 
   const sexLabel = animal.sex === 'female' ? 'Dişi' : 'Erkek';
-  const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
+  const avatar = grade && grade.level >= 3 ? grade.emoji : turEmoji(animal.species ?? 'sheep'); // kupa: bronz/gümüş/altın
   const ageMonths = ageInMonths(animal.birthDate);
   const ageBand = bandForAge(ageMonths);
   const ageLabel =
@@ -125,7 +125,7 @@ export default function AnimalDetailScreen() {
           </Text>
         ) : null}
         <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 6 }}>
-          {turEtiketi(animal.species ?? 'sheep')} · {animal.breed} · {sexLabel} · {ANIMAL_STATUS_LABELS[animal.status]}
+          {hayvanSinifEtiketi(animal.species, animal.sex, ageMonths)} · {animal.breed} · {sexLabel} · {ANIMAL_STATUS_LABELS[animal.status]}
         </Text>
         <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4, fontSize: 13 }}>
           {ageLabel}
