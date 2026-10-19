@@ -116,12 +116,12 @@ async function main() {
       return;
     }
     if (bulutBuild) {
-      console.error(
-        '[supabase-migrate] Vercel production build: Postgres env eksik (' +
-          (postgresEnvOzeti().join(', ') || 'hiçbiri') +
-          '). Entegrasyon değişkenlerinin Build ortamına açık olduğunu doğrulayın veya SUPABASE_ACCESS_TOKEN (database_write) ekleyin.',
+      console.warn(
+        '[supabase-migrate] Vercel build: Postgres/Management API yok — şema atlanıyor (' +
+          (postgresEnvOzeti().join(', ') || 'postgres env yok') +
+          '). Web derlemesi devam eder; şema için POSTGRES_* Build env veya SUPABASE_ACCESS_TOKEN ekleyin.',
       );
-      process.exit(1);
+      return;
     }
     console.log('[supabase-migrate] Postgres URL yok — atlanıyor (yerel derleme?).');
     return;

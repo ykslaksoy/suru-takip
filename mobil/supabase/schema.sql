@@ -105,6 +105,9 @@ begin
   return k;
 end $$;
 
+create or replace function public.kullanici_id_bos(u uuid) returns boolean
+language sql immutable as $$ select u is null $$;
+
 -- Davete katıl
 create or replace function public.davet_kabul(p_kod text, p_ad text default '') returns uuid
 language plpgsql security definer set search_path = public as $$
@@ -119,9 +122,6 @@ begin
   update ciftlik_davet set kullanildi_by = auth.uid() where kod = d.kod;
   return d.ciftlik_id;
 end $$;
-
-create or replace function public.kullanici_id_bos(u uuid) returns boolean
-language sql immutable as $$ select u is null $$;
 
 -- Bakıcı finans=true olamaz (sunucu kuralı)
 create or replace function public.uye_kural() returns trigger language plpgsql as $$

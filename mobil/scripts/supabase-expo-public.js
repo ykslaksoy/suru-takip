@@ -1,7 +1,7 @@
 /**
  * Vercel Supabase entegrasyonu SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY verir;
  * Expo web derlemesi yalnızca EXPO_PUBLIC_* değişkenlerini istemciye gömer.
- * Bu betik build öncesi eksik EXPO_PUBLIC_* alanlarını doldurur.
+ * Bu betik build öncesi eksik EXPO_PUBLIC_* alanlarını doldurur, sonra alt komutu çalıştırır.
  */
 const { spawnSync } = require('child_process');
 
@@ -41,7 +41,10 @@ if (!String(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '').trim()) {
 const argv = process.argv.slice(2);
 if (argv.length === 0) process.exit(0);
 
-const r = spawnSync(argv[0], argv.slice(1), {
+/** node script.js … veya npx … — doğrudan exec; sh -c kullanılmaz */
+const cmd = argv[0];
+const args = argv.slice(1);
+const r = spawnSync(cmd, args, {
   stdio: 'inherit',
   env: process.env,
   shell: false,
