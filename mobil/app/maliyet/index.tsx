@@ -4,11 +4,15 @@
  */
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Stack, router, useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { getAnimals, getLatestWeight, getStockItems, getStockMovements } from '@/kaynak/cekirdek/veritabani';
-import { getBirimFiyatlar } from '@/kaynak/stok/fiyat';
+import { getAnimals, getLatestWeight, getStockItems, getStockMovements, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
+import { alisTahmini, etkinFiyatlar, oneriMetni, type FiyatDurum } from '@/kaynak/maliyet/tahmini-fiyat';
+import { CANLI_KUZU_KG, referansTarihMetni } from '@/kaynak/maliyet/fiyat-referans';
+import { fiyatSorusunuGec, getGecilenFiyatSorulari } from '@/kaynak/maliyet/fiyat-sorusu';
+import { FiyatSorKarti } from '@/bilesenler/maliyet/FiyatSorKarti';
 import { partiMaliyetleri, tl, type MaliyetAyar, type PartiMaliyet } from '@/kaynak/maliyet/hesap';
 import { getMaliyetAyar, saveMaliyetAyar } from '@/kaynak/maliyet/depo';
 
@@ -19,22 +23,37 @@ export default function MaliyetScreen() {
   const colors = Colors[scheme];
   const [satirlar, setSatirlar] = useState<PartiMaliyet[] | null>(null);
   const [ayar, setAyar] = useState<MaliyetAyar>({ partiler: {}, hayvanAlis: {} });
-  const [fiyatsizStok, setFiyatsizStok] = useState(0);
+  const [durumlar, setDurumlar] = useState<FiyatDurum[]>([]);
+  const [gecilen, setGecilen] = useState<Record<string, string>>({});
+  const [fiyatAcik, setFiyatAcik] = useState<string | null>(null);
   const [acik, setAcik] = useState<string | null>(null);
 
   const hesapla = useCallback(async (a?: MaliyetAyar) => {
-    const [animals, items, movements, fiyatlar, kayitli] = await Promise.all([
+    const [animals, items, movements, gercekFiyatlar, kayitli, gec] = await Promise.all([
       getAnimals(),
       getStockItems(),
       getStockMovements(),
       getBirimFiyatlar(),
       a ? Promise.resolve(a) : getMaliyetAyar(),
+      getGecilenFiyatSorulari(),
     ]);
     const sonKg: Record<string, number | null> = {};
-    await Promise.all(animals.map(async (x) => (sonKg[x.id] = await getLatestWeight(x.id).catch(() => null))));
+    const alisTahminleri: Record<string, number> = {};
+    await Promise.all(
+      animals.map(async (x) => {
+        sonKg[x.id] = await getLatestWeight(x.id).catch(() => null);
+        const wr = await getWeightRecords(x.id).catch(() => []);
+        const t = alisTahmini(wr.length ? wr[wr.length - 1].weightKg : null);
+        if (t != null) alisTahminleri[x.id] = t;
+      }),
+    );
+    // Yalnızca çıkışı olan (maliyete giren) kalemler; tahmini fiyat onaysız uygulanır
+    const kullanilan = new Set(movements.filter((m) => m.movementType === 'out').map((m) => m.stockId));
+    const { fiyatlar, durumlar: d } = etkinFiyatlar(items.filter((i) => kullanilan.has(i.id)), gercekFiyatlar);
     setAyar(kayitli);
-    setFiyatsizStok(new Set(movements.filter((m) => m.movementType === 'out' && !fiyatlar[m.stockId]).map((m) => m.stockId)).size);
-    setSatirlar(partiMaliyetleri({ animals, sonKg, items, movements, fiyatlar, ayar: kayitli }));
+    setGecilen(gec);
+    setDurumlar(d);
+    setSatirlar(partiMaliyetleri({ animals, sonKg, items, movements, fiyatlar, ayar: kayitli, alisTahminleri }));
   }, []);
 
   useFocusEffect(
@@ -53,18 +72,47 @@ export default function MaliyetScreen() {
     await hesapla(yeni);
   };
 
+  const gercekKaydet = async (stockId: string, fiyat: number) => {
+    await setBirimFiyat(stockId, fiyat);
+    setFiyatAcik(null);
+    await hesapla();
+  };
+  const gec = async (anahtar: string) => {
+    await fiyatSorusunuGec(anahtar);
+    setFiyatAcik(null);
+    await hesapla();
+  };
+  const tahminiler = durumlar.filter((d) => d.tur === 'tahmini');
+  const fiyatsizlar = durumlar.filter((d) => d.tur === 'yok');
+  /** İsteğe bağlı soru: henüz yanıtlanmamış ilk tahmini kalem (akışı engellemez) */
+  const soru = fiyatAcik ? null : tahminiler.find((d) => !gecilen[d.stockId]) ?? null;
+  const kaynakMetni = (d: FiyatDurum) =>
+    d.ref?.kaynakAd ? `${d.ref.kaynakAd}${d.ref.veriTarihi ? ` · ${referansTarihMetni(d.ref.veriTarihi)}` : ''}` : '';
+  const fiyatSor = (d: FiyatDurum) => (
+    <FiyatSorKarti
+      key={`sor-${d.stockId}`}
+      baslik={`${d.ad} — birim fiyatını biliyor musun?`}
+      birim={d.birim}
+      oneri={oneriMetni(d)}
+      altMetin={d.tur === 'tahmini' ? `Şimdilik tahmini fiyat kullanılıyor (${kaynakMetni(d)}).` : 'Fiyat bulunamadı; yazarsan maliyete eklenir.'}
+      onKaydet={(f) => gercekKaydet(d.stockId, f)}
+      onGec={() => gec(d.stockId)}
+    />
+  );
+  const fiyatNum = (n: number) => n.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+
   const toplam = satirlar?.reduce(
     (s, r) => ({ bas: s.bas + r.bas, maliyet: s.maliyet + r.toplam, kar: r.gercekKar ?? r.tahminiKar ?? null }),
     { bas: 0, maliyet: 0, kar: null as number | null },
   );
 
-  const girdi = (parti: string, alan: Alan, etiket: string) => (
+  const girdi = (parti: string, alan: Alan, etiket: string, oneri?: string) => (
     <View style={styles.girdi}>
       <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{etiket}</Text>
       <TextInput
         defaultValue={ayar.partiler[parti]?.[alan] ? String(ayar.partiler[parti]![alan]) : ''}
         keyboardType="decimal-pad"
-        placeholder="—"
+        placeholder={oneri ?? '—'}
         placeholderTextColor={colors.textSecondary}
         onEndEditing={(e) => void alanKaydet(parti, alan, e.nativeEvent.text)}
         onBlur={(e) => void alanKaydet(parti, alan, (e.target as unknown as { value?: string })?.value ?? '')}
@@ -85,13 +133,49 @@ export default function MaliyetScreen() {
       <Stack.Screen options={{ title: 'Maliyet ve Kâr' }} />
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
-          Parti başına alış + yem + ilaç. Yem ve ilaç maliyeti stok çıkışlarından ve girişte yazdığın birim fiyattan kendiliğinden hesaplanır.
+          Parti başına alış + yem + ilaç. Yem ve ilaç maliyeti stok çıkışlarından ve girişte yazdığın birim fiyattan hesaplanır; fiyatı olmayan kalemde referans tablodan tahmini fiyat kullanılır.
         </Text>
-        {fiyatsizStok ? (
-          <Pressable onPress={() => router.push('/(tabs)/stok' as never)} style={[styles.uyari, { borderColor: colors.warning, backgroundColor: colors.card }]}>
-            <Text style={{ color: colors.warning, fontWeight: '800' }}>⚠ {fiyatsizStok} stok kaleminin birim fiyatı yok</Text>
-            <Text style={{ color: colors.text, fontSize: 13, marginTop: 2 }}>Bu kalemlerin çıkışı maliyete yansımıyor. Stokta girişte fiyat yaz →</Text>
-          </Pressable>
+        {soru ? fiyatSor(soru) : null}
+        {tahminiler.length ? (
+          <View style={[styles.bilgi, { borderColor: colors.tint, backgroundColor: colors.accent + '22' }]}>
+            <Text style={{ color: colors.tint, fontWeight: '800' }}>ℹ {tahminiler.length} kalem tahmini fiyatla maliyete eklendi</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Gerçek fiyatı yazmak için kaleme dokun.</Text>
+            {tahminiler.map((d) => (
+              <View key={d.stockId}>
+                <Pressable
+                  onPress={() => setFiyatAcik((x) => (x === d.stockId ? null : d.stockId))}
+                  style={styles.kalem}
+                  accessibilityRole="button">
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontWeight: '700' }}>
+                      {d.ad} · {fiyatNum(d.fiyat ?? 0)} ₺/{d.birim}
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                      <Text style={[styles.etiket, { color: colors.tint, borderColor: colors.tint }]}> tahmini </Text> {kaynakMetni(d)}
+                    </Text>
+                  </View>
+                  <Text style={{ color: colors.tint, fontWeight: '800' }}>{fiyatAcik === d.stockId ? 'Kapat' : 'Gerçek fiyat ›'}</Text>
+                </Pressable>
+                {fiyatAcik === d.stockId ? fiyatSor(d) : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {fiyatsizlar.length ? (
+          <View style={[styles.uyari, { borderColor: colors.warning, backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.warning, fontWeight: '800' }}>
+              ⚠ {fiyatsizlar.length} kalemin fiyatı bulunamadı, maliyete yansımıyor
+            </Text>
+            {fiyatsizlar.map((d) => (
+              <View key={d.stockId}>
+                <Pressable onPress={() => setFiyatAcik((x) => (x === d.stockId ? null : d.stockId))} style={styles.kalem}>
+                  <Text style={{ color: colors.text, flex: 1 }}>{d.ad}</Text>
+                  <Text style={{ color: colors.tint, fontWeight: '800' }}>{fiyatAcik === d.stockId ? 'Kapat' : 'Fiyat yaz ›'}</Text>
+                </Pressable>
+                {fiyatAcik === d.stockId ? fiyatSor(d) : null}
+              </View>
+            ))}
+          </View>
         ) : null}
         {!satirlar ? (
           <ActivityIndicator color={colors.tint} style={{ marginTop: 24 }} />
@@ -119,7 +203,15 @@ export default function MaliyetScreen() {
                     </Text>
                     <Text style={{ color: colors.tint, fontWeight: '800' }}>{acik === r.parti ? 'Kapat' : 'Fiyat gir'}</Text>
                   </Pressable>
-                  {satir('Alış', `${tl(r.alis)}${r.alisEksikBas ? ` (${r.alisEksikBas} kuzuda fiyat yok)` : ''}`)}
+                  {satir(
+                    'Alış',
+                    `${tl(r.alis)}${r.alisTahminiBas ? ` · ${r.alisTahminiBas} kuzu tahmini` : ''}${r.alisEksikBas ? ` (${r.alisEksikBas} kuzuda fiyat yok)` : ''}`,
+                  )}
+                  {r.alisTahminiBas && !ayar.partiler[r.parti]?.alisBasFiyat ? (
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 2 }}>
+                      Tahmini alış: canlı kuzu {CANLI_KUZU_KG.fiyat} ₺/kg × ilk tartım ({CANLI_KUZU_KG.kaynakAd}). “Fiyat gir” ile değiştir.
+                    </Text>
+                  ) : null}
                   {satir('Yem', tl(r.yem))}
                   {satir('İlaç / aşı', tl(r.ilac))}
                   {satir('Toplam maliyet', tl(r.toplam))}
@@ -132,7 +224,7 @@ export default function MaliyetScreen() {
                       : satir(kar == null ? 'Kâr' : '', 'Satış ₺/kg gir')}
                   {acik === r.parti ? (
                     <View style={styles.girdiler}>
-                      {girdi(r.parti, 'alisBasFiyat', 'Alış ₺/baş')}
+                      {girdi(r.parti, 'alisBasFiyat', 'Alış ₺/baş', r.alisTahminiBas && r.bas ? `${Math.round(r.alis / r.bas).toLocaleString('tr-TR')} (tahmini)` : undefined)}
                       {girdi(r.parti, 'satisKgFiyat', 'Satış ₺/kg (tahmin)')}
                       {girdi(r.parti, 'gercekSatisTutar', 'Gerçek satış toplamı ₺')}
                     </View>
@@ -152,6 +244,9 @@ export default function MaliyetScreen() {
 
 const styles = StyleSheet.create({
   uyari: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12 },
+  bilgi: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12, marginTop: 8 },
+  kalem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
+  etiket: { fontSize: 11, fontWeight: '800', borderWidth: 1, borderRadius: 6 },
   ozet: { flexDirection: 'row', borderRadius: 16, padding: 16, marginBottom: 12 },
   ozetSayi: { color: '#fff', fontSize: 22, fontWeight: '900' },
   ozetEtiket: { color: '#ffffffcc', fontSize: 12 },

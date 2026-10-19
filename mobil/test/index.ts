@@ -29,6 +29,7 @@ import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
 import { kuzuDereceModul } from './moduller/kuzu-derece';
 import { besiCinsiyetModul } from './moduller/besi-cinsiyet';
+import { tahminiFiyatModul } from './moduller/tahmini-fiyat';
 
 const MODULLER = [
   hizliBesiModul,
@@ -56,6 +57,7 @@ const MODULLER = [
   zamanCizelgesiModul,
   kuzuDereceModul,
   besiCinsiyetModul,
+  tahminiFiyatModul,
 ];
 
 async function main() {

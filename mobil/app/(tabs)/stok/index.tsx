@@ -32,6 +32,8 @@ import {
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
 import { terim } from '@/sabitler/Metinler';
+import { birimFiyatCoz, oneriMetni } from '@/kaynak/maliyet/tahmini-fiyat';
+import { referansTarihMetni } from '@/kaynak/maliyet/fiyat-referans';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -122,6 +124,7 @@ export default function StockScreen() {
   const [adjustFiyat, setAdjustFiyat] = useState('');
   const [hareketler, setHareketler] = useState<StockMovement[]>([]);
   const [fiyatlar, setFiyatlar] = useState<Record<string, number>>({});
+  const adjustTahmin = adjustItem ? birimFiyatCoz(adjustItem, fiyatlar) : null;
 
   const openAdjust = (item: StockItem) => {
     setAdjustItem(item);
@@ -319,12 +322,26 @@ export default function StockScreen() {
               />
             ) : null}
             <TextInput
-              placeholder={`Birim alış fiyatı ₺/${adjustItem?.unit ?? ''} (giriş için, opsiyonel)`}
+              placeholder={
+                adjustTahmin?.tur === 'tahmini'
+                  ? `Birim alış ₺/${adjustItem?.unit ?? ''} — önerilen ${oneriMetni(adjustTahmin)}`
+                  : `Birim alış fiyatı ₺/${adjustItem?.unit ?? ''} (giriş için, opsiyonel)`
+              }
               keyboardType="decimal-pad"
               value={adjustFiyat}
               onChangeText={setAdjustFiyat}
               style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
+            {adjustTahmin?.tur === 'tahmini' ? (
+              <Text style={{ color: colors.tint, fontSize: 12, marginBottom: 4 }}>
+                Bilmiyorsan boş bırak: maliyette tahmini {oneriMetni(adjustTahmin)} ₺/{adjustItem?.unit} kullanılır ({adjustTahmin.ref?.kaynakAd}
+                {adjustTahmin.ref?.veriTarihi ? ` · ${referansTarihMetni(adjustTahmin.ref.veriTarihi)}` : ''}).
+              </Text>
+            ) : adjustTahmin?.tur === 'yok' ? (
+              <Text style={{ color: colors.warning, fontSize: 12, marginBottom: 4 }}>
+                Bu kalem için referans fiyat yok — fiyat yazmazsan maliyete yansımaz.
+              </Text>
+            ) : null}
             <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
               Mevcut: {adjustItem?.quantity ?? 0} {adjustItem?.unit} · minimum {adjustItem?.minQuantity ?? 0}
               {adjustItem && fiyatlar[adjustItem.id] ? ` · son alış ${fiyatlar[adjustItem.id]} ₺/${adjustItem.unit}` : ''}
