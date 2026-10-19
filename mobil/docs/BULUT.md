@@ -1,20 +1,28 @@
 # Bulut eşitleme (Supabase)
 
-Bulut, **özellik bayrağı** ile kapalıdır. Aşağıdaki iki değişken tanımlı değilse uygulama yalnız yerel çalışır, hiçbir ağ isteği yapmaz.
+Bulut, **Supabase ortam değişkenleri** tanımlı olduğunda açılır. Değişkenler yoksa uygulama yalnız yerel çalışır, hiçbir ağ isteği yapmaz.
 
-| Değişken | Nereden |
+| Amaç | Değişken adları (öncelik sırasıyla) |
 |---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL (`https://xxxx.supabase.co`) |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Aynı sayfa → `anon` / publishable key (herkese açık anahtardır, RLS korur) |
+| Proje URL | `EXPO_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_URL` · `SUPABASE_URL` |
+| Anon / publishable key | `EXPO_PUBLIC_SUPABASE_ANON_KEY` · `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` · `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` · `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_PUBLISHABLE_KEY` · `SUPABASE_ANON_KEY` |
 
-**Service role anahtarı gerekmez** ve uygulamaya asla konmamalıdır.
+**Service role / secret key gerekmez** ve istemciye asla konmamalıdır.
 
-## Kurulum
-1. Supabase'de yeni proje aç (SüperArı projesinden ayrı).
-2. SQL Editor → `mobil/supabase/schema.sql` içeriğini yapıştır → Run.
-3. Authentication → URL Configuration → Site URL: `https://superkuzu.vercel.app`, Redirect URLs: `https://superkuzu.vercel.app/bulut`.
-4. Authentication → Email Templates → "Magic Link" şablonuna `{{ .Token }}` ekle (6 haneli kod da gelsin).
-5. Vercel → superkuzu → Settings → Environment Variables: yukarıdaki iki değişkeni Production'a ekle → Redeploy.
+### Vercel (superkuzu)
+
+Supabase ↔ Vercel entegrasyonu (proje ref `eferktaopilgoeetgggk`) varsayılan olarak `SUPABASE_URL` ve `SUPABASE_PUBLISHABLE_KEY` (veya `SUPABASE_ANON_KEY`) ekler. Web derlemede `mobil/scripts/supabase-expo-public.js` bunları `EXPO_PUBLIC_SUPABASE_*` olarak Expo'ya aktarır — elle kopyalamaya gerek yok.
+
+**SuperAri** (`ssminvxldxaqnzizbrfy`) projesine dokunmayın; yalnız SuperKuzu Supabase projesi kullanılır.
+
+## Kurulum (Supabase paneli)
+
+1. SQL Editor → `mobil/supabase/schema.sql` içeriğini yapıştır → Run.
+2. Authentication → URL Configuration:
+   - **Site URL:** `https://superkuzu.vercel.app`
+   - **Redirect URLs:** `https://superkuzu.vercel.app/bulut` (önizleme URL'leri entegrasyon ekleyebilir)
+3. Authentication → Email Templates → Magic Link / OTP: Türkçe şablon ve `{{ .Token }}` (6 haneli kod) — örnek: `mobil/supabase/email-otp-tr.html`
+4. Vercel → superkuzu → entegrasyon bağlı ve Production/Preview env senk → Redeploy.
 
 ## Tasarım
 - **Giriş:** e-posta kodu (OTP) veya sihirli bağlantı. Şifre yok.

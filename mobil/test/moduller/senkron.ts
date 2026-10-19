@@ -14,8 +14,12 @@ export const senkronModul: TestModul = {
       ),
       test(
         'Senkron mesajları',
-        'API URL ile bulut açılabilir',
-        typeof process.env.EXPO_PUBLIC_API_URL === 'string' || !bulut,
+        'Supabase env ile bulut açılabilir',
+        !!(
+          process.env.EXPO_PUBLIC_SUPABASE_URL ||
+          process.env.SUPABASE_URL ||
+          process.env.NEXT_PUBLIC_SUPABASE_URL
+        ) || !bulut,
       ),
     ];
   },

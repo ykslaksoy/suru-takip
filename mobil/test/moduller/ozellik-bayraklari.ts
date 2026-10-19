@@ -10,7 +10,7 @@ export const ozellikModul: TestModul = {
     const iap = OZELLIK_BAYRAKLARI.find((o) => o.id === 'iap')!;
     return [
       test('Özellik bayrakları', 'Mod1 tam işaretli', mod1.durum === 'tam'),
-      test('Özellik bayrakları', 'Bulut yakında', bulut.durum === 'yakinda'),
+      test('Özellik bayrakları', 'Bulut pilot', bulut.durum === 'pilot'),
       test('Özellik bayrakları', 'OCR simülasyon', ocr.durum === 'simulasyon'),
       test('Özellik bayrakları', 'IAP simülasyon', iap.durum === 'simulasyon'),
       test('Özellik bayrakları', 'Tüm bayraklar açıklamalı', OZELLIK_BAYRAKLARI.every((o) => o.aciklama.length > 5)),
