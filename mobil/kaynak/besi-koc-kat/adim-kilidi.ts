@@ -41,7 +41,7 @@ export const MOD2_ADIMLAR: Mod2Adim[] = [
     sira: 2,
     baslik: 'Gebelik takibi',
     aciklama: 'Gebe işaretle; doğuma yaklaşınca uyar.',
-    href: '/(tabs)/suru',
+    href: '/ciftlesme',
   },
   {
     id: 'kuzulatma',

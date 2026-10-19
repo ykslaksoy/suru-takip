@@ -27,7 +27,7 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
   {
     id: 'mod2-6',
     ad: 'Mod 2–6 (etçi, damızlık, süt)',
-    durum: 'yakinda',
+    durum: 'tam',
     aciklama: 'Etçi + kuzu besi, damızlık et/süt kuzusu, süt koyunculuğu, süt + kuzu besi',
   },
   {

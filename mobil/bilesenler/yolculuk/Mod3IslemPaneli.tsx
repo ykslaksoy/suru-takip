@@ -40,7 +40,7 @@ export function Mod3IslemPaneli({ adim, onDegisti }: Props) {
             : 'Seleksiyon sıralaması'}
       </Text>
       <Text style={{ color: colors.textSecondary, marginBottom: 8, lineHeight: 18 }}>
-        ADG, tartım, aşı ve TÜRKVET ile skorlanır.
+        ADG, tartım, aşı ve TÜRKVET ile skorlanır. Çiftleşme ve soy için Çiftleşme / hayvan şecere ekranlarını kullanın.
       </Text>
       {liste.slice(0, adim === 'seleksiyon' ? 12 : 8).map((s) => (
         <View

@@ -31,7 +31,7 @@ export const MOD4_ADIMLAR: Mod4Adim[] = [
     sira: 1,
     baslik: 'Üreme / kuzulatma',
     aciklama: 'Çoğaltma ve kuzulatma kayıtları.',
-    href: '/hayvan/ekle',
+    href: '/ciftlesme',
   },
   {
     id: 'sagim',

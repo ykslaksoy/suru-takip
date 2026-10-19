@@ -9,6 +9,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { ASI_PROGRAMI, asiKategori } from '@/kaynak/cekirdek/asi-programi';
 import { VITAMIN_PROGRAMI } from '@/kaynak/akilli-veteriner/vitamin-programi';
 import { kaliciGetItem, kaliciSetItem, kaliciRemoveItem } from '@/kaynak/cekirdek/web-kalici-depo';
+import { getAktifModId } from '@/sabitler/Modlar';
+import {
+  getOnerilenPlanByMod,
+  onerilenPlanAcikMi as onerilenPlanAcikMiMod,
+} from './saglik-plani-mod';
 import type { PlanZaman } from './plan-takvim';
 
 export type SaglikPlaniBolum = 'asi' | 'parazit' | 'vitamin';
@@ -47,25 +52,20 @@ export async function getEtkinPlan(): Promise<SaglikPlani> {
   return getKendiPlan();
 }
 
-/** Mod 1 (Kuzu alarak besi) önerilen plan — yalnız erişim açıkken kullanılır. */
-const ONERILEN_PLAN: SaglikPlani = {
-  asi: ['karma', 'cicek', 'ppr', 'pasteurella', 'sarbon', 'brusella', 'sap'],
-  parazit: ['ivermektin', 'albendazol'],
-  vitamin: ['selen-e'],
-};
-
 /**
- * Önerilen plana erişim var mı? Varsayılan: KAPALI.
+ * Önerilen plana erişim — Mod 1 kapalı (hızlı besi); hazır mod 2–6 açık.
  * TODO(yönetici paneli): uzak bayraktan (kullanıcı / işletme bazlı) oku.
  */
 export async function onerilenPlanAcikMi(): Promise<boolean> {
-  return false;
+  return onerilenPlanAcikMiMod();
 }
 
 /** Önerilen plan — erişim yoksa null (id’ler dışarı verilmez). */
 export async function getOnerilenPlan(): Promise<SaglikPlani | null> {
   if (!(await onerilenPlanAcikMi())) return null;
-  return kopya(ONERILEN_PLAN);
+  const modId = await getAktifModId();
+  const p = await getOnerilenPlanByMod(modId);
+  return p ? kopya(p) : null;
 }
 
 function kopya(p: SaglikPlani): SaglikPlani {
