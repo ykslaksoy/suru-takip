@@ -60,6 +60,8 @@ export const DAHA_MENUSU: DahaMenuOgesi[] = [
   { id: 'satis', label: 'Satış / çıkış', href: '/satis' },
   { id: 'sigorta', label: 'Sigorta (TARSİM)', href: '/sigorta' },
   { id: 'sayim', label: 'Sayım listesi', href: '/sayim' },
+  { id: 'cop', label: 'Geri dönüşüm kutusu', href: '/gecmis?sekme=cop' },
+  { id: 'islem-kaydi', label: 'İşlem kaydı', href: '/gecmis?sekme=kayit' },
   { id: 'seri', label: 'Seri ahır', href: '/seri-giris' },
   { id: 'ses', label: 'Sesli komut', href: '/ses' },
 ];

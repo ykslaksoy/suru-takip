@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Platform } from 'react-native';
+import { saglikKaydiSil } from '@/kaynak/gecmis/hayvan-sil';
+import { metindenIlaclar } from '@/kaynak/arinma/hesap';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -104,7 +107,24 @@ export default function AnimalHealthScreen() {
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.type, { color: colors.tint }]}>{typeLabels[item.recordType]}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[styles.type, { color: colors.tint, flex: 1 }]}>{typeLabels[item.recordType]}</Text>
+              <Pressable
+                hitSlop={8}
+                onPress={() => {
+                  const yap = async () => {
+                    await saglikKaydiSil(item, animal ? hayvanAnaEtiket(animal) : '');
+                    refresh();
+                    load();
+                  };
+                  const m = 'Kayıt silinsin mi? 30 gün geri dönüşüm kutusunda kalır.';
+                  if (Platform.OS === 'web') {
+                    if (typeof window !== 'undefined' && window.confirm(m)) void yap();
+                  } else Alert.alert('Sil', m, [{ text: 'İptal', style: 'cancel' }, { text: 'Sil', style: 'destructive', onPress: () => void yap() }]);
+                }}>
+                <Text style={{ color: colors.danger, fontSize: 12, fontWeight: '700' }}>Sil</Text>
+              </Pressable>
+            </View>
             <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
               {item.symptoms || item.diagnosis || item.treatment}
             </Text>
@@ -160,6 +180,14 @@ export default function AnimalHealthScreen() {
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
               />
             ))}
+            {(() => {
+              const e = metindenIlaclar(`${form.medicine} ${form.treatment}`)[0];
+              return e && e.gun > 0 ? (
+                <Text style={{ color: colors.danger, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+                  🚫 {e.tanim.ad}: et arınma {e.gun} gün (tahmini) — boş bırakırsan bu değer kullanılır
+                </Text>
+              ) : null;
+            })()}
             <AnaButon title="Kaydet" onPress={save} />
             <AnaButon title="İptal" variant="secondary" onPress={() => setModal(false)} />
           </View>

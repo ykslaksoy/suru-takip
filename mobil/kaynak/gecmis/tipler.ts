@@ -13,10 +13,16 @@ export type Islem = {
   adet?: number;
 };
 
+export type CopTur = 'hayvan' | 'saglik' | 'tartim' | 'police' | 'sablon' | 'foto' | 'yem' | 'ureme';
+
 export type CopKaydi = {
   id: string;
   silinme: string;
-  tur: 'hayvan';
+  tur: CopTur;
   etiket: string;
+  /** Kuzu kaydı + bağlı tartım / sağlık kayıtları, ya da tek kayıt */
   veri: unknown;
+  /** Kim sildi */
+  kim?: string;
+  animalId?: string;
 };

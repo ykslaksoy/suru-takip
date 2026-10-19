@@ -41,3 +41,9 @@ export async function policeSil(id: string): Promise<void> {
   const list = await getPoliceler();
   await yaz(list.filter((p) => p.id !== id));
 }
+
+/** Geri dönüşüm kutusundan geri yükle (aynı id) */
+export async function policeGeriYukle(p: SigortaPolice): Promise<void> {
+  const list = await getPoliceler();
+  await yaz([...list.filter((x) => x.id !== p.id), p]);
+}

@@ -1,5 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { v4 as uuidv4 } from 'uuid';
+import { denetimYaz, farklar, HAYVAN_ALANLARI } from './denetim';
+import { hayvanAnaEtiket } from './hayvan-etiket';
 import type {
   Animal,
   AnimalSpecies,
@@ -227,6 +229,10 @@ export async function upsertAnimal(animal: Omit<Animal, 'createdAt' | 'updatedAt
     ]
   );
   await enqueueSync('animals', record.id, existing ? 'update' : 'create', record);
+  const degisiklikler = existing ? farklar(existing as unknown as Record<string, unknown>, record as unknown as Record<string, unknown>, HAYVAN_ALANLARI) : undefined;
+  if (!existing || degisiklikler?.length) {
+    denetimYaz({ eylem: existing ? 'guncelleme' : 'ekleme', tablo: 'hayvan', kayitId: record.id, animalId: record.id, ozet: hayvanAnaEtiket(record), degisiklikler });
+  }
   return record;
 }
 
@@ -234,6 +240,7 @@ export async function deleteAnimal(id: string): Promise<void> {
   const database = await getDatabase();
   await database.runAsync('DELETE FROM animals WHERE id = ?', [id]);
   await enqueueSync('animals', id, 'delete', { id });
+  denetimYaz({ eylem: 'silme', tablo: 'hayvan', kayitId: id, animalId: id, ozet: 'Kuzu silindi' });
 }
 
 export async function getWeightRecords(animalId: string): Promise<WeightRecord[]> {
@@ -256,6 +263,7 @@ export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: 
     'INSERT OR REPLACE INTO weight_records (id, animal_id, weight_kg, recorded_at, notes) VALUES (?, ?, ?, ?, ?)',
     [full.id, full.animalId, full.weightKg, full.recordedAt, full.notes]
   );
+  denetimYaz({ eylem: 'ekleme', tablo: 'tartim', kayitId: full.id, animalId: full.animalId, ozet: `${full.weightKg} kg` });
   return full;
 }
 
@@ -368,7 +376,21 @@ export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: 
     const animal = await getAnimal(full.animalId);
     if (animal && animal.status === 'healthy') await upsertAnimal({ ...animal, status: 'sick' });
   }
+  denetimYaz({ eylem: 'ekleme', tablo: 'saglik', kayitId: full.id, animalId: full.animalId, ozet: full.medicine || full.treatment || full.diagnosis || 'Sağlık kaydı' });
   return full;
+}
+
+/** Sağlık kaydını sil (geri dönüşüm kutusu önce kopyalar) */
+export async function deleteHealthRecord(id: string): Promise<void> {
+  const database = await getDatabase();
+  await database.runAsync('DELETE FROM health_records WHERE id = ?', [id]);
+  denetimYaz({ eylem: 'silme', tablo: 'saglik', kayitId: id, ozet: 'Sağlık kaydı silindi' });
+}
+
+export async function deleteWeightRecord(id: string): Promise<void> {
+  const database = await getDatabase();
+  await database.runAsync('DELETE FROM weight_records WHERE id = ?', [id]);
+  denetimYaz({ eylem: 'silme', tablo: 'tartim', kayitId: id, ozet: 'Tartım silindi' });
 }
 
 export async function getActiveWithdrawals(): Promise<(HealthRecord & { earTag: string })[]> {
@@ -388,6 +410,7 @@ export async function upsertStockItem(item: Omit<StockItem, 'id'> & { id?: strin
   const database = await getDatabase();
   const full: StockItem = { ...item, id: item.id ?? uuidv4() };
   await database.runAsync(`INSERT OR REPLACE INTO stock_items (id, name, type, quantity, unit, min_quantity, expiry_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [full.id, full.name, full.type, full.quantity, full.unit, full.minQuantity, full.expiryDate, full.notes]);
+  if (!item.id) denetimYaz({ eylem: 'ekleme', tablo: 'stok', kayitId: full.id, ozet: full.name });
   return full;
 }
 
@@ -398,6 +421,7 @@ export async function adjustStock(stockId: string, movementType: 'in' | 'out', q
   await upsertStockItem({ ...item, quantity: Math.max(0, item.quantity + delta) });
   const database = await getDatabase();
   await database.runAsync('INSERT INTO stock_movements (id, stock_id, movement_type, quantity, recorded_at, notes) VALUES (?, ?, ?, ?, ?, ?)', [uuidv4(), stockId, movementType, quantity, new Date().toISOString(), notes]);
+  denetimYaz({ eylem: 'ekleme', tablo: 'stok_hareket', kayitId: stockId, ozet: `${item.name} ${movementType === 'in' ? '+' : '−'}${quantity} ${item.unit}${notes ? ` · ${notes}` : ''}` });
 }
 
 export async function getLowStockItems(): Promise<StockItem[]> {

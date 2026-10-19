@@ -5,7 +5,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
-import { getAnimals, getLatestWeight, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { getAnimals, getLatestWeight, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import { upsertKullaniciRasyon } from '@/kaynak/rasyon/kullanici-rasyon';
 import {
   getAnimalRationPlan,
@@ -150,7 +150,10 @@ export async function seedPadokRasyonStoklari(): Promise<void> {
     { name: 'Yonca kuru ot', quantity: 400, min: 80, notes: 'yonca-kuru · padok besi' },
     { name: 'Buğday samanı', quantity: 500, min: 100, notes: 'saman-bugday · padok besi' },
   ];
+  const mevcut = new Set((await getStockItems()).map((x) => x.name.trim().toLocaleLowerCase('tr')));
   for (const s of stoklar) {
+    // Tekrar çağrılınca aynı adlı stok kalemi çoğalmasın
+    if (mevcut.has(s.name.trim().toLocaleLowerCase('tr'))) continue;
     await upsertStockItem({
       name: s.name,
       type: 'feed',

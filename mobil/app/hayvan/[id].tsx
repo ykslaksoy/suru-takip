@@ -364,7 +364,7 @@ export default function AnimalDetailScreen() {
           title="Hayvanı Sil"
           variant="danger"
           onPress={() => {
-            const mesaj = 'Kayıt çöp kutusuna taşınır; İşlem geçmişi ekranından geri alabilirsin.';
+            const mesaj = 'Kuzu, tartım ve sağlık kayıtlarıyla birlikte geri dönüşüm kutusuna taşınır; 30 gün içinde Daha → Geri dönüşüm kutusundan geri alabilirsin.';
             if (Platform.OS === 'web') {
               // RN-web Alert butonları göstermez — tarayıcı onayı
               if (typeof window !== 'undefined' && window.confirm(`Sil? ${mesaj}`)) {

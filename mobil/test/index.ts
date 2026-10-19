@@ -36,6 +36,7 @@ import { sayimModul } from './moduller/sayim';
 import { arinmaModul } from './moduller/arinma';
 import { sablonModul } from './moduller/sablon';
 import { takvimModul } from './moduller/takvim';
+import { geriDonusumModul } from './moduller/geri-donusum';
 
 const MODULLER = [
   hizliBesiModul,
@@ -70,6 +71,7 @@ const MODULLER = [
   arinmaModul,
   sablonModul,
   takvimModul,
+  geriDonusumModul,
 ];
 
 async function main() {

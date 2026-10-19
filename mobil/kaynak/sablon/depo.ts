@@ -41,3 +41,8 @@ export async function sablonSil(id: string): Promise<KayitSablonu | null> {
   await yaz(l.filter((x) => x.id !== id));
   return s;
 }
+
+export async function sablonGeriYukle(s: KayitSablonu): Promise<void> {
+  const l = await getSablonlar();
+  await yaz([...l.filter((x) => x.id !== s.id), s]);
+}

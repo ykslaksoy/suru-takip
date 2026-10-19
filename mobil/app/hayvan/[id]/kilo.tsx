@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { tartimSil } from '@/kaynak/gecmis/hayvan-sil';
 import { useLocalSearchParams } from 'expo-router';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { PerformansMetrikleri } from '@/bilesenler/kilo/PerformansMetrikleri';
@@ -114,9 +115,24 @@ export default function WeightScreen() {
         renderItem={({ item }) => (
           <View style={[styles.row, { borderBottomColor: colors.border, marginHorizontal: 16 }]}>
             <Text style={{ color: colors.text, fontWeight: '600' }}>{item.weightKg} kg</Text>
-            <Text style={{ color: colors.textSecondary }}>
+            <Text style={{ color: colors.textSecondary, flex: 1, textAlign: 'right', marginRight: 12 }}>
               {new Date(item.recordedAt).toLocaleDateString('tr-TR')}
             </Text>
+            <Pressable
+              hitSlop={8}
+              onPress={() => {
+                const yap = async () => {
+                  await tartimSil(item, baslik);
+                  refresh();
+                  load();
+                };
+                const m = `${item.weightKg} kg tartım silinsin mi? 30 gün geri dönüşüm kutusunda kalır.`;
+                if (Platform.OS === 'web') {
+                  if (typeof window !== 'undefined' && window.confirm(m)) void yap();
+                } else Alert.alert('Sil', m, [{ text: 'İptal', style: 'cancel' }, { text: 'Sil', style: 'destructive', onPress: () => void yap() }]);
+              }}>
+              <Text style={{ color: colors.danger, fontSize: 12, fontWeight: '700' }}>Sil</Text>
+            </Pressable>
           </View>
         )}
       />

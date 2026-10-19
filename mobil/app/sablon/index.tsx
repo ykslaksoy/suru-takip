@@ -12,7 +12,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
-import { islemKaydet } from '@/kaynak/gecmis/gunluk';
+import { copeAt, islemKaydet } from '@/kaynak/gecmis/gunluk';
 import {
   adimAnahtar,
   adimEtiket,
@@ -97,7 +97,8 @@ export default function SablonScreen() {
   };
 
   const sil = (s: KayitSablonu) =>
-    onayla(`“${s.ad}” şablonu silinsin mi? (Yapılmış kayıtlar silinmez.)`, async () => {
+    onayla(`“${s.ad}” şablonu silinsin mi? 30 gün geri dönüşüm kutusunda kalır; yapılmış kayıtlar silinmez.`, async () => {
+      await copeAt({ id: s.id, tur: 'sablon', etiket: s.ad, veri: s });
       await sablonSil(s.id);
       await islemKaydet({ tur: 'silme', ozet: `Şablon silindi · ${s.ad}` });
       await yukle();

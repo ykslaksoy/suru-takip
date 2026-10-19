@@ -1,6 +1,7 @@
 /** Uygulama geneli işlem günlüğü + çöp kutusu (yerel cihaz) */
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import type { CopKaydi, Islem } from './tipler';
+import { copSuresiDolanlar } from './cop';
 
 const KEY_GUNLUK = 'sy_islem_gunlugu_v1';
 const KEY_COP = 'sy_cop_kutusu_v1';
@@ -23,24 +24,37 @@ export async function getIslemler(): Promise<Islem[]> {
 }
 
 /** Günlüğe ekle — hata uygulamayı durdurmaz */
+let kimAdi: () => string = () => KIM_VARSAYILAN;
+/** Roller: aktif kullanıcı adı sağlayıcısı */
+export function setGunlukKimSaglayici(f: () => string): void {
+  kimAdi = f;
+}
+export function gunlukKim(): string {
+  return kimAdi();
+}
+
 export async function islemKaydet(i: Omit<Islem, 'id' | 'zaman' | 'kim'> & { kim?: string }): Promise<void> {
   try {
     const l = await getIslemler();
-    l.unshift({ ...i, kim: i.kim ?? KIM_VARSAYILAN, id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, zaman: new Date().toISOString() });
+    l.unshift({ ...i, kim: i.kim ?? kimAdi(), id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, zaman: new Date().toISOString() });
     await kaliciSetItem(KEY_GUNLUK, JSON.stringify(l.slice(0, MAKS)));
   } catch {
     /* günlük yazılamadı — kayıt yine geçerli */
   }
 }
 
+/** 30 günü dolanlar okurken kalıcı silinir */
 export async function getCopKutusu(): Promise<CopKaydi[]> {
-  return oku<CopKaydi>(KEY_COP);
+  const l = await oku<CopKaydi>(KEY_COP);
+  const { kalan, dolan } = copSuresiDolanlar(l);
+  if (dolan.length) await kaliciSetItem(KEY_COP, JSON.stringify(kalan));
+  return kalan;
 }
 
-export async function copeAt(k: Omit<CopKaydi, 'silinme'>): Promise<void> {
+export async function copeAt(k: Omit<CopKaydi, 'silinme' | 'kim'> & { kim?: string }): Promise<void> {
   const l = await getCopKutusu();
-  l.unshift({ ...k, silinme: new Date().toISOString() });
-  await kaliciSetItem(KEY_COP, JSON.stringify(l.slice(0, 200)));
+  l.unshift({ ...k, kim: k.kim ?? kimAdi(), silinme: new Date().toISOString() });
+  await kaliciSetItem(KEY_COP, JSON.stringify(l.slice(0, 500)));
 }
 
 export async function coptenCikar(id: string): Promise<CopKaydi | null> {

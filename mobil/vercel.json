@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "EXPO_PUBLIC_ORTAM=uretim npx expo export -p web",
+  "buildCommand": "EXPO_PUBLIC_ORTAM=uretim npx expo export -p web && node scripts/vercel-dinamik.js",
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
@@ -8,31 +8,31 @@
   "rewrites": [
     {
       "source": "/hayvan/:id/kilo",
-      "destination": "/hayvan/%5Bid%5D/kilo"
+      "destination": "/hayvan/_id/kilo"
     },
     {
       "source": "/hayvan/:id/saglik",
-      "destination": "/hayvan/%5Bid%5D/saglik"
+      "destination": "/hayvan/_id/saglik"
     },
     {
       "source": "/hayvan/:id/dogum",
-      "destination": "/hayvan/%5Bid%5D/dogum"
+      "destination": "/hayvan/_id/dogum"
     },
     {
       "source": "/hayvan/:id",
-      "destination": "/hayvan/%5Bid%5D"
+      "destination": "/hayvan/_id"
     },
     {
       "source": "/gorevler/asi/:programId",
-      "destination": "/gorevler/asi/%5BprogramId%5D"
+      "destination": "/gorevler/asi/_programId"
     },
     {
       "source": "/gorevler/kategori/:id",
-      "destination": "/gorevler/kategori/%5Bid%5D"
+      "destination": "/gorevler/kategori/_id"
     },
     {
       "source": "/gorevler/yem/:yemId",
-      "destination": "/gorevler/yem/%5ByemId%5D"
+      "destination": "/gorevler/yem/_yemId"
     }
   ]
 }

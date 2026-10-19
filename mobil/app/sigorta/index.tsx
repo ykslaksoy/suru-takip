@@ -11,7 +11,7 @@ import TopluHayvanSecici from '@/bilesenler/ortak/TopluHayvanSecici';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
-import { islemKaydet } from '@/kaynak/gecmis/gunluk';
+import { copeAt, islemKaydet } from '@/kaynak/gecmis/gunluk';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { tl } from '@/kaynak/maliyet/hesap';
 import {
@@ -113,12 +113,13 @@ export default function SigortaScreen() {
 
   const sil = (p: SigortaPolice) => {
     const yap = async () => {
+      await copeAt({ id: p.id, tur: 'police', etiket: `Poliçe ${p.policeNo}`, veri: p });
       await policeSil(p.id);
-      await islemKaydet({ tur: 'silme', ozet: `Sigorta poliçesi silindi · ${p.policeNo}` });
+      await islemKaydet({ tur: 'silme', ozet: `Sigorta poliçesi silindi · ${p.policeNo} (geri dönüşüm kutusunda)` });
       refresh();
       await yukle();
     };
-    const mesaj = `Poliçe ${p.policeNo} kaydı silinsin mi?`;
+    const mesaj = `Poliçe ${p.policeNo} silinsin mi? 30 gün geri dönüşüm kutusunda kalır.`;
     if (Platform.OS === 'web') {
       if (typeof window !== 'undefined' && window.confirm(mesaj)) void yap();
       return;
