@@ -2,6 +2,7 @@
  * Maliyet ve Kâr (Mod 1 besi) — parti başına alış + yem + ilaç → baş başı / kg başı maliyet, tahmini ve gerçek kâr.
  * Mevcut ekranlarda bu hesap yoktu; yeni ekran. Veriler stok hareketleri ve birim fiyatlardan kendiliğinden gelir.
  */
+import { YetkiKapisi } from '@/bilesenler/ekip/YetkiKapisi';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, useFocusEffect } from 'expo-router';
@@ -18,7 +19,7 @@ import { maliyetTopla } from '@/kaynak/maliyet/topla';
 
 type Alan = 'alisBasFiyat' | 'satisKgFiyat' | 'gercekSatisTutar';
 
-export default function MaliyetScreen() {
+function MaliyetScreenIcerik() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [satirlar, setSatirlar] = useState<PartiMaliyet[] | null>(null);
@@ -238,3 +239,11 @@ const styles = StyleSheet.create({
   girdi: { flex: 1, minWidth: 100 },
   input: { borderWidth: 1, borderRadius: 10, padding: 10, marginTop: 4, fontSize: 16, minWidth: 0 },
 });
+
+export default function MaliyetScreen() {
+  return (
+    <YetkiKapisi yetki="finans">
+      <MaliyetScreenIcerik />
+    </YetkiKapisi>
+  );
+}

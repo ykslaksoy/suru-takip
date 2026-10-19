@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -88,6 +89,7 @@ export default function AsiGorevDetayScreen() {
 
   const topluKaydet = async () => {
     if (!detay || secili.size === 0) return;
+    if (!yetkiUyar('tedavi')) return;
     setKaydediliyor(true);
     try {
       const hepsi = await getAnimals();

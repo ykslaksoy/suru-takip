@@ -2,6 +2,7 @@
  * Yem ve rasyon — yem stoğu (alımlar ₺/kg), parti başına rasyon (kg/baş/gün),
  * otomatik günlük stok düşümü, maliyete parti bazında yazılan yem gideri, az kalan yem uyarısı.
  */
+import { useEkip } from '@/bilesenler/ekip/useEkip';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
@@ -51,6 +52,10 @@ export default function YemScreen() {
   const [alim, setAlim] = useState<{ stockId: string | null; yeniAd: string; kg: string; fiyat: string; tedarikci: string } | null>(null);
   const [form, setForm] = useState<RasyonForm | null>(null);
   const [mesgul, setMesgul] = useState(false);
+  const ekip = useEkip();
+  const finans = ekip.yetki('finans');
+  const duzen = ekip.yetki('duzenleme');
+  const para = (n: number) => (finans ? tl(n) : '•••');
 
   const yukle = useCallback(async () => {
     await gunlukYemDusumu().catch(() => null);
@@ -91,7 +96,7 @@ export default function YemScreen() {
     try {
       setMesgul(true);
       await yemAlimiEkle({ stockId: alim.stockId ?? undefined, yeniAd: alim.yeniAd, kg: k ?? 0, fiyatKg: f ?? 0, tedarikci: alim.tedarikci });
-      setMesaj(`Alım kaydedildi: ${kg(k ?? 0)} × ${tl(f ?? 0)}/kg = ${tl((k ?? 0) * (f ?? 0))}`);
+      setMesaj(`Alım kaydedildi: ${kg(k ?? 0)} × ${para(f ?? 0)}/kg = ${para((k ?? 0) * (f ?? 0))}`);
       setAlim(null);
       refresh();
       await yukle();
@@ -177,7 +182,7 @@ export default function YemScreen() {
         <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.basSatir}>
             <Text style={[styles.baslik, { color: colors.text, flex: 1, marginBottom: 0 }]}>🍽️ Parti rasyonları</Text>
-            {!form ? (
+            {!form && duzen ? (
               <Pressable onPress={() => setForm({ partiler: new Set(), miktar: {} })}>
                 <Text style={{ color: colors.tint, fontWeight: '800' }}>+ Rasyon kur</Text>
               </Pressable>
@@ -233,7 +238,7 @@ export default function YemScreen() {
                 const bas = [...form.partiler].reduce((s, p) => s + (o.basSayisi[p] ?? 0), 0);
                 return (
                   <Text style={{ color: colors.text, marginTop: 8, fontWeight: '700' }}>
-                    {kg(m.kgBasGun)}/baş/gün · {tl(m.tlBasGun)}/baş/gün{bas ? ` · ${bas} baş: günde ${kg(m.kgBasGun * bas)}, ${tl(m.tlBasGun * bas)}` : ''}
+                    {kg(m.kgBasGun)}/baş/gün · {para(m.tlBasGun)}/baş/gün{bas ? ` · ${bas} baş: günde ${kg(m.kgBasGun * bas)}, ${para(m.tlBasGun * bas)}` : ''}
                   </Text>
                 );
               })()}
@@ -275,12 +280,13 @@ export default function YemScreen() {
                       {gr.kalemler.map((k) => `${yemAdi(k.stockId)} ${k.kgBasGun.toLocaleString('tr-TR')}`).join(' · ')} kg/baş/gün
                     </Text>
                     <Text style={{ color: colors.text, marginTop: 2 }}>
-                      Günde {kg(m.kgBasGun * bas)} · {tl(m.tlGun)}/gün · {tl(m.tlBasGun)}/baş
+                      Günde {kg(m.kgBasGun * bas)} · {para(m.tlGun)}/gün · {para(m.tlBasGun)}/baş
                       {m.fiyatsiz ? ` · ${m.fiyatsiz} yemin fiyatı yok` : ''}
                     </Text>
                     {gr.sonDusum ? (
                       <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>Son düşüm: {gunTR(gr.sonDusum)}</Text>
                     ) : null}
+                    {duzen ? (
                     <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
                       <View style={{ flex: 1 }}>
                         <Btn
@@ -316,6 +322,7 @@ export default function YemScreen() {
                         />
                       </View>
                     </View>
+                    ) : null}
                   </>
                 ) : null}
               </View>
@@ -327,7 +334,7 @@ export default function YemScreen() {
         <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.basSatir}>
             <Text style={[styles.baslik, { color: colors.text, flex: 1, marginBottom: 0 }]}>🌾 Yem stoğu</Text>
-            {!alim ? (
+            {!alim && finans ? (
               <Pressable onPress={() => setAlim({ stockId: o.yemler[0]?.id ?? null, yeniAd: '', kg: '', fiyat: '', tedarikci: '' })}>
                 <Text style={{ color: colors.tint, fontWeight: '800' }}>+ Yem alımı</Text>
               </Pressable>
@@ -358,7 +365,7 @@ export default function YemScreen() {
               </View>
               <TextInput value={alim.tedarikci} onChangeText={(t) => setAlim({ ...alim, tedarikci: t })} placeholder="Tedarikçi (isteğe bağlı)" placeholderTextColor={colors.textSecondary} style={[inp, { marginTop: 8 }]} />
               {sayiOku(alim.kg) && sayiOku(alim.fiyat) ? (
-                <Text style={{ color: colors.text, marginTop: 6, fontWeight: '700' }}>Toplam: {tl((sayiOku(alim.kg) ?? 0) * (sayiOku(alim.fiyat) ?? 0))}</Text>
+                <Text style={{ color: colors.text, marginTop: 6, fontWeight: '700' }}>Toplam: {para((sayiOku(alim.kg) ?? 0) * (sayiOku(alim.fiyat) ?? 0))}</Text>
               ) : null}
               {hata ? <Text style={{ color: colors.danger, marginTop: 6 }}>{hata}</Text> : null}
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
@@ -379,7 +386,7 @@ export default function YemScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: colors.text, fontWeight: '700' }}>{d.ad}</Text>
                   <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                    {d.fiyatKg ? `${tl(d.fiyatKg)}/kg${gercek[d.stockId] ? '' : ' (tahmini)'}` : 'fiyat yok'}
+                    {d.fiyatKg ? `${para(d.fiyatKg)}/kg${gercek[d.stockId] ? '' : ' (tahmini)'}` : 'fiyat yok'}
                     {d.gunlukKg ? ` · günde ${kg(d.gunlukKg)}` : ' · rasyonda değil'}
                   </Text>
                 </View>
@@ -418,7 +425,7 @@ export default function YemScreen() {
                 <View key={d.id} style={[styles.satir, { borderColor: colors.border }]}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontWeight: '700' }}>
-                      {gunTR(d.gun)} · {kg(top)} · {tl(tutar)}
+                      {gunTR(d.gun)} · {kg(top)} · {para(tutar)}
                     </Text>
                     <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
                       {partiler.join(', ')}
@@ -430,9 +437,11 @@ export default function YemScreen() {
               );
             })
           )}
-          <View style={{ marginTop: 8 }}>
-            <Btn t="Parti maliyetine bak →" onPress={() => router.push('/maliyet' as never)} />
-          </View>
+          {finans ? (
+            <View style={{ marginTop: 8 }}>
+              <Btn t="Parti maliyetine bak →" onPress={() => router.push('/maliyet' as never)} />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </>

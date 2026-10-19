@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
@@ -33,6 +34,7 @@ export default function AnimalDetailScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refreshKey, refresh } = useDatabase();
+  const ekip = useEkip();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [adg, setAdg] = useState<number | null>(null);
@@ -185,9 +187,11 @@ export default function AnimalDetailScreen() {
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
           <Text style={[styles.sectionTitle, { color: colors.tint, marginBottom: 0, flex: 1 }]}>Zaman çizelgesi</Text>
-          <Pressable onPress={() => setPadokAcik((v) => !v)} hitSlop={8}>
-            <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Parti değiştir</Text>
-          </Pressable>
+          {ekip.yetki('duzenleme') ? (
+            <Pressable onPress={() => setPadokAcik((v) => !v)} hitSlop={8}>
+              <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 13 }}>Parti değiştir</Text>
+            </Pressable>
+          ) : null}
         </View>
         {padokAcik ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
@@ -343,7 +347,7 @@ export default function AnimalDetailScreen() {
         </View>
       ) : null}
 
-      {animal.status !== 'sold' && animal.status !== 'dead' ? (
+      {animal.status !== 'sold' && animal.status !== 'dead' && ekip.yetki('duzenleme') ? (
         <View style={[styles.actions, { marginTop: 10 }]}>
           <Pressable
             onPress={() => router.push(`/satis?id=${animal.id}`)}
@@ -359,6 +363,7 @@ export default function AnimalDetailScreen() {
         <Text style={[styles.notes, { color: colors.textSecondary }]}>Not: {animal.notes}</Text>
       ) : null}
 
+      {ekip.yetki('silme') ? (
       <View style={{ padding: 16 }}>
         <AnaButon
           title="Hayvanı Sil"
@@ -390,6 +395,7 @@ export default function AnimalDetailScreen() {
           }}
         />
       </View>
+      ) : null}
     </ScrollView>
   );
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Platform } from 'react-native';
@@ -46,6 +47,7 @@ export default function AnimalHealthScreen() {
 
   const save = async () => {
     if (!id) return;
+    if (!yetkiUyar('tedavi')) return;
     await addHealthRecord({
       animalId: id,
       recordType: form.recordType,
@@ -112,6 +114,7 @@ export default function AnimalHealthScreen() {
               <Pressable
                 hitSlop={8}
                 onPress={() => {
+                  if (!yetkiUyar('silme')) return;
                   const yap = async () => {
                     await saglikKaydiSil(item, animal ? hayvanAnaEtiket(animal) : '');
                     refresh();

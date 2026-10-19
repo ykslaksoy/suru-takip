@@ -2,6 +2,7 @@
  * Excel / CSV — dışa aktar (sürü, tedaviler, tartımlar, maliyetler; .xlsx + .csv) ve
  * içe aktar (dosya seç / yapıştır → sütun eşle → önizle → mükerrer küpe kararı → kaydet).
  */
+import { useEkip } from '@/bilesenler/ekip/useEkip';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, router } from 'expo-router';
@@ -49,14 +50,18 @@ export default function ExcelScreen() {
   const [acikSutun, setAcikSutun] = useState<number | null>(null);
   const [filtre, setFiltre] = useState<SatirDurum | 'hepsi'>('hepsi');
   const [sonuc, setSonuc] = useState<IceAktarSonuc | null>(null);
+  const ekip = useEkip();
+  const finans = ekip.yetki('finans');
+  const duzen = ekip.yetki('duzenleme');
+  const setler = VERI_SETLERI.filter((v) => finans || v.id !== 'maliyet');
 
   const disaAktar = async (id: VeriSeti | 'hepsi', tur: 'xlsx' | 'csv') => {
     setMesgul(`${id}-${tur}`);
     setMesaj(null);
     try {
       if (id === 'hepsi') {
-        await dosyaIndir(dosyaAdi('tum-veriler', 'xlsx'), xlsxYaz(await tumSayfalar()), XLSX_MIME);
-        setMesaj('Tüm veriler tek Excel dosyasına aktarıldı (4 sayfa).');
+        await dosyaIndir(dosyaAdi('tum-veriler', 'xlsx'), xlsxYaz(await tumSayfalar(finans)), XLSX_MIME);
+        setMesaj(`Tüm veriler tek Excel dosyasına aktarıldı (${setler.length} sayfa).`);
       } else {
         const v = VERI_SETLERI.find((x) => x.id === id)!;
         const t = await veriSetiTablosu(id);
@@ -168,8 +173,8 @@ export default function ExcelScreen() {
             {/* DIŞA AKTAR */}
             <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.baslik, { color: colors.text }]}>⬇️ Dışa aktar</Text>
-              <Btn t="Tüm veriler · tek Excel (4 sayfa)" birincil k="hepsi-xlsx" onPress={() => void disaAktar('hepsi', 'xlsx')} />
-              {VERI_SETLERI.map((v) => (
+              <Btn t={`Tüm veriler · tek Excel (${setler.length} sayfa)`} birincil k="hepsi-xlsx" onPress={() => void disaAktar('hepsi', 'xlsx')} />
+              {setler.map((v) => (
                 <View key={v.id} style={[styles.satir, { borderColor: colors.border }]}>
                   <Text style={{ flex: 1, color: colors.text, fontSize: 15, fontWeight: '600' }}>
                     {v.simge} {v.ad}
@@ -188,6 +193,7 @@ export default function ExcelScreen() {
             </View>
 
             {/* İÇE AKTAR */}
+            {duzen ? (
             <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.baslik, { color: colors.text }]}>⬆️ İçe aktar (kuzu listesi)</Text>
               <Text style={[styles.not, { color: colors.textSecondary, marginBottom: 10 }]}>
@@ -224,6 +230,7 @@ export default function ExcelScreen() {
                 onPress={() => void dosyaIndir('superkuzu-ice-aktarma-sablonu.xlsx', xlsxYaz([{ ad: 'Kuzular', satirlar: sablonTablosu() }]), XLSX_MIME)}
               />
             </View>
+            ) : null}
           </>
         ) : (
           onizleme && (

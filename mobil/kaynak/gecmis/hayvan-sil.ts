@@ -2,6 +2,7 @@
  * Geri dönüşüm kutusu — kuzu ve kayıtları geri alınabilir şekilde sil, geri yükle, kalıcı sil.
  * Kuzu silinince tartım ve sağlık kayıtları da kutuya taşınır; geri alınca hepsi döner.
  */
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import {
   addHealthRecord,
   addWeightRecord,
@@ -28,6 +29,7 @@ import { sablonGeriYukle } from '@/kaynak/sablon/depo';
 import type { KayitSablonu } from '@/kaynak/sablon/hesap';
 
 export async function hayvanSilGeriAlinabilir(id: string): Promise<boolean> {
+  yetkiGerekli('silme');
   const a = await getAnimal(id);
   if (!a) return false;
   const [weights, health] = await Promise.all([getWeightRecords(id).catch(() => []), getHealthRecords(id).catch(() => [])]);
@@ -97,6 +99,7 @@ export async function hayvanGeriYukle(id: string): Promise<boolean> {
 }
 
 export async function copKaliciSil(id: string): Promise<CopKaydi | null> {
+  yetkiGerekli('silme');
   const k = await coptenCikar(id);
   if (!k) return null;
   denetimYaz({ eylem: 'kalici_silme', tablo: 'diger', kayitId: id, animalId: k.animalId, ozet: `${COP_TUR_ETIKET[k.tur]} kalıcı silindi · ${k.etiket}` });

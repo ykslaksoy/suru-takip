@@ -4,6 +4,7 @@ import {
   getAnimals,
   getStockItems,
 } from '@/kaynak/cekirdek/veritabani';
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { turEtiketi } from '@/kaynak/suru/tur';
 import { getAllWeightRecords } from '@/kaynak/cekirdek/veritabani';
@@ -13,6 +14,7 @@ import type { Hucre, Sayfa } from './xlsx';
 
 /** Seçilen veri setinin tablosu (ilk satır başlık) */
 export async function veriSetiTablosu(id: VeriSeti): Promise<Hucre[][]> {
+  if (id === 'maliyet') yetkiGerekli('finans');
   if (id === 'maliyet') return maliyetTablosu((await maliyetTopla()).satirlar);
   const hayvanlar = await getAnimals();
   if (id === 'tedavi') return tedaviTablosu(hayvanlar, await getAllHealthRecordsForAsi());
@@ -21,9 +23,9 @@ export async function veriSetiTablosu(id: VeriSeti): Promise<Hucre[][]> {
 }
 
 /** Tek Excel dosyasında tüm sayfalar */
-export async function tumSayfalar(): Promise<Sayfa[]> {
+export async function tumSayfalar(finans = true): Promise<Sayfa[]> {
   const out: Sayfa[] = [];
-  for (const v of VERI_SETLERI) out.push({ ad: v.ad, satirlar: await veriSetiTablosu(v.id) });
+  for (const v of VERI_SETLERI.filter((x) => finans || x.id !== 'maliyet')) out.push({ ad: v.ad, satirlar: await veriSetiTablosu(v.id) });
   return out;
 }
 

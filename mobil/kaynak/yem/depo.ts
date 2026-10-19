@@ -1,4 +1,5 @@
 /** Yem envanteri + parti rasyonu — depo işlemleri, otomatik günlük düşüm */
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { v4 as uuidv4 } from 'uuid';
 import { adjustStock, getAnimals, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
@@ -46,6 +47,7 @@ export async function getRasyonlar(): Promise<PartiRasyonu[]> {
 }
 
 export async function rasyonKaydet(input: { id?: string; parti: string; ad?: string; kalemler: RasyonKalemi[]; baslangic?: string }): Promise<PartiRasyonu> {
+  yetkiGerekli('duzenleme');
   const hata = rasyonDogrula(input);
   if (hata) throw new Error(hata);
   const l = await rasyonlariOku();
@@ -70,6 +72,7 @@ export async function rasyonKaydet(input: { id?: string; parti: string; ad?: str
 }
 
 export async function rasyonDurdur(id: string, aktif: boolean): Promise<void> {
+  yetkiGerekli('duzenleme');
   const l = await rasyonlariOku();
   const r = l.find((x) => x.id === id);
   if (!r) return;
@@ -94,6 +97,7 @@ function gunOnce(iso: string): string {
 }
 
 export async function rasyonSil(id: string): Promise<void> {
+  yetkiGerekli('silme');
   const l = await rasyonlariOku();
   const r = l.find((x) => x.id === id);
   if (!r) return;
@@ -104,6 +108,7 @@ export async function rasyonSil(id: string): Promise<void> {
 
 /** Yem alımı: stok girişi + ağırlıklı ortalama ₺/kg */
 export async function yemAlimiEkle(a: { stockId?: string; yeniAd?: string; kg: number; fiyatKg: number; tarih?: string; tedarikci?: string }): Promise<YemAlimi> {
+  yetkiGerekli('finans');
   if (!(a.kg > 0)) throw new Error('Miktar (kg) gir');
   if (!(a.fiyatKg > 0)) throw new Error('₺/kg gir');
   let item = a.stockId ? (await getYemler()).find((s) => s.id === a.stockId) : undefined;

@@ -3,6 +3,7 @@
  * Geri dönüşüm kutusu: silinen kuzu / kayıt 30 gün tutulur; geri al ya da onayla kalıcı sil.
  * İşlem kaydı: her ekleme / değişiklik / silme — kim, ne zaman, eski → yeni.
  */
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -75,6 +76,7 @@ export default function GecmisScreen() {
   const gorunenDenetim = useMemo(() => denetimFiltrele(denetim, { tablo }), [denetim, tablo]);
 
   const kaliciSil = (c: CopKaydi) =>
+    yetkiUyar('silme') &&
     onayla('Kalıcı sil', `${c.etiket} kalıcı olarak silinecek. Bu işlem geri alınamaz.`, async () => {
       await copKaliciSil(c.id);
       setMesaj(`${c.etiket} kalıcı silindi`);

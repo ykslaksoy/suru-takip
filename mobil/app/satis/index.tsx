@@ -3,6 +3,8 @@
  * İlaç arınma süresindeki kuzular için uyarı: arınmadakiler ayrılarak kaydedilebilir
  * ya da onayla yine de hepsi kaydedilir.
  */
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
+import { YetkiKapisi } from '@/bilesenler/ekip/YetkiKapisi';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -18,7 +20,7 @@ import { getArinmalarTarihte, satistaArinmadakiler, tarihTR, yerelGun, type Hayv
 import { arinmaKontroluGerekli, CIKIS_ETIKET, cikisaHazirla, type CikisTur } from '@/kaynak/satis';
 import { sayiCoz, tarihCoz } from '@/kaynak/sigorta/hesap';
 
-export default function SatisScreen() {
+function SatisScreenIcerik() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -29,6 +31,7 @@ export default function SatisScreen() {
   const [tur, setTur] = useState<CikisTur>('satis');
   const [tarih, setTarih] = useState(tarihTR(yerelGun()));
   const [tutar, setTutar] = useState('');
+  const finansVar = useEkip().yetki('finans');
   const [arinmalar, setArinmalar] = useState<HayvanArinma[]>([]);
   const [mesaj, setMesaj] = useState<string | null>(null);
   const [kaydediliyor, setKaydediliyor] = useState(false);
@@ -137,7 +140,7 @@ export default function SatisScreen() {
                   style={[styles.input, { color: colors.text, borderColor: tarihIso ? colors.border : colors.danger, backgroundColor: colors.card }]}
                 />
               </View>
-              {tur !== 'olum' ? (
+              {tur !== 'olum' && finansVar ? (
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.etiket, { color: colors.textSecondary }]}>Toplam tutar ₺ (isteğe bağlı)</Text>
                   <TextInput
@@ -227,3 +230,11 @@ const styles = StyleSheet.create({
   ctaText: { color: '#fff', fontWeight: '800', fontSize: 16, textAlign: 'center' },
   ikincil: { borderWidth: 1.5, borderRadius: 10, padding: 12, alignItems: 'center', marginTop: 10 },
 });
+
+export default function SatisScreen() {
+  return (
+    <YetkiKapisi yetki="duzenleme">
+      <SatisScreenIcerik />
+    </YetkiKapisi>
+  );
+}

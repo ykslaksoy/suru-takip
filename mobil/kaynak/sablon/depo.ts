@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { adimlariTemizle, VARSAYILAN_SABLONLAR, type KayitSablonu, type SablonAdim } from './hesap';
 
@@ -20,6 +21,7 @@ async function yaz(l: KayitSablonu[]): Promise<void> {
 }
 
 export async function sablonKaydet(g: { id?: string; ad: string; adimlar: SablonAdim[] }): Promise<KayitSablonu> {
+  yetkiGerekli('duzenleme');
   const l = await getSablonlar();
   const now = new Date().toISOString();
   const eski = g.id ? l.find((s) => s.id === g.id) : undefined;

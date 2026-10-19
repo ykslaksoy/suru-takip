@@ -1,4 +1,5 @@
 /** Uygulama geneli işlem günlüğü + çöp kutusu (yerel cihaz) */
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import type { CopKaydi, Islem } from './tipler';
 import { copSuresiDolanlar } from './cop';
@@ -52,6 +53,7 @@ export async function getCopKutusu(): Promise<CopKaydi[]> {
 }
 
 export async function copeAt(k: Omit<CopKaydi, 'silinme' | 'kim'> & { kim?: string }): Promise<void> {
+  yetkiGerekli('silme');
   const l = await getCopKutusu();
   l.unshift({ ...k, kim: k.kim ?? kimAdi(), silinme: new Date().toISOString() });
   await kaliciSetItem(KEY_COP, JSON.stringify(l.slice(0, 500)));

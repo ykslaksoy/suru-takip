@@ -2,6 +2,7 @@
  * Kayıt şablonları — “Giriş paketi” gibi çok adımlı işleri seçili gruba tek dokunuşla uygula.
  * Kullanıcı kendi şablonunu oluşturur, düzenler, siler.
  */
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
@@ -73,6 +74,7 @@ export default function SablonScreen() {
   const uygula = async (s: KayitSablonu) => {
     const hedef = hayvanlar.filter((a) => secili.has(a.id));
     if (!hedef.length) return;
+    if (!yetkiUyar('tedavi')) return;
     setCalisiyor(true);
     try {
       const r = await sablonUygula(s, hedef);
@@ -87,6 +89,7 @@ export default function SablonScreen() {
 
   const kaydet = async () => {
     if (!form) return;
+    if (!yetkiUyar('duzenleme')) return;
     const h = sablonDogrula(form.ad, form.adimlar, sablonlar.filter((s) => s.id !== form.id).map((s) => s.ad));
     setHata(h);
     if (h) return;
@@ -97,6 +100,7 @@ export default function SablonScreen() {
   };
 
   const sil = (s: KayitSablonu) =>
+    yetkiUyar('silme') &&
     onayla(`“${s.ad}” şablonu silinsin mi? 30 gün geri dönüşüm kutusunda kalır; yapılmış kayıtlar silinmez.`, async () => {
       await copeAt({ id: s.id, tur: 'sablon', etiket: s.ad, veri: s });
       await sablonSil(s.id);

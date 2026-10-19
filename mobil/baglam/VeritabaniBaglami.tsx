@@ -4,6 +4,7 @@ import { ensurePadokKuzuVerisi, seedDemoDataIfEmpty } from '@/kaynak/cekirdek/or
 import { demoSeedOtomatik } from '@/sabitler/Ortam';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import { gunlukYemDusumu } from '@/kaynak/yem/depo';
+import { ekipYukle } from '@/kaynak/ekip/depo';
 
 interface DatabaseContextValue {
   ready: boolean;
@@ -26,6 +27,8 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      // Aktif kullanıcı + yetkiler (işlem kaydına kim yazılacak)
+      await ekipYukle().catch(() => null);
       // Demo stok/sürü (geliştirme): boşsa doldur. Her ortamda ensure: eksik Gözlem(~80)+A/B/C merge;
       // mevcut kullanıcı kayıtlarını silmez / üzerine yazmaz.
       if (demoSeedOtomatik()) {

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { YetkiKapisi } from '@/bilesenler/ekip/YetkiKapisi';
 import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -18,7 +19,7 @@ import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 
 type LinkSatir = { baslik: string; href?: string; onPress?: () => void; ok?: string };
 
-export function AyarlarEkrani() {
+function AyarlarIcerik() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { tierLabel, limit } = useSubscription();
@@ -230,3 +231,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 });
+
+/** Ayarlar yalnız “Sürü ve ayarları düzenler” yetkisiyle */
+export function AyarlarEkrani() {
+  return (
+    <YetkiKapisi yetki="duzenleme">
+      <AyarlarIcerik />
+    </YetkiKapisi>
+  );
+}

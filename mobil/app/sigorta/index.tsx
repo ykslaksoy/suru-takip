@@ -2,6 +2,7 @@
  * Sigorta (TARSİM) — poliçe kaydı, kapsanan kuzular, bitiş uyarıları ve sigortasız kuzular.
  * Uyarılar Görevler / Bugün listesine de düşer (30 gün, 7 gün kala, süresi doldu).
  */
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, Stack, useFocusEffect } from 'expo-router';
@@ -112,6 +113,7 @@ export default function SigortaScreen() {
   };
 
   const sil = (p: SigortaPolice) => {
+    if (!yetkiUyar('silme')) return;
     const yap = async () => {
       await copeAt({ id: p.id, tur: 'police', etiket: `Poliçe ${p.policeNo}`, veri: p });
       await policeSil(p.id);

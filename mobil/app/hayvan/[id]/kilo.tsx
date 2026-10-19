@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { tartimSil } from '@/kaynak/gecmis/hayvan-sil';
 import { useLocalSearchParams } from 'expo-router';
@@ -121,6 +122,7 @@ export default function WeightScreen() {
             <Pressable
               hitSlop={8}
               onPress={() => {
+                if (!yetkiUyar('silme')) return;
                 const yap = async () => {
                   await tartimSil(item, baslik);
                   refresh();

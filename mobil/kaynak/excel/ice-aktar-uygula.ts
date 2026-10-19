@@ -1,4 +1,5 @@
 /** İçe aktarma önizlemesini depoya yazar (kuzu + isteğe bağlı ilk tartım) */
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { v4 as uuidv4 } from 'uuid';
 import { addWeightRecord, getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
@@ -12,6 +13,7 @@ export async function mevcutKupeAnahtarlari(): Promise<Set<string>> {
 export type IceAktarSonuc = { eklenen: number; guncellenen: number; tartim: number; atlanan: number };
 
 export async function iceAktarUygula(o: Onizleme, politika: TekrarPolitika): Promise<IceAktarSonuc> {
+  yetkiGerekli('duzenleme');
   const hayvanlar = await getAnimals();
   const kupeyeGore = new Map<string, Animal>();
   for (const a of hayvanlar) if (a.earTag) kupeyeGore.set(kupeAnahtar(a.earTag), a);

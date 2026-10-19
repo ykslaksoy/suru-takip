@@ -3,6 +3,7 @@
  * Aşı/parazit: mevcut uygulaAsiHayvana akışı (stok düşümü dahil).
  * Vitamin: sağlık kaydı + birimi doz/adet ise stoktan hayvan başı 1.
  */
+import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { v4 as uuidv4 } from 'uuid';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { addHealthRecord, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
@@ -35,6 +36,7 @@ export async function topluUygula(opts: {
   /** Otomatik aşı tabancasıyla yapıldı → iğne ucu düşülür */
   tabanca?: boolean;
 }): Promise<TopluUygulaSonuc> {
+  yetkiGerekli('tedavi');
   const bugun = new Date().toISOString().slice(0, 10);
   let kayit = 0;
   let stokDusum = 0;
