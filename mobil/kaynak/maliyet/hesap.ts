@@ -2,6 +2,7 @@
  * Besi maliyet ve kâr — saf hesap (parti = padok).
  * Alış: hayvan bazlı alış fiyatı (girilmişse) yoksa parti baş fiyatı, yoksa hayvan notundaki "Alım 9.000 ₺".
  * Yem: yem stok çıkışları × son birim alış fiyatı; çıkış notunda padok adı varsa o partiye, yoksa baş sayısına göre paylaştırılır.
+ * Sigorta: poliçe primi kapsanan kuzulara eşit bölünür, kuzunun partisine yazılır.
  * İlaç/aşı: yem dışı stok çıkışları × birim fiyat; notta küpe geçiyorsa o kuzunun partisine, yoksa baş sayısına göre.
  */
 import type { Animal, StockItem, StockMovement } from '@/kaynak/cekirdek/tipler';
@@ -18,6 +19,8 @@ export type PartiMaliyet = {
   alisTahminiBas: number;
   yem: number;
   ilac: number;
+  /** Sigorta primi payı (TARSİM poliçeleri, kapsanan kuzu başına) */
+  sigorta: number;
   toplam: number;
   basBasi: number | null;
   toplamKg: number;
@@ -50,6 +53,8 @@ export function partiMaliyetleri(opts: {
   ayar: MaliyetAyar;
   /** Gerçek alış fiyatı olmayan kuzular için tahmini alış (hayvan id → ₺) */
   alisTahminleri?: Record<string, number>;
+  /** Hayvan id → sigorta primi payı ₺ (sigorta modülü hayvanPrimPaylari) */
+  sigortaPrimleri?: Record<string, number>;
 }): PartiMaliyet[] {
   const aktif = opts.animals.filter((a) => a.status !== 'dead' && a.paddock);
   const partiAdlari = [...new Set(aktif.map((a) => a.paddock))].sort((a, b) => a.localeCompare(b, 'tr'));
@@ -81,6 +86,13 @@ export function partiMaliyetleri(opts: {
     }
   }
 
+  const sigorta: Record<string, number> = {};
+  for (const [id, pay] of Object.entries(opts.sigortaPrimleri ?? {})) {
+    const a = aktif.find((x) => x.id === id);
+    if (a) sigorta[a.paddock] = (sigorta[a.paddock] ?? 0) + pay;
+    else paylastir(sigorta, pay);
+  }
+
   return partiAdlari.map((p) => {
     const hayvanlar = aktif.filter((a) => a.paddock === p);
     const pa = opts.ayar.partiler[p] ?? {};
@@ -101,7 +113,7 @@ export function partiMaliyetleri(opts: {
       } else alisEksikBas += 1;
       if (a.status !== 'sold') toplamKg += opts.sonKg[a.id] ?? 0;
     }
-    const toplam = alis + (yem[p] ?? 0) + (ilac[p] ?? 0);
+    const toplam = alis + (yem[p] ?? 0) + (ilac[p] ?? 0) + (sigorta[p] ?? 0);
     const tahminiSatis = pa.satisKgFiyat && toplamKg ? toplamKg * pa.satisKgFiyat : null;
     const gercekSatis = pa.gercekSatisTutar ?? null;
     return {
@@ -112,6 +124,7 @@ export function partiMaliyetleri(opts: {
       alisTahminiBas,
       yem: yuvarla(yem[p] ?? 0),
       ilac: yuvarla(ilac[p] ?? 0),
+      sigorta: yuvarla(sigorta[p] ?? 0),
       toplam: yuvarla(toplam),
       basBasi: hayvanlar.length ? yuvarla(toplam / hayvanlar.length) : null,
       toplamKg: Math.round(toplamKg * 10) / 10,

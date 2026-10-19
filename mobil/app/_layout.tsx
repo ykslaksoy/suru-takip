@@ -70,6 +70,7 @@ export default function RootLayout() {
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
                     <Stack.Screen name="maliyet/index" options={{ title: 'Maliyet ve Kâr' }} />
+                    <Stack.Screen name="sigorta/index" options={{ title: 'Sigorta (TARSİM)' }} />
                     <Stack.Screen name="gecmis/index" options={{ title: 'İşlem geçmişi' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
                     <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />

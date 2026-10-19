@@ -23,6 +23,7 @@ import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 import { hayvanSinifEtiketi, turEmoji } from '@/kaynak/suru/tur';
 import { terim, fcrDeger } from '@/sabitler/Metinler';
 import { gebeIsaretle } from '@/kaynak/ureme';
+import { getPoliceler, hayvanPolicesi, kalanGun, tarihGoster, yerelTarih, type SigortaPolice } from '@/kaynak/sigorta';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
@@ -45,6 +46,7 @@ export default function AnimalDetailScreen() {
   const [padoklar, setPadoklar] = useState<string[]>([]);
   const [padokAcik, setPadokAcik] = useState(false);
   const [skalaAcik, setSkalaAcik] = useState(false);
+  const [police, setPolice] = useState<SigortaPolice | null | undefined>(undefined);
 
   useEffect(() => {
     if (!id) return;
@@ -58,11 +60,14 @@ export default function AnimalDetailScreen() {
         const fcr = await hesaplaFcr(a, records);
         const plan = await ensureRationPlan(a, w);
         setWeightRecords(records);
-        const [health, islemler, pl] = await Promise.all([
+        const [health, islemler, pl, policeler] = await Promise.all([
           getHealthRecords(a.id).catch(() => []),
           getIslemler(),
           getPadoklar().catch(() => []),
+          getPoliceler().catch(() => [] as SigortaPolice[]),
         ]);
+        // undefined = hiç poliçe girilmemiş (satır gösterme); null = sigortasız
+        setPolice(policeler.length ? hayvanPolicesi(policeler, a.id, yerelTarih()) : undefined);
         setOlaylar(hayvanZamanCizelgesi({ animal: a, weights: records, health, islemler }));
         setPadoklar(pl.map((x) => x.ad));
         setWeight(w);
@@ -145,6 +150,25 @@ export default function AnimalDetailScreen() {
           </Text>
         ) : null}
         <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>{animal.paddock}</Text>
+        {police !== undefined ? (
+          <Pressable
+            onPress={() => router.push('/sigorta')}
+            style={[
+              styles.sigorta,
+              {
+                borderColor: police ? (kalanGun(police, yerelTarih()) <= 30 ? colors.warning : colors.tint) : colors.danger,
+                backgroundColor: (police ? colors.tint : colors.danger) + '12',
+              },
+            ]}>
+            <Text style={{ color: police ? colors.tint : colors.danger, fontWeight: '800', fontSize: 13, textAlign: 'center' }}>
+              {police
+                ? `🛡️ Sigortalı · Poliçe ${police.policeNo} · bitiş ${tarihGoster(police.bitis)}${
+                    kalanGun(police, yerelTarih()) <= 30 ? ` (${kalanGun(police, yerelTarih())} gün)` : ''
+                  }`
+                : '⚠️ Sigortasız · geçerli poliçe yok'}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -371,6 +395,7 @@ const styles = StyleSheet.create({
   notes: { padding: 16, fontStyle: 'italic' },
   olay: { flexDirection: 'row', gap: 8 },
   rozetSatir: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 8 },
+  sigorta: { marginTop: 10, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, alignSelf: 'center' },
   skalaSatir: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 4, borderRadius: 12, borderWidth: 1.5 },
   olayCizgi: { width: 2, flex: 1, marginTop: 2 },
 });

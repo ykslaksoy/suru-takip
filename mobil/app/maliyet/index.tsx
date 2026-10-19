@@ -15,6 +15,7 @@ import { fiyatSorusunuGec, getGecilenFiyatSorulari } from '@/kaynak/maliyet/fiya
 import { FiyatSorKarti } from '@/bilesenler/maliyet/FiyatSorKarti';
 import { partiMaliyetleri, tl, type MaliyetAyar, type PartiMaliyet } from '@/kaynak/maliyet/hesap';
 import { getMaliyetAyar, saveMaliyetAyar } from '@/kaynak/maliyet/depo';
+import { getPoliceler, hayvanPrimPaylari } from '@/kaynak/sigorta';
 
 type Alan = 'alisBasFiyat' | 'satisKgFiyat' | 'gercekSatisTutar';
 
@@ -29,13 +30,14 @@ export default function MaliyetScreen() {
   const [acik, setAcik] = useState<string | null>(null);
 
   const hesapla = useCallback(async (a?: MaliyetAyar) => {
-    const [animals, items, movements, gercekFiyatlar, kayitli, gec] = await Promise.all([
+    const [animals, items, movements, gercekFiyatlar, kayitli, gec, policeler] = await Promise.all([
       getAnimals(),
       getStockItems(),
       getStockMovements(),
       getBirimFiyatlar(),
       a ? Promise.resolve(a) : getMaliyetAyar(),
       getGecilenFiyatSorulari(),
+      getPoliceler().catch(() => []),
     ]);
     const sonKg: Record<string, number | null> = {};
     const alisTahminleri: Record<string, number> = {};
@@ -53,7 +55,7 @@ export default function MaliyetScreen() {
     setAyar(kayitli);
     setGecilen(gec);
     setDurumlar(d);
-    setSatirlar(partiMaliyetleri({ animals, sonKg, items, movements, fiyatlar, ayar: kayitli, alisTahminleri }));
+    setSatirlar(partiMaliyetleri({ animals, sonKg, items, movements, fiyatlar, ayar: kayitli, alisTahminleri, sigortaPrimleri: hayvanPrimPaylari(policeler) }));
   }, []);
 
   useFocusEffect(
@@ -214,6 +216,7 @@ export default function MaliyetScreen() {
                   ) : null}
                   {satir('Yem', tl(r.yem))}
                   {satir('İlaç / aşı', tl(r.ilac))}
+                  {r.sigorta ? satir('Sigorta primi', tl(r.sigorta)) : null}
                   {satir('Toplam maliyet', tl(r.toplam))}
                   {satir('Baş başı maliyet', tl(r.basBasi))}
                   {satir('Kg başı maliyet', r.kgBasi == null ? '—' : `${r.kgBasi.toLocaleString('tr-TR')} ₺/kg · ${r.toplamKg.toLocaleString('tr-TR')} kg canlı`)}

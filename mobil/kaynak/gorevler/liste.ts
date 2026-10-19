@@ -24,6 +24,8 @@ import {
   type IsPlaniTur,
 } from '@/kaynak/gorevler/is-plani';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
+import { getPoliceler } from '@/kaynak/sigorta/depo';
+import { sigortaUyarilari, yerelTarih } from '@/kaynak/sigorta/hesap';
 import {
   bugunTarih,
   gorevleriSirala,
@@ -285,6 +287,21 @@ export async function getGorevler(): Promise<Gorev[]> {
         tarih: bugun,
       });
     }
+  }
+
+  // Sigorta (TARSİM): bitişe 30 / 7 gün kala, süresi doldu, sigortasız kuzular
+  const policeler = await getPoliceler().catch(() => []);
+  for (const u of sigortaUyarilari(policeler, animals, yerelTarih())) {
+    out.push({
+      id: u.id,
+      seviye: u.seviye,
+      kaynak: 'sigorta',
+      baslik: `🛡️ ${u.baslik}`,
+      aciklama: u.aciklama,
+      href: '/sigorta',
+      cta: 'Sigortaya git',
+      tarih: bugun,
+    });
   }
 
   const yol = await yolculukGorevi();
