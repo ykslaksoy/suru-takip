@@ -9,10 +9,12 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import {
   countHealthRecords,
-  getActiveWithdrawals,
+  getAnimals,
   getAsiKayitlari,
   getHealthRecords,
 } from '@/kaynak/cekirdek/veritabani';
+import { getAktifArinmalar, kesilemezMetni, type HayvanArinma } from '@/kaynak/arinma';
+import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 
 type Sekme = 'kayitlar' | 'asi' | 'bekletme';
@@ -29,15 +31,18 @@ export default function HealthOverviewScreen() {
   const [toplamKayit, setToplamKayit] = useState(0);
   const [yukleniyorEski, setYukleniyorEski] = useState(false);
   const [asiKayitlari, setAsiKayitlari] = useState<Awaited<ReturnType<typeof getAsiKayitlari>>>([]);
-  const [withdrawals, setWithdrawals] = useState<Awaited<ReturnType<typeof getActiveWithdrawals>>>([]);
+  const [withdrawals, setWithdrawals] = useState<HayvanArinma[]>([]);
+  const [hayvanMap, setHayvanMap] = useState<Map<string, Animal>>(new Map());
 
   const load = useCallback(async () => {
-    const [kayitlar, asi, bekletme, toplam] = await Promise.all([
+    const [kayitlar, asi, bekletme, toplam, hayvanlar] = await Promise.all([
       getHealthRecords(undefined, { limit: SAYFA, offset: 0 }),
       getAsiKayitlari(),
-      getActiveWithdrawals(),
+      getAktifArinmalar().catch(() => [] as HayvanArinma[]),
       countHealthRecords(),
+      getAnimals(),
     ]);
+    setHayvanMap(new Map(hayvanlar.map((a) => [a.id, a])));
     setRecords(kayitlar);
     setToplamKayit(toplam);
     setAsiKayitlari(asi);
@@ -77,7 +82,7 @@ export default function HealthOverviewScreen() {
         items={[
           { key: 'kayitlar', label: 'Kayıtlar' },
           { key: 'asi', label: 'Aşı' },
-          { key: 'bekletme', label: 'Bekletme' },
+          { key: 'bekletme', label: 'Arınma' },
         ]}
         activeKey={sekme}
         onSelect={(k) => setSekme(k as Sekme)}
@@ -87,29 +92,19 @@ export default function HealthOverviewScreen() {
         <View style={{ padding: 16 }}>
           {withdrawals.length === 0 ? (
             <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 24 }}>
-              Aktif bekletme süresi yok
+              Arınma süresinde kuzu yok — kesime / satışa uygun
             </Text>
           ) : (
             withdrawals.map((w) => {
-              const end = new Date(w.recordedAt);
-              end.setDate(end.getDate() + w.withdrawalDays);
-              const daysLeft = Math.ceil((end.getTime() - Date.now()) / 86400000);
+              const a = hayvanMap.get(w.animalId);
               return (
-                <View
-                  key={w.id}
-                  style={[styles.card, { backgroundColor: colors.warning + '22', borderColor: colors.warning }]}>
-                  <Text style={[styles.tag, { color: colors.tint }]}>
-                    {hayvanAnaEtiket({
-                      earTag: w.earTag ?? '',
-                      sirtNo: (w as { sirtNo?: string | null }).sirtNo ?? null,
-                      gehisId: null,
-                      name: '',
-                    })}
-                  </Text>
-                  <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
-                    {w.medicine}: {daysLeft} gün kaldı
-                  </Text>
-                </View>
+                <Pressable
+                  key={w.animalId}
+                  onPress={() => router.push(`/hayvan/${w.animalId}`)}
+                  style={[styles.card, { backgroundColor: colors.danger + '14', borderColor: colors.danger }]}>
+                  <Text style={[styles.tag, { color: colors.tint }]}>{a ? hayvanAnaEtiket(a) : w.animalId}</Text>
+                  <Text style={{ color: colors.danger, fontWeight: '700', marginTop: 4 }}>{kesilemezMetni(w)}</Text>
+                </Pressable>
               );
             })
           )}

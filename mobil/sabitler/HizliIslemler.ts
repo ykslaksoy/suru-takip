@@ -54,6 +54,8 @@ export const DAHA_MENUSU: DahaMenuOgesi[] = [
   { id: 'profesyonellik', label: 'Profesyonellik', href: '/profesyonellik' },
   { id: 'ayarlar', label: 'Ayarlar', ayarlar: true },
   { id: 'gorevler', label: 'Görevler', href: '/gorevler' },
+  { id: 'arinma', label: 'İlaç arınma süreleri', href: '/arinma' },
+  { id: 'satis', label: 'Satış / çıkış', href: '/satis' },
   { id: 'sigorta', label: 'Sigorta (TARSİM)', href: '/sigorta' },
   { id: 'sayim', label: 'Sayım listesi', href: '/sayim' },
   { id: 'seri', label: 'Seri ahır', href: '/seri-giris' },

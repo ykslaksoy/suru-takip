@@ -1,5 +1,4 @@
 import {
-  getActiveWithdrawals,
   getAnimals,
   getAllHealthRecordsForAsi,
   getLatestWeight,
@@ -26,6 +25,8 @@ import {
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getPoliceler } from '@/kaynak/sigorta/depo';
 import { sigortaUyarilari, yerelTarih } from '@/kaynak/sigorta/hesap';
+import { getAktifArinmalar } from '@/kaynak/arinma/depo';
+import { tarihTR } from '@/kaynak/arinma/hesap';
 import {
   bugunTarih,
   gorevleriSirala,
@@ -53,17 +54,6 @@ export function gorevSeviyeEtiket(seviye: GorevSeviye): string {
   if (seviye === 'sira') return 'Sırada';
   if (seviye === 'plan') return 'Planlı';
   return 'Bilgi';
-}
-
-function tarihGunSonra(gun: number, from = new Date()): string {
-  const d = new Date(from);
-  d.setDate(d.getDate() + gun);
-  return d.toISOString().slice(0, 10);
-}
-
-function kalanGun(recordedAt: string, withdrawalDays: number): number {
-  const bitis = new Date(recordedAt).getTime() + withdrawalDays * 86400000;
-  return Math.max(0, Math.ceil((bitis - Date.now()) / 86400000));
 }
 
 function dusukTakviyeler(items: StockItem[]): StockItem[] {
@@ -167,20 +157,21 @@ function isPlaniCta(tur: IsPlaniTur): string {
 export async function getGorevler(): Promise<Gorev[]> {
   const out: Gorev[] = [];
 
-  const withdrawals = await getActiveWithdrawals();
+  // İlaç arınma süresi (kesim yasağı) — kayıttaki gün ile ilaç tablosunun büyüğü
   const bugun = bugunTarih();
-  for (const w of withdrawals) {
-    const gun = kalanGun(w.recordedAt, w.withdrawalDays);
-    const bitis = tarihGunSonra(w.withdrawalDays, new Date(w.recordedAt));
+  const arinmalar = await getAktifArinmalar().catch(() => []);
+  const arinmaHayvan = new Map((await getAnimals()).map((a) => [a.id, a]));
+  for (const w of arinmalar) {
+    const a = arinmaHayvan.get(w.animalId);
     out.push({
       id: `bekletme-${w.animalId}`,
-      seviye: 'uyari',
+      seviye: w.kalanGun <= 3 ? 'sira' : 'uyari',
       kaynak: 'bekletme',
-      baslik: 'Bekletme',
-      aciklama: `${hayvanAnaEtiket({ earTag: w.earTag ?? '', sirtNo: (w as { sirtNo?: string | null }).sirtNo ?? null, gehisId: null, name: '' })} · ${w.medicine} · ${gun} gün kaldı`,
-      href: `/hayvan/${w.animalId}/saglik`,
-      cta: 'Kayıt aç',
-      tarih: bitis,
+      baslik: '🚫 Arınma · kesilemez',
+      aciklama: `${a ? hayvanAnaEtiket(a) : w.animalId} · ${w.ilac} · ${tarihTR(w.bitis)} tarihine kadar kesilemez (${w.kalanGun} gün)`,
+      href: `/hayvan/${w.animalId}`,
+      cta: 'Kuzuyu aç',
+      tarih: bugun,
     });
   }
 
@@ -425,10 +416,10 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       id: 'bugun-bekletme-ozet',
       seviye: 'uyari',
       kaynak: 'bekletme',
-      baslik: 'Bekletme',
-      aciklama: `${bekN} hayvan · ilaç bekletmesi devam ediyor`,
-      href: '/gorevler',
-      cta: 'Görevlere bak',
+      baslik: '🚫 Arınma süresi',
+      aciklama: `${bekN} kuzu ilaç arınmasında · kesime / satışa gönderme`,
+      href: '/arinma',
+      cta: 'Listeye bak',
       tarih: bugun,
     });
   }

@@ -24,6 +24,7 @@ import { hayvanSinifEtiketi, turEmoji } from '@/kaynak/suru/tur';
 import { terim, fcrDeger } from '@/sabitler/Metinler';
 import { gebeIsaretle } from '@/kaynak/ureme';
 import { getPoliceler, hayvanPolicesi, kalanGun, tarihGoster, yerelTarih, type SigortaPolice } from '@/kaynak/sigorta';
+import { getAktifArinmalar, kesilemezMetni, type HayvanArinma } from '@/kaynak/arinma';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
@@ -47,6 +48,7 @@ export default function AnimalDetailScreen() {
   const [padokAcik, setPadokAcik] = useState(false);
   const [skalaAcik, setSkalaAcik] = useState(false);
   const [police, setPolice] = useState<SigortaPolice | null | undefined>(undefined);
+  const [arinma, setArinma] = useState<HayvanArinma | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -60,12 +62,14 @@ export default function AnimalDetailScreen() {
         const fcr = await hesaplaFcr(a, records);
         const plan = await ensureRationPlan(a, w);
         setWeightRecords(records);
-        const [health, islemler, pl, policeler] = await Promise.all([
+        const [health, islemler, pl, policeler, arinmalar] = await Promise.all([
           getHealthRecords(a.id).catch(() => []),
           getIslemler(),
           getPadoklar().catch(() => []),
           getPoliceler().catch(() => [] as SigortaPolice[]),
+          getAktifArinmalar().catch(() => [] as HayvanArinma[]),
         ]);
+        setArinma(arinmalar.find((x) => x.animalId === a.id) ?? null);
         // undefined = hiç poliçe girilmemiş (satır gösterme); null = sigortasız
         setPolice(policeler.length ? hayvanPolicesi(policeler, a.id, yerelTarih()) : undefined);
         setOlaylar(hayvanZamanCizelgesi({ animal: a, weights: records, health, islemler }));
@@ -167,6 +171,13 @@ export default function AnimalDetailScreen() {
                   }`
                 : '⚠️ Sigortasız · geçerli poliçe yok'}
             </Text>
+          </Pressable>
+        ) : null}
+        {arinma ? (
+          <Pressable
+            onPress={() => router.push('/arinma')}
+            style={[styles.sigorta, { borderColor: colors.danger, backgroundColor: colors.danger + '14' }]}>
+            <Text style={{ color: colors.danger, fontWeight: '800', fontSize: 13, textAlign: 'center' }}>{kesilemezMetni(arinma)}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -328,6 +339,18 @@ export default function AnimalDetailScreen() {
             onPress={() => router.push(`/hayvan/${animal.id}/dogum`)}
             style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.tint }])}>
             <Text style={styles.actionText}>Doğum kaydı</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {animal.status !== 'sold' && animal.status !== 'dead' ? (
+        <View style={[styles.actions, { marginTop: 10 }]}>
+          <Pressable
+            onPress={() => router.push(`/satis?id=${animal.id}`)}
+            style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: arinma ? colors.danger : colors.tint }])}>
+            <Text style={StyleSheet.flatten([styles.actionText, { color: arinma ? colors.danger : colors.tint }])}>
+              {arinma ? '🚫 Satış / çıkış (arınmada)' : '💰 Satış / çıkış'}
+            </Text>
           </Pressable>
         </View>
       ) : null}
