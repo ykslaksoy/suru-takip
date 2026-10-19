@@ -4,6 +4,7 @@
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
 import { bulutModul } from './moduller/bulut';
+import { supabaseGuvenlikModul } from './moduller/supabase-guvenlik';
 import { calistirTestModulleri, raporYaz } from './cerceve';
 import { hizliBesiModul } from './moduller/hizli-besi';
 import { gun1SecimModul } from './moduller/gun1-secim';
@@ -91,6 +92,7 @@ const MODULLER = [
   soyModul,
   ciftlesmeModul,
   cevrimdisiModul,
+  supabaseGuvenlikModul,
   bulutModul,
 ];
 

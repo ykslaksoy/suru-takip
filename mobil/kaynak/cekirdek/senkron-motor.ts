@@ -9,7 +9,7 @@ export type SenkronSonuc = {
 
 /**
  * Yerel senkron kuyruğunu işler.
- * Bulut API (EXPO_PUBLIC_API_URL) tanımlı değilse kuyruk yalnızca yerelde temizlenir.
+ * Supabase env tanımlı değilse kuyruk yalnızca yerelde temizlenir.
  */
 export async function isleSenkronKuyrugu(): Promise<SenkronSonuc> {
   const bekleyen = await getSyncQueueEntries();

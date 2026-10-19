@@ -3,6 +3,8 @@
  * gelistirme: demo seed açık · pilot/uretim: boş kurulum, yedek zorunlu.
  */
 
+import { bulutAcik } from '@/kaynak/bulut/ayar';
+
 export type AppOrtam = 'gelistirme' | 'pilot' | 'uretim';
 
 function ortamDegeri(): string {
@@ -38,8 +40,7 @@ export function isletmeProfilZorunlu(): boolean {
   return appOrtam() !== 'gelistirme';
 }
 
+/** Supabase URL + anon key tanımlıysa bulut eşitleme açık (web/PWA). */
 export function bulutSenkronAktif(): boolean {
-  const url =
-    (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_URL) || '';
-  return String(url).trim().length > 0;
+  return bulutAcik();
 }

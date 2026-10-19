@@ -30,7 +30,12 @@ export const ortamModul: TestModul = {
       test(
         'Ortam ayarları',
         'Bulut senkron varsayılan kapalı',
-        !bulutSenkronAktif() || !!process.env.EXPO_PUBLIC_API_URL,
+        !bulutSenkronAktif() ||
+          !!(
+            process.env.EXPO_PUBLIC_SUPABASE_URL ||
+            process.env.SUPABASE_URL ||
+            process.env.NEXT_PUBLIC_SUPABASE_URL
+          ),
       ),
     ];
   },

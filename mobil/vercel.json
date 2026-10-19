@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "EXPO_PUBLIC_ORTAM=uretim npx expo export -p web && node scripts/vercel-dinamik.js && node scripts/sw-olustur.js",
+  "buildCommand": "node scripts/bulut-build-oncesi.js && node scripts/supabase-expo-public.js sh -c 'EXPO_PUBLIC_ORTAM=uretim npx expo export -p web && node scripts/vercel-dinamik.js && node scripts/sw-olustur.js'",
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
