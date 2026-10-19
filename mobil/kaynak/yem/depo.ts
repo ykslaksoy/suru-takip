@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { adjustStock, getAnimals, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
+import { getLatestWeight } from '@/kaynak/cekirdek/veritabani';
+import { EKSIK_YEM_ADI, partiOrtalamaKg, rasyonOnerisi, rasyonsuzPartiler, type RasyonOnerisi } from './oneri';
+import type { RationPhase } from '@/kaynak/rasyon/hesapla';
 import { etkinFiyatlar } from '@/kaynak/maliyet/tahmini-fiyat';
 import { copeAt, islemKaydet } from '@/kaynak/gecmis/gunluk';
 import { denetimYaz } from '@/kaynak/cekirdek/denetim';
@@ -206,4 +209,47 @@ export async function getYemOzeti(): Promise<YemOzeti> {
 export async function yemUyarilari(): Promise<YemDurumu[]> {
   const o = await getYemOzeti();
   return o.durumlar.filter((d) => d.uyari === 'bitti' || d.uyari === 'az');
+}
+
+/** Kuzusu olup aktif rasyonu olmayan partiler için öneri (son tartım ortalaması + baş sayısı) */
+export async function rasyonsuzOneriler(fazlar: Record<string, RationPhase> = {}): Promise<RasyonOnerisi[]> {
+  const [rasyonlar, yemler, hayvanlar] = await Promise.all([rasyonlariOku(), getYemler(), getAnimals()]);
+  const canli = hayvanlar.filter((a) => a.status !== 'sold' && a.status !== 'dead' && a.paddock?.trim());
+  const bas: Record<string, number> = {};
+  for (const a of canli) bas[a.paddock] = (bas[a.paddock] ?? 0) + 1;
+  const eksikler = rasyonsuzPartiler(bas, rasyonlar);
+  if (!eksikler.length) return [];
+  const set = new Set(eksikler);
+  const ilgili = canli.filter((a) => set.has(a.paddock));
+  const kg = await Promise.all(ilgili.map((a) => getLatestWeight(a.id).catch(() => null)));
+  const ort = partiOrtalamaKg(ilgili.map((a, i) => ({ paddock: a.paddock, sonKg: kg[i] })));
+  return eksikler.map((p) => rasyonOnerisi({ parti: p, bas: bas[p], ortKg: ort[p] ?? null, faz: fazlar[p], yemler }));
+}
+
+/** Öneriyi rasyon olarak kaydet; stokta olmayan yem 0 kg ile stoğa eklenir (alım yapılınca düşüm başlar) */
+export async function oneriyiUygula(o: RasyonOnerisi): Promise<PartiRasyonu> {
+  yetkiGerekli('duzenleme');
+  const yemler = await getYemler();
+  const kalemler: RasyonKalemi[] = [];
+  for (const k of o.kalemler) {
+    let id = k.stockId;
+    if (!id) {
+      const ad = EKSIK_YEM_ADI[k.sinif];
+      const ayni = yemler.find((s) => s.name.trim().toLocaleLowerCase('tr') === ad.toLocaleLowerCase('tr'));
+      const item =
+        ayni ?? (await upsertStockItem({ name: ad, type: 'feed', quantity: 0, unit: 'kg', minQuantity: 50, expiryDate: null, notes: 'Rasyon önerisiyle eklendi — alım gir' }));
+      if (!ayni) yemler.push(item);
+      id = item.id;
+    }
+    const var_ = kalemler.find((x) => x.stockId === id);
+    if (var_) var_.kgBasGun = Math.round((var_.kgBasGun + k.kgBasGun) * 100) / 100;
+    else kalemler.push({ stockId: id, kgBasGun: k.kgBasGun });
+  }
+  return rasyonKaydet({ parti: o.parti, ad: 'Önerilen rasyon', kalemler });
+}
+
+/** Görevler için: kuzusu olup rasyonu olmayan partiler */
+export async function rasyonsuzPartiUyarilari(): Promise<{ parti: string; bas: number }[]> {
+  const [rasyonlar, bas] = await Promise.all([rasyonlariOku(), partiBasSayilari()]);
+  return rasyonsuzPartiler(bas, rasyonlar).map((p) => ({ parti: p, bas: bas[p] }));
 }

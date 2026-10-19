@@ -26,7 +26,7 @@ import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getPoliceler } from '@/kaynak/sigorta/depo';
 import { sigortaUyarilari, yerelTarih } from '@/kaynak/sigorta/hesap';
 import { getAktifArinmalar } from '@/kaynak/arinma/depo';
-import { yemUyarilari } from '@/kaynak/yem/depo';
+import { rasyonsuzPartiUyarilari, yemUyarilari } from '@/kaynak/yem/depo';
 import { tarihTR } from '@/kaynak/arinma/hesap';
 import { getCiftlesmeler, bugunYerel } from '@/kaynak/ciftlesme/depo';
 import { gorevHatirlatmalari, grupla, gunFarki, trTarih as ureTarih } from '@/kaynak/ciftlesme/hesap';
@@ -267,6 +267,20 @@ export async function getGorevler(): Promise<Gorev[]> {
           : `${y.ad} · ${Math.round(y.stokKg)} kg · ${y.yeterGun} gün yeter (günde ${Math.round(y.gunlukKg)} kg)`,
       href: '/yem',
       cta: 'Yem al',
+      tarih: bugun,
+    });
+  }
+
+  // Kuzusu olan ama rasyonu olmayan parti/padok
+  for (const r of (await rasyonsuzPartiUyarilari().catch(() => [])).slice(0, 10)) {
+    out.push({
+      id: `rasyon-yok-${r.parti}`,
+      seviye: 'sira',
+      kaynak: 'stok',
+      baslik: '🍽️ Rasyon yok',
+      aciklama: `${r.parti} · ${r.bas} baş · rasyon tanımlı değil, yem stoktan düşmüyor`,
+      href: '/yem',
+      cta: 'Rasyon öner',
       tarih: bugun,
     });
   }

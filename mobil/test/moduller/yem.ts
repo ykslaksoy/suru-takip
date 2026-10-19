@@ -15,6 +15,8 @@ import {
   yemDurumlari,
   type PartiRasyonu,
 } from '@/kaynak/yem/hesap';
+import { kabaPayi, partiOrtalamaKg, rasyonOnerisi, rasyonsuzPartiler, VARSAYILAN_KG, yemSinifi } from '@/kaynak/yem/oneri';
+import { calculateRation } from '@/kaynak/rasyon/hesapla';
 import { partiMaliyetleri } from '@/kaynak/maliyet/hesap';
 import type { Animal, StockItem, StockMovement } from '@/kaynak/cekirdek/tipler';
 
@@ -86,6 +88,30 @@ export const yemModul: TestModul = {
     const mov = [{ id: 'm', stockId: 'arpa', movementType: 'out', quantity: 15, recordedAt: '', notes: not } as StockMovement];
     const pm = partiMaliyetleri({ animals: [hay('a', 'Padok A'), hay('b', 'Padok B')], sonKg: {}, items, movements: mov, fiyatlar: { arpa: 10 }, ayar: { partiler: {}, hayvanAlis: {} } });
     t('maliyet: rasyon düşümü yalnız o partiye yem gideri (15 kg × 10 ₺)', pm.find((p) => p.parti === 'Padok B')?.yem === 150 && pm.find((p) => p.parti === 'Padok A')?.yem === 0);
+    // Rasyonsuz padok önerisi
+    {
+      const yemler = [{ id: 'arpa', name: 'Arpa' }, { id: 'yonca', name: 'Yonca kuru otu' }, { id: 'hazir', name: 'Kuzu besi yemi' }];
+      t('yem sınıfı: yonca/saman/silaj kaba, arpa/hazır yem kesif', yemSinifi('Yonca') === 'kaba' && yemSinifi('Buğday samanı') === 'kaba' && yemSinifi('Mısır silajı') === 'kaba' && yemSinifi('Arpa') === 'kesif' && yemSinifi('Kuzu besi yemi') === 'kesif');
+      t('rasyonsuz partiler: kuzusu olup aktif rasyonu olmayan', rasyonsuzPartiler({ 'Padok A': 5, 'Padok C': 8, 'Padok B': 0 }, [{ parti: 'Padok A', aktif: true }]).join() === 'Padok C');
+      t('pasif rasyon "rasyon yok" sayılır', rasyonsuzPartiler({ 'Padok A': 5 }, [{ parti: 'Padok A', aktif: false }]).join() === 'Padok A');
+      const ort = partiOrtalamaKg([{ paddock: 'Padok C', sonKg: 30 }, { paddock: 'Padok C', sonKg: 40 }, { paddock: 'Padok C', sonKg: null }, { paddock: 'Padok D', sonKg: null }]);
+      t('ortalama sadece tartımlılardan; tartımsız padok null', ort['Padok C'] === 35 && ort['Padok D'] === null);
+      const o = rasyonOnerisi({ parti: 'Padok C', bas: 10, ortKg: 35, yemler });
+      const ref = calculateRation({ liveWeightKg: 35, count: 10, phase: 'lamb_fattening', forageQuality: 'medium' });
+      t('varsayılan dönem besi', o.faz === 'lamb_fattening' && o.tartimli);
+      t('toplam kg/baş calculateRation ile uyumlu', Math.abs(o.gunlukKgBas - ref.dailyFeedKg) < 0.03);
+      const kaba = o.kalemler.filter((k) => k.sinif === 'kaba').reduce((s, k) => s + k.kgBasGun, 0);
+      t('besi: kaba pay %40', Math.abs(kaba - ref.dailyFeedKg * kabaPayi('lamb_fattening')) < 0.03);
+      t('kesif pay stoktaki kesif yemlere eşit bölünür', o.kalemler.find((k) => k.stockId === 'arpa')?.kgBasGun === o.kalemler.find((k) => k.stockId === 'hazir')?.kgBasGun);
+      t('stok tam → eksik yok', !o.eksikVar && o.kalemler.every((k) => k.stockId));
+      t('padok toplamı = kg/baş × baş', Math.abs(o.toplamGunlukKg - o.gunlukKgBas * 10) < 0.1);
+      const e = rasyonOnerisi({ parti: 'Padok C', bas: 10, ortKg: 35, yemler: [{ id: 'arpa', name: 'Arpa' }] });
+      t('kaba yem stokta yoksa eksik işaretli kalem', e.eksikVar && e.kalemler.some((k) => k.eksik && k.stockId === null && k.sinif === 'kaba'));
+      const b = rasyonOnerisi({ parti: 'X', bas: 3, ortKg: null, yemler });
+      t('tartım yoksa varsayılan kg', !b.tartimli && b.ortKg === VARSAYILAN_KG);
+      const m = rasyonOnerisi({ parti: 'X', bas: 3, ortKg: 60, faz: 'maintenance', yemler });
+      t('dönem değişince miktar değişir (bakım < besi)', m.faz === 'maintenance' && m.gunlukKgBas < rasyonOnerisi({ parti: 'X', bas: 3, ortKg: 60, yemler }).gunlukKgBas);
+    }
     return out;
   },
 };
