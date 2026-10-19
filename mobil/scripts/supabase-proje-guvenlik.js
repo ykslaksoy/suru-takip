@@ -20,6 +20,26 @@ function refPostgresUrlden(url) {
   return '';
 }
 
+function postgresUrlOlustur() {
+  const urls = [
+    process.env.POSTGRES_URL_NON_POOLING,
+    process.env.POSTGRES_URL,
+    process.env.POSTGRES_PRISMA_URL,
+    process.env.DATABASE_URL,
+  ]
+    .map((s) => String(s ?? '').trim())
+    .filter(Boolean);
+  if (urls.length) return urls[0];
+
+  const host = String(process.env.POSTGRES_HOST ?? '').trim();
+  const user = String(process.env.POSTGRES_USER ?? '').trim();
+  const password = String(process.env.POSTGRES_PASSWORD ?? '').trim();
+  if (!host || !user || !password) return null;
+  const database = String(process.env.POSTGRES_DATABASE ?? 'postgres').trim();
+  const port = String(process.env.POSTGRES_PORT ?? '5432').trim();
+  return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(database)}`;
+}
+
 function tumRefler() {
   const refs = new Set();
   const urlKaynaklari = [
@@ -74,10 +94,7 @@ function dogrula() {
     };
   }
 
-  const postgresUrl =
-    String(process.env.POSTGRES_URL_NON_POOLING ?? '').trim() ||
-    String(process.env.POSTGRES_URL ?? '').trim() ||
-    null;
+  const postgresUrl = postgresUrlOlustur();
 
   const tumRefs = new Set(refs);
   if (postgresUrl) {
@@ -120,5 +137,6 @@ module.exports = {
   YASAK_REF,
   refSupabaseUrlden,
   refPostgresUrlden,
+  postgresUrlOlustur,
   dogrula,
 };

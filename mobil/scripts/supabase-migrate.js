@@ -5,43 +5,61 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { dogrula, IZINLI_REF } = require('./supabase-proje-guvenlik');
+const { dogrula, IZINLI_REF, refSupabaseUrlden } = require('./supabase-proje-guvenlik');
 
-async function main() {
-  const d = dogrula();
-  if (!d.izinli && d.refs.length > 0) {
-    console.error('[supabase-migrate]', d.hata);
-    process.exit(1);
-  }
-  if (!d.postgresUrl) {
-    console.log('[supabase-migrate] Postgres URL yok — atlanıyor (yerel derleme?).');
-    return;
-  }
-  if (d.refs.length === 0) {
-    const pgRef = require('./supabase-proje-guvenlik').refPostgresUrlden(d.postgresUrl);
-    if (pgRef && pgRef !== IZINLI_REF) {
-      console.error('[supabase-migrate] Postgres host ref doğrulanamadı:', pgRef);
-      process.exit(1);
-    }
-  }
+const PG_ENV_ANAHTARLARI = [
+  'POSTGRES_URL_NON_POOLING',
+  'POSTGRES_URL',
+  'POSTGRES_PRISMA_URL',
+  'DATABASE_URL',
+  'POSTGRES_HOST',
+  'POSTGRES_USER',
+  'POSTGRES_PASSWORD',
+];
 
+function yonetimTokeni() {
+  return (
+    String(process.env.SUPABASE_ACCESS_TOKEN ?? '').trim() ||
+    String(process.env.SUPABASE_MANAGEMENT_API_TOKEN ?? '').trim()
+  );
+}
+
+function postgresEnvOzeti() {
+  return PG_ENV_ANAHTARLARI.filter((k) => String(process.env[k] ?? '').trim().length > 0);
+}
+
+async function migrateViaManagementApi(sql, token) {
+  const url = `https://api.supabase.com/v1/projects/${IZINLI_REF}/database/query`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query: sql }),
+  });
+  const metin = await r.text();
+  if (!r.ok) {
+    throw new Error(`Management API SQL (${r.status}): ${metin.slice(0, 400)}`);
+  }
+}
+
+async function migrateViaPg(postgresUrl) {
   let pg;
   try {
     pg = require('pg');
   } catch {
-    console.error('[supabase-migrate] pg paketi gerekli (npm ci).');
-    process.exit(1);
+    throw new Error('pg paketi gerekli (npm ci).');
   }
+
+  const client = new pg.Client({
+    connectionString: postgresUrl,
+    ssl: { rejectUnauthorized: false },
+  });
 
   const sqlPath = path.join(__dirname, '..', 'supabase', 'schema.sql');
   const sql = fs.readFileSync(sqlPath, 'utf8');
 
-  const client = new pg.Client({
-    connectionString: d.postgresUrl,
-    ssl: { rejectUnauthorized: false },
-  });
-
-  console.log(`[supabase-migrate] Şema uygulanıyor (proje ${IZINLI_REF})…`);
   await client.connect();
   try {
     await client.query(sql);
@@ -58,6 +76,70 @@ async function main() {
   } finally {
     await client.end();
   }
+}
+
+async function tablolariDogrulaAnon() {
+  const supUrl = String(process.env.SUPABASE_URL ?? '').trim();
+  const anon =
+    String(process.env.SUPABASE_PUBLISHABLE_KEY ?? '').trim() ||
+    String(process.env.SUPABASE_ANON_KEY ?? '').trim();
+  if (!supUrl || !anon) return;
+  for (const t of ['ciftlik', 'belge', 'foto']) {
+    const r = await fetch(`${supUrl.replace(/\/+$/, '')}/rest/v1/${t}?select=id&limit=0`, {
+      headers: { apikey: anon, Authorization: `Bearer ${anon}` },
+    });
+    if (r.status === 404) {
+      throw new Error(`REST doğrulama: public.${t} bulunamadı (${r.status})`);
+    }
+  }
+  console.log('[supabase-migrate] PostgREST doğrulama: ciftlik, belge, foto erişilebilir.');
+}
+
+async function main() {
+  const d = dogrula();
+  if (!d.izinli && d.refs.length > 0) {
+    console.error('[supabase-migrate]', d.hata);
+    process.exit(1);
+  }
+
+  const vercel = process.env.VERCEL === '1';
+  const supRef = refSupabaseUrlden(process.env.SUPABASE_URL);
+  const bulutBuild = vercel && supRef === IZINLI_REF;
+
+  if (!d.postgresUrl) {
+    const token = yonetimTokeni();
+    if (token && bulutBuild) {
+      console.log('[supabase-migrate] Postgres URL yok; Management API SQL deneniyor…');
+      const sql = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'schema.sql'), 'utf8');
+      await migrateViaManagementApi(sql, token);
+      await tablolariDogrulaAnon();
+      return;
+    }
+    if (bulutBuild) {
+      console.error(
+        '[supabase-migrate] Vercel production build: Postgres env eksik (' +
+          (postgresEnvOzeti().join(', ') || 'hiçbiri') +
+          '). Entegrasyon değişkenlerinin Build ortamına açık olduğunu doğrulayın veya SUPABASE_ACCESS_TOKEN (database_write) ekleyin.',
+      );
+      process.exit(1);
+    }
+    console.log('[supabase-migrate] Postgres URL yok — atlanıyor (yerel derleme?).');
+    return;
+  }
+
+  if (d.refs.length === 0) {
+    const pgRef = require('./supabase-proje-guvenlik').refPostgresUrlden(d.postgresUrl);
+    if (pgRef && pgRef !== IZINLI_REF) {
+      console.error('[supabase-migrate] Postgres host ref doğrulanamadı:', pgRef);
+      process.exit(1);
+    }
+  }
+
+  console.log(
+    `[supabase-migrate] Şema uygulanıyor (proje ${IZINLI_REF}, postgres env: ${postgresEnvOzeti().join(', ')})…`,
+  );
+  await migrateViaPg(d.postgresUrl);
+  await tablolariDogrulaAnon();
 }
 
 main().catch((e) => {
