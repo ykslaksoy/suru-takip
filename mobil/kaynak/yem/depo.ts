@@ -7,6 +7,7 @@ import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
 import { getLatestWeight } from '@/kaynak/cekirdek/veritabani';
 import { EKSIK_YEM_ADI, partiOrtalamaKg, rasyonOnerisi, rasyonsuzPartiler, type RasyonOnerisi } from './oneri';
 import type { RationPhase } from '@/kaynak/rasyon/hesapla';
+import { standartYem } from '@/kaynak/rasyon/yem-besin';
 import { etkinFiyatlar } from '@/kaynak/maliyet/tahmini-fiyat';
 import { copeAt, islemKaydet } from '@/kaynak/gecmis/gunluk';
 import { denetimYaz } from '@/kaynak/cekirdek/denetim';
@@ -252,4 +253,34 @@ export async function oneriyiUygula(o: RasyonOnerisi): Promise<PartiRasyonu> {
 export async function rasyonsuzPartiUyarilari(): Promise<{ parti: string; bas: number }[]> {
   const [rasyonlar, bas] = await Promise.all([rasyonlariOku(), partiBasSayilari()]);
   return rasyonsuzPartiler(bas, rasyonlar).map((p) => ({ parti: p, bas: bas[p] }));
+}
+
+/** Parti başına son tartım ortalaması (tartım yoksa null) */
+export async function partiOrtalamalari(): Promise<Record<string, number | null>> {
+  const canli = (await getAnimals()).filter((a) => a.status !== 'sold' && a.status !== 'dead' && a.paddock?.trim());
+  const kg = await Promise.all(canli.map((a) => getLatestWeight(a.id).catch(() => null)));
+  return partiOrtalamaKg(canli.map((a, i) => ({ paddock: a.paddock, sonKg: kg[i] })));
+}
+
+/** Ada göre stok yemine eşle (yoksa 0 kg ile stoğa ekle) ve rasyon olarak kaydet */
+export async function adliRasyonUygula(parti: string, ad: string, kalemler: { ad: string; stockId?: string; kgBasGun: number }[]): Promise<PartiRasyonu> {
+  yetkiGerekli('duzenleme');
+  const yemler = await getYemler();
+  const norm = (s: string) => s.trim().toLocaleLowerCase('tr');
+  const out: RasyonKalemi[] = [];
+  for (const k of kalemler) {
+    if (!(k.kgBasGun > 0)) continue;
+    let id = k.stockId && yemler.some((y) => y.id === k.stockId) ? k.stockId : undefined;
+    if (!id) {
+      const ayni = yemler.find((y) => norm(y.name) === norm(k.ad)) ?? (() => { const st = standartYem(k.ad)?.ad; return st ? yemler.find((y) => standartYem(y.name)?.ad === st) : undefined; })();
+      const item = ayni ?? (await upsertStockItem({ name: k.ad, type: 'feed', quantity: 0, unit: 'kg', minQuantity: 50, expiryDate: null, notes: 'Rasyonla eklendi — alım gir' }));
+      if (!ayni) yemler.push(item);
+      id = item.id;
+    }
+    const v = out.find((x) => x.stockId === id);
+    if (v) v.kgBasGun = Math.round((v.kgBasGun + k.kgBasGun) * 1000) / 1000;
+    else out.push({ stockId: id, kgBasGun: Math.round(k.kgBasGun * 1000) / 1000 });
+  }
+  const aktif = (await rasyonlariOku()).find((r) => r.parti === parti && r.aktif);
+  return rasyonKaydet({ id: aktif?.id, parti, ad, kalemler: out });
 }

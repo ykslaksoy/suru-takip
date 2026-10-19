@@ -28,6 +28,7 @@ import type { RasyonOnerisi } from '@/kaynak/yem/oneri';
 import { calculateRation, PHASE_LABELS, type RationPhase } from '@/kaynak/rasyon/hesapla';
 import { AkilliOneriKarti } from '@/bilesenler/rasyon/AkilliOneriKarti';
 import { KarsilastirmaTablosu } from '@/bilesenler/rasyon/KarsilastirmaTablosu';
+import { RasyonModlari } from '@/bilesenler/yem/RasyonModlari';
 import { getBirimFiyatlar } from '@/kaynak/stok/fiyat';
 
 function onayla(mesaj: string, evet: () => void) {
@@ -267,6 +268,21 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
             })}
           </View>
         ) : null}
+
+        <RasyonModlari
+          partiler={o.partiler}
+          basSayisi={o.basSayisi}
+          yemler={o.yemler}
+          fiyatlar={o.fiyatlar}
+          varsayilanParti={oneriler[0]?.parti}
+          duzen={duzen}
+          finans={finans}
+          onKendi={() => setForm({ partiler: new Set(), miktar: {} })}
+          onUygulandi={(m) => {
+            setMesaj(m);
+            void gunlukYemDusumu().catch(() => null).then(() => { refresh(); return yukle(); });
+          }}
+        />
 
         {/* PARTİ RASYONLARI */}
         <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
