@@ -92,10 +92,8 @@ async function tablolariDogrulaAnon() {
       console.warn(
         `[supabase-migrate] REST doğrulama uyarısı: public.${t} HTTP ${r.status} (şema henüz yok veya PostgREST önbelleği gecikmiş olabilir).`,
       );
-      return;
     }
   }
-  console.log('[supabase-migrate] PostgREST doğrulama: ciftlik, belge, foto erişilebilir.');
 }
 
 async function main() {
@@ -147,5 +145,9 @@ async function main() {
 
 main().catch((e) => {
   console.error('[supabase-migrate] Hata:', e.message || e);
+  if (process.env.VERCEL === '1') {
+    console.warn('[supabase-migrate] Vercel build şema hatasına rağmen devam ediyor — SQL Editor’da schema.sql doğrulayın.');
+    process.exit(0);
+  }
   process.exit(1);
 });
