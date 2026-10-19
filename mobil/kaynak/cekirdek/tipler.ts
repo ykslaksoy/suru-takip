@@ -1,7 +1,7 @@
 export type AnimalSex = 'female' | 'male';
 export type AnimalSpecies = 'sheep' | 'goat';
 export type AnimalStatus = 'healthy' | 'sick' | 'pregnant' | 'lactating' | 'dry' | 'sold' | 'dead';
-export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement';
+export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement' | 'equipment';
 export type {
   PaketAdet,
   PaketTanim,
@@ -165,7 +165,8 @@ export const STOCK_TYPE_LABELS: Record<StockType, string> = {
   vaccine: 'Aşı',
   medicine: 'İlaç',
   supplement: 'Takviye',
+  equipment: 'Ekipman',
 };
 
 /** Stok ekranı filtre sırası */
-export const STOCK_TYPE_ORDER: StockType[] = ['feed', 'supplement', 'vaccine', 'medicine'];
+export const STOCK_TYPE_ORDER: StockType[] = ['feed', 'supplement', 'vaccine', 'medicine', 'equipment'];

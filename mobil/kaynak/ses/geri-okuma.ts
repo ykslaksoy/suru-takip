@@ -4,9 +4,14 @@ import { kupeOku, sayiOku } from './sayi-oku';
 import { grupEtiketi } from '@/kaynak/toplu/secim';
 import type { GrupAsiKomutu } from './tipler';
 
+function tabancaMlMetni(ml: number): string {
+  return String(Math.round(ml * 100) / 100).replace('.', ',');
+}
+
 function grupOzet(e: GrupAsiKomutu): string {
   const sayi = e.hayvanSayisi != null ? `, ${e.hayvanSayisi} kuzu` : '';
-  return `${grupEtiketi(e.grup)}${sayi}, ${e.asiAdi}`;
+  const tab = e.tabancaMl != null ? `Tabanca ${tabancaMlMetni(e.tabancaMl)} ml, ` : '';
+  return `${tab}${grupEtiketi(e.grup)}${sayi}, ${e.asiAdi}`;
 }
 
 function formatKilo(kg: number): string {
@@ -79,7 +84,7 @@ export function onayCumlesi(eylem: SesKomutEylemi): string {
     case 'asi':
       return `Küpe ${kupeOku(eylem.kupeArama)}, ${asiAdiSesli(eylem.asiAdi)} yapıldı. ${soru}`;
     case 'grup_asi':
-      return `${grupEtiketi(eylem.grup).replace(/\s*\(.*\)$/, '')}, ${eylem.hayvanSayisi != null ? `${sayiOku(eylem.hayvanSayisi)} kuzu, ` : ''}${eylem.asiAdi}. ${soru}`;
+      return `${eylem.tabancaMl != null ? `Tabanca ${tabancaMlMetni(eylem.tabancaMl)} ml, ` : ''}${grupEtiketi(eylem.grup).replace(/\s*\(.*\)$/, '')}, ${eylem.hayvanSayisi != null ? `${sayiOku(eylem.hayvanSayisi)} kuzu, ` : ''}${eylem.asiAdi}. ${soru}`;
     case 'stok':
       return (
         `Stok ${eylem.yon === 'giris' ? 'girişi' : 'çıkışı'}, ${eylem.stokAdi}, ` +

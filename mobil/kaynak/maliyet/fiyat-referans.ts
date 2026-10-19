@@ -124,6 +124,11 @@ export const FIYAT_REFERANS_TABLOSU: FiyatReferansTablosu = {
     yok('triklabendazol', 'Triklabendazol', 'ml'),
     yok('oksiteirasiklin', 'Oksitetrasiklin', 'ml'),
     yok('penisilin', 'Penisilin', 'flakon'),
+
+    // ── Ekipman (doğrulanmış fiyat yok) ───────────────────────────
+    yok('asi-tabancasi', 'Otomatik aşı tabancası', 'adet', ['tabanca']),
+    yok('tabanca-igne-ucu', 'Tabanca iğne ucu', 'adet', ['iğne ucu', 'igne ucu']),
+    yok('siringa', 'Şırınga (tek kullanımlık)', 'adet', ['şırınga', 'siringa', 'enjektör']),
   ],
 };
 

@@ -16,6 +16,8 @@ import { getAnimals, getAllHealthRecordsForAsi } from '@/kaynak/cekirdek/veritab
 import type { Animal, HealthRecord } from '@/kaynak/cekirdek/tipler';
 import { kalemZamani, planVadeleri, vadeOzeti, zamanEtiketi } from '@/kaynak/gorevler/plan-takvim';
 import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
+import TabancaAyarKarti from '@/bilesenler/veteriner/TabancaAyarKarti';
+import { getTabancaDurum, setTabancaTercih, type TabancaDurum } from '@/kaynak/akilli-veteriner/tabanca-ayar';
 
 const BOLUM_BASLIK: Record<SaglikPlaniBolum, string> = {
   asi: 'Aşılar',
@@ -53,6 +55,16 @@ export default function KuzuSaglikPlaniScreen() {
   const colors = Colors[scheme];
   const { hazir, onerilenAcik, onerilen, kendi, mod, setMod, ekle, cikar, sifirla, zaman, setZaman } = useSaglikPlani();
   const [veri, setVeri] = useState<{ animals: Animal[]; health: HealthRecord[] } | null>(null);
+  const [tabanca, setTabanca] = useState<TabancaDurum | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      getTabancaDurum().then(setTabanca);
+    }, []),
+  );
+  const tabancaGuncelle = async (t: { kullan?: boolean; kapasite?: number }) => {
+    await setTabancaTercih(t);
+    setTabanca(await getTabancaDurum());
+  };
   useFocusEffect(
     useCallback(() => {
       let iptal = false;
@@ -228,6 +240,15 @@ export default function KuzuSaglikPlaniScreen() {
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 12 }}>
           Plan, her kuzunun giriş tarihine göre kendiliğinden takvime yazılır. Yapıldı işaretlenince sıradaki tekrar planlanır.
         </Text>
+        {tabanca ? (
+          <TabancaAyarKarti
+            durum={tabanca}
+            ayar={null}
+            onKullan={(kullan) => tabancaGuncelle({ kullan })}
+            onKapasite={(kapasite) => tabancaGuncelle({ kapasite })}
+            bilgi={`Tabanca en çok ${tabanca.kapasite} ml. Ayar satırı (kaç ml, kaç kuzu, şişede kaç ml) bir göreve dokununca seçilen kuzulara göre çıkar.`}
+          />
+        ) : null}
 
         <Text style={[styles.katmanBaslik, { color: colors.text }]}>Önleyici Sağlık Planı</Text>
         <Text style={[styles.katmanNot, { color: colors.tint }]}>Her kuzuya istisnasız rutin uygulanır.</Text>

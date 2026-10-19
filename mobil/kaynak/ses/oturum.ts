@@ -19,7 +19,7 @@ import {
   uygulandiMetni,
 } from './geri-okuma';
 import { duzeltmeIstegiMi, kesinOnayMi, tamIptalMi } from './onay';
-import { grupHayvanSayisi, komutuUygula } from './uygula';
+import { grupHayvanSayisi, grupTabancaMl, komutuUygula } from './uygula';
 import type { SesKomutEylemi, SesKomutSonucu } from './tipler';
 
 type Durum =
@@ -133,7 +133,8 @@ export class SesKomutOturumu {
         this.durum = { tip: 'bos' };
         return { asama: 'anlasilmadi', okumaMetni: 'Bu grupta kayıtlı kuzu bulunamadı. Parti numarasını kontrol edin.', bekleyenEylem: null };
       }
-      const zengin = { ...e, hayvanSayisi: sayi };
+      const tabancaMl = await grupTabancaMl(e);
+      const zengin = { ...e, hayvanSayisi: sayi, ...(tabancaMl != null ? { tabancaMl } : {}) };
       this.durum = { ...this.durum, eylem: zengin };
       if (r.asama === 'onay_bekliyor') {
         return { ...r, bekleyenEylem: zengin, okumaMetni: geriOkumaMetni(zengin), konusmaMetni: onayCumlesi(zengin) };

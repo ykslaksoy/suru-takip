@@ -2,6 +2,7 @@ import { ASI_PROGRAMI, asiMlDozYerEtiketi, type AsiProgramKalemi } from '@/kayna
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { getKuzular, planOku, type AsiPlani, type AsiTercih } from './asi-modu';
+import { igneUcuAdedi, igneUcuKurali, tabancaAyariHesapla } from './asi-tabancasi';
 
 function normalize(s: string): string {
   return s
@@ -50,6 +51,8 @@ export type AsiMalzemeSatiri = {
   eksikDoz: number;
   eksikMl: number | null;
   devletNotu?: string;
+  /** Tabanca açıkken sabit dozlu kalemde ayar satırı */
+  tabancaSatir?: string;
   /** Plan tarihi (varsa) */
   tarih?: string;
   durumMetni: string;
@@ -59,8 +62,14 @@ export type AsiMalzemeListesi = {
   kuzuSayisi: number;
   kaynak: 'plan' | 'tercih';
   satirlar: AsiMalzemeSatiri[];
-  /** Enjeksiyon sayısı (şırınga tahmini) */
+  /** Enjeksiyon sayısı (şırınga tahmini) — tabancayla 0 */
   siringaAdedi: number;
+  /** Tabanca kullanılıyor mu */
+  tabanca: boolean;
+  /** Tabancayla: iğne ucu tahmini */
+  igneUcuAdedi: number;
+  /** İğne ucu kuralı (metinde gösterilir) */
+  igneUcuKurali: string;
   ozet: string;
 };
 
@@ -73,7 +82,11 @@ type KaynakSatir = {
 /**
  * Planlanan (bekleyen) aşılara göre malzeme; yoksa aktif tercihler × kuzu.
  */
-export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise<AsiMalzemeListesi> {
+export async function olusturAsiMalzemeListesi(
+  tercihler?: AsiTercih[],
+  opts?: { tabanca?: boolean; tabancaKapasite?: number },
+): Promise<AsiMalzemeListesi> {
+  const tabanca = !!opts?.tabanca;
   const [kuzular, planlar, stock] = await Promise.all([getKuzular(), planOku(), getStockItems()]);
   const kuzuSayisi = kuzular.length;
 
@@ -106,6 +119,7 @@ export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise
 
   const satirlar: AsiMalzemeSatiri[] = [];
   let siringaAdedi = 0;
+  let igneUcu = 0;
 
   for (const k of kaynakSatirlar) {
     const program = programBul(k.programId);
@@ -124,8 +138,20 @@ export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise
         : null;
 
     // Çizik / hap / oral parazit hariç şırınga
+    // Tabancayla: şırınga yerine iğne ucu (her aşı türünde yeni uç + her 20 kuzuda bir)
+    let tabancaSatir: string | undefined;
     if (program.mlHayvan != null) {
-      siringaAdedi += hayvanSayisi;
+      if (tabanca) {
+        igneUcu += igneUcuAdedi(hayvanSayisi);
+        const ayar = tabancaAyariHesapla(
+          program.id,
+          Array.from({ length: hayvanSayisi }, (_, i) => ({ id: String(i), etiket: '', kg: null })),
+          opts?.tabancaKapasite,
+        );
+        if (ayar.uygun) tabancaSatir = ayar.satir;
+      } else {
+        siringaAdedi += hayvanSayisi;
+      }
     }
 
     let durumMetni: string;
@@ -149,6 +175,7 @@ export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise
       eksikDoz,
       eksikMl,
       devletNotu: program.devletNotu,
+      tabancaSatir,
       tarih: k.tarih,
       durumMetni,
     });
@@ -157,9 +184,20 @@ export async function olusturAsiMalzemeListesi(tercihler?: AsiTercih[]): Promise
   const ozet =
     satirlar.length === 0
       ? 'Malzeme yok — önce aşı seçin veya plan oluşturun.'
-      : `${satirlar.length} aşı · ${kuzuSayisi} kuzu · ~${siringaAdedi} şırınga`;
+      : tabanca
+        ? `${satirlar.length} aşı · ${kuzuSayisi} kuzu · tabancayla · ~${igneUcu} iğne ucu`
+        : `${satirlar.length} aşı · ${kuzuSayisi} kuzu · ~${siringaAdedi} şırınga`;
 
-  return { kuzuSayisi, kaynak, satirlar, siringaAdedi, ozet };
+  return {
+    kuzuSayisi,
+    kaynak,
+    satirlar,
+    siringaAdedi,
+    tabanca,
+    igneUcuAdedi: igneUcu,
+    igneUcuKurali: igneUcuKurali(),
+    ozet,
+  };
 }
 
 /** Paylaşılabilir düz metin */
@@ -176,8 +214,12 @@ export function asiMalzemeMetni(liste: AsiMalzemeListesi): string {
         : s.stokAdi
           ? `stok yeterli (${s.stokMiktar})`
           : 'stok kaydı yok';
-    return `• ${s.koruma} (${s.asiAdi}) ${s.mlEtiket}\n  ${s.durumMetni}\n  → ${stok}`;
+    const tab = s.tabancaSatir ? `\n  ${s.tabancaSatir}` : '';
+    return `• ${s.koruma} (${s.asiAdi}) ${s.mlEtiket}\n  ${s.durumMetni}${tab}\n  → ${stok}`;
   });
 
-  return [baslik, ...satirlar, `Şırınga tahmini: ${liste.siringaAdedi} adet`].join('\n');
+  const sarf = liste.tabanca
+    ? `İğne ucu tahmini: ${liste.igneUcuAdedi} adet (${liste.igneUcuKurali})`
+    : `Şırınga tahmini: ${liste.siringaAdedi} adet`;
+  return [baslik, ...satirlar, sarf].join('\n');
 }
