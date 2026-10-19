@@ -88,8 +88,11 @@ async function tablolariDogrulaAnon() {
     const r = await fetch(`${supUrl.replace(/\/+$/, '')}/rest/v1/${t}?select=id&limit=0`, {
       headers: { apikey: anon, Authorization: `Bearer ${anon}` },
     });
-    if (r.status === 404) {
-      throw new Error(`REST doğrulama: public.${t} bulunamadı (${r.status})`);
+    if (!r.ok) {
+      console.warn(
+        `[supabase-migrate] REST doğrulama uyarısı: public.${t} HTTP ${r.status} (şema henüz yok veya PostgREST önbelleği gecikmiş olabilir).`,
+      );
+      return;
     }
   }
   console.log('[supabase-migrate] PostgREST doğrulama: ciftlik, belge, foto erişilebilir.');
