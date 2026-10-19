@@ -1,6 +1,6 @@
 /**
  * Bulut senkron özellik bayrağı. EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY
- * tanımlı değilse bulut tamamen kapalıdır; uygulama yalnız yerel çalışır.
+ * (Vercel Supabase entegrasyonu bu adlarla otomatik ekler) tanımlı değilse bulut tamamen kapalıdır; uygulama yalnız yerel çalışır.
  */
 export type BulutAyar = { url: string; anonKey: string };
 
