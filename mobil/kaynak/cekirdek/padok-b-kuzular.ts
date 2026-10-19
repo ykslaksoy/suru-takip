@@ -1,3 +1,4 @@
+import { getSilinenDemoIdleri } from './demo-silinen';
 /**
  * Eşleşik kuzu seed’leri — Padok A + B + C.
  *
@@ -438,7 +439,8 @@ async function demoKuzulariErkekYap(animals: Animal[]): Promise<void> {
 export async function ensurePadokKuzuVerisi(): Promise<void> {
   const animals = await getAnimals();
   await demoKuzulariErkekYap(animals);
-  const ids = new Set(animals.map((a) => a.id));
+  // Bilerek silinen örnek kuzular eksik sayılmaz (geri gelmesin)
+  const ids = new Set([...animals.map((a) => a.id), ...(await getSilinenDemoIdleri())]);
   const eksik = (prefix: string, adet: number) => {
     for (let i = 1; i <= adet; i++) {
       if (!ids.has(`${prefix}${String(i).padStart(2, '0')}`)) return true;

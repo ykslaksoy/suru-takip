@@ -3,6 +3,7 @@ import { countAnimals, getPendingSyncCount } from '@/kaynak/cekirdek/veritabani'
 import { ensurePadokKuzuVerisi, seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
 import { demoSeedOtomatik } from '@/sabitler/Ortam';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
+import { gunlukYemDusumu } from '@/kaynak/yem/depo';
 
 interface DatabaseContextValue {
   ready: boolean;
@@ -31,6 +32,8 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
         await seedDemoDataIfEmpty();
       }
       await ensurePadokKuzuVerisi();
+      // Parti rasyonlarının bekleyen günlerini yem stoğundan düş (günde bir kez)
+      await gunlukYemDusumu().catch(() => null);
       const hayvan = await countAnimals();
       if (hayvan > 0) {
         await limitAsimindaPaketAc(hayvan);

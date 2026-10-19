@@ -76,6 +76,7 @@ export default function RootLayout() {
                     <Stack.Screen name="sablon/index" options={{ title: 'Kayıt şablonları' }} />
                     <Stack.Screen name="takvim/index" options={{ title: 'Takvim' }} />
                     <Stack.Screen name="excel/index" options={{ title: 'Excel / CSV' }} />
+                    <Stack.Screen name="yem/index" options={{ title: 'Yem ve rasyon' }} />
                     <Stack.Screen name="sayim/index" options={{ title: 'Sayım listesi' }} />
                     <Stack.Screen name="gecmis/index" options={{ title: 'İşlem geçmişi' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />

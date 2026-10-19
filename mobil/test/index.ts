@@ -38,6 +38,7 @@ import { sablonModul } from './moduller/sablon';
 import { takvimModul } from './moduller/takvim';
 import { geriDonusumModul } from './moduller/geri-donusum';
 import { excelModul } from './moduller/excel';
+import { yemModul } from './moduller/yem';
 
 const MODULLER = [
   hizliBesiModul,
@@ -74,6 +75,7 @@ const MODULLER = [
   takvimModul,
   geriDonusumModul,
   excelModul,
+  yemModul,
 ];
 
 async function main() {

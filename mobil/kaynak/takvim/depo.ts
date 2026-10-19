@@ -3,6 +3,9 @@ import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAktifArinmalar } from '@/kaynak/arinma/depo';
 import { getPoliceler } from '@/kaynak/sigorta/depo';
 import { getGorevler } from '@/kaynak/gorevler/liste';
+import { getYemOzeti } from '@/kaynak/yem/depo';
+import { yemBitisOlaylari } from '@/kaynak/yem/hesap';
+import { yerelGun } from '@/kaynak/arinma/depo';
 import {
   arinmaOlaylari,
   gorevOlaylari,
@@ -22,13 +25,14 @@ export function takvimKaynagiEkle(k: Kaynak): void {
 }
 
 export async function getTakvimOlaylari(): Promise<TakvimOlay[]> {
-  const [hayvanlar, saglik, tartim, arinma, policeler, gorevler, ...ek] = await Promise.all([
+  const [hayvanlar, saglik, tartim, arinma, policeler, gorevler, yem, ...ek] = await Promise.all([
     getAnimals(),
     getAllHealthRecordsForAsi().catch(() => []),
     getAllWeightRecords().catch(() => []),
     getAktifArinmalar().catch(() => []),
     getPoliceler().catch(() => []),
     getGorevler().catch(() => []),
+    getYemOzeti().catch(() => null),
     ...ekKaynaklar.map((k) => k().catch(() => [] as TakvimOlay[])),
   ]);
   const m = new Map(hayvanlar.map((a) => [a.id, a]));
@@ -42,6 +46,7 @@ export async function getTakvimOlaylari(): Promise<TakvimOlay[]> {
     arinmaOlaylari(arinma, etiket),
     sigortaOlaylari(policeler),
     gorevOlaylari(gorevler),
+    yem ? yemBitisOlaylari(yem.durumlar, yerelGun()) : [],
     ...ek,
   );
 }

@@ -18,6 +18,9 @@ import type { Animal, HealthRecord, WeightRecord } from '@/kaynak/cekirdek/tiple
 import { denetimYaz } from '@/kaynak/cekirdek/denetim';
 import { copeAt, coptenCikar, getCopKutusu, islemKaydet } from './gunluk';
 import { COP_TUR_ETIKET, hayvanCopVerisi } from './cop';
+import { rasyonGeriYukle } from '@/kaynak/yem/kayit';
+import { silinenDemoIsaretle } from '@/kaynak/cekirdek/demo-silinen';
+import type { PartiRasyonu } from '@/kaynak/yem/hesap';
 import type { CopKaydi, CopTur } from './tipler';
 import { policeGeriYukle } from '@/kaynak/sigorta/depo';
 import type { SigortaPolice } from '@/kaynak/sigorta/hesap';
@@ -33,6 +36,7 @@ export async function hayvanSilGeriAlinabilir(id: string): Promise<boolean> {
   for (const w of weights) await deleteWeightRecord(w.id);
   for (const h of temizSaglik) await deleteHealthRecord(h.id);
   await deleteAnimal(id);
+  await silinenDemoIsaretle(id, true);
   await islemKaydet({ tur: 'silme', ozet: `${hayvanAnaEtiket(a)} silindi (geri dönüşüm kutusunda)`, animalId: a.id });
   return true;
 }
@@ -63,6 +67,7 @@ export async function copGeriYukle(id: string): Promise<CopKaydi | null> {
   if (k.tur === 'hayvan') {
     const { animal, weights, health } = hayvanCopVerisi(k.veri);
     await upsertAnimal(animal as unknown as Animal);
+    await silinenDemoIsaretle((animal as unknown as Animal).id, false);
     for (const w of weights as WeightRecord[]) await addWeightRecord(w);
     for (const h of health as HealthRecord[]) await addHealthRecord(h);
   } else if (k.tur === 'saglik') {
@@ -73,13 +78,15 @@ export async function copGeriYukle(id: string): Promise<CopKaydi | null> {
     await policeGeriYukle(k.veri as SigortaPolice);
   } else if (k.tur === 'sablon') {
     await sablonGeriYukle(k.veri as KayitSablonu);
+  } else if (k.tur === 'yem' && !yukleyiciler.yem) {
+    await rasyonGeriYukle(k.veri as PartiRasyonu);
   } else {
     const f = yukleyiciler[k.tur];
     if (!f) return null;
     await f(k.veri);
   }
   await coptenCikar(id);
-  denetimYaz({ eylem: 'geri_alma', tablo: k.tur === 'hayvan' ? 'hayvan' : k.tur === 'saglik' ? 'saglik' : k.tur === 'tartim' ? 'tartim' : k.tur === 'police' ? 'police' : k.tur === 'sablon' ? 'sablon' : k.tur === 'foto' ? 'foto' : 'diger', kayitId: id, animalId: k.animalId, ozet: `${COP_TUR_ETIKET[k.tur]} geri alındı · ${k.etiket}` });
+  denetimYaz({ eylem: 'geri_alma', tablo: k.tur === 'hayvan' ? 'hayvan' : k.tur === 'saglik' ? 'saglik' : k.tur === 'tartim' ? 'tartim' : k.tur === 'police' ? 'police' : k.tur === 'sablon' ? 'sablon' : k.tur === 'foto' ? 'foto' : k.tur === 'yem' ? 'yem' : k.tur === 'ureme' ? 'ureme' : 'diger', kayitId: id, animalId: k.animalId, ozet: `${COP_TUR_ETIKET[k.tur]} geri alındı · ${k.etiket}` });
   await islemKaydet({ tur: 'geri_alma', ozet: `${k.etiket} geri alındı`, animalId: k.animalId });
   return k;
 }

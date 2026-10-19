@@ -26,6 +26,7 @@ import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getPoliceler } from '@/kaynak/sigorta/depo';
 import { sigortaUyarilari, yerelTarih } from '@/kaynak/sigorta/hesap';
 import { getAktifArinmalar } from '@/kaynak/arinma/depo';
+import { yemUyarilari } from '@/kaynak/yem/depo';
 import { tarihTR } from '@/kaynak/arinma/hesap';
 import {
   bugunTarih,
@@ -245,6 +246,25 @@ export async function getGorevler(): Promise<Gorev[]> {
       aciklama: `${item.name} · ${item.quantity} ${item.unit} (min ${item.minQuantity})`,
       href: '/(tabs)/stok',
       cta: 'Stoka git',
+      tarih: bugun,
+    });
+  }
+
+  // Rasyondaki yem az kaldı / bitti (gün hesabı aktif parti rasyonlarından)
+  const dusukIds = new Set(lowStock.map((i) => i.id));
+  for (const y of (await yemUyarilari().catch(() => [])).slice(0, 10)) {
+    if (dusukIds.has(y.stockId) && y.uyari !== 'bitti') continue;
+    out.push({
+      id: `yem-yeter-${y.stockId}`,
+      seviye: 'uyari',
+      kaynak: 'stok',
+      baslik: y.uyari === 'bitti' ? '🌾 Yem bitti' : '🌾 Yem az kaldı',
+      aciklama:
+        y.uyari === 'bitti'
+          ? `${y.ad} · stok yok, rasyon günde ${Math.round(y.gunlukKg)} kg istiyor`
+          : `${y.ad} · ${Math.round(y.stokKg)} kg · ${y.yeterGun} gün yeter (günde ${Math.round(y.gunlukKg)} kg)`,
+      href: '/yem',
+      cta: 'Yem al',
       tarih: bugun,
     });
   }
