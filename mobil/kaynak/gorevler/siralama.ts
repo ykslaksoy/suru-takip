@@ -13,7 +13,8 @@ export type GorevKaynak =
   | 'yolculuk'
   | 'planlanan'
   | 'is-plani'
-  | 'sigorta';
+  | 'sigorta'
+  | 'ureme';
 
 export type Gorev = {
   id: string;

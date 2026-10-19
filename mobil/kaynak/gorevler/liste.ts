@@ -28,6 +28,8 @@ import { sigortaUyarilari, yerelTarih } from '@/kaynak/sigorta/hesap';
 import { getAktifArinmalar } from '@/kaynak/arinma/depo';
 import { yemUyarilari } from '@/kaynak/yem/depo';
 import { tarihTR } from '@/kaynak/arinma/hesap';
+import { getCiftlesmeler, bugunYerel } from '@/kaynak/ciftlesme/depo';
+import { gorevHatirlatmalari, grupla, gunFarki, trTarih as ureTarih } from '@/kaynak/ciftlesme/hesap';
 import {
   bugunTarih,
   gorevleriSirala,
@@ -267,6 +269,26 @@ export async function getGorevler(): Promise<Gorev[]> {
       cta: 'Yem al',
       tarih: bugun,
     });
+  }
+
+  // Çiftleşme / doğum hatırlatmaları (aynı gün aynı iş → tek satır)
+  {
+    const gunY = bugunYerel();
+    const ure = grupla(gorevHatirlatmalari(await getCiftlesmeler().catch(() => []), gunY));
+    const ad = new Map(animals.map((a) => [a.id, hayvanAnaEtiket(a)]));
+    for (const g of ure.slice(0, 12)) {
+      const kalan = gunFarki(gunY, g.tarih);
+      const kim = g.koyunIds.length === 1 ? ad.get(g.koyunIds[0]) ?? '1 koyun' : `${g.koyunIds.length} koyun`;
+      const ne =
+        g.tur === 'dogum'
+          ? { b: '🐑 Doğum yaklaşıyor', a: `${kim} · beklenen ${ureTarih(g.tarih)}${kalan > 0 ? ` (${kalan} gün)` : kalan === 0 ? ' (bugün)' : ` (${-kalan} gün geçti)`}`, h: '/ciftlesme', c: 'Doğumları gör', s: kalan <= 3 ? 'uyari' : 'sira' }
+          : g.tur === 'gecikti'
+            ? { b: '⏰ Doğum gecikti', a: `${kim} · beklenen ${ureTarih(g.tarih)} (${-kalan} gün geçti) · ultrason / kontrol`, h: '/ciftlesme', c: 'Kontrol et', s: 'uyari' }
+            : g.tur === 'ultrason'
+              ? { b: '🔎 Ultrason zamanı', a: `${kim} · katımdan ~45 gün${kalan < 0 ? ` (${-kalan} gün geçti)` : ''}`, h: '/ciftlesme/ultrason', c: 'Sonuç gir', s: 'sira' }
+              : { b: '🧽 Sünger çıkar', a: `${kim} · ${ureTarih(g.tarih)}${kalan === 1 ? ' (yarın)' : kalan < 0 ? ` (${-kalan} gün geçti)` : ' (bugün)'} · çıkarınca PMSG, 48 saat sonra koç`, h: '/ciftlesme', c: 'Listeyi gör', s: kalan <= 0 ? 'uyari' : 'sira' };
+      out.push({ id: `ureme-${g.tur}-${g.tarih}`, seviye: ne.s as Gorev['seviye'], kaynak: 'ureme', baslik: ne.b, aciklama: ne.a, href: ne.h, cta: ne.c, tarih: g.tarih < bugun ? bugun : g.tarih });
+    }
   }
 
   const hasta = animals.filter((a) => a.status === 'sick');

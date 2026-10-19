@@ -6,6 +6,8 @@ import { getGorevler } from '@/kaynak/gorevler/liste';
 import { getYemOzeti } from '@/kaynak/yem/depo';
 import { yemBitisOlaylari } from '@/kaynak/yem/hesap';
 import { yerelGun } from '@/kaynak/arinma/depo';
+import { getCiftlesmeler } from '@/kaynak/ciftlesme/depo';
+import { grupla, hatirlatmalar, HATIRLATMA_ETIKET } from '@/kaynak/ciftlesme/hesap';
 import {
   arinmaOlaylari,
   gorevOlaylari,
@@ -25,7 +27,7 @@ export function takvimKaynagiEkle(k: Kaynak): void {
 }
 
 export async function getTakvimOlaylari(): Promise<TakvimOlay[]> {
-  const [hayvanlar, saglik, tartim, arinma, policeler, gorevler, yem, ...ek] = await Promise.all([
+  const [hayvanlar, saglik, tartim, arinma, policeler, gorevler, yem, ciftlesme, ...ek] = await Promise.all([
     getAnimals(),
     getAllHealthRecordsForAsi().catch(() => []),
     getAllWeightRecords().catch(() => []),
@@ -33,6 +35,7 @@ export async function getTakvimOlaylari(): Promise<TakvimOlay[]> {
     getPoliceler().catch(() => []),
     getGorevler().catch(() => []),
     getYemOzeti().catch(() => null),
+    getCiftlesmeler().catch(() => []),
     ...ekKaynaklar.map((k) => k().catch(() => [] as TakvimOlay[])),
   ]);
   const m = new Map(hayvanlar.map((a) => [a.id, a]));
@@ -47,6 +50,14 @@ export async function getTakvimOlaylari(): Promise<TakvimOlay[]> {
     sigortaOlaylari(policeler),
     gorevOlaylari(gorevler),
     yem ? yemBitisOlaylari(yem.durumlar, yerelGun()) : [],
+    grupla(hatirlatmalar(ciftlesme, yerelGun())).map((g) => ({
+      id: `ureme-${g.tur}-${g.tarih}`,
+      tarih: g.tarih,
+      tur: 'ureme' as const,
+      baslik: `${HATIRLATMA_ETIKET[g.tur]} · ${g.koyunIds.length === 1 ? etiket(g.koyunIds[0]) : `${g.koyunIds.length} koyun`}`,
+      href: g.tur === 'ultrason' ? '/ciftlesme/ultrason' : '/ciftlesme',
+      adet: g.koyunIds.length,
+    })),
     ...ek,
   );
 }

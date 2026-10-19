@@ -21,6 +21,8 @@ import { copeAt, coptenCikar, getCopKutusu, islemKaydet } from './gunluk';
 import { COP_TUR_ETIKET, hayvanCopVerisi } from './cop';
 import { rasyonGeriYukle } from '@/kaynak/yem/kayit';
 import { fotoGeriYukle, metaOku, metaYaz } from '@/kaynak/galeri/meta';
+import { ciftlesmeGeriYukle } from '@/kaynak/ciftlesme/kayit';
+import type { CiftlesmeKaydi } from '@/kaynak/ciftlesme/hesap';
 import { gorselSil } from '@/kaynak/galeri/gorsel';
 import type { FotoKaydi } from '@/kaynak/galeri/hesap';
 import { silinenDemoIsaretle } from '@/kaynak/cekirdek/demo-silinen';
@@ -85,6 +87,8 @@ export async function copGeriYukle(id: string): Promise<CopKaydi | null> {
     await sablonGeriYukle(k.veri as KayitSablonu);
   } else if (k.tur === 'foto' && !yukleyiciler.foto) {
     await fotoGeriYukle(k.veri as FotoKaydi);
+  } else if (k.tur === 'ureme' && !yukleyiciler.ureme) {
+    await ciftlesmeGeriYukle(k.veri as CiftlesmeKaydi);
   } else if (k.tur === 'yem' && !yukleyiciler.yem) {
     await rasyonGeriYukle(k.veri as PartiRasyonu);
   } else {

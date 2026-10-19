@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { KuzuFotoSeridi } from '@/bilesenler/galeri/KuzuFotoSeridi';
 import { KuzuSoyOzeti } from '@/bilesenler/soy/KuzuSoyOzeti';
+import { KoyunUremeOzeti } from '@/bilesenler/ciftlesme/KoyunUremeOzeti';
 import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -325,6 +326,7 @@ export default function AnimalDetailScreen() {
         </Pressable>
       </View>
 
+      {animal.sex === 'female' ? <KoyunUremeOzeti koyunId={animal.id} /> : null}
       <KuzuSoyOzeti animal={animal} />
       <KuzuFotoSeridi animalId={animal.id} />
 

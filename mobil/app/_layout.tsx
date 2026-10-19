@@ -78,6 +78,9 @@ export default function RootLayout() {
                     <Stack.Screen name="sablon/index" options={{ title: 'Kayıt şablonları' }} />
                     <Stack.Screen name="takvim/index" options={{ title: 'Takvim' }} />
                     <Stack.Screen name="excel/index" options={{ title: 'Excel / CSV' }} />
+                    <Stack.Screen name="ciftlesme/index" options={{ title: 'Çiftleşme ve doğum' }} />
+                    <Stack.Screen name="ciftlesme/katim" options={{ title: 'Koç katımı / süngerleme' }} />
+                    <Stack.Screen name="ciftlesme/ultrason" options={{ title: 'Ultrason sonuçları' }} />
                     <Stack.Screen name="yem/index" options={{ title: 'Yem ve rasyon' }} />
                     <Stack.Screen name="ekip/index" options={{ title: 'Ekip ve yetkiler' }} />
                     <Stack.Screen name="sayim/index" options={{ title: 'Sayım listesi' }} />
