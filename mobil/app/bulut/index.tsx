@@ -18,6 +18,7 @@ import {
   uyeYetkiGuncelle,
   type BulutDurum,
 } from '@/kaynak/bulut/servis';
+import { KullanimSartlariNotu } from '@/bilesenler/ortak/KullanimSartlariNotu';
 
 const ROL_AD: Record<string, string> = { sahip: 'Sahip', ortak: 'Ortak', bakici: 'Bakıcı', veteriner: 'Veteriner' };
 const YESIL = '#2d6a4f';
@@ -88,6 +89,7 @@ export default function BulutEkrani() {
           <Text style={s.baslik}>Giriş yap</Text>
           <Text style={s.metin}>E-postana bir giriş kodu ve bağlantı gelir. Şifre yok.</Text>
           <TextInput style={s.girdi} placeholder="E-posta" autoCapitalize="none" keyboardType="email-address" value={eposta} onChangeText={setEposta} />
+          <KullanimSartlariNotu />
           {!kodGitti ? (
             <Dugme etiket="Kod gönder" onPress={calistir(async () => { await girisKoduGonder(eposta); setKodGitti(true); }, 'Kod gönderildi, e-postanı kontrol et.')} />
           ) : (

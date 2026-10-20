@@ -98,7 +98,7 @@ export default function RootLayout() {
                     <Stack.Screen name="sistem-kontrol/index" options={{ title: 'Sistem kontrolü' }} />
                     <Stack.Screen name="isletme-profil/index" options={{ title: 'İşletme profili' }} />
                     <Stack.Screen name="yasal/gizlilik" options={{ title: 'KVKK' }} />
-                    <Stack.Screen name="yasal/kullanim" options={{ title: 'Kullanım koşulları' }} />
+                    <Stack.Screen name="yasal/kullanim" options={{ title: 'Kullanım Şartları' }} />
                   </Stack>
                   <BaglantiSeridi />
                   <AyarlarKaplama />
