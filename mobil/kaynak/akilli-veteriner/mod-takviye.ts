@@ -21,7 +21,13 @@ import {
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
 import { getAktifModId, getMod, type UrunModId } from '@/sabitler/Modlar';
 import { VITAMIN_PROGRAMI, vitaminDozEtiketi, vitaminMlDozYerEtiketi } from './vitamin-programi';
-import { hizliBesiTakviyeSablonu, HIZLI_BESI_PLAN_BASLIK, hizliBesiPlanGun, rapelAnaProgramId } from './hizli-besi-plani';
+import {
+  BESI_SATIS_UFUK_GUN,
+  hizliBesiTakviyeSablonuUfukta,
+  hizliBesiPlanGun,
+  rapelAnaProgramId,
+} from './hizli-besi-plani';
+import { aktifBesiTakviyeSablonu, besiPlanBaslikUfukta, besiUfukGunOku } from '@/kaynak/besi-programi';
 import {
   TARTIM_GIRIS_PROGRAM_ID,
   TARTIM_15_PROGRAM_ID,
@@ -159,7 +165,7 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
   };
 
   if (modId === 'mod1') {
-    return hizliBesiTakviyeSablonu();
+    return hizliBesiTakviyeSablonuUfukta(BESI_SATIS_UFUK_GUN);
   }
 
   const s = ids[modId];
@@ -412,14 +418,19 @@ export async function olusturModTakviyePlani(opts?: {
   const modId = opts?.modId ?? (await getAktifModId());
   const baglanan = await atanmamisHayvanlariModaBagla(modId);
   const hayvanlar = await getHayvanlarByMod(modId);
-  const kalemler = opts?.kalemler ?? modTakviyeSablonu(modId);
+  let kalemler = opts?.kalemler;
+  if (!kalemler) {
+    kalemler = modId === 'mod1' ? await aktifBesiTakviyeSablonu() : modTakviyeSablonu(modId);
+  }
   const mod = getMod(modId);
   const planTarih = opts?.tarih ?? gunSonraTarih(ASI_PLAN_GUN);
   const mevcut = await aktifPlanOku(modId);
   const health = await getAllHealthRecordsForAsi();
 
   const baslik =
-    modId === 'mod1' ? HIZLI_BESI_PLAN_BASLIK : `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`;
+    modId === 'mod1'
+      ? besiPlanBaslikUfukta(await besiUfukGunOku())
+      : `${mod.baslik} — aşı (21g), tartım, parazit & vitamin`;
 
   if (hayvanlar.length === 0) {
     const plan: ModTakviyePlani = {
