@@ -6,6 +6,9 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 import { useAyarlar } from '@/baglam/AyarlarBaglami';
 import { DAHA_MENUSU } from '@/sabitler/HizliIslemler';
+import { AktifKullaniciRozeti } from '@/bilesenler/ekip/YetkiKapisi';
+import { CevrimdisiHazirSatiri } from '@/bilesenler/ortak/BaglantiSeridi';
+import { YasalAltBaglantilar } from '@/bilesenler/ortak/YasalAltBaglantilar';
 
 export default function DahaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -22,6 +25,8 @@ export default function DahaScreen() {
         <Text style={StyleSheet.flatten([styles.sub, { color: colors.textSecondary }])}>
           Diğer ekranlar ve ayarlar
         </Text>
+        <AktifKullaniciRozeti />
+        <CevrimdisiHazirSatiri />
         <View style={styles.liste}>
           {DAHA_MENUSU.map((item) => (
             <Pressable
@@ -50,6 +55,7 @@ export default function DahaScreen() {
             </Pressable>
           ))}
         </View>
+        <YasalAltBaglantilar />
       </ScrollView>
     </View>
   );

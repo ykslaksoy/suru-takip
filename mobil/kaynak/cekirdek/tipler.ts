@@ -1,7 +1,7 @@
 export type AnimalSex = 'female' | 'male';
 export type AnimalSpecies = 'sheep' | 'goat';
 export type AnimalStatus = 'healthy' | 'sick' | 'pregnant' | 'lactating' | 'dry' | 'sold' | 'dead';
-export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement';
+export type StockType = 'feed' | 'vaccine' | 'medicine' | 'supplement' | 'equipment';
 export type {
   PaketAdet,
   PaketTanim,
@@ -17,8 +17,8 @@ export {
 export type SyncStatus = 'synced' | 'pending' | 'error';
 export type RationPhase = 'maintenance' | 'pregnant' | 'lactating' | 'lamb_fattening' | 'dry';
 
-/** Ürün modu — hangi işletme hattına kayıtlı (mod1–mod4) */
-export type AnimalModId = 'mod1' | 'mod2' | 'mod3' | 'mod4';
+/** Ürün modu — hangi işletme hattına kayıtlı (bkz. sabitler/ModlarSabit; mod2 eski kayıt) */
+export type AnimalModId = 'mod1' | 'mod2' | 'mod3' | 'mod4' | 'mod5' | 'mod6' | 'mod7';
 
 export interface Animal {
   id: string;
@@ -32,6 +32,8 @@ export interface Animal {
   paddock: string;
   status: AnimalStatus;
   motherId: string | null;
+  /** Baba (koç) hayvan id'si — opsiyonel, soy ağacı için */
+  fatherId?: string | null;
   /** GEKİS / Aref elektronik kimlik (RFID) */
   gehisId: string | null;
   /** Sırt boya / padok numarası — küpe ve Aref ile eşleşir */
@@ -165,7 +167,8 @@ export const STOCK_TYPE_LABELS: Record<StockType, string> = {
   vaccine: 'Aşı',
   medicine: 'İlaç',
   supplement: 'Takviye',
+  equipment: 'Ekipman',
 };
 
 /** Stok ekranı filtre sırası */
-export const STOCK_TYPE_ORDER: StockType[] = ['feed', 'supplement', 'vaccine', 'medicine'];
+export const STOCK_TYPE_ORDER: StockType[] = ['feed', 'supplement', 'vaccine', 'medicine', 'equipment'];

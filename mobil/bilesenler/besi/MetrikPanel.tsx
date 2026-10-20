@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { hesaplaMod1MetrikRapor, type Mod1MetrikRapor } from '@/kaynak/besi-ortak/metrik-rapor';
@@ -65,6 +66,9 @@ export function MetrikPanel() {
           • {n}
         </Text>
       ))}
+      <Pressable onPress={() => router.push('/maliyet' as never)} style={{ marginTop: 10 }}>
+        <Text style={{ color: colors.tint, fontWeight: '800' }}>Parti maliyet ve kâr →</Text>
+      </Pressable>
     </View>
   );
 }

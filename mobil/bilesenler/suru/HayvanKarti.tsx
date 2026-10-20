@@ -5,6 +5,7 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
+import { RozetGorseli } from '@/bilesenler/kilo/RozetGorseli';
 import { turEmoji } from '@/kaynak/suru/tur';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
@@ -21,7 +22,7 @@ export function HayvanKarti({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const sexIcon = animal.sex === 'female' ? '♀' : '♂';
-  const avatar = grade?.emoji ?? turEmoji(animal.species ?? 'sheep');
+  const avatar = grade && grade.level >= 3 ? grade.emoji : turEmoji(animal.species ?? 'sheep'); // kupa: bronz/gümüş/altın
   const anaEtiket = hayvanAnaEtiket(animal);
   const altEtiket = hayvanAltEtiket(animal);
 
@@ -46,7 +47,7 @@ export function HayvanKarti({
         {grade ? <DereceRozeti grade={grade} /> : null}
       </View>
       <View style={styles.nameRow}>
-        <Text style={styles.avatar}>{avatar}</Text>
+        {grade ? <RozetGorseli grade={grade} boyut={56} /> : <Text style={styles.avatar}>{avatar}</Text>}
         <View style={{ flex: 1 }}>
           {altEtiket ? (
             <Text style={StyleSheet.flatten([styles.meta, { color: colors.textSecondary }])}>

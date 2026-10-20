@@ -7,6 +7,7 @@ import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { addBetaFeedback, addBetaSignup, getBetaFeedback, getBetaSignups } from '@/kaynak/cekirdek/veritabani';
 import type { BetaFeedback, BetaSignup } from '@/kaynak/cekirdek/tipler';
 import { BETA_KATEGORILER, type BetaKategori } from '@/sabitler/Metinler';
+import { KullanimSartlariNotu } from '@/bilesenler/ortak/KullanimSartlariNotu';
 
 export default function PilotProgramEkrani() {
   const scheme = useColorScheme() ?? 'light';
@@ -108,6 +109,7 @@ export default function PilotProgramEkrani() {
               style={[styles.input, { borderColor: colors.border, color: colors.text }]}
             />
           ))}
+          <KullanimSartlariNotu />
           <AnaButon title="Pilot Programa Katıl" onPress={submitSignup} />
         </View>
       )}

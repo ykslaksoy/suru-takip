@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import { denetimYaz, farklar, HAYVAN_ALANLARI } from './denetim';
+import { hayvanAnaEtiket } from './hayvan-etiket';
 import type {
   Animal,
   BetaFeedback,
@@ -74,6 +76,7 @@ export async function upsertAnimal(
     modId: animal.modId !== undefined ? animal.modId : existing?.modId ?? null,
     sirtNo: animal.sirtNo !== undefined ? animal.sirtNo : existing?.sirtNo ?? null,
     gehisId: animal.gehisId !== undefined ? animal.gehisId : existing?.gehisId ?? null,
+    fatherId: animal.fatherId !== undefined ? animal.fatherId : existing?.fatherId ?? null,
     createdAt: existing?.createdAt ?? animal.createdAt ?? now,
     updatedAt: now,
     syncStatus: 'pending',
@@ -81,6 +84,10 @@ export async function upsertAnimal(
   const next = existing ? animals.map((a) => (a.id === record.id ? record : a)) : [...animals, record];
   await write(KEYS.animals, next);
   await enqueueSync('animals', record.id, existing ? 'update' : 'create', record);
+  const degisiklikler = existing ? farklar(existing as unknown as Record<string, unknown>, record as unknown as Record<string, unknown>, HAYVAN_ALANLARI) : undefined;
+  if (!existing || degisiklikler?.length) {
+    denetimYaz({ eylem: existing ? 'guncelleme' : 'ekleme', tablo: 'hayvan', kayitId: record.id, animalId: record.id, ozet: hayvanAnaEtiket(record), degisiklikler });
+  }
   return record;
 }
 
@@ -90,12 +97,18 @@ export async function deleteAnimal(id: string): Promise<void> {
     (await read<Animal>(KEYS.animals)).filter((a) => a.id !== id)
   );
   await enqueueSync('animals', id, 'delete', { id });
+  denetimYaz({ eylem: 'silme', tablo: 'hayvan', kayitId: id, animalId: id, ozet: 'Kuzu silindi' });
 }
 
 export async function getWeightRecords(animalId: string): Promise<WeightRecord[]> {
   return (await read<WeightRecord>(KEYS.weights))
     .filter((r) => r.animalId === animalId)
     .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+}
+
+/** Tüm tartım kayıtları (takvim, dışa aktarma) — yeni → eski */
+export async function getAllWeightRecords(): Promise<WeightRecord[]> {
+  return (await read<WeightRecord>(KEYS.weights)).sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
 }
 
 export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: string }): Promise<WeightRecord> {
@@ -105,6 +118,7 @@ export async function addWeightRecord(record: Omit<WeightRecord, 'id'> & { id?: 
     ? weights.map((w) => (w.id === full.id ? full : w))
     : [...weights, full];
   await write(KEYS.weights, next);
+  denetimYaz({ eylem: 'ekleme', tablo: 'tartim', kayitId: full.id, animalId: full.animalId, ozet: `${full.weightKg} kg` });
   return full;
 }
 
@@ -190,7 +204,19 @@ export async function addHealthRecord(record: Omit<HealthRecord, 'id'> & { id?: 
     const animal = await getAnimal(full.animalId);
     if (animal && animal.status === 'healthy') await upsertAnimal({ ...animal, status: 'sick' });
   }
+  denetimYaz({ eylem: 'ekleme', tablo: 'saglik', kayitId: full.id, animalId: full.animalId, ozet: full.medicine || full.treatment || full.diagnosis || 'Sağlık kaydı' });
   return full;
+}
+
+/** Sağlık kaydını sil (geri dönüşüm kutusu önce kopyalar) */
+export async function deleteHealthRecord(id: string): Promise<void> {
+  await write(KEYS.health, (await read<HealthRecord>(KEYS.health)).filter((h) => h.id !== id));
+  denetimYaz({ eylem: 'silme', tablo: 'saglik', kayitId: id, ozet: 'Sağlık kaydı silindi' });
+}
+
+export async function deleteWeightRecord(id: string): Promise<void> {
+  await write(KEYS.weights, (await read<WeightRecord>(KEYS.weights)).filter((w) => w.id !== id));
+  denetimYaz({ eylem: 'silme', tablo: 'tartim', kayitId: id, ozet: 'Tartım silindi' });
 }
 
 export async function getActiveWithdrawals(): Promise<(HealthRecord & { earTag: string })[]> {
@@ -213,6 +239,7 @@ export async function upsertStockItem(item: Omit<StockItem, 'id'> & { id?: strin
   const items = await read<StockItem>(KEYS.stock);
   const existing = items.find((i) => i.id === full.id);
   await write(KEYS.stock, existing ? items.map((i) => (i.id === full.id ? full : i)) : [...items, full]);
+  if (!existing) denetimYaz({ eylem: 'ekleme', tablo: 'stok', kayitId: full.id, ozet: full.name });
   return full;
 }
 
@@ -225,6 +252,7 @@ export async function adjustStock(stockId: string, movementType: 'in' | 'out', q
     ...(await read<StockMovement>(KEYS.movements)),
     { id: uuidv4(), stockId, movementType, quantity, recordedAt: new Date().toISOString(), notes },
   ]);
+  denetimYaz({ eylem: 'ekleme', tablo: 'stok_hareket', kayitId: stockId, ozet: `${item.name} ${movementType === 'in' ? '+' : '−'}${quantity} ${item.unit}${notes ? ` · ${notes}` : ''}` });
 }
 
 export async function getLowStockItems(): Promise<StockItem[]> {

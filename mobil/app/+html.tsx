@@ -2,8 +2,8 @@ import { ScrollViewStyleReset } from 'expo-router/html';
 import type { ReactNode } from 'react';
 
 /**
- * Mobil Safari: 100dvh ilk paint’te görünür alandan büyük → üst kırpılır, altta boşluk.
- * visualViewport yüksekliğini ilk script’te sabitle → FOUC / hydrate kayması olmaz.
+ * Mobil Safari: 100dvh ilk paint'te görünür alandan büyük → üst kırpılır, altta boşluk.
+ * visualViewport yüksekliğini ilk script'te sabitle → FOUC / hydrate kayması olmaz.
  */
 const appHeightScript = `
 (function () {
@@ -42,6 +42,8 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="SürüYön" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="description" content="SürüYön — koyun ve kuzu sürü yönetimi" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/ikon/apple-touch-icon.png" />
 
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: webStyles }} />
@@ -52,6 +54,7 @@ export default function Root({ children }: { children: ReactNode }) {
   );
 }
 
+/** SuperAraç ile aynı fikir: masaüstünde 390px telefon kolonu, çerçeve görünür. */
 const webStyles = `
 *, *::before, *::after {
   box-sizing: border-box;
@@ -102,10 +105,10 @@ img {
   }
 }
 
-/* Masaüstünde telefon çerçevesi — uygulama hissi */
+/* Masaüstü / geniş ekran: SuperAraç tarzı telefon kolonu (yatay dahil) */
 @media (min-width: 520px) {
   body {
-    background: linear-gradient(145deg, #1a2e1a 0%, #2d6a4f 45%, #40916c 100%);
+    background: #e8ecee;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -119,32 +122,25 @@ img {
 
   #root {
     width: 100%;
-    max-width: 430px;
-    height: min(920px, calc(100dvh - 56px));
-    max-height: 920px;
-    border-radius: 32px;
+    max-width: 390px;
+    height: min(844px, calc(100dvh - 24px));
+    max-height: calc(100dvh - 24px);
+    border-radius: 28px;
     overflow: hidden;
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.12),
-      0 30px 90px rgba(0, 0, 0, 0.45);
+      0 0 0 1px rgba(17, 24, 39, 0.08),
+      0 8px 32px rgba(17, 24, 39, 0.12);
     background-color: #f4f7f0;
     padding-top: 0;
     padding-bottom: 0;
   }
-
-  @media (prefers-color-scheme: dark) {
-    #root {
-      background-color: #1a241a;
-    }
-  }
 }
 
-/* Gerçek telefonda: çentik CSS’ten; tarayıcı chrome --app-height / svh ile */
+/* Gerçek telefonda: çentik CSS'ten; tarayıcı chrome --app-height / svh ile */
 @media (max-width: 519px) {
   #root {
-    /* İlk paint’ten görünür — JS inset beklenmez (FOUC yok) */
+    /* İlk paint'ten görünür — JS inset beklenmez (FOUC yok) */
     padding-top: max(env(safe-area-inset-top, 0px), 12px);
-    /* Sadece home indicator — ekstra px Safari üstünde beyaz boşluk yapıyordu */
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }

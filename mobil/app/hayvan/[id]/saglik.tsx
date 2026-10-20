@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Platform } from 'react-native';
+import { saglikKaydiSil } from '@/kaynak/gecmis/hayvan-sil';
+import { metindenIlaclar } from '@/kaynak/arinma/hesap';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { addHealthRecord, getAnimal, getHealthRecords, upsertAnimal, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { dusumMiktari, stokKalemiEslestir } from '@/kaynak/stok/eslesme';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { HealthRecord } from '@/kaynak/cekirdek/tipler';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
@@ -41,6 +47,7 @@ export default function AnimalHealthScreen() {
 
   const save = async () => {
     if (!id) return;
+    if (!yetkiUyar('tedavi')) return;
     await addHealthRecord({
       animalId: id,
       recordType: form.recordType,
@@ -52,6 +59,23 @@ export default function AnimalHealthScreen() {
       vetName: form.vetName.trim(),
       recordedAt: new Date().toISOString(),
       notes: form.notes.trim(),
+    });
+    // Aşı / tedavi: ilaç adı stok kalemiyle eşleşirse 1 doz düş
+    let stokMesaj = '';
+    if ((form.recordType === 'vaccine' || form.recordType === 'treatment') && form.medicine.trim()) {
+      const item = stokKalemiEslestir(form.medicine, await getStockItems());
+      if (item) {
+        const { dus, eksik } = dusumMiktari(1, 1, item.quantity);
+        if (dus > 0) await adjustStock(item.id, 'out', dus, `Sağlık kaydı · ${animal?.earTag ?? ''}`);
+        stokMesaj = eksik ? `${item.name}: stok yetersiz, düşülemedi` : `${item.name}: stoktan 1 düşüldü`;
+      }
+    }
+    if (stokMesaj) Alert.alert('Kaydedildi', stokMesaj);
+    await islemKaydet({
+      tur: form.recordType === 'vaccine' ? 'asi' : 'ilac',
+      ozet: `${animal ? hayvanAnaEtiket(animal) : ''} · ${form.medicine.trim() || form.diagnosis.trim() || 'Sağlık kaydı'}`,
+      detay: stokMesaj || undefined,
+      animalId: id,
     });
     if (form.recordType === 'illness') {
       const animal = await getAnimal(id);
@@ -85,7 +109,25 @@ export default function AnimalHealthScreen() {
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.type, { color: colors.tint }]}>{typeLabels[item.recordType]}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[styles.type, { color: colors.tint, flex: 1 }]}>{typeLabels[item.recordType]}</Text>
+              <Pressable
+                hitSlop={8}
+                onPress={() => {
+                  if (!yetkiUyar('silme')) return;
+                  const yap = async () => {
+                    await saglikKaydiSil(item, animal ? hayvanAnaEtiket(animal) : '');
+                    refresh();
+                    load();
+                  };
+                  const m = 'Kayıt silinsin mi? 30 gün geri dönüşüm kutusunda kalır.';
+                  if (Platform.OS === 'web') {
+                    if (typeof window !== 'undefined' && window.confirm(m)) void yap();
+                  } else Alert.alert('Sil', m, [{ text: 'İptal', style: 'cancel' }, { text: 'Sil', style: 'destructive', onPress: () => void yap() }]);
+                }}>
+                <Text style={{ color: colors.danger, fontSize: 12, fontWeight: '700' }}>Sil</Text>
+              </Pressable>
+            </View>
             <Text style={{ color: colors.text, fontWeight: '600', marginTop: 4 }}>
               {item.symptoms || item.diagnosis || item.treatment}
             </Text>
@@ -141,6 +183,14 @@ export default function AnimalHealthScreen() {
                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
               />
             ))}
+            {(() => {
+              const e = metindenIlaclar(`${form.medicine} ${form.treatment}`)[0];
+              return e && e.gun > 0 ? (
+                <Text style={{ color: colors.danger, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+                  🚫 {e.tanim.ad}: et arınma {e.gun} gün (tahmini) — boş bırakırsan bu değer kullanılır
+                </Text>
+              ) : null;
+            })()}
             <AnaButon title="Kaydet" onPress={save} />
             <AnaButon title="İptal" variant="secondary" onPress={() => setModal(false)} />
           </View>

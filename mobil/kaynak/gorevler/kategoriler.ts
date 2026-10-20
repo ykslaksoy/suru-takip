@@ -102,7 +102,8 @@ export async function getGorevGruplari(): Promise<GorevGruplarSonuc> {
   const gruplar: GorevGrup[] = [];
   for (const meta of GOREV_KATEGORI_SIRASI) {
     const gorevler = buckets[meta.id];
-    if (gorevler.length === 0) continue;
+    // Aşı her zaman görünsün — katalog listesine giden giriş
+    if (gorevler.length === 0 && meta.id !== 'asi') continue;
     gruplar.push({ ...meta, adet: gorevler.length, gorevler: gorevleriSirala(gorevler) });
   }
 

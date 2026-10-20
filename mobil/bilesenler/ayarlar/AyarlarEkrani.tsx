@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { YetkiKapisi } from '@/bilesenler/ekip/YetkiKapisi';
+import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -18,7 +19,7 @@ import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 
 type LinkSatir = { baslik: string; href?: string; onPress?: () => void; ok?: string };
 
-export function AyarlarEkrani() {
+function AyarlarIcerik() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { tierLabel, limit } = useSubscription();
@@ -36,13 +37,13 @@ export function AyarlarEkrani() {
 
   const sec = async (id: UrunModId) => {
     const mod = await secMod(id);
-    if (mod.href) {
-      git(mod.href);
+    if (!mod.hazir) {
+      const mesaj = `${mod.baslik} modu yakında açılacak.`;
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(`Yakında\n\n${mesaj}`);
+      else Alert.alert('Yakında', mesaj);
       return;
     }
-    if (!mod.hazir) {
-      Alert.alert('Yakında', `${mod.baslik} yolculuğu yakında açılacak.`);
-    }
+    if (mod.href) git(mod.href);
   };
 
   const satirStil = useMemo(
@@ -93,7 +94,7 @@ export function AyarlarEkrani() {
       },
     },
     { baslik: 'KVKK / gizlilik', href: '/yasal/gizlilik' },
-    { baslik: 'Kullanım koşulları', href: '/yasal/kullanim' },
+    { baslik: 'Kullanım Şartları', href: '/yasal/kullanim' },
   ];
 
   return (
@@ -231,3 +232,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 });
+
+/** Ayarlar yalnız “Sürü ve ayarları düzenler” yetkisiyle */
+export function AyarlarEkrani() {
+  return (
+    <YetkiKapisi yetki="duzenleme">
+      <AyarlarIcerik />
+    </YetkiKapisi>
+  );
+}

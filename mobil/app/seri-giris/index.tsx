@@ -18,6 +18,7 @@ import {
   type SeriMod,
   type SeriOturum,
 } from '@/kaynak/seri-giris';
+import { HizliTartim } from '@/bilesenler/kilo/HizliTartim';
 import { dinlemeyiBaslat, metniSeslendir, seslendirmeyiDurdur, type DinlemeKontrol } from '@/kaynak/ses';
 import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
 import { useGirisYontemi } from '@/baglam/GirisYontemiBaglami';
@@ -30,7 +31,7 @@ export default function SeriGirisScreen() {
   const { tercih } = useGirisYontemi();
   const kuzuYontem = etkinKuzuSecim(tercih.kuzuSecim);
   const tartimYontem = etkinTartimGiris(tercih.tartimGiris);
-  const [mod, setMod] = useState<SeriMod>('tartim');
+  const [mod, setMod] = useState<SeriMod | 'hizli'>('hizli');
   const [oturum, setOturum] = useState<SeriOturum | null>(null);
   const [satir, setSatir] = useState('');
   const [dinliyor, setDinliyor] = useState(false);
@@ -45,6 +46,7 @@ export default function SeriGirisScreen() {
   }, [load]);
 
   const baslat = async () => {
+    if (mod === 'hizli') return;
     setOturum(await seriOturumBaslat(mod));
   };
 
@@ -114,28 +116,40 @@ export default function SeriGirisScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Seri ahır modu' }} />
+      <Stack.Screen options={{ title: mod === 'hizli' && !oturum ? 'Hızlı tartım' : 'Seri ahır modu' }} />
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.pad}>
-        <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
-          Ahırda arka arkaya kayıt. Satır ekleyin (yazın veya dinleyin), sonra «Hepsini uygula» ile veritabanına yazın.
-        </Text>
-        <YontemOzeti ayarlarLink />
-        <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 12, lineHeight: 18 }}>
-          {oturum?.mod === 'tartim'
-            ? `Tartım: ${tartimYontem === 'sesle-kilo' ? 'ses veya yazı' : 'kayıtlı yöntem'}`
-            : `Kuzu no: ${kuzuYontem === 'sesle-numara' ? 'ses veya yazı' : 'kayıtlı yöntem'}`}
-        </Text>
         {!oturum ? (
           <>
             <AltButonlar
               items={[
-                { key: 'tartim', label: 'Tartım' },
-                { key: 'asi', label: 'Aşı' },
+                { key: 'hizli', label: 'Hızlı tartım' },
+                { key: 'tartim', label: 'Seri tartım' },
+                { key: 'asi', label: 'Seri aşı' },
               ]}
               activeKey={mod}
-              onSelect={(k) => setMod(k as SeriMod)}
+              onSelect={(k) => setMod(k as SeriMod | 'hizli')}
             />
-            <AnaButon title={`${SERI_MOD_ETIKET[mod]} başlat`} onPress={() => void baslat()} />
+            {mod === 'hizli' ? (
+              <>
+                <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
+                  Küpeyi yaz, Enter → kiloyu yaz, Enter: kaydedilir ve sıradaki kuzuya geçilir.
+                </Text>
+                <HizliTartim />
+              </>
+            ) : (
+              <>
+                <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
+                  Ahırda arka arkaya kayıt. Satır ekleyin (yazın veya dinleyin), sonra «Hepsini uygula» ile veritabanına yazın.
+                </Text>
+                <YontemOzeti ayarlarLink />
+                <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 12, lineHeight: 18 }}>
+                  {mod === 'tartim'
+                    ? `Tartım: ${tartimYontem === 'sesle-kilo' ? 'ses veya yazı' : 'kayıtlı yöntem'}`
+                    : `Kuzu no: ${kuzuYontem === 'sesle-numara' ? 'ses veya yazı' : 'kayıtlı yöntem'}`}
+                </Text>
+                <AnaButon title={`${SERI_MOD_ETIKET[mod]} başlat`} onPress={() => void baslat()} />
+              </>
+            )}
           </>
         ) : (
           <>

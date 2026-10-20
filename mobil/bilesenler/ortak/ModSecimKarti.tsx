@@ -16,7 +16,8 @@ export function ModSecimKarti({ mod, secili, onPress }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected: !!secili }}
+      accessibilityState={{ selected: !!secili, disabled: !mod.hazir }}
+      accessibilityLabel={`Mod ${mod.no}: ${mod.baslik}${mod.hazir ? '' : ', yakında'}`}
       onPress={onPress}
       style={({ pressed }) =>
         StyleSheet.flatten([
@@ -25,7 +26,7 @@ export function ModSecimKarti({ mod, secili, onPress }: Props) {
             backgroundColor: colors.card,
             borderColor: secili ? colors.tint : colors.border,
             borderWidth: secili ? 2 : 1,
-            opacity: pressed ? 0.9 : 1,
+            opacity: !mod.hazir ? 0.6 : pressed ? 0.9 : 1,
           },
         ])
       }>

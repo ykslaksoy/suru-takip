@@ -3,12 +3,21 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 
-export function KiloGrafigi({ records }: { records: WeightRecord[] }) {
+export function KiloGrafigi({
+  records,
+  referans,
+}: {
+  records: WeightRecord[];
+  /** Tarih için beklenen kilo (referans eğri) — verilirse çubuk üstünde çizgi */
+  referans?: (at: string) => number | null;
+}) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const sorted = [...records].sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
-  const max = Math.max(...sorted.map((r) => r.weightKg), 1);
-  const min = Math.min(...sorted.map((r) => r.weightKg), 0);
+  const refler = sorted.map((r) => (referans ? referans(r.recordedAt) : null));
+  const tum = [...sorted.map((r) => r.weightKg), ...refler.filter((x): x is number => x != null)];
+  const max = Math.max(...tum, 1);
+  const min = Math.min(...tum, 0);
   const range = max - min || 1;
 
   if (sorted.length === 0) {
@@ -22,11 +31,20 @@ export function KiloGrafigi({ records }: { records: WeightRecord[] }) {
   return (
     <View style={[styles.chart, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.bars}>
-        {sorted.map((r) => {
+        {sorted.slice(-10).map((r, i, arr) => {
           const height = ((r.weightKg - min) / range) * 80 + 20;
+          const ref = refler[sorted.length - arr.length + i];
+          const refH = ref != null ? ((ref - min) / range) * 80 + 20 : null;
+          const altinda = ref != null && r.weightKg < ref * 0.9;
           return (
             <View key={r.id} style={styles.barCol}>
-              <View style={[styles.bar, { height, backgroundColor: colors.tint }]} />
+              <Text style={{ color: colors.text, fontSize: 10, fontWeight: '700' }}>{String(r.weightKg).replace('.', ',')}</Text>
+              <View style={{ height: 100, justifyContent: 'flex-end' }}>
+                {refH != null ? (
+                  <View style={{ position: 'absolute', bottom: refH, left: -4, right: -4, height: 2, backgroundColor: colors.warning }} />
+                ) : null}
+                <View style={[styles.bar, { height, backgroundColor: altinda ? colors.warning : colors.tint }]} />
+              </View>
               <Text style={[styles.label, { color: colors.textSecondary }]}>
                 {new Date(r.recordedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
               </Text>
@@ -34,6 +52,11 @@ export function KiloGrafigi({ records }: { records: WeightRecord[] }) {
           );
         })}
       </View>
+      {referans ? (
+        <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 8 }}>
+          Turuncu çizgi: referans eğri (varsayılan, Hızlı tartım ayarından değişir)
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -49,7 +72,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-around',
-    height: 120,
+    height: 140,
   },
   barCol: {
     alignItems: 'center',

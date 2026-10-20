@@ -1,9 +1,27 @@
 import { addHealthRecord, addWeightRecord, adjustStock, getAnimals, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { getTabancaDurum, tabancaAyariGetir } from '@/kaynak/akilli-veteriner/tabanca-ayar';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { v4 as uuidv4 } from 'uuid';
-import type { SesKomutEylemi } from './tipler';
+import type { GrupAsiKomutu, SesKomutEylemi } from './tipler';
+import { topluSec } from '@/kaynak/toplu/secim';
+import { topluUygula } from '@/kaynak/toplu/uygula';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 
-async function hayvanBul(arama: string) {
+/** Grup komutundaki aktif kuzu sayısı (geri okuma için) */
+export async function grupHayvanSayisi(e: GrupAsiKomutu): Promise<number> {
+  return topluSec(await getAnimals(), e.grup).secilen.length;
+}
+
+/** Tabanca açıksa grubun tabanca ayarı (ml); kapalı/uygun değilse undefined */
+export async function grupTabancaMl(e: GrupAsiKomutu): Promise<number | undefined> {
+  const durum = await getTabancaDurum();
+  if (!durum.aktif) return undefined;
+  const { secilen } = topluSec(await getAnimals(), e.grup);
+  const ayar = await tabancaAyariGetir(e.programId, secilen, durum.kapasite);
+  return ayar.uygun ? ayar.ayarMl : undefined;
+}
+
+export async function hayvanBul(arama: string) {
   const term = arama.trim();
   if (!term) return null;
   const list = await getAnimals({ search: term });
@@ -39,6 +57,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         recordedAt: new Date().toISOString(),
         notes: 'Sesli komut',
       });
+      await islemKaydet({ tur: 'tartim', ozet: `${hayvanAnaEtiket(animal)} · ${eylem.kiloKg} kg`, detay: 'Sesli komut', animalId: animal.id });
       return { ok: true };
     }
     case 'asi': {
@@ -59,6 +78,13 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         recordedAt: new Date().toISOString().split('T')[0],
         notes: `Sesli komut · ${hayvanAnaEtiket(animal)}`,
       });
+      await islemKaydet({ tur: 'asi', ozet: `${hayvanAnaEtiket(animal)} · ${eylem.asiAdi}`, detay: 'Sesli komut', animalId: animal.id });
+      return { ok: true };
+    }
+    case 'grup_asi': {
+      const { secilen } = topluSec(await getAnimals(), eylem.grup);
+      if (secilen.length === 0) return { ok: false, hata: 'Bu grupta kuzu bulunamadı.' };
+      await topluUygula({ hayvanlar: secilen, programId: eylem.programId, programTur: eylem.programTur, kaynak: 'Sesli komut', tabanca: eylem.tabancaMl != null });
       return { ok: true };
     }
     case 'stok': {
@@ -69,6 +95,7 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
         return { ok: false, hata: 'Eşleşen stok kalemi bulunamadı.' };
       }
       await adjustStock(item.id, eylem.yon === 'giris' ? 'in' : 'out', eylem.miktar, 'Sesli komut');
+      await islemKaydet({ tur: 'stok', ozet: `${item.name} ${eylem.yon === 'giris' ? '+' : '−'}${eylem.miktar} ${item.unit}`, detay: 'Sesli komut' });
       return { ok: true };
     }
     default:

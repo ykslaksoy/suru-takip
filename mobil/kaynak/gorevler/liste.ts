@@ -1,5 +1,4 @@
 import {
-  getActiveWithdrawals,
   getAnimals,
   getAllHealthRecordsForAsi,
   getLatestWeight,
@@ -24,6 +23,13 @@ import {
   type IsPlaniTur,
 } from '@/kaynak/gorevler/is-plani';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
+import { getPoliceler } from '@/kaynak/sigorta/depo';
+import { sigortaUyarilari, yerelTarih } from '@/kaynak/sigorta/hesap';
+import { getAktifArinmalar } from '@/kaynak/arinma/depo';
+import { rasyonsuzPartiUyarilari, yemUyarilari } from '@/kaynak/yem/depo';
+import { tarihTR } from '@/kaynak/arinma/hesap';
+import { getCiftlesmeler, bugunYerel } from '@/kaynak/ciftlesme/depo';
+import { gorevHatirlatmalari, grupla, gunFarki, trTarih as ureTarih } from '@/kaynak/ciftlesme/hesap';
 import {
   bugunTarih,
   gorevleriSirala,
@@ -51,17 +57,6 @@ export function gorevSeviyeEtiket(seviye: GorevSeviye): string {
   if (seviye === 'sira') return 'Sırada';
   if (seviye === 'plan') return 'Planlı';
   return 'Bilgi';
-}
-
-function tarihGunSonra(gun: number, from = new Date()): string {
-  const d = new Date(from);
-  d.setDate(d.getDate() + gun);
-  return d.toISOString().slice(0, 10);
-}
-
-function kalanGun(recordedAt: string, withdrawalDays: number): number {
-  const bitis = new Date(recordedAt).getTime() + withdrawalDays * 86400000;
-  return Math.max(0, Math.ceil((bitis - Date.now()) / 86400000));
 }
 
 function dusukTakviyeler(items: StockItem[]): StockItem[] {
@@ -142,6 +137,54 @@ async function yolculukGorevi(): Promise<Gorev | null> {
       cta: 'Yolculuğa git',
     };
   }
+  if (modId === 'mod6') {
+    const { getMod6BirlesikIlerleme, sonrakiAcikAdimMod6 } = await import('@/kaynak/damizlik-sut');
+    const m = await getMod6BirlesikIlerleme();
+    const sonraki = sonrakiAcikAdimMod6(m.tamamlanan);
+    if (!sonraki) return null;
+    const kanit = m.kanitlar.find((k) => k.id === sonraki.id);
+    return {
+      id: `yolculuk-${sonraki.id}`,
+      seviye: 'sira',
+      kaynak: 'yolculuk',
+      baslik: `${mod.icon} ${sonraki.baslik}`,
+      aciklama: kanit?.kanit ?? sonraki.aciklama,
+      href: '/(tabs)/yolculuk',
+      cta: 'Yolculuğa git',
+    };
+  }
+  if (modId === 'mod5') {
+    const { getMod5BirlesikIlerleme, sonrakiAcikAdimMod5 } = await import('@/kaynak/sut-besi');
+    const m = await getMod5BirlesikIlerleme();
+    const sonraki = sonrakiAcikAdimMod5(m.tamamlanan);
+    if (!sonraki) return null;
+    const kanit = m.kanitlar.find((k) => k.id === sonraki.id);
+    return {
+      id: `yolculuk-${sonraki.id}`,
+      seviye: 'sira',
+      kaynak: 'yolculuk',
+      baslik: `${mod.icon} ${sonraki.baslik}`,
+      aciklama: kanit?.kanit ?? sonraki.aciklama,
+      href: '/(tabs)/yolculuk',
+      cta: 'Yolculuğa git',
+    };
+  }
+  if (modId === 'mod7') {
+    const { getMod7BirlesikIlerleme, sonrakiAcikAdimMod7 } = await import('@/kaynak/sut-etc');
+    const m = await getMod7BirlesikIlerleme();
+    const sonraki = sonrakiAcikAdimMod7(m.tamamlanan);
+    if (!sonraki) return null;
+    const kanit = m.kanitlar.find((k) => k.id === sonraki.id);
+    return {
+      id: `yolculuk-${sonraki.id}`,
+      seviye: 'sira',
+      kaynak: 'yolculuk',
+      baslik: `${mod.icon} ${sonraki.baslik}`,
+      aciklama: kanit?.kanit ?? sonraki.aciklama,
+      href: '/(tabs)/yolculuk',
+      cta: 'Yolculuğa git',
+    };
+  }
   return null;
 }
 
@@ -165,20 +208,21 @@ function isPlaniCta(tur: IsPlaniTur): string {
 export async function getGorevler(): Promise<Gorev[]> {
   const out: Gorev[] = [];
 
-  const withdrawals = await getActiveWithdrawals();
+  // İlaç arınma süresi (kesim yasağı) — kayıttaki gün ile ilaç tablosunun büyüğü
   const bugun = bugunTarih();
-  for (const w of withdrawals) {
-    const gun = kalanGun(w.recordedAt, w.withdrawalDays);
-    const bitis = tarihGunSonra(w.withdrawalDays, new Date(w.recordedAt));
+  const arinmalar = await getAktifArinmalar().catch(() => []);
+  const arinmaHayvan = new Map((await getAnimals()).map((a) => [a.id, a]));
+  for (const w of arinmalar) {
+    const a = arinmaHayvan.get(w.animalId);
     out.push({
       id: `bekletme-${w.animalId}`,
-      seviye: 'uyari',
+      seviye: w.kalanGun <= 3 ? 'sira' : 'uyari',
       kaynak: 'bekletme',
-      baslik: 'Bekletme',
-      aciklama: `${hayvanAnaEtiket({ earTag: w.earTag ?? '', sirtNo: (w as { sirtNo?: string | null }).sirtNo ?? null, gehisId: null, name: '' })} · ${w.medicine} · ${gun} gün kaldı`,
-      href: `/hayvan/${w.animalId}/saglik`,
-      cta: 'Kayıt aç',
-      tarih: bitis,
+      baslik: '🚫 Arınma · kesilemez',
+      aciklama: `${a ? hayvanAnaEtiket(a) : w.animalId} · ${w.ilac} · ${tarihTR(w.bitis)} tarihine kadar kesilemez (${w.kalanGun} gün)`,
+      href: `/hayvan/${w.animalId}`,
+      cta: 'Kuzuyu aç',
+      tarih: bugun,
     });
   }
 
@@ -256,6 +300,59 @@ export async function getGorevler(): Promise<Gorev[]> {
     });
   }
 
+  // Rasyondaki yem az kaldı / bitti (gün hesabı aktif parti rasyonlarından)
+  const dusukIds = new Set(lowStock.map((i) => i.id));
+  for (const y of (await yemUyarilari().catch(() => [])).slice(0, 10)) {
+    if (dusukIds.has(y.stockId) && y.uyari !== 'bitti') continue;
+    out.push({
+      id: `yem-yeter-${y.stockId}`,
+      seviye: 'uyari',
+      kaynak: 'stok',
+      baslik: y.uyari === 'bitti' ? '🌾 Yem bitti' : '🌾 Yem az kaldı',
+      aciklama:
+        y.uyari === 'bitti'
+          ? `${y.ad} · stok yok, rasyon günde ${Math.round(y.gunlukKg)} kg istiyor`
+          : `${y.ad} · ${Math.round(y.stokKg)} kg · ${y.yeterGun} gün yeter (günde ${Math.round(y.gunlukKg)} kg)`,
+      href: '/yem',
+      cta: 'Yem al',
+      tarih: bugun,
+    });
+  }
+
+  // Kuzusu olan ama rasyonu olmayan parti/padok
+  for (const r of (await rasyonsuzPartiUyarilari().catch(() => [])).slice(0, 10)) {
+    out.push({
+      id: `rasyon-yok-${r.parti}`,
+      seviye: 'sira',
+      kaynak: 'stok',
+      baslik: '🍽️ Rasyon yok',
+      aciklama: `${r.parti} · ${r.bas} baş · rasyon tanımlı değil, yem stoktan düşmüyor`,
+      href: '/yem',
+      cta: 'Rasyon öner',
+      tarih: bugun,
+    });
+  }
+
+  // Çiftleşme / doğum hatırlatmaları (aynı gün aynı iş → tek satır)
+  {
+    const gunY = bugunYerel();
+    const ure = grupla(gorevHatirlatmalari(await getCiftlesmeler().catch(() => []), gunY));
+    const ad = new Map(animals.map((a) => [a.id, hayvanAnaEtiket(a)]));
+    for (const g of ure.slice(0, 12)) {
+      const kalan = gunFarki(gunY, g.tarih);
+      const kim = g.koyunIds.length === 1 ? ad.get(g.koyunIds[0]) ?? '1 koyun' : `${g.koyunIds.length} koyun`;
+      const ne =
+        g.tur === 'dogum'
+          ? { b: '🐑 Doğum yaklaşıyor', a: `${kim} · beklenen ${ureTarih(g.tarih)}${kalan > 0 ? ` (${kalan} gün)` : kalan === 0 ? ' (bugün)' : ` (${-kalan} gün geçti)`}`, h: '/ciftlesme', c: 'Doğumları gör', s: kalan <= 3 ? 'uyari' : 'sira' }
+          : g.tur === 'gecikti'
+            ? { b: '⏰ Doğum gecikti', a: `${kim} · beklenen ${ureTarih(g.tarih)} (${-kalan} gün geçti) · ultrason / kontrol`, h: '/ciftlesme', c: 'Kontrol et', s: 'uyari' }
+            : g.tur === 'ultrason'
+              ? { b: '🔎 Ultrason zamanı', a: `${kim} · katımdan ~45 gün${kalan < 0 ? ` (${-kalan} gün geçti)` : ''}`, h: '/ciftlesme/ultrason', c: 'Sonuç gir', s: 'sira' }
+              : { b: '🧽 Sünger çıkar', a: `${kim} · ${ureTarih(g.tarih)}${kalan === 1 ? ' (yarın)' : kalan < 0 ? ` (${-kalan} gün geçti)` : ' (bugün)'} · çıkarınca PMSG, 48 saat sonra koç`, h: '/ciftlesme', c: 'Listeyi gör', s: kalan <= 0 ? 'uyari' : 'sira' };
+      out.push({ id: `ureme-${g.tur}-${g.tarih}`, seviye: ne.s as Gorev['seviye'], kaynak: 'ureme', baslik: ne.b, aciklama: ne.a, href: ne.h, cta: ne.c, tarih: g.tarih < bugun ? bugun : g.tarih });
+    }
+  }
+
   const hasta = animals.filter((a) => a.status === 'sick');
   for (const h of hasta.slice(0, 15)) {
     out.push({
@@ -285,6 +382,21 @@ export async function getGorevler(): Promise<Gorev[]> {
         tarih: bugun,
       });
     }
+  }
+
+  // Sigorta (TARSİM): bitişe 30 / 7 gün kala, süresi doldu, sigortasız kuzular
+  const policeler = await getPoliceler().catch(() => []);
+  for (const u of sigortaUyarilari(policeler, animals, yerelTarih())) {
+    out.push({
+      id: u.id,
+      seviye: u.seviye,
+      kaynak: 'sigorta',
+      baslik: `🛡️ ${u.baslik}`,
+      aciklama: u.aciklama,
+      href: '/sigorta',
+      cta: 'Sigortaya git',
+      tarih: bugun,
+    });
   }
 
   const yol = await yolculukGorevi();
@@ -408,10 +520,10 @@ export async function getBugunGorevleri(limit = 3): Promise<Gorev[]> {
       id: 'bugun-bekletme-ozet',
       seviye: 'uyari',
       kaynak: 'bekletme',
-      baslik: 'Bekletme',
-      aciklama: `${bekN} hayvan · ilaç bekletmesi devam ediyor`,
-      href: '/gorevler',
-      cta: 'Görevlere bak',
+      baslik: '🚫 Arınma süresi',
+      aciklama: `${bekN} kuzu ilaç arınmasında · kesime / satışa gönderme`,
+      href: '/arinma',
+      cta: 'Listeye bak',
       tarih: bugun,
     });
   }

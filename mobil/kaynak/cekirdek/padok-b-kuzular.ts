@@ -1,3 +1,4 @@
+import { getSilinenDemoIdleri } from './demo-silinen';
 /**
  * Eşleşik kuzu seed’leri — Padok A + B + C.
  *
@@ -10,8 +11,11 @@ import { addWeightRecord, getAnimals, getWeightRecords, upsertAnimal } from '@/k
 import { hayvanKayitAdi } from '@/kaynak/cekirdek/hayvan-etiket';
 import { ensureVarsayilanPadoklar, GOZLEM_PADOK_AD } from '@/kaynak/suru/padok';
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
+import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { seedPadokHayvanKayitlari } from './padok-kuzu-kayitlar';
 import { padokAgirlikGun, padokBeklenenArtisKg, padokRasyonNotu } from './padok-rasyon';
+
+import { DEMO_KUZU_CINSIYET, demoKuzuMu } from './demo-kuzu';
 
 /** Mevcut tartımın tarihini koru; kilo revizyonunda kg güncelle */
 async function yazTartimEgerYok(
@@ -90,7 +94,7 @@ export async function seedPadokAEslesikKuzular(): Promise<{ adet: number; padok:
 
   for (let sira = 1; sira <= PADOK_A_KUZU_ADET; sira++) {
     const k = padokAKuzuKimlik(sira);
-    const sex = sira % 2 === 0 ? 'male' : 'female';
+    const sex = DEMO_KUZU_CINSIYET; // besi kuzuları genelde erkek
     await upsertAnimal({
       id: k.id,
       earTag: k.earTag,
@@ -149,7 +153,7 @@ export async function seedGozlemEslesikKuzular(): Promise<{ adet: number; padok:
 
   for (let sira = 1; sira <= GOZLEM_KUZU_ADET; sira++) {
     const k = padokGozlemKimlik(sira);
-    const sex = sira % 2 === 0 ? 'male' : 'female';
+    const sex = DEMO_KUZU_CINSIYET; // besi kuzuları genelde erkek
     await upsertAnimal({
       id: k.id,
       earTag: k.earTag,
@@ -220,7 +224,7 @@ export async function seedPadokBGrupKuzular(): Promise<{ adet: number; padok: st
 
   for (let sira = 1; sira <= PADOK_B_KUZU_ADET; sira++) {
     const k = padokBGrupKimlik(sira);
-    const sex = sira % 3 === 0 ? 'male' : 'female';
+    const sex = DEMO_KUZU_CINSIYET; // besi kuzuları genelde erkek
     const animal: Omit<Animal, 'createdAt' | 'updatedAt' | 'syncStatus'> &
       Partial<Pick<Animal, 'createdAt'>> = {
       id: k.id,
@@ -340,7 +344,7 @@ export async function seedPadokCGrupKuzular(): Promise<{ adet: number; padok: st
 
   for (let sira = 1; sira <= PADOK_C_KUZU_ADET; sira++) {
     const k = padokCGrupKimlik(sira);
-    const sex = sira % 2 === 1 ? 'male' : 'female';
+    const sex = DEMO_KUZU_CINSIYET; // besi kuzuları genelde erkek
     const animal: Omit<Animal, 'createdAt' | 'updatedAt' | 'syncStatus'> &
       Partial<Pick<Animal, 'createdAt'>> = {
       id: k.id,
@@ -421,9 +425,22 @@ async function padokGuncelTartimRevizeEt(
   }
 }
 
+const DEMO_ERKEK_BAYRAK = 'sy_demo_kuzu_erkek_v1';
+
+/** Eski demo kurulumda dişi yazılmış demo kuzuları bir kez erkeğe çevirir */
+async function demoKuzulariErkekYap(animals: Animal[]): Promise<void> {
+  if (await kaliciGetItem(DEMO_ERKEK_BAYRAK)) return;
+  for (const a of animals) {
+    if (demoKuzuMu(a.id) && a.sex === 'female') await upsertAnimal({ ...a, sex: DEMO_KUZU_CINSIYET });
+  }
+  await kaliciSetItem(DEMO_ERKEK_BAYRAK, '1');
+}
+
 export async function ensurePadokKuzuVerisi(): Promise<void> {
   const animals = await getAnimals();
-  const ids = new Set(animals.map((a) => a.id));
+  await demoKuzulariErkekYap(animals);
+  // Bilerek silinen örnek kuzular eksik sayılmaz (geri gelmesin)
+  const ids = new Set([...animals.map((a) => a.id), ...(await getSilinenDemoIdleri())]);
   const eksik = (prefix: string, adet: number) => {
     for (let i = 1; i <= adet; i++) {
       if (!ids.has(`${prefix}${String(i).padStart(2, '0')}`)) return true;

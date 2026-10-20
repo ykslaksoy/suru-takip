@@ -1,9 +1,71 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "cd mobil && npm ci --no-audit --no-fund",
-  "buildCommand": "cd mobil && EXPO_PUBLIC_ORTAM=uretim npx expo export -p web",
+  "buildCommand": "cd mobil && node scripts/bulut-build-oncesi.js && node scripts/supabase-expo-public.js node scripts/vercel-web-build.js",
   "outputDirectory": "mobil/dist",
   "framework": null,
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/hayvan/:id/soy",
+      "destination": "/hayvan/_id/soy"
+    },
+    {
+      "source": "/hayvan/:id/galeri",
+      "destination": "/hayvan/_id/galeri"
+    },
+    {
+      "source": "/hayvan/:id/kilo",
+      "destination": "/hayvan/_id/kilo"
+    },
+    {
+      "source": "/hayvan/:id/saglik",
+      "destination": "/hayvan/_id/saglik"
+    },
+    {
+      "source": "/hayvan/:id/dogum",
+      "destination": "/hayvan/_id/dogum"
+    },
+    {
+      "source": "/hayvan/:id",
+      "destination": "/hayvan/_id"
+    },
+    {
+      "source": "/gorevler/asi/:programId",
+      "destination": "/gorevler/asi/_programId"
+    },
+    {
+      "source": "/gorevler/kategori/:id",
+      "destination": "/gorevler/kategori/_id"
+    },
+    {
+      "source": "/gorevler/yem/:yemId",
+      "destination": "/gorevler/yem/_yemId"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
+    }
+  ]
 }

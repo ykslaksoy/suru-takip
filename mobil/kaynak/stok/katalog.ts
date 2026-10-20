@@ -110,6 +110,16 @@ export const ASI_KATALOGU: StokKatalogKalemi[] = [
   k('topallik', 'Topallık (Ayak)', 'vaccine', 'doz', 10, 'Her kuzuya 2 ml'),
 ];
 
+/**
+ * Ekipman — tabanca dozla tükenmez; iğne ucu ve şırınga sarf malzemesidir.
+ * Tabanca kapasitesi (1 / 2 / 5 ml) aşı ekranında seçilir.
+ */
+export const EKIPMAN_KATALOGU: StokKatalogKalemi[] = [
+  k('asi-tabancasi', 'Otomatik aşı tabancası', 'equipment', 'adet', 1, 'Ayarlı dozlu enjektör · 1 / 2 / 5 ml'),
+  k('tabanca-igne-ucu', 'Tabanca iğne ucu', 'equipment', 'adet', 20, 'Sarf · her 20 kuzuda / her aşı türünde yeni uç'),
+  k('siringa', 'Şırınga (tek kullanımlık)', 'equipment', 'adet', 50, 'Sarf · tabancasız uygulamada kuzu başı 1'),
+];
+
 /** Parazit kalemleri — ILAC içinden (ASI_PROGRAMI ile aynı id/ad) */
 export const PARAZIT_KATALOGU: StokKatalogKalemi[] = ILAC_KATALOGU.filter((x) =>
   ['albendazol', 'ivermectin', 'doramectin', 'levamizol', 'oksiklozanid', 'triklabendazol'].includes(x.id)
@@ -120,6 +130,7 @@ export const STOK_KATALOGU: StokKatalogKalemi[] = [
   ...TAKVIYE_KATALOGU,
   ...ILAC_KATALOGU,
   ...ASI_KATALOGU,
+  ...EKIPMAN_KATALOGU,
 ];
 
 export function katalogByType(type?: StockType | 'all'): StokKatalogKalemi[] {

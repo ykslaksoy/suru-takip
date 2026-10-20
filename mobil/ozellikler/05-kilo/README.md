@@ -19,6 +19,7 @@
 ### bilesenler
 - `FcrKarti.tsx`
 - `TartimFormu.tsx`
+- `RozetGorseli.tsx` — derece başına Karacabey Merinosu görseli (`varliklar/images/rozet/*.jpg`, 512×512)
 
 ## Bağımlılık
 

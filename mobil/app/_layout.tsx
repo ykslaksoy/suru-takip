@@ -14,6 +14,8 @@ import { AyarlarProvider } from '@/baglam/AyarlarBaglami';
 import { GirisYontemiProvider } from '@/baglam/GirisYontemiBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
+import { BaglantiSeridi } from '@/bilesenler/ortak/BaglantiSeridi';
+import { bulutBaslat } from '@/kaynak/bulut/servis';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -37,6 +39,11 @@ export default function RootLayout() {
     if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
+  // Bulut eşitleme: env yoksa hiçbir şey yapmaz
+  useEffect(() => {
+    bulutBaslat();
+  }, []);
+
   if (!loaded) return null;
 
   return (
@@ -55,6 +62,8 @@ export default function RootLayout() {
                     <Stack.Screen name="hayvan/[id]" options={{ title: 'Hayvan Detay' }} />
                     <Stack.Screen name="hayvan/[id]/kilo" options={{ title: 'Kilo Takibi' }} />
                     <Stack.Screen name="hayvan/[id]/saglik" options={{ title: 'Sağlık Kayıtları' }} />
+                    <Stack.Screen name="hayvan/[id]/soy" options={{ title: 'Soy ağacı' }} />
+                    <Stack.Screen name="hayvan/[id]/galeri" options={{ title: 'Fotoğraflar' }} />
                     <Stack.Screen name="hayvan/[id]/dogum" options={{ title: 'Doğum Kaydı', presentation: 'modal' }} />
                     <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
                     <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
@@ -62,6 +71,7 @@ export default function RootLayout() {
                     <Stack.Screen name="ana-sayfa/duzenle" options={{ title: 'Ana ekranı planla', presentation: 'modal' }} />
                     <Stack.Screen name="gorevler/index" options={{ title: 'Görevler' }} />
                     <Stack.Screen name="gorevler/kategori/[id]" options={{ title: 'Kategori' }} />
+                    <Stack.Screen name="gorevler/asi/index" options={{ title: 'Aşı ve İlaç' }} />
                     <Stack.Screen name="gorevler/asi/[programId]" options={{ title: 'Aşı görevi' }} />
                     <Stack.Screen name="gorevler/yem/[yemId]" options={{ title: 'Yem görevi' }} />
                     <Stack.Screen name="profesyonellik/index" options={{ title: 'Profesyonellik' }} />
@@ -72,13 +82,29 @@ export default function RootLayout() {
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
                     <Stack.Screen name="giris-yontemi/kurulum" options={{ title: 'Giriş yöntemi kurulumu' }} />
                     <Stack.Screen name="giris-yontemi/index" options={{ title: 'Kuzu seçim & tartım' }} />
+                    <Stack.Screen name="maliyet/index" options={{ title: 'Maliyet ve Kâr' }} />
+                    <Stack.Screen name="sigorta/index" options={{ title: 'Sigorta (TARSİM)' }} />
+                    <Stack.Screen name="arinma/index" options={{ title: 'İlaç arınma süreleri' }} />
+                    <Stack.Screen name="satis/index" options={{ title: 'Satış / çıkış' }} />
+                    <Stack.Screen name="sablon/index" options={{ title: 'Kayıt şablonları' }} />
+                    <Stack.Screen name="takvim/index" options={{ title: 'Takvim' }} />
+                    <Stack.Screen name="excel/index" options={{ title: 'Excel / CSV' }} />
+                    <Stack.Screen name="ciftlesme/index" options={{ title: 'Çiftleşme ve doğum' }} />
+                    <Stack.Screen name="ciftlesme/katim" options={{ title: 'Koç katımı / süngerleme' }} />
+                    <Stack.Screen name="ciftlesme/ultrason" options={{ title: 'Ultrason sonuçları' }} />
+                    <Stack.Screen name="yem/index" options={{ title: 'Yem ve rasyon' }} />
+                    <Stack.Screen name="ekip/index" options={{ title: 'Ekip ve yetkiler' }} />
+                    <Stack.Screen name="sayim/index" options={{ title: 'Sayım listesi' }} />
+                    <Stack.Screen name="bulut/index" options={{ title: 'Bulut eşitleme' }} />
+                    <Stack.Screen name="gecmis/index" options={{ title: 'İşlem geçmişi' }} />
                     <Stack.Screen name="ayarlar/index" options={{ title: 'Ayarlar', headerShown: true }} />
                     <Stack.Screen name="besi/index" options={{ title: 'Yolculuk' }} />
                     <Stack.Screen name="sistem-kontrol/index" options={{ title: 'Sistem kontrolü' }} />
                     <Stack.Screen name="isletme-profil/index" options={{ title: 'İşletme profili' }} />
                     <Stack.Screen name="yasal/gizlilik" options={{ title: 'KVKK' }} />
-                    <Stack.Screen name="yasal/kullanim" options={{ title: 'Kullanım koşulları' }} />
+                    <Stack.Screen name="yasal/kullanim" options={{ title: 'Kullanım Şartları' }} />
                   </Stack>
+                  <BaglantiSeridi />
                   <AyarlarKaplama />
                 </View>
               </AyarlarProvider>

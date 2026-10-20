@@ -15,9 +15,12 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
 import { useSubscription } from '@/baglam/AbonelikBaglami';
-import { countAnimals, getAnimal } from '@/kaynak/cekirdek/veritabani';
+import { countAnimals, getAnimal, getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
-import { dogumKaydet, type DogumKuzuGirdi } from '@/kaynak/ureme';
+import type { DogumKuzuGirdi } from '@/kaynak/ureme';
+import { ciftlesmeliDogum, getKoyunCiftlesme } from '@/kaynak/ciftlesme/depo';
+import { aktifMi, beklenenDogum, beklenenKuzuSayisi, trTarih, type CiftlesmeKaydi } from '@/kaynak/ciftlesme/hesap';
+import { HayvanSecici } from '@/bilesenler/soy/HayvanSecici';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import type { Animal, AnimalSex } from '@/kaynak/cekirdek/tipler';
 
@@ -51,10 +54,23 @@ export default function DogumKayitEkrani() {
   const [notes, setNotes] = useState('');
   const [kuzular, setKuzular] = useState<KuzuForm[]>([bosKuzu()]);
   const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [kayit, setKayit] = useState<CiftlesmeKaydi | null>(null);
+  const [hayvanlar, setHayvanlar] = useState<Animal[]>([]);
+  const [baba, setBaba] = useState<Animal | null>(null);
+  const [babaSec, setBabaSec] = useState(false);
+  const [olu, setOlu] = useState('');
 
   useEffect(() => {
     if (!id) return;
     void getAnimal(id).then(setAnne);
+    void Promise.all([getKoyunCiftlesme(id), getAnimals()]).then(([k, l]) => {
+      setHayvanlar(l);
+      const aktif = k && aktifMi(k) ? k : null;
+      setKayit(aktif);
+      if (aktif?.kocId) setBaba(l.find((a) => a.id === aktif.kocId) ?? null);
+      const n = beklenenKuzuSayisi(aktif);
+      if (n > 1) setKuzular(Array.from({ length: n }, bosKuzu));
+    });
   }, [id]);
 
   const baslik = useMemo(() => (anne ? hayvanAnaEtiket(anne) : '…'), [anne]);
@@ -93,8 +109,10 @@ export default function DogumKayitEkrani() {
 
     setKaydediliyor(true);
     try {
-      const sonuc = await dogumKaydet({
+      const sonuc = await ciftlesmeliDogum({
         anneId: id,
+        babaId: baba?.id ?? null,
+        olu: parseInt(olu, 10) || 0,
         birthDate: birthDate.trim(),
         kuzular: girdiKuzular,
         paddock: anne.paddock,
@@ -105,7 +123,7 @@ export default function DogumKayitEkrani() {
         return;
       }
       refresh();
-      uyar('Tamam', `${sonuc.kuzular.length} kuzu kaydedildi · anne sağmal`);
+      uyar('Tamam', `${sonuc.kuzular.length} kuzu kaydedildi · anne sağmal${baba ? ` · baba ${hayvanAnaEtiket(baba)}` : ''}`);
       router.back();
     } finally {
       setKaydediliyor(false);
@@ -128,6 +146,32 @@ export default function DogumKayitEkrani() {
       <Text style={[styles.hint, { color: colors.textSecondary }]}>
         Anne: {baslik} · {anne.paddock || 'padoksuz'}
       </Text>
+      {kayit ? (
+        <Text style={[styles.hint, { color: colors.text, marginTop: -6 }]}>
+          🐏 Katım {trTarih(kayit.katimTarih)} · beklenen doğum {trTarih(beklenenDogum(kayit))}
+          {kayit.ultrason?.sonuc === 'gebe' && (kayit.ultrason.yavruSayisi ?? 1) > 1 ? ` · ultrason: ${kayit.ultrason.yavruSayisi === 2 ? 'ikiz' : 'üçüz'}` : ''}
+        </Text>
+      ) : null}
+      <View style={[styles.babaSatir, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <Text style={{ color: colors.textSecondary, fontWeight: '700', width: 44 }}>Baba</Text>
+        <Text style={{ color: baba ? colors.text : colors.textSecondary, fontWeight: '800', flex: 1 }}>{baba ? `♂ ${hayvanAnaEtiket(baba)}` : 'bilinmiyor (isteğe bağlı)'}</Text>
+        <Pressable onPress={() => setBabaSec(!babaSec)}>
+          <Text style={{ color: colors.tint, fontWeight: '800' }}>{baba ? 'Değiştir' : 'Seç'}</Text>
+        </Pressable>
+      </View>
+      {babaSec ? (
+        <HayvanSecici
+          baslik="Baba koç"
+          hayvanlar={hayvanlar}
+          cinsiyet="male"
+          bosSecenek="— Bilinmiyor"
+          onSec={(a) => {
+            setBaba(a);
+            setBabaSec(false);
+          }}
+          onKapat={() => setBabaSec(false)}
+        />
+      ) : null}
       <Text style={[styles.label, { color: colors.text }]}>Doğum tarihi (YYYY-MM-DD)</Text>
       <TextInput
         value={birthDate}
@@ -206,6 +250,16 @@ export default function DogumKayitEkrani() {
         />
       ) : null}
 
+      <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Ölü doğan kuzu (sayı)</Text>
+      <TextInput
+        value={olu}
+        onChangeText={setOlu}
+        placeholder="0"
+        keyboardType="number-pad"
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
+      />
+
       <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Not</Text>
       <TextInput
         value={notes}
@@ -245,6 +299,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   kuzuBaslik: { fontWeight: '800', marginBottom: 4 },
+  babaSatir: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, padding: 12, gap: 8, marginBottom: 8 },
   sexRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
   sexChip: {
     flex: 1,

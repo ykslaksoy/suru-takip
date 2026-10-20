@@ -1,0 +1,17 @@
+{
+  "name": "SüperKuzu — sürü takip",
+  "short_name": "SüperKuzu",
+  "description": "Koyun ve kuzu sürü yönetimi — internet olmadan da çalışır",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7f0",
+  "theme_color": "#2d6a4f",
+  "icons": [
+    { "src": "/ikon/ikon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

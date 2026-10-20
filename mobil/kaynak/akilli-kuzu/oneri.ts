@@ -50,6 +50,8 @@ export function getSmartSuggestions(ctx?: {
   quarantineDay?: number;
   quarantineTotal?: number;
   lowStock?: boolean;
+  /** Düşük stoktaki kalem adları (varsa mesajda gösterilir) */
+  lowStockAdlar?: string[];
   needsVaccine?: boolean;
   needsWeigh?: boolean;
   adgGrams?: number | null;
@@ -109,8 +111,10 @@ export function getSmartSuggestions(ctx?: {
   if (ctx?.lowStock) {
     out.push({
       id: 'stock',
-      title: 'Yem stoku kritik',
-      body: 'Stok minimum seviyenin altında',
+      title: ctx.lowStockAdlar?.length ? `Stok azaldı (${ctx.lowStockAdlar.length} kalem)` : 'Yem stoku kritik',
+      body: ctx.lowStockAdlar?.length
+        ? `${ctx.lowStockAdlar.slice(0, 2).join(', ')}${ctx.lowStockAdlar.length > 2 ? ` +${ctx.lowStockAdlar.length - 2}` : ''} azaldı`
+        : 'Stok minimum seviyenin altında',
       voice: `Besi döneminde yem kesintisi performans kaybına yol açar. Eksik kalemleri tamamlayın ve minimum stok eşiğini güncelleyin.`,
       urgency: 'alert',
       source: 'stok',

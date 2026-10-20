@@ -3,7 +3,7 @@ import {
   VARSAYILAN_PAKET,
 } from './asamalar';
 import type { SistemCevaplari } from './analiz';
-import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
+import { kaliciGetItem, kaliciRemoveItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 
 const KEY = 'sy_profesyonellik_v1';
 
@@ -96,5 +96,5 @@ export async function asamaOnaylandiKaydet(
 }
 
 export async function profesyonellikSifirla(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  await kaliciRemoveItem(KEY);
 }

@@ -38,6 +38,9 @@ export function AsiMalzemePaneli({ liste, onPaylas }: Props) {
           </Text>
           <Text style={{ color: colors.tint, fontWeight: '700', marginTop: 2 }}>{s.mlEtiket}</Text>
           <Text style={{ color: colors.text, fontSize: 13, marginTop: 4, lineHeight: 19 }}>{s.durumMetni}</Text>
+          {s.tabancaSatir ? (
+            <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 2 }}>🔫 {s.tabancaSatir}</Text>
+          ) : null}
           {s.tarih ? (
             <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>Tarih: {s.tarih}</Text>
           ) : null}
@@ -58,12 +61,25 @@ export function AsiMalzemePaneli({ liste, onPaylas }: Props) {
         </View>
       ))}
 
-      <Text style={{ color: colors.text, fontWeight: '700', marginTop: 8 }}>
-        Şırınga tahmini: {liste.siringaAdedi} adet
-      </Text>
-      <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
-        (Her enjeksiyon için 1 — çizik / hap / oral parazit hariç)
-      </Text>
+      {liste.tabanca ? (
+        <>
+          <Text style={{ color: colors.text, fontWeight: '700', marginTop: 8 }}>
+            İğne ucu tahmini: {liste.igneUcuAdedi} adet
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+            (Tabancayla şırınga gerekmez · {liste.igneUcuKurali})
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text style={{ color: colors.text, fontWeight: '700', marginTop: 8 }}>
+            Şırınga tahmini: {liste.siringaAdedi} adet
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+            (Her enjeksiyon için 1 — çizik / hap / oral parazit hariç)
+          </Text>
+        </>
+      )}
 
       {onPaylas ? <AnaButon title="Listeyi kopyala / paylaş" variant="secondary" onPress={onPaylas} /> : null}
     </View>

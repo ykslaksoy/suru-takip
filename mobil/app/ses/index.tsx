@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
@@ -10,13 +10,33 @@ import {
   konusmaDurumu,
   metniSeslendir,
   sesKomutOturumuOlustur,
+  seslendirmeKilidiAc,
   seslendirmeyiDurdur,
+  sesliTekrarAcikMi,
+  sesliTekrarKaydet,
   type DinlemeKontrol,
+  type SesKomutSonucu,
 } from '@/kaynak/ses';
+
+const ASAMA_ETIKET: Record<string, string> = {
+  hazir: 'hazır',
+  bos: 'hazır',
+  onay_bekliyor: 'onay bekliyor',
+  duzeltme: 'düzeltme bekleniyor (kaydedilmedi)',
+  eksik_bilgi: 'eksik bilgi',
+  uygulandi: 'kaydedildi',
+  iptal: 'iptal',
+  anlasilmadi: 'anlaşılmadı',
+};
+
+const IOS_IPUCU =
+  'Cevap için Dinle’ye basın — iPhone tarayıcısı mikrofonu dokunmadan otomatik açmaya izin vermeyebilir.';
 
 const ORNEKLER = [
   'küpe 1234, 68 kilo',
   'küpe TR-34-001235 aşı çiçek',
+  '3. parti karma aşısı yapıldı',
+  'tüm kuzular ivermektin',
   'stok giriş yem 50 kg',
   'tamam',
 ];
@@ -31,61 +51,113 @@ export default function SesKomutScreen() {
   const [asama, setAsama] = useState('hazir');
   const [dinliyor, setDinliyor] = useState(false);
   const [ahirModu, setAhirModu] = useState(true);
+  const [sesliTekrar, setSesliTekrar] = useState(true);
+  const [ipucu, setIpucu] = useState<string | null>(null);
   const [uygulanan, setUygulanan] = useState(0);
   const dinlemeRef = useRef<DinlemeKontrol | null>(null);
   const ahirRef = useRef(true);
+  const sesliRef = useRef(true);
   const durum = useMemo(() => konusmaDurumu(), []);
 
   ahirRef.current = ahirModu;
+  sesliRef.current = sesliTekrar;
 
-  const dinlemeyiAc = useCallback(() => {
+  useEffect(() => {
+    let iptal = false;
+    sesliTekrarAcikMi().then((v) => {
+      if (!iptal) setSesliTekrar(v);
+    });
+    return () => {
+      iptal = true;
+    };
+  }, []);
+
+  const sesliTekrarDegis = (v: boolean) => {
+    setSesliTekrar(v);
+    if (!v) seslendirmeyiDurdur();
+    sesliTekrarKaydet(v).catch(() => {});
+  };
+
+  const isleRef = useRef<(girdi: string) => Promise<void>>(async () => {});
+
+  /** otomatik: konuşma sonrası kendiliğinden açıldı (iOS engelleyebilir) */
+  const dinlemeyiAc = useCallback((otomatik = false) => {
     seslendirmeyiDurdur();
     const ctrl = dinlemeyiBaslat({
-      onBasladi: () => setDinliyor(true),
+      onBasladi: () => {
+        setDinliyor(true);
+        setIpucu(null);
+      },
       onSonuc: (t) => {
         setDinliyor(false);
         setMetin(t);
         void isleRef.current(t);
       },
-      onHata: (mesaj) => {
+      onBitti: () => setDinliyor(false),
+      onHata: (mesaj, kod) => {
         setDinliyor(false);
+        if (otomatik) {
+          setIpucu(IOS_IPUCU);
+          return;
+        }
+        if (kod === 'no-speech' || kod === 'aborted') {
+          setIpucu('Ses duyulmadı. Tekrar Dinle’ye basın veya yazın.');
+          return;
+        }
         if (!ahirRef.current) Alert.alert('Dinleme', mesaj);
+        else setIpucu(mesaj);
       },
     });
     dinlemeRef.current = ctrl;
-    if (!ctrl) setDinliyor(false);
+    if (!ctrl) {
+      setDinliyor(false);
+      if (otomatik) setIpucu(IOS_IPUCU);
+    }
   }, []);
 
-  const isleRef = useRef<(girdi: string) => Promise<void>>(async () => {});
+  /** Sonucu göster + (açıksa) sesli oku; cevap bekleniyorsa konuşma bitince dinle */
+  const sonucuSun = useCallback(
+    (sonuc: SesKomutSonucu) => {
+      setOkuma(sonuc.okumaMetni);
+      setAsama(sonuc.asama);
+      if (sonuc.duzeltmeMetni) setMetin(sonuc.duzeltmeMetni);
+      else if (sonuc.asama === 'onay_bekliyor' || sonuc.asama === 'eksik_bilgi') setMetin('');
+
+      const sonraDinle =
+        durum.sttHazir &&
+        (sonuc.cevapBekleniyor || (sonuc.asama === 'uygulandi' && ahirRef.current));
+      const dinlemeyeGec = () => {
+        if (sonraDinle) setTimeout(() => dinlemeyiAc(true), 250);
+        else if (sonuc.cevapBekleniyor && !durum.sttHazir) setIpucu(null);
+      };
+
+      if (sesliRef.current) {
+        metniSeslendir(sonuc.konusmaMetni ?? sonuc.okumaMetni, { onBitti: dinlemeyeGec });
+      } else if (sonraDinle) {
+        setTimeout(() => dinlemeyiAc(true), 600);
+      }
+    },
+    [dinlemeyiAc, durum.sttHazir]
+  );
 
   const isle = useCallback(
     async (girdi: string) => {
       const sonuc = await oturum.metinAl(girdi);
-      setOkuma(sonuc.okumaMetni);
-      setAsama(sonuc.asama);
-      metniSeslendir(sonuc.okumaMetni);
       if (sonuc.asama === 'uygulandi') {
         refresh();
-        setMetin('');
         setUygulanan((n) => n + 1);
-        if (ahirRef.current) {
-          // Sonraki hayvan — kısa bekleme sonra dinle (TTS bitsin)
-          setTimeout(() => {
-            if (ahirRef.current) dinlemeyiAc();
-          }, 1200);
-        }
-      } else if (sonuc.asama === 'onay_bekliyor' && ahirRef.current && durum.sttHazir) {
-        setTimeout(() => {
-          if (ahirRef.current) dinlemeyiAc();
-        }, 900);
+        setMetin('');
       }
+      sonucuSun(sonuc);
     },
-    [oturum, refresh, dinlemeyiAc, durum.sttHazir]
+    [oturum, refresh, sonucuSun]
   );
 
   isleRef.current = isle;
 
   const gonder = async () => {
+    seslendirmeKilidiAc(); // iOS: dokunuş anında konuşmayı aç
+    setIpucu(null);
     await isle(metin);
   };
 
@@ -95,7 +167,8 @@ export default function SesKomutScreen() {
       setDinliyor(false);
       return;
     }
-    dinlemeyiAc();
+    seslendirmeKilidiAc();
+    dinlemeyiAc(false);
   };
 
   return (
@@ -114,13 +187,41 @@ export default function SesKomutScreen() {
           <Switch value={ahirModu} onValueChange={setAhirModu} />
         </View>
 
-        <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>Sistem</Text>
+        <View style={[styles.switchRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.text, fontWeight: '700' }}>Sesli tekrar</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+              Kaydetmeden önce kaydı sesli okur; «tamam» ile kaydeder, «dur / yanlış» ile düzeltirsiniz
+            </Text>
+          </View>
+          <Switch value={sesliTekrar} onValueChange={sesliTekrarDegis} />
+        </View>
+
+        <View
+          style={[
+            styles.box,
+            {
+              backgroundColor: colors.card,
+              borderColor: asama === 'duzeltme' ? colors.warning : colors.border,
+            },
+          ]}>
+          <Text
+            style={{
+              color: asama === 'duzeltme' ? colors.warning : colors.tint,
+              fontWeight: '800',
+              marginBottom: 6,
+            }}>
+            {asama === 'duzeltme' ? 'Sistem — kaydedilmedi' : 'Sistem'}
+          </Text>
           <Text style={{ color: colors.text, lineHeight: 22 }}>{okuma}</Text>
           <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 12 }}>
-            Aşama: {asama}
+            Aşama: {ASAMA_ETIKET[asama] ?? asama}
+            {dinliyor ? ' · dinleniyor…' : ''}
             {uygulanan > 0 ? ` · Bu oturumda ${uygulanan} kayıt` : ''}
           </Text>
+          {ipucu ? (
+            <Text style={{ color: colors.warning, marginTop: 8, fontSize: 12, fontWeight: '700' }}>{ipucu}</Text>
+          ) : null}
         </View>
 
         <Text style={{ color: colors.textSecondary, marginBottom: 8, fontSize: 13 }}>Hızlı örnek</Text>
@@ -154,7 +255,8 @@ export default function SesKomutScreen() {
             const r = oturum.iptalEt();
             setOkuma(r.okumaMetni);
             setAsama(r.asama);
-            metniSeslendir(r.okumaMetni);
+            setIpucu(null);
+            if (sesliRef.current) metniSeslendir(r.okumaMetni);
           }}
         />
 

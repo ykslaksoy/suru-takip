@@ -1,15 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { router } from 'expo-router';
 import { StokKarti } from '@/bilesenler/stok/StokKarti';
-import { StokGirisCikisModal } from '@/bilesenler/stok/StokGirisCikisModal';
-import { StokKayitModal } from '@/bilesenler/stok/StokKayitModal';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { adjustStock, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { adjustStock, getStockItems, getStockMovements, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
+import { dusukStokMu } from '@/kaynak/stok/eslesme';
+import { islemKaydet } from '@/kaynak/gecmis/gunluk';
+import type { StockMovement } from '@/kaynak/cekirdek/tipler';
 import { kaydetYemSayim } from '@/kaynak/stok/sayim';
 import {
   getSiraliStokListesi,
@@ -18,6 +31,9 @@ import {
 } from '@/kaynak/stok';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
+import { terim } from '@/sabitler/Metinler';
+import { birimFiyatCoz, oneriMetni } from '@/kaynak/maliyet/tahmini-fiyat';
+import { referansTarihMetni } from '@/kaynak/maliyet/fiyat-referans';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -54,6 +70,8 @@ export default function StockScreen() {
         s.aciklama.toLocaleLowerCase('tr-TR').includes(q)
     );
   }, [satirlar, arama]);
+
+  const dusukler = useMemo(() => satirlar.filter((s) => s.item && dusukStokMu(s.item)), [satirlar]);
 
   const openFromSatir = (satir: StokListeSatiri) => {
     if (satir.item) {
@@ -103,11 +121,21 @@ export default function StockScreen() {
   const [adjustQty, setAdjustQty] = useState('');
   const [adjustItem, setAdjustItem] = useState<StockItem | null>(null);
   const [adjustPadok, setAdjustPadok] = useState('');
+  const [adjustFiyat, setAdjustFiyat] = useState('');
+  const [hareketler, setHareketler] = useState<StockMovement[]>([]);
+  const [fiyatlar, setFiyatlar] = useState<Record<string, number>>({});
+  const adjustTahmin = adjustItem ? birimFiyatCoz(adjustItem, fiyatlar) : null;
 
   const openAdjust = (item: StockItem) => {
     setAdjustItem(item);
     setAdjustQty('');
     setAdjustPadok('');
+    setAdjustFiyat('');
+    setHareketler([]);
+    getStockMovements({ stockId: item.id })
+      .then((m) => setHareketler(m.filter((x) => x.stockId === item.id).slice(0, 8)))
+      .catch(() => {});
+    getBirimFiyatlar().then(setFiyatlar).catch(() => {});
     setAdjustModal(true);
   };
 
@@ -120,7 +148,15 @@ export default function StockScreen() {
     }
     const notes =
       adjustItem.type === 'feed' && adjustPadok.trim() ? adjustPadok.trim() : '';
-    await adjustStock(adjustItem.id, movementType, q, notes);
+    const fiyat = parseFloat(adjustFiyat.replace(',', '.'));
+    await adjustStock(
+      adjustItem.id,
+      movementType,
+      q,
+      movementType === 'in' && Number.isFinite(fiyat) && fiyat > 0 ? `${notes ? `${notes} · ` : ''}Alış ${fiyat} ₺/${adjustItem.unit}` : notes,
+    );
+    if (movementType === 'in' && Number.isFinite(fiyat) && fiyat > 0) await setBirimFiyat(adjustItem.id, fiyat);
+    await islemKaydet({ tur: 'stok', ozet: `${adjustItem.name} ${movementType === 'in' ? '+' : '−'}${q} ${adjustItem.unit}` });
     if (movementType === 'out') {
       await kaydetKatalogKullanim(adjustItem.name, Math.max(1, Math.round(q)));
     }
@@ -149,6 +185,9 @@ export default function StockScreen() {
         <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
           Tüm liste · çok kullanılan üstte
         </Text>
+        <Pressable onPress={() => router.push('/maliyet' as never)} hitSlop={8}>
+          <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 4 }}>Maliyet ve kâr →</Text>
+        </Pressable>
       </View>
       <AltButonlar
         items={types.map((t) => ({
@@ -174,9 +213,19 @@ export default function StockScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         renderItem={({ item }) => <StokKarti satir={item} onPress={() => openFromSatir(item)} />}
         ListHeaderComponent={
-          <Text style={[styles.hint, { color: colors.textSecondary }]}>
-            {filtered.length} kalem · çıkış yaptıkça sıra yükselir
-          </Text>
+          <>
+            {dusukler.length ? (
+              <View style={[styles.uyari, { borderColor: colors.warning, backgroundColor: colors.card }]}>
+                <Text style={{ color: colors.warning, fontWeight: '800' }}>⚠ {dusukler.length} kalem minimumun altında</Text>
+                <Text style={{ color: colors.text, marginTop: 2, fontSize: 13 }}>
+                  {dusukler.slice(0, 4).map((d) => `${d.ad} (${d.item?.quantity ?? 0} ${d.item?.unit ?? ''})`).join(' · ')}
+                </Text>
+              </View>
+            ) : null}
+            <Text style={[styles.hint, { color: colors.textSecondary }]}>
+              {filtered.length} kalem · aşı/ilaç kaydı girildikçe stoktan otomatik düşer
+            </Text>
+          </>
         }
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 24 }}>
@@ -202,30 +251,124 @@ export default function StockScreen() {
         />
       </View>
 
-      <StokKayitModal
-        visible={modalVisible}
-        form={form}
-        onFormChange={setForm}
-        onKaydet={saveItem}
-        onIptal={() => setModalVisible(false)}
-      />
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+            <View style={[styles.modal, { backgroundColor: colors.card }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Stok kaydı</Text>
+              {(['name', 'quantity', 'minQuantity', 'unit', 'expiryDate'] as const).map((field) => (
+                <TextInput
+                  key={field}
+                  placeholder={
+                    field === 'name'
+                      ? 'Ad'
+                      : field === 'quantity'
+                        ? 'Miktar'
+                        : field === 'minQuantity'
+                          ? 'Minimum stok'
+                          : field === 'unit'
+                            ? 'Birim'
+                            : `${terim('SKT')} (YYYY-MM-DD)`
+                  }
+                  value={form[field]}
+                  onChangeText={(v) => setForm({ ...form, [field]: v })}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+                />
+              ))}
+              <View style={styles.typeRow}>
+                {STOCK_TYPE_ORDER.map((t) => (
+                  <Pressable
+                    key={t}
+                    onPress={() => setForm({ ...form, type: t })}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: form.type === t ? colors.tint : colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}>
+                    <Text style={{ color: form.type === t ? '#fff' : colors.text }}>
+                      {STOCK_TYPE_LABELS[t]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <AnaButon title="Kaydet" onPress={saveItem} />
+              <AnaButon title="İptal" variant="secondary" onPress={() => setModalVisible(false)} />
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
 
-      <StokGirisCikisModal
-        visible={adjustModal}
-        item={adjustItem}
-        miktar={adjustQty}
-        padok={adjustPadok}
-        onMiktarChange={setAdjustQty}
-        onPadokChange={setAdjustPadok}
-        onGiris={() => doAdjust('in')}
-        onCikis={() => doAdjust('out')}
-        onIptal={() => setAdjustModal(false)}
-      />
+      <Modal visible={adjustModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modal, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Giriş/Çıkış — {adjustItem?.name}
+            </Text>
+            <TextInput
+              placeholder={`Miktar (${adjustItem?.unit ?? ''})`}
+              keyboardType="decimal-pad"
+              value={adjustQty}
+              onChangeText={setAdjustQty}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            {adjustItem?.type === 'feed' ? (
+              <TextInput
+                placeholder="Padok (opsiyonel — FCR paylaşımı için)"
+                value={adjustPadok}
+                onChangeText={setAdjustPadok}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              />
+            ) : null}
+            <TextInput
+              placeholder={
+                adjustTahmin?.tur === 'tahmini'
+                  ? `Birim alış ₺/${adjustItem?.unit ?? ''} — önerilen ${oneriMetni(adjustTahmin)}`
+                  : `Birim alış fiyatı ₺/${adjustItem?.unit ?? ''} (giriş için, opsiyonel)`
+              }
+              keyboardType="decimal-pad"
+              value={adjustFiyat}
+              onChangeText={setAdjustFiyat}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            {adjustTahmin?.tur === 'tahmini' ? (
+              <Text style={{ color: colors.tint, fontSize: 12, marginBottom: 4 }}>
+                Bilmiyorsan boş bırak: maliyette tahmini {oneriMetni(adjustTahmin)} ₺/{adjustItem?.unit} kullanılır ({adjustTahmin.ref?.kaynakAd}
+                {adjustTahmin.ref?.veriTarihi ? ` · ${referansTarihMetni(adjustTahmin.ref.veriTarihi)}` : ''}).
+              </Text>
+            ) : adjustTahmin?.tur === 'yok' ? (
+              <Text style={{ color: colors.warning, fontSize: 12, marginBottom: 4 }}>
+                Bu kalem için referans fiyat yok — fiyat yazmazsan maliyete yansımaz.
+              </Text>
+            ) : null}
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
+              Mevcut: {adjustItem?.quantity ?? 0} {adjustItem?.unit} · minimum {adjustItem?.minQuantity ?? 0}
+              {adjustItem && fiyatlar[adjustItem.id] ? ` · son alış ${fiyatlar[adjustItem.id]} ₺/${adjustItem.unit}` : ''}
+            </Text>
+            <AnaButon title="Giriş (+)" onPress={() => doAdjust('in')} />
+            <AnaButon title="Çıkış (-)" variant="danger" onPress={() => doAdjust('out')} />
+            <AnaButon title="İptal" variant="secondary" onPress={() => setAdjustModal(false)} />
+            {hareketler.length ? (
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontWeight: '800', fontSize: 12, marginBottom: 4 }}>SON HAREKETLER</Text>
+                {hareketler.map((h) => (
+                  <Text key={h.id} style={{ color: colors.text, fontSize: 13, marginBottom: 2 }}>
+                    {h.movementType === 'in' ? '＋' : '－'} {h.quantity} {adjustItem?.unit} · {new Date(h.recordedAt).toLocaleDateString('tr-TR')}
+                    {h.notes ? ` · ${h.notes}` : ''}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  uyari: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 10 },
   container: { flex: 1 },
   pageHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   pageTitle: { fontSize: 26, fontWeight: '800' },
@@ -240,4 +383,10 @@ const styles = StyleSheet.create({
   },
   hint: { marginBottom: 10, fontSize: 12, fontWeight: '600' },
   footer: { padding: 16, position: 'absolute', left: 0, right: 0, bottom: 0 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16, minHeight: 48 },
+  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
 });

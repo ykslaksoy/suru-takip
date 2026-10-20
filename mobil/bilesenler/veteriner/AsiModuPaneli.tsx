@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AsiBaslikSatir } from '@/bilesenler/veteriner/AsiBaslikSatir';
 import { AsiMalzemePaneli } from '@/bilesenler/veteriner/AsiMalzemePaneli';
+import { getTabancaDurum } from '@/kaynak/akilli-veteriner/tabanca-ayar';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -89,7 +90,8 @@ export function AsiModuPaneli() {
   const [malzeme, setMalzeme] = useState<AsiMalzemeListesi | null>(null);
 
   const malzemeYenile = useCallback(async (t: AsiTercih[]) => {
-    setMalzeme(await olusturAsiMalzemeListesi(t));
+    const tab = await getTabancaDurum();
+    setMalzeme(await olusturAsiMalzemeListesi(t, { tabanca: tab.aktif, tabancaKapasite: tab.kapasite }));
   }, []);
 
   const yukle = useCallback(async () => {
