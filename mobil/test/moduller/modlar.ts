@@ -8,6 +8,7 @@ const BEKLENEN = [
   'Damızlık Süt Kuzusu Yetiştiriciliği',
   'Süt Koyunculuğu',
   'Süt Koyunculuğu + Kuzu Besi',
+  'Süt Koyunculuğu + Etçi Koyunculuk',
 ];
 
 export const modlarModul: TestModul = {
@@ -17,16 +18,16 @@ export const modlarModul: TestModul = {
     const sirali = [...URUN_MODLARI].sort((a, b) => a.no - b.no);
 
     return [
-      test('Ürün modları', 'Altı mod tanımlı', URUN_MODLARI.length === 6),
+      test('Ürün modları', 'Yedi mod tanımlı', URUN_MODLARI.length === 7),
       test(
         'Ürün modları',
-        'Ekran sırası no 1–6',
+        'Ekran sırası no 1–7',
         sirali.every((m, i) => m.no === i + 1 && m.baslik === BEKLENEN[i]),
       ),
       test('Ürün modları', 'Mod1 Kuzu Besi tam', mod1.no === 1 && mod1.seviye === 'tam' && mod1.hazir),
       test(
         'Ürün modları',
-        'Mod 2–6 tam ve seçilebilir',
+        'Mod 2–7 tam ve seçilebilir',
         URUN_MODLARI.filter((m) => m.id !== 'mod1').every((m) => m.seviye === 'tam' && m.hazir),
       ),
       test(
@@ -43,6 +44,7 @@ export const modlarModul: TestModul = {
       test('Ürün modları', 'Eski Damızlık kuzu id korunur', getMod('mod3').baslik === BEKLENEN[2] && getMod('mod3').no === 3),
       test('Ürün modları', 'mod6 4. · mod5 6. sırada', getMod('mod6').no === 4 && getMod('mod5').no === 6),
       test('Ürün modları', 'Süt koyunculuğu id korunur', getMod('mod4').baslik === BEKLENEN[4] && getMod('mod4').no === 5),
+      test('Ürün modları', 'Mod7 yedinci', getMod('mod7').no === 7 && getMod('mod7').baslik === BEKLENEN[6]),
     ];
   },
 };

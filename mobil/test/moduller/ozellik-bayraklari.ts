@@ -5,13 +5,13 @@ export const ozellikModul: TestModul = {
   grup: 'Özellik bayrakları',
   calistir() {
     const mod1 = OZELLIK_BAYRAKLARI.find((o) => o.id === 'mod1-hizli-besi')!;
-    const mod26 = OZELLIK_BAYRAKLARI.find((o) => o.id === 'mod2-6')!;
+    const mod27 = OZELLIK_BAYRAKLARI.find((o) => o.id === 'mod2-7')!;
     const bulut = OZELLIK_BAYRAKLARI.find((o) => o.id === 'bulut-senkron')!;
     const ocr = OZELLIK_BAYRAKLARI.find((o) => o.id === 'ocr-kupe')!;
     const iap = OZELLIK_BAYRAKLARI.find((o) => o.id === 'iap')!;
     return [
       test('Özellik bayrakları', 'Mod1 tam işaretli', mod1.durum === 'tam'),
-      test('Özellik bayrakları', 'Mod 2–6 tam', mod26.durum === 'tam'),
+      test('Özellik bayrakları', 'Mod 2–7 tam', mod27.durum === 'tam'),
       test('Özellik bayrakları', 'Bulut pilot', bulut.durum === 'pilot'),
       test('Özellik bayrakları', 'OCR simülasyon', ocr.durum === 'simulasyon'),
       test('Özellik bayrakları', 'IAP simülasyon', iap.durum === 'simulasyon'),

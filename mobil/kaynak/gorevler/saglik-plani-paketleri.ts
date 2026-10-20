@@ -46,12 +46,23 @@ function mod2Paketi(): SaglikPlani {
   };
 }
 
+/** Mod 5: süt sürüsü paketi + satın alım besi giriş paketi (Mod 1). */
 function mod5Paketi(): SaglikPlani {
   const sut = sutPaketi();
   return {
     asi: [...new Set([...sut.asi, ...BESI_GIRIS.asi])],
     parazit: [...new Set([...sut.parazit, ...BESI_GIRIS.parazit])],
     vitamin: [...new Set([...sut.vitamin, ...BESI_GIRIS.vitamin])],
+  };
+}
+
+function mod7Paketi(): SaglikPlani {
+  const sut = sutPaketi();
+  const etc = mod2Paketi();
+  return {
+    asi: [...new Set([...sut.asi, ...etc.asi])],
+    parazit: [...new Set([...sut.parazit, ...etc.parazit])],
+    vitamin: [...new Set([...sut.vitamin, ...etc.vitamin])],
   };
 }
 
@@ -62,6 +73,7 @@ export const ONERILEN_PLANLAR: Record<UrunModId, SaglikPlani> = {
   mod4: sutPaketi(),
   mod5: mod5Paketi(),
   mod6: DAMIZLIK,
+  mod7: mod7Paketi(),
 };
 
 export function onerilenPlanModEtiketi(modId: UrunModId): string {

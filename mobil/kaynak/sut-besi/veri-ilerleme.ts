@@ -2,14 +2,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getAnimals,
   getAllHealthRecordsForAsi,
-  getStockItems,
-  getStockMovements,
   getWeightRecords,
 } from '@/kaynak/cekirdek/veritabani';
 import type { Mod5AdimId } from './adim-kilidi';
 import { getSagimKayitlari } from './sagim';
 import { getLaktasyonKayitlari } from './laktasyon';
 import { getSutYonlendirme, yonlendirmeTamamMi } from './yonlendirme';
+import {
+  besiYolundaMi,
+  getKuzuYonHedefMap,
+  satinAlinanKuzuMu,
+  sutDisiAnneIds,
+  sutDoganKuzuAdaylari,
+  yasAy,
+} from '@/kaynak/kuzu-yonlendirme';
+import { tespitOrtakBesiKanitlari } from '@/kaynak/ortak-besi-yol';
 
 const RATION_KEY = 'sy_animal_ration_plans';
 
@@ -21,7 +28,7 @@ export type Mod5VeriDurum = {
   ozet: {
     disi: number;
     sagmal: number;
-    kuzu: number;
+    besiKuzu: number;
     sagim: number;
     litre: number;
     laktasyon: number;
@@ -31,12 +38,6 @@ export type Mod5VeriDurum = {
 
 function aktif<T extends { status: string }>(list: T[]) {
   return list.filter((a) => a.status !== 'sold' && a.status !== 'dead');
-}
-
-function yasAy(birthDate: string): number | null {
-  const b = new Date(birthDate).getTime();
-  if (Number.isNaN(b)) return null;
-  return (Date.now() - b) / (30.44 * 86400000);
 }
 
 async function rasyonIds(): Promise<Set<string>> {
@@ -51,16 +52,21 @@ async function rasyonIds(): Promise<Set<string>> {
 
 export async function tespitMod5VeriDurumu(): Promise<Mod5VeriDurum> {
   const animals = aktif(await getAnimals());
+  const hedef = await getKuzuYonHedefMap();
   const disiler = animals.filter((a) => a.sex === 'female');
   const sagmal = animals.filter(
     (a) =>
       a.sex === 'female' &&
-      (/sağmal|sagmal|süt|sut|laktasyon/i.test(`${a.notes} ${a.paddock}`) || a.status === 'lactating')
+      (/sağmal|sagmal|süt|sut|laktasyon/i.test(`${a.notes} ${a.paddock}`) || a.status === 'lactating'),
   );
-  const kuzular = animals.filter((a) => {
-    const ay = yasAy(a.birthDate);
-    return ay != null && ay <= 6;
-  });
+  const sutAnne = sutDisiAnneIds(animals);
+  const sutDogan = sutDoganKuzuAdaylari(animals, sutAnne);
+  const besiKuzular = animals.filter(
+    (a) => {
+      const ay = yasAy(a.birthDate);
+      return ay != null && ay <= 12 && besiYolundaMi(a, hedef);
+    },
+  );
   const gebeler = animals.filter((a) => a.status === 'pregnant');
   const sagimlar = await getSagimKayitlari();
   const laktasyonlar = await getLaktasyonKayitlari();
@@ -68,7 +74,7 @@ export async function tespitMod5VeriDurumu(): Promise<Mod5VeriDurum> {
   const health = await getAllHealthRecordsForAsi();
   const asiIds = new Set(health.filter((h) => h.recordType === 'vaccine').map((h) => h.animalId));
   const memeSaglik = health.some((h) =>
-    /meme|mastit|sağım|sagim|süt|sut/i.test(`${h.notes} ${h.diagnosis} ${h.treatment}`)
+    /meme|mastit|sağım|sagim|süt|sut/i.test(`${h.notes} ${h.diagnosis} ${h.treatment}`),
   );
   const rasyon = await rasyonIds();
   const rasyonN = disiler.filter((a) => rasyon.has(a.id)).length;
@@ -79,129 +85,85 @@ export async function tespitMod5VeriDurumu(): Promise<Mod5VeriDurum> {
     if (w.length >= 1) tartimli += 1;
   }
 
-  let kuzuT0 = 0;
-  let kuzuAra = 0;
-  for (const a of kuzular) {
-    const w = await getWeightRecords(a.id);
-    if (w.length >= 1) kuzuT0 += 1;
-    if (w.length >= 2) kuzuAra += 1;
-  }
-  const kuzuAsi = kuzular.filter((a) => asiIds.has(a.id)).length;
-  const besiNot = animals.some((a) => /besi/i.test(`${a.notes} ${a.paddock}`));
-  const feedIds = new Set((await getStockItems('feed')).map((s) => s.id));
-  const yemCikis = (await getStockMovements()).some(
-    (m) => m.movementType === 'out' && feedIds.has(m.stockId),
-  );
   const litre = sagimlar.reduce((s, k) => s + (k.litre || 0), 0);
   const asi = disiler.filter((a) => asiIds.has(a.id)).length;
-  const grupTamam =
-    disiler.length >= 1 &&
-    (sagmal.length >= 1 ||
-      animals.some((a) => /sağmal|sagmal|kuru|gebe/i.test(`${a.notes} ${a.paddock}`)));
+  const grupTamam = disiler.length >= 1;
+
+  const ayirmaTamam =
+    sutDogan.length === 0 ||
+    sutDogan.every((k) => hedef[k.id] === 'damizlik' || hedef[k.id] === 'besi' || besiYolundaMi(k, hedef));
+
+  const besiKanit = await tespitOrtakBesiKanitlari(besiKuzular, hedef);
+  const besiMap = Object.fromEntries(besiKanit.map((k) => [k.id, k]));
 
   const kanitlar: Mod5AdimKanit[] = [
     {
       id: 'gruplar',
-      tamam: grupTamam || disiler.length >= 1,
+      tamam: grupTamam,
       kanit: grupTamam
-        ? `${disiler.length} dişi · ${sagmal.length || disiler.length} sağmal/grup`
-        : disiler.length
-          ? `${disiler.length} dişi — padok/not ile grup ayırın`
-          : 'Dişi hayvan yok',
+        ? `${disiler.length} dişi · süt sürüsü`
+        : 'Süt sürüsü için dişi hayvan ekleyin',
     },
     {
       id: 'ureme',
-      tamam: kuzular.length >= 1 || gebeler.length >= 1,
-      kanit: kuzular.length
-        ? `${kuzular.length} kuzu`
-        : gebeler.length
-          ? `${gebeler.length} gebe`
-          : 'Üreme / kuzulatma kaydı yok',
+      tamam: gebeler.length >= 1 || sutDogan.length >= 1,
+      kanit: gebeler.length || sutDogan.length
+        ? `${gebeler.length} gebe · ${sutDogan.length} süt kuzusu`
+        : 'İsteğe bağlı — çiftleşme / doğum kaydı',
     },
     {
       id: 'sagim',
       tamam: sagimlar.length >= 1,
       kanit: sagimlar.length
         ? `${sagimlar.length} sağım · ${litre.toFixed(1)} L`
-        : 'Sağım kaydı yok — litre girin',
+        : 'Sağım kaydı yok',
     },
     {
       id: 'laktasyon',
       tamam: laktasyonlar.length >= 1 || (sagimlar.length >= 2 && disiler.length >= 1),
       kanit: laktasyonlar.length
-        ? `${laktasyonlar.length} laktasyon kaydı`
+        ? `${laktasyonlar.length} laktasyon`
         : sagimlar.length >= 2
-          ? 'Çoklu sağım — laktasyon eğrisi mümkün'
-          : 'Laktasyon için kayıt veya ≥2 sağım',
+          ? 'Çoklu sağım — laktasyon mümkün'
+          : 'Laktasyon kaydı veya ≥2 sağım',
     },
     {
-      id: 'rasyon',
+      id: 'rasyon-sut',
       tamam: rasyonN >= 1 || tartimli >= 1,
-      kanit: rasyonN
-        ? `${rasyonN} rasyon planı`
-        : tartimli
-          ? `${tartimli} tartımlı — rasyon bağlayın`
-          : 'Rasyon planı yok',
+      kanit: rasyonN ? `${rasyonN} süt rasyonu` : tartimli ? 'Tartım var — rasyon bağlayın' : 'Süt rasyonu yok',
     },
     {
       id: 'saglik',
       tamam: memeSaglik || asi >= 1 || health.length >= 1,
-      kanit: memeSaglik
-        ? 'Meme / sağım sağlık kaydı var'
-        : asi
-          ? `${asi} aşı kaydı`
-          : health.length
-            ? `${health.length} sağlık kaydı`
-            : 'Meme / sağlık kaydı yok',
-    },
-    {
-      id: 'besiye-aktar',
-      tamam: kuzular.length >= 1 && (besiNot || kuzuT0 >= 1 || yemCikis),
-      kanit:
-        kuzular.length >= 1 && (besiNot || kuzuT0 >= 1 || yemCikis)
-          ? 'Kuzu besi grubuna aktarım görülüyor'
-          : kuzular.length
-            ? `${kuzular.length} kuzu — besi padok/not veya tartım`
-            : 'Kuzu yok',
-    },
-    {
-      id: 'asi-kuzu',
-      tamam: kuzular.length >= 1 && kuzuAsi >= 1,
-      kanit: kuzuAsi ? `${kuzuAsi} kuzu aşı kaydı` : 'Besi kuzu aşısı bekleniyor',
-    },
-    {
-      id: 't0-kuzu',
-      tamam: kuzuT0 >= 1,
-      kanit: kuzuT0 ? `${kuzuT0} kuzuda T1 tartım` : 'Besi T1 tartım yok',
-    },
-    {
-      id: 'tartim-kuzu',
-      tamam: kuzuAra >= 1,
-      kanit: kuzuAra ? `${kuzuAra} kuzuda ≥2 tartım` : 'Besi ara tartım yok',
+      kanit: memeSaglik ? 'Meme / sağlık kaydı' : asi ? `${asi} aşı` : 'Meme / sağlık kaydı yok',
     },
     {
       id: 'yonlendirme',
-      tamam: yonlendirmeTamamMi(yon) || (sagimlar.length >= 1 && (gebeler.length >= 1 || kuzular.length >= 1)),
-      kanit: yonlendirmeTamamMi(yon)
-        ? 'Süt yönlendirme seçildi'
-        : sagimlar.length && (gebeler.length || kuzular.length)
-          ? 'Sağım + üreme — yönlendirme için veri yeterli'
-          : 'Kuruya alma / yönlendirme için veri eksik',
+      tamam: yonlendirmeTamamMi(yon) || (sagimlar.length >= 1 && disiler.length >= 1),
+      kanit: yonlendirmeTamamMi(yon) ? 'Yönlendirme seçildi' : 'Kuruya alma / sütten kesme',
     },
     {
+      id: 'damizlik-besi',
+      tamam: ayirmaTamam && (sutDogan.length === 0 || besiKuzular.some((k) => sutAnne.has(k.motherId ?? ''))),
+      kanit: sutDogan.length
+        ? ayirmaTamam
+          ? `${sutDogan.length} kuzu ayırıldı (damızlık veya besi)`
+          : `${sutDogan.length} kuzu — damızlık/besi seçin`
+        : 'Süt kuzusu yok veya hepsi işaretli',
+    },
+    ...(besiKanit as Mod5AdimKanit[]),
+    {
       id: 'rapor',
-      tamam: sagimlar.length >= 1 && (rasyonN >= 1 || tartimli >= 1) && (kuzuAra >= 1 || kuzular.length === 0),
+      tamam:
+        sagimlar.length >= 1 &&
+        (besiMap['tartim-besi']?.tamam || besiKuzular.length === 0) &&
+        (rasyonN >= 1 || tartimli >= 1),
       kanit:
-        sagimlar.length >= 1 && (rasyonN >= 1 || tartimli >= 1)
-          ? kuzuAra >= 1 || kuzular.length === 0
-            ? 'Süt + besi metrikleri raporlanabilir'
-            : 'Besi ara tartım eksik'
-          : 'Rapor için sağım ve rasyon/tartım gerekli',
+        sagimlar.length >= 1
+          ? 'Süt + besi metrikleri raporlanabilir'
+          : 'Rapor için sağım gerekli',
     },
   ];
-
-  // gruplar: en az bir dişi
-  kanitlar[0].tamam = disiler.length >= 1;
 
   return {
     kanitlar,
@@ -209,7 +171,7 @@ export async function tespitMod5VeriDurumu(): Promise<Mod5VeriDurum> {
     ozet: {
       disi: disiler.length,
       sagmal: sagmal.length || disiler.length,
-      kuzu: kuzular.length,
+      besiKuzu: besiKuzular.length,
       sagim: sagimlar.length,
       litre,
       laktasyon: laktasyonlar.length,

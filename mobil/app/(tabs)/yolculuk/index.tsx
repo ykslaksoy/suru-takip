@@ -77,7 +77,21 @@ import {
   type Mod5AdimId,
   type Mod5BirlesikIlerleme,
 } from '@/kaynak/sut-besi';
+import {
+  MOD7_ADIMLAR,
+  adimAcikMiMod7,
+  adimTamamlaMod7,
+  addSagimKaydi as addSagimKaydiMod7,
+  getMod7BirlesikIlerleme,
+  resetMod7Ilerleme,
+  sonrakiAcikAdimMod7,
+  type Mod7AdimId,
+  type Mod7BirlesikIlerleme,
+} from '@/kaynak/sut-etc';
 import { Mod2IslemPaneli } from '@/bilesenler/yolculuk/Mod2IslemPaneli';
+import { DamizlikBesiAyirmaPaneli } from '@/bilesenler/yolculuk/DamizlikBesiAyirmaPaneli';
+import { SuruKoluEtiketPaneli } from '@/bilesenler/yolculuk/SuruKoluEtiketPaneli';
+import { Mod7IslemPaneli } from '@/bilesenler/yolculuk/Mod7IslemPaneli';
 import { Mod3IslemPaneli } from '@/bilesenler/yolculuk/Mod3IslemPaneli';
 import { Mod4IslemPaneli } from '@/bilesenler/yolculuk/Mod4IslemPaneli';
 import { Mod5IslemPaneli } from '@/bilesenler/yolculuk/Mod5IslemPaneli';
@@ -125,7 +139,14 @@ const BOS5: Mod5BirlesikIlerleme = {
   tamamlanan: [],
   kaynak: {},
   kanitlar: [],
-  ozet: { disi: 0, sagmal: 0, kuzu: 0, sagim: 0, litre: 0, laktasyon: 0, asi: 0 },
+  ozet: { disi: 0, sagmal: 0, besiKuzu: 0, sagim: 0, litre: 0, laktasyon: 0, asi: 0 },
+};
+
+const BOS7: Mod7BirlesikIlerleme = {
+  tamamlanan: [],
+  kaynak: {},
+  kanitlar: [],
+  ozet: { sut: 0, et: 0, besiKuzu: 0, sagim: 0, litre: 0, katim: 0 },
 };
 
 export default function YolculukScreen() {
@@ -140,6 +161,7 @@ export default function YolculukScreen() {
   const [m4, setM4] = useState<Mod4BirlesikIlerleme>(BOS4);
   const [m6, setM6] = useState<Mod6BirlesikIlerleme>(BOS6);
   const [m5, setM5] = useState<Mod5BirlesikIlerleme>(BOS5);
+  const [m7, setM7] = useState<Mod7BirlesikIlerleme>(BOS7);
   const [loading, setLoading] = useState(true);
   const [katimForm, setKatimForm] = useState({
     kocEarTag: '',
@@ -162,6 +184,7 @@ export default function YolculukScreen() {
       else if (aktifMod.id === 'mod4') setM4(await getMod4BirlesikIlerleme());
       else if (aktifMod.id === 'mod6') setM6(await getMod6BirlesikIlerleme());
       else if (aktifMod.id === 'mod5') setM5(await getMod5BirlesikIlerleme());
+      else if (aktifMod.id === 'mod7') setM7(await getMod7BirlesikIlerleme());
     } finally {
       setLoading(false);
     }
@@ -671,6 +694,206 @@ export default function YolculukScreen() {
     );
   }
 
+  if (aktifMod.id === 'mod7') {
+    const sonraki = sonrakiAcikAdimMod7(m7.tamamlanan);
+    const kanitMap = Object.fromEntries(m7.kanitlar.map((k) => [k.id, k]));
+    const durumOf = (id: Mod7AdimId) => {
+      const adim = MOD7_ADIMLAR.find((a) => a.id === id)!;
+      if (m7.tamamlanan.includes(id)) return 'tamam' as const;
+      if (adimAcikMiMod7(adim, m7.tamamlanan)) return 'aktif' as const;
+      return 'kilitli' as const;
+    };
+
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
+        <Text style={[styles.h1, { color: colors.text }]}>
+          {aktifMod.icon} {aktifMod.baslik}
+        </Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>
+          Süt ve et sürüsü ayrı kol; ortak çiftleşme/doğum; besi yolu birleşik.
+          {loading ? ' Güncelleniyor…' : ''}
+        </Text>
+        <Text style={[styles.sub, { color: colors.textSecondary, fontSize: 12, marginBottom: 8 }]}>
+          {VETERINER_ONERI_NOTU}
+        </Text>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.ozetTitle, { color: colors.text }]}>Veri özeti</Text>
+          <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
+            {m7.ozet.sut} süt kolu · {m7.ozet.et} et kolu · {m7.ozet.besiKuzu} besi kuzu · {m7.ozet.sagim} sağım ·{' '}
+            {m7.ozet.litre.toFixed(1)} L · {m7.ozet.katim} katım
+          </Text>
+        </View>
+
+        {sonraki?.id === 'kol-etiket' ? <SuruKoluEtiketPaneli onDegisti={load} /> : null}
+
+        {sonraki?.id === 'sagim' ? (
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.tint }]}>
+            <Text style={[styles.ozetTitle, { color: colors.text }]}>Sağım kaydı ekle</Text>
+            {(
+              [
+                ['litre', 'Toplam litre'],
+                ['hayvanSayisi', 'Sağılan hayvan sayısı'],
+                ['notes', 'Not (opsiyonel)'],
+              ] as const
+            ).map(([key, ph]) => (
+              <TextInput
+                key={key}
+                placeholder={ph}
+                placeholderTextColor={colors.textSecondary}
+                value={sagimForm[key]}
+                onChangeText={(v) => setSagimForm({ ...sagimForm, [key]: v })}
+                keyboardType={key === 'notes' ? 'default' : 'decimal-pad'}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              />
+            ))}
+            <AnaButon
+              title="Sağımı kaydet"
+              onPress={async () => {
+                const litre = parseFloat(sagimForm.litre.replace(',', '.'));
+                if (!Number.isFinite(litre) || litre <= 0) {
+                  Alert.alert('Eksik', 'Geçerli litre girin');
+                  return;
+                }
+                await addSagimKaydiMod7({
+                  litre,
+                  hayvanSayisi: parseInt(sagimForm.hayvanSayisi, 10) || 1,
+                  tarih: new Date().toISOString().slice(0, 10),
+                  notes: sagimForm.notes.trim(),
+                });
+                setSagimForm({ litre: '', hayvanSayisi: sagimForm.hayvanSayisi, notes: '' });
+                await load();
+                Alert.alert('Tamam', 'Sağım kaydı eklendi');
+              }}
+            />
+          </View>
+        ) : null}
+
+        {sonraki?.id === 'katim' ? (
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.tint }]}>
+            <Text style={[styles.ozetTitle, { color: colors.text }]}>Koç katım (et kolu)</Text>
+            <TextInput
+              placeholder="Koç küpe no"
+              placeholderTextColor={colors.textSecondary}
+              value={katimForm.kocEarTag}
+              onChangeText={(v) => setKatimForm({ ...katimForm, kocEarTag: v })}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            <TextInput
+              placeholder="Padok"
+              placeholderTextColor={colors.textSecondary}
+              value={katimForm.padok}
+              onChangeText={(v) => setKatimForm({ ...katimForm, padok: v })}
+              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            />
+            <AnaButon
+              title="Katım kaydet"
+              onPress={async () => {
+                if (!katimForm.kocEarTag.trim()) {
+                  Alert.alert('Eksik', 'Koç küpe girin');
+                  return;
+                }
+                await addKatimKaydi({
+                  kocEarTag: katimForm.kocEarTag.trim(),
+                  padok: katimForm.padok.trim() || 'Et padok',
+                  disiSayisi: parseInt(katimForm.disiSayisi, 10) || 1,
+                  tarih: new Date().toISOString().slice(0, 10),
+                  notes: katimForm.notes.trim(),
+                });
+                await load();
+                Alert.alert('Tamam', 'Katım kaydı eklendi');
+              }}
+            />
+          </View>
+        ) : null}
+
+        <Mod7IslemPaneli
+          adim={
+            sonraki?.id === 'laktasyon' || sonraki?.id === 'saglik-sut' ? sonraki.id : null
+          }
+          onDegisti={load}
+        />
+
+        {sonraki?.id === 'damizlik-besi' ? (
+          <DamizlikBesiAyirmaPaneli sutKoluFiltre onDegisti={load} />
+        ) : null}
+
+        <Mod2IslemPaneli
+          adim={
+            sonraki?.id === 'kuzulatma' || sonraki?.id === 'besiye-aktar-et'
+              ? sonraki.id === 'besiye-aktar-et'
+                ? 'besiye-aktar'
+                : 'kuzulatma'
+              : null
+          }
+          onDegisti={load}
+        />
+
+        {sonraki ? (
+          <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>
+            <Text style={styles.nextLabel}>Şimdi</Text>
+            <Text style={styles.nextTitle}>{sonraki.baslik}</Text>
+            <Text style={styles.nextDesc}>{kanitMap[sonraki.id]?.kanit ?? sonraki.aciklama}</Text>
+          </View>
+        ) : (
+          <View style={[styles.nextBox, { backgroundColor: colors.success }]}>
+            <Text style={styles.nextTitle}>Yolculuk tamam</Text>
+            <Text style={styles.nextDesc}>Süt + etçi adımları dolu.</Text>
+          </View>
+        )}
+
+        {MOD7_ADIMLAR.map((adim) => {
+          const durum = durumOf(adim.id);
+          const kanit = kanitMap[adim.id];
+          return (
+            <YolculukAdimi
+              key={adim.id}
+              adim={adim}
+              durum={durum}
+              kanit={kanit?.kanit}
+              kaynak={m7.kaynak[adim.id]}
+              onPress={
+                durum === 'kilitli'
+                  ? undefined
+                  : () => {
+                      if (adim.href) router.push(adim.href as never);
+                    }
+              }
+              onTamamla={
+                durum === 'aktif' && !kanit?.tamam
+                  ? async () => {
+                      await adimTamamlaMod7(adim.id);
+                      await load();
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+
+        <Pressable
+          onPress={() => {
+            Alert.alert('Manuel onayları sıfırla', 'Elle onaylar silinir; veri adımları kalır.', [
+              { text: 'Vazgeç', style: 'cancel' },
+              {
+                text: 'Sıfırla',
+                style: 'destructive',
+                onPress: async () => {
+                  await resetMod7Ilerleme();
+                  await load();
+                },
+              },
+            ]);
+          }}
+          style={{ marginTop: 8, marginBottom: 24 }}>
+          <Text style={{ color: colors.danger, textAlign: 'center', fontWeight: '700' }}>
+            Manuel onayları sıfırla
+          </Text>
+        </Pressable>
+      </ScrollView>
+    );
+  }
+
   if (aktifMod.id === 'mod5') {
     const sonraki = sonrakiAcikAdimMod5(m5.tamamlanan);
     const kanitMap = Object.fromEntries(m5.kanitlar.map((k) => [k.id, k]));
@@ -687,7 +910,7 @@ export default function YolculukScreen() {
           {aktifMod.icon} {aktifMod.baslik}
         </Text>
         <Text style={[styles.sub, { color: colors.textSecondary }]}>
-          Sağım + laktasyon + kuzuyu besiye al. Kayıtlardan otomatik ilerler.
+          Süt sürüsü + satın alınan kuzu besi (Mod 1 giriş hattı). Süt kuzusu isteğe bağlı besiye alınır.
           {loading ? ' Güncelleniyor…' : ''}
         </Text>
         <Text style={[styles.sub, { color: colors.textSecondary, fontSize: 12, marginBottom: 8 }]}>
@@ -697,7 +920,7 @@ export default function YolculukScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.ozetTitle, { color: colors.text }]}>Veri özeti</Text>
           <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>
-            {m5.ozet.disi} dişi · {m5.ozet.sagmal} sağmal · {m5.ozet.kuzu} kuzu · {m5.ozet.sagim} sağım ·{' '}
+            {m5.ozet.disi} dişi · {m5.ozet.sagmal} sağmal · {m5.ozet.besiKuzu} besi kuzu · {m5.ozet.sagim} sağım ·{' '}
             {m5.ozet.litre.toFixed(1)} L · laktasyon {m5.ozet.laktasyon} · aşı {m5.ozet.asi}
           </Text>
         </View>
@@ -751,7 +974,9 @@ export default function YolculukScreen() {
           onDegisti={load}
         />
 
-        <Mod2IslemPaneli adim={sonraki?.id === 'besiye-aktar' ? 'besiye-aktar' : null} onDegisti={load} />
+        {sonraki?.id === 'damizlik-besi' ? (
+          <DamizlikBesiAyirmaPaneli onDegisti={load} />
+        ) : null}
 
         {sonraki ? (
           <View style={[styles.nextBox, { backgroundColor: colors.tint }]}>

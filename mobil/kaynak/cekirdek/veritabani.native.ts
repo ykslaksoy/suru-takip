@@ -143,7 +143,8 @@ function rowToAnimal(row: Record<string, unknown>): Animal {
     rawMod === 'mod3' ||
     rawMod === 'mod4' ||
     rawMod === 'mod5' ||
-    rawMod === 'mod6'
+    rawMod === 'mod6' ||
+    rawMod === 'mod7'
       ? rawMod
       : null;
   return {

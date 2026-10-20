@@ -14,6 +14,7 @@ import { dozModul } from './moduller/doz';
 import { ortamModul } from './moduller/ortam';
 import { modlarModul } from './moduller/modlar';
 import { uretimModlariModul } from './moduller/uretim-modlari';
+import { mod7Mod5Modul } from './moduller/mod7-mod5';
 import { ozellikModul } from './moduller/ozellik-bayraklari';
 import { abonelikModul } from './moduller/abonelik';
 import { senkronModul } from './moduller/senkron';
@@ -59,6 +60,7 @@ const MODULLER = [
   ortamModul,
   modlarModul,
   uretimModlariModul,
+  mod7Mod5Modul,
   ozellikModul,
   abonelikModul,
   senkronModul,

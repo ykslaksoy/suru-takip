@@ -25,10 +25,10 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
     aciklama: 'Yerel kural motoru · teşhis veteriner hekime aittir',
   },
   {
-    id: 'mod2-6',
-    ad: 'Mod 2–6 (etçi, damızlık, süt)',
+    id: 'mod2-7',
+    ad: 'Mod 2–7 (etçi, damızlık, süt)',
     durum: 'tam',
-    aciklama: 'Etçi + kuzu besi, damızlık et/süt kuzusu, süt koyunculuğu, süt + kuzu besi',
+    aciklama: 'Etçi, damızlık, süt koyunculuğu, süt+besi, süt+etçi kombinasyonları',
   },
   {
     id: 'bulut-senkron',

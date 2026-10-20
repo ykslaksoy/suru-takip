@@ -80,8 +80,8 @@ export type UretimAyari = {
 
 const TRAKYA_KESIN = ['edirne', 'kirklareli', 'tekirdag'];
 const TRAKYA_YAKA = ['istanbul', 'canakkale'];
-const SUT_MODLARI = ['mod4', 'mod5', 'mod6'];
-const BESI_MODLARI = ['mod1', 'mod2', 'mod5'];
+const SUT_MODLARI = ['mod4', 'mod5', 'mod6', 'mod7'];
+const BESI_MODLARI = ['mod1', 'mod2', 'mod5', 'mod7'];
 
 export const ASI_ONCELIK = ['karma', 'cicek', 'ppr', 'pasteurella', 'sarbon', 'brusella', 'sap'];
 
