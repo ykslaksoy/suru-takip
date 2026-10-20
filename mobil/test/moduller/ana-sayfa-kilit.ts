@@ -37,6 +37,8 @@ export const anaSayfaKilitModul: TestModul = {
   calistir() {
     const ozet = readFileSync(join(KOK, 'kaynak/ana-sayfa/ozet.ts'), 'utf8');
     const ana = readFileSync(join(KOK, 'bilesenler/ana-sayfa/KilitliAnaSayfa.tsx'), 'utf8');
+    const html = readFileSync(join(KOK, 'app/+html.tsx'), 'utf8');
+    const guvenli = readFileSync(join(KOK, 'bilesenler/ortak/guvenliAlan.ts'), 'utf8');
     return [
       test('Kilitli ana sayfa', 'Başlık Akıllı Kuzu', ozet.includes("KILITLI_ANA_BASLIK = 'Akıllı Kuzu'")),
       test('Kilitli ana sayfa', 'Sezon 2026 Sezonu', ozet.includes("KILITLI_SEZON_ETIKET = '2026 Sezonu'")),
@@ -55,6 +57,21 @@ export const anaSayfaKilitModul: TestModul = {
       test('Kilitli ana sayfa', 'Padok B yaş', ozet.includes('3,5 aylık')),
       test('Kilitli ana sayfa', 'Padok C yaş', ozet.includes('4,5 aylık')),
       test('Kilitli ana sayfa', 'Maskot header’da', ana.includes('KILITLI_MASKOT')),
+      test(
+        'Kilitli ana sayfa',
+        'Safari ilk paint --app-height',
+        html.includes('--app-height') && html.includes('visualViewport'),
+      ),
+      test(
+        'Kilitli ana sayfa',
+        'Üst safe-area CSS-only (inset import yok)',
+        !guvenli.includes("from 'react-native-safe-area-context'") && guvenli.includes('headerPadTop'),
+      ),
+      test(
+        'Kilitli ana sayfa',
+        'ScrollView contentInset yok',
+        !ana.includes('contentInsetAdjustmentBehavior'),
+      ),
       test('Kilitli ana sayfa', 'Daha menüsü dolu', DAHA_MENUSU.length >= 5),
       ...VARLIKLAR.map((d) => test('Kilitli ana sayfa', `Varlık: ${d}`, existsSync(join(KOK, d)))),
     ];

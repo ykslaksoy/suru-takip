@@ -100,7 +100,7 @@ export function KilitliAnaSayfa() {
         style={styles.scroll}
         contentContainerStyle={StyleSheet.flatten([styles.scrollContent, { paddingBottom: scrollPadBottom }])}
         showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior="automatic">
+        keyboardShouldPersistTaps="handled">
         {/* ── Üst kart ── */}
         <View style={{ paddingTop: headerPadTop, paddingHorizontal: yatayPad }}>
           <View style={StyleSheet.flatten([styles.hero, { backgroundColor: heroBg }])}>

@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
@@ -19,6 +18,8 @@ import { countAnimals } from '@/kaynak/cekirdek/veritabani';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import { hizliTekKuzuEkle, VARSAYILAN_KABUL_CINSIYET } from '@/kaynak/suru/hizli-kuzu-kabul';
 import type { AnimalSex } from '@/kaynak/cekirdek/tipler';
+import { KuzuSecimPaneli } from '@/bilesenler/giris-yontemi/KuzuSecimPaneli';
+import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
 
 function uyar(baslik: string, mesaj: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -28,7 +29,7 @@ function uyar(baslik: string, mesaj: string) {
   Alert.alert(baslik, mesaj);
 }
 
-/** Minimal tek kuzu formu — seçilen padok için ayrı sayfa */
+/** Minimal tek kuzu formu — seçilen padok + kayıtlı kuzu seçim yöntemi */
 export default function HizliTekFormScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -38,9 +39,7 @@ export default function HizliTekFormScreen() {
   const params = useLocalSearchParams<{ padok?: string }>();
   const padok = typeof params.padok === 'string' ? params.padok : '';
 
-  const [earTag, setEarTag] = useState('');
-  const [sirtNo, setSirtNo] = useState('');
-  /** Besi kuralı: varsayılan erkek; dişi seçimi korunur */
+  const [kimlik, setKimlik] = useState({ earTag: '', sirtNo: '', gehisId: undefined as string | undefined });
   const [sex, setSex] = useState<AnimalSex>(VARSAYILAN_KABUL_CINSIYET);
   const [busy, setBusy] = useState(false);
 
@@ -50,7 +49,7 @@ export default function HizliTekFormScreen() {
       uyar('Padok', 'Önce padok seçin');
       return;
     }
-    if (!earTag.trim()) {
+    if (!kimlik.earTag.trim()) {
       uyar('Küpe', 'Kulak küpe numarası yazın');
       return;
     }
@@ -67,10 +66,10 @@ export default function HizliTekFormScreen() {
         }
       }
       const sonuc = await hizliTekKuzuEkle({
-        earTag,
+        earTag: kimlik.earTag,
         paddock: padok,
         sex,
-        sirtNo: sirtNo || undefined,
+        sirtNo: kimlik.sirtNo || undefined,
       });
       refresh();
       router.replace({
@@ -100,30 +99,9 @@ export default function HizliTekFormScreen() {
           Padok: {padok || '—'}
         </Text>
 
-        <Text style={[styles.label, { color: colors.text }]}>Kulak küpe *</Text>
-        <TextInput
-          value={earTag}
-          onChangeText={setEarTag}
-          placeholder="TR-34-001234"
-          placeholderTextColor={colors.textSecondary}
-          autoCapitalize="characters"
-          style={[
-            styles.input,
-            { borderColor: colors.border, color: colors.text, backgroundColor: colors.card },
-          ]}
-        />
+        <YontemOzeti ayarlarLink />
 
-        <Text style={[styles.label, { color: colors.text }]}>Sırt no (opsiyonel)</Text>
-        <TextInput
-          value={sirtNo}
-          onChangeText={setSirtNo}
-          placeholder="87"
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            { borderColor: colors.border, color: colors.text, backgroundColor: colors.card },
-          ]}
-        />
+        <KuzuSecimPaneli value={kimlik} onChange={setKimlik} yeniKayit />
 
         <Text style={[styles.label, { color: colors.text }]}>Cinsiyet</Text>
         <Text style={{ color: colors.textSecondary, marginBottom: 8, fontWeight: '600' }}>
@@ -184,15 +162,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   label: { fontWeight: '700', marginBottom: 8, fontSize: 15 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    fontSize: 18,
-    minHeight: 56,
-    marginBottom: 16,
-  },
   row: { flexDirection: 'row', gap: 10, marginBottom: 24 },
   sexBtn: {
     flex: 1,

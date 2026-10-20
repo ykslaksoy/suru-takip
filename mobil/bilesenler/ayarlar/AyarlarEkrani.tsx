@@ -56,6 +56,7 @@ function AyarlarIcerik() {
   );
 
   const anaAyarlar: LinkSatir[] = [
+    { baslik: 'Kuzu seçim & tartım girişi', href: '/giris-yontemi' },
     { baslik: 'İşletme profili', href: '/isletme-profil' },
     { baslik: 'Profesyonellik aşamaları', href: '/profesyonellik' },
     { baslik: 'Abonelik / paket', href: '/abonelik' },

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { IzgaraTabBar } from '@/bilesenler/ortak/IzgaraTabBar';
+import { GirisYontemiKurulumYonlendirici } from '@/bilesenler/giris-yontemi/GirisYontemiKurulumYonlendirici';
 
 const GIZLI: { name: string; title: string }[] = [
   { name: 'saglik', title: 'Sağlık' },
@@ -16,6 +17,7 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1 }}>
+      <GirisYontemiKurulumYonlendirici />
       <Tabs
         tabBar={(props) => <IzgaraTabBar {...props} />}
         screenOptions={{

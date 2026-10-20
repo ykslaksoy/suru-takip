@@ -20,11 +20,17 @@ import {
 } from '@/kaynak/seri-giris';
 import { HizliTartim } from '@/bilesenler/kilo/HizliTartim';
 import { dinlemeyiBaslat, metniSeslendir, seslendirmeyiDurdur, type DinlemeKontrol } from '@/kaynak/ses';
+import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
+import { useGirisYontemi } from '@/baglam/GirisYontemiBaglami';
+import { etkinKuzuSecim, etkinTartimGiris } from '@/kaynak/giris-yontemi';
 
 export default function SeriGirisScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refresh } = useDatabase();
+  const { tercih } = useGirisYontemi();
+  const kuzuYontem = etkinKuzuSecim(tercih.kuzuSecim);
+  const tartimYontem = etkinTartimGiris(tercih.tartimGiris);
   const [mod, setMod] = useState<SeriMod | 'hizli'>('hizli');
   const [oturum, setOturum] = useState<SeriOturum | null>(null);
   const [satir, setSatir] = useState('');
@@ -134,6 +140,12 @@ export default function SeriGirisScreen() {
               <>
                 <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
                   Ahırda arka arkaya kayıt. Satır ekleyin (yazın veya dinleyin), sonra «Hepsini uygula» ile veritabanına yazın.
+                </Text>
+                <YontemOzeti ayarlarLink />
+                <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 12, lineHeight: 18 }}>
+                  {mod === 'tartim'
+                    ? `Tartım: ${tartimYontem === 'sesle-kilo' ? 'ses veya yazı' : 'kayıtlı yöntem'}`
+                    : `Kuzu no: ${kuzuYontem === 'sesle-numara' ? 'ses veya yazı' : 'kayıtlı yöntem'}`}
                 </Text>
                 <AnaButon title={`${SERI_MOD_ETIKET[mod]} başlat`} onPress={() => void baslat()} />
               </>

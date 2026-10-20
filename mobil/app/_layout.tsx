@@ -11,6 +11,7 @@ import { SubscriptionProvider } from '@/baglam/AbonelikBaglami';
 import { AnaSayfaProvider } from '@/baglam/AnaSayfaBaglami';
 import { ModProvider } from '@/baglam/ModBaglami';
 import { AyarlarProvider } from '@/baglam/AyarlarBaglami';
+import { GirisYontemiProvider } from '@/baglam/GirisYontemiBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
 import { BaglantiSeridi } from '@/bilesenler/ortak/BaglantiSeridi';
@@ -51,6 +52,7 @@ export default function RootLayout() {
         <SubscriptionProvider>
           <AnaSayfaProvider>
             <ModProvider>
+              <GirisYontemiProvider>
               <AyarlarProvider>
                 <View style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
                   <Stack screenOptions={{ headerTintColor: '#2d6a4f' }}>
@@ -78,6 +80,8 @@ export default function RootLayout() {
                     <Stack.Screen name="profesyonellik/oneri" options={{ title: 'Üst aşama' }} />
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
                     <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
+                    <Stack.Screen name="giris-yontemi/kurulum" options={{ title: 'Giriş yöntemi kurulumu' }} />
+                    <Stack.Screen name="giris-yontemi/index" options={{ title: 'Kuzu seçim & tartım' }} />
                     <Stack.Screen name="maliyet/index" options={{ title: 'Maliyet ve Kâr' }} />
                     <Stack.Screen name="sigorta/index" options={{ title: 'Sigorta (TARSİM)' }} />
                     <Stack.Screen name="arinma/index" options={{ title: 'İlaç arınma süreleri' }} />
@@ -104,6 +108,7 @@ export default function RootLayout() {
                   <AyarlarKaplama />
                 </View>
               </AyarlarProvider>
+              </GirisYontemiProvider>
             </ModProvider>
           </AnaSayfaProvider>
         </SubscriptionProvider>
