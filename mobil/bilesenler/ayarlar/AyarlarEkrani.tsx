@@ -93,7 +93,7 @@ function AyarlarIcerik() {
       },
     },
     { baslik: 'KVKK / gizlilik', href: '/yasal/gizlilik' },
-    { baslik: 'Kullanım koşulları', href: '/yasal/kullanim' },
+    { baslik: 'Kullanım Şartları', href: '/yasal/kullanim' },
   ];
 
   return (

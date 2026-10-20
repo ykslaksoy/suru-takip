@@ -8,6 +8,7 @@ import { useAyarlar } from '@/baglam/AyarlarBaglami';
 import { DAHA_MENUSU } from '@/sabitler/HizliIslemler';
 import { AktifKullaniciRozeti } from '@/bilesenler/ekip/YetkiKapisi';
 import { CevrimdisiHazirSatiri } from '@/bilesenler/ortak/BaglantiSeridi';
+import { YasalAltBaglantilar } from '@/bilesenler/ortak/YasalAltBaglantilar';
 
 export default function DahaScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -54,6 +55,7 @@ export default function DahaScreen() {
             </Pressable>
           ))}
         </View>
+        <YasalAltBaglantilar />
       </ScrollView>
     </View>
   );
