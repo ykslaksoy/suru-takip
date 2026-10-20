@@ -3,6 +3,7 @@ import { Stack, router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
+import { BesiUfukSecici } from '@/bilesenler/hizli-kuzu/BesiUfukSecici';
 
 /** Hub — tek veya toplu; saha için iki büyük yol */
 export default function HizliKuzuHubScreen() {
@@ -20,6 +21,17 @@ export default function HizliKuzuHubScreen() {
         <Text style={[styles.sub, { color: colors.textSecondary }]}>
           Sahada hızlı yol — az yazı, büyük düğmeler. Sonra aşı / tartım / yem adımları hazırlanır.
         </Text>
+
+        <BesiUfukSecici colors={colors} compact />
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/hayvan/hizli-ekle/besi-programi' as never)}
+          style={{ marginBottom: 16, paddingVertical: 8 }}>
+          <Text style={{ color: colors.tint, fontWeight: '700', textAlign: 'center' }}>
+            Program önizleme ve zaman çizelgesi →
+          </Text>
+        </Pressable>
 
         <Pressable
           accessibilityRole="button"

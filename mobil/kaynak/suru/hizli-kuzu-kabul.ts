@@ -8,13 +8,18 @@ import { getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
 import { ASI_PROGRAMI } from '@/kaynak/cekirdek/asi-programi';
 import { olusturModTakviyePlani } from '@/kaynak/akilli-veteriner/mod-takviye';
 import {
-  BESI_PLAN_TAVAN_GUN,
-  BESI_SATIS_UFUK_GUN,
   HIZLI_BESI_TAKVIM,
-  HIZLI_BESI_YEM_TAKVIM,
   asiGorunumBaslik,
   gunEtiket,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
+import {
+  besiPlanMesajUfukta,
+  besiTakviyeSablonuUfukta,
+  besiUfukGunOku,
+  olusturBesiGorevZamanCizelgesi,
+  takvimSatirlariUfukta,
+  yemSatirlariUfukta,
+} from '@/kaynak/besi-programi';
 import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import { GOZLEM_PADOK_AD, addPadok, getPadokByAd } from '@/kaynak/suru/padok';
 import { yemPlaniHayvanlaraEkle } from '@/kaynak/gorevler/yem-gorev';
@@ -155,13 +160,15 @@ export async function hizliTekKuzuEkle(
   });
 
   await upsertRationPlanFromWeight(animal, VARSAYILAN_GIRIS_KILO);
-  const plan = await olusturModTakviyePlani({ modId });
-  await yemPlaniHayvanlaraEkle([animal.id]);
-  const sonraki = await rehberGorevleriYaz(1, paddock);
+  const ufukGun = await besiUfukGunOku();
+  const kalemler = besiTakviyeSablonuUfukta(ufukGun);
+  const plan = await olusturModTakviyePlani({ modId, kalemler });
+  await yemPlaniHayvanlaraEkle([animal.id], { ufukGun });
+  const sonraki = await rehberGorevleriYaz(1, paddock, ufukGun);
 
   return {
     hayvanlar: [{ id: animal.id, earTag: animal.earTag, paddock: animal.paddock }],
-    planMesaj: `${plan.message} · Yem planı satılana kadar (~${BESI_SATIS_UFUK_GUN}+${BESI_PLAN_TAVAN_GUN - BESI_SATIS_UFUK_GUN}g)`,
+    planMesaj: `${plan.message} · ${besiPlanMesajUfukta(ufukGun)}`,
     sonrakiAdimlar: sonraki,
   };
 }
@@ -248,13 +255,15 @@ export async function topluKuzuKabul(
     ids.push(animal.id);
   }
 
-  const plan = await olusturModTakviyePlani({ modId });
-  await yemPlaniHayvanlaraEkle(ids);
-  const sonraki = await rehberGorevleriYaz(hayvanlar.length, paddock);
+  const ufukGun = await besiUfukGunOku();
+  const kalemler = besiTakviyeSablonuUfukta(ufukGun);
+  const plan = await olusturModTakviyePlani({ modId, kalemler });
+  await yemPlaniHayvanlaraEkle(ids, { ufukGun });
+  const sonraki = await rehberGorevleriYaz(hayvanlar.length, paddock, ufukGun);
 
   return {
     hayvanlar,
-    planMesaj: `${plan.message} · Yem planı satılana kadar (~${BESI_SATIS_UFUK_GUN}g)`,
+    planMesaj: `${plan.message} · ${besiPlanMesajUfukta(ufukGun)}`,
     sonrakiAdimlar: sonraki,
     kupeNeden,
   };
@@ -280,21 +289,30 @@ export async function ensureGozlemPadok(): Promise<string> {
 async function rehberGorevleriYaz(
   adet: number,
   paddock: string,
+  ufukGun: number,
 ): Promise<{ baslik: string; aciklama: string; href: string }[]> {
-  const asiGunler = [...new Set(HIZLI_BESI_TAKVIM.filter((t) => t.tip !== 'tartim').map((t) => t.gun))].sort(
+  const takvim = takvimSatirlariUfukta(ufukGun);
+  const yemTakvim = yemSatirlariUfukta(ufukGun);
+  const asiGunler = [...new Set(takvim.filter((t) => t.tip !== 'tartim').map((t) => t.gun))].sort(
     (a, b) => a - b,
   );
-  const yemGunler = HIZLI_BESI_YEM_TAKVIM.map((y) => y.gun);
+  const yemGunler = yemTakvim.map((y) => y.gun);
+  const ozet = olusturBesiGorevZamanCizelgesi({ ufukGun });
 
   const sonraki: { baslik: string; aciklama: string; href: string }[] = [
     {
-      baslik: `Aşı / ilaç — gün gün (satış ~${BESI_SATIS_UFUK_GUN}g)`,
-      aciklama: `${adet} kuzu · ${paddock} · ${asiGunler.map((g) => gunEtiket(g)).join(' → ')}`,
+      baslik: `Besi programı (~${ufukGun} gün)`,
+      aciklama: `${adet} kuzu · ${paddock} · ${ozet.length} görev adımı`,
+      href: '/hayvan/hizli-ekle/besi-programi',
+    },
+    {
+      baslik: `Aşı / ilaç — gün gün`,
+      aciklama: `${asiGunler.map((g) => gunEtiket(g)).join(' → ')}`,
       href: '/gorevler/kategori/asi',
     },
     {
-      baslik: `Yem — ayrı liste (satışa kadar)`,
-      aciklama: `${HIZLI_BESI_YEM_TAKVIM.length} kontrol · gün ${yemGunler.join(', ')}`,
+      baslik: `Yem — ayrı liste`,
+      aciklama: `${yemTakvim.length} kontrol · gün ${yemGunler.join(', ')}`,
       href: '/gorevler/kategori/yem',
     },
   ];

@@ -440,10 +440,17 @@ function kalemOlustur(
  * Mod 1 şablonu — satış ufkuna kadar tüm kalemler.
  */
 export function hizliBesiTakviyeSablonu(): ModTakviyeKalemi[] {
+  return hizliBesiTakviyeSablonuUfukta(BESI_PLAN_TAVAN_GUN);
+}
+
+/** Satış ufkuna göre plan kalemleri — gün > maxGun olan tartım/aşılar düşer */
+export function hizliBesiTakviyeSablonuUfukta(maxGun: number): ModTakviyeKalemi[] {
+  const tavan = Math.max(1, Math.min(Math.floor(maxGun), BESI_PLAN_TAVAN_GUN));
   const seen = new Set<string>();
   const out: ModTakviyeKalemi[] = [];
 
   for (const s of HIZLI_BESI_TAKVIM) {
+    if (s.gun > tavan) continue;
     const key = `${s.tip}:${s.programId}`;
     if (seen.has(key)) continue;
     const k = kalemOlustur(s.tip, s.programId);
