@@ -152,6 +152,10 @@ export function modTakviyeSablonu(modId: UrunModId): ModTakviyeKalemi[] {
       asilar: ['karma', 'cicek', 'ppr', 'brusella', 'ivermektin', 'albendazol'],
       vitaminler: ['selen-e'],
     },
+    mod7: {
+      asilar: ['karma', 'cicek', 'ppr', 'pasteurella', 'agalaksi', 'ektima', 'brusella', 'ivermektin', 'albendazol'],
+      vitaminler: ['selen-e'],
+    },
   };
 
   if (modId === 'mod1') {

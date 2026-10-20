@@ -8,11 +8,12 @@
  *   no 3 · mod3 · Damızlık Et Kuzusu Yetiştiriciliği     (yakında — eski "Damızlık kuzu")
  *   no 4 · mod6 · Damızlık Süt Kuzusu Yetiştiriciliği    (yakında — yeni)
  *   no 5 · mod4 · Süt Koyunculuğu                        (yakında — eski "Süt koyunculuğu")
- *   no 6 · mod5 · Süt Koyunculuğu + Kuzu Besi            (yakında — yeni)
+ *   no 6 · mod5 · Süt Koyunculuğu + Kuzu Besi            (süt sürüsü + satın alım besi)
+ *   no 7 · mod7 · Süt Koyunculuğu + Etçi Koyunculuk
  *
  * Kayıtlı değer "Yakında" bir moddaysa aktif mod mod1 (Kuzu Besi) açılır; değer silinmez.
  */
-export type UrunModId = 'mod1' | 'mod2' | 'mod3' | 'mod4' | 'mod5' | 'mod6';
+export type UrunModId = 'mod1' | 'mod2' | 'mod3' | 'mod4' | 'mod5' | 'mod6' | 'mod7';
 
 /** Listeden kaldırılmış, yalnız eski kayıt uyumu için tanınan kimlikler (şu an yok) */
 export const ESKI_MOD_ESLEME: Partial<Record<UrunModId, UrunModId>> = {};
@@ -92,9 +93,22 @@ export const URUN_MODLARI: UrunMod[] = [
     id: 'mod5',
     no: 6,
     baslik: 'Süt Koyunculuğu + Kuzu Besi',
-    kisa: 'Sağım + kuzuyu besiye al',
-    aciklama: 'Sağmal sürü ve doğan kuzuların besiye alınması bir arada.',
+    kisa: 'Süt sürüsü + kuzu al besi',
+    aciklama:
+      'Sağmal süt sürüsü; besi hattı satın alınan kuzularla (Mod 1 giriş paketi). Süt kuzusu isteğe bağlı damızlık/besi ayrımı.',
     icon: '🥛🐑',
+    hazir: true,
+    seviye: 'tam',
+    href: '/(tabs)/yolculuk',
+  },
+  {
+    id: 'mod7',
+    no: 7,
+    baslik: 'Süt Koyunculuğu + Etçi Koyunculuk',
+    kisa: 'Süt + et sürüsü',
+    aciklama:
+      'Süt kolu: sağım, laktasyon, meme sağlığı. Et kolu: koç kat, gebelik, kuzulatma. Ortak çiftleşme/doğum; süt kuzusu besi yolu satın alım ile birleşik.',
+    icon: '🥛🐏',
     hazir: true,
     seviye: 'tam',
     href: '/(tabs)/yolculuk',

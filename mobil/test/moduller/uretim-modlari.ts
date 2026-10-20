@@ -4,7 +4,7 @@ import { aktifModaCoz, getMod } from '@/sabitler/ModlarSabit';
 import { test, type TestModul } from '../cerceve';
 
 export const uretimModlariModul: TestModul = {
-  grup: 'Üretim modları 2–6',
+  grup: 'Üretim modları 2–7',
   calistir() {
     const m2 = getMod('mod2');
     const m3 = getMod('mod3');
@@ -45,8 +45,11 @@ export const uretimModlariModul: TestModul = {
       test('Mod 5', 'Kombine hazır', m5.hazir && m5.seviye === 'tam'),
       test(
         'Mod 5',
-        'Süt + besi paketi',
-        plan5.asi.includes('ektima') && plan5.parazit.includes('albendazol'),
+        'Süt + satın alım besi giriş paketi',
+        plan5.asi.includes('ektima') &&
+          plan5.parazit.includes('albendazol') &&
+          plan5.asi.includes('karma') &&
+          plan5.vitamin.includes('selen-e'),
       ),
       test(
         'Mod 2',

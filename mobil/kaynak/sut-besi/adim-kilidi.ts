@@ -5,13 +5,17 @@ export type Mod5AdimId =
   | 'ureme'
   | 'sagim'
   | 'laktasyon'
-  | 'rasyon'
+  | 'rasyon-sut'
   | 'saglik'
-  | 'besiye-aktar'
-  | 'asi-kuzu'
-  | 't0-kuzu'
-  | 'tartim-kuzu'
   | 'yonlendirme'
+  | 'damizlik-besi'
+  | 'kuzu-alim'
+  | 'karantina'
+  | 'asi-giris'
+  | 't0-besi'
+  | 'rasyon-besi'
+  | 'besi-donem'
+  | 'tartim-besi'
   | 'rapor';
 
 export type Mod5Adim = {
@@ -26,15 +30,15 @@ export const MOD5_ADIMLAR: Mod5Adim[] = [
   {
     id: 'gruplar',
     sira: 0,
-    baslik: 'Sürü grupları',
+    baslik: 'Süt sürüsü grupları',
     aciklama: 'Sağmal / kuru / gebe gruplarını ayır.',
     href: '/(tabs)/suru',
   },
   {
     id: 'ureme',
     sira: 1,
-    baslik: 'Üreme / kuzulatma',
-    aciklama: 'Çiftleşme, gebelik ve doğum kayıtları.',
+    baslik: 'Üreme / kuzulatma (isteğe bağlı)',
+    aciklama: 'Süt sürüsünde çiftleşme ve doğum — ortak kayıt.',
     href: '/ciftlesme',
   },
   {
@@ -52,9 +56,9 @@ export const MOD5_ADIMLAR: Mod5Adim[] = [
     href: '/(tabs)/akilli-kuzu',
   },
   {
-    id: 'rasyon',
+    id: 'rasyon-sut',
     sira: 4,
-    baslik: 'Dönemsel rasyon',
+    baslik: 'Süt rasyonu',
     aciklama: 'Sağmal / kuru dönem yem planı.',
     href: '/(tabs)/rasyon',
   },
@@ -62,47 +66,76 @@ export const MOD5_ADIMLAR: Mod5Adim[] = [
     id: 'saglik',
     sira: 5,
     baslik: 'Meme / sağlık',
-    aciklama: 'Meme sağlığı ve tedavi kayıtları.',
+    aciklama: 'Meme sağlığı, agalaksi / ORF programı.',
     href: '/(tabs)/saglik',
   },
   {
-    id: 'besiye-aktar',
+    id: 'yonlendirme',
     sira: 6,
-    baslik: 'Kuzuyu besiye al',
-    aciklama: 'Sütten kesilen / yaş uygun kuzuları besi grubuna al.',
-    href: '/(tabs)/suru',
+    baslik: 'Süt yönlendirme',
+    aciklama: 'Kuruya alma, sütten kesme uyarıları.',
+    href: '/(tabs)/akilli-kuzu',
   },
   {
-    id: 'asi-kuzu',
+    id: 'damizlik-besi',
     sira: 7,
-    baslik: 'Besi kuzu aşısı',
-    aciklama: 'Besiye alınan kuzulara giriş paketi.',
+    baslik: 'Damızlık / besi ayır',
+    aciklama:
+      'Süt sürüsünde doğan kuzular: damızlık seç veya toplu “Besiye al” — satın alınan kuzularla aynı besi yolu.',
+    href: '/(tabs)/yolculuk',
+  },
+  {
+    id: 'kuzu-alim',
+    sira: 8,
+    baslik: 'Kuzu alım (besi)',
+    aciklama: 'Satın alınan kuzuları sisteme gir — ana besi hattı.',
+    href: '/hayvan/ekle',
+  },
+  {
+    id: 'karantina',
+    sira: 9,
+    baslik: 'Karantina',
+    aciklama: 'Giriş kuzuları: yonca + su, günlük kontrol.',
+    href: '/(tabs)/saglik',
+  },
+  {
+    id: 'asi-giris',
+    sira: 10,
+    baslik: 'Giriş aşı paketi',
+    aciklama: 'İvermektin, albendazol, karma, selenyum-E.',
     href: '/gorevler/asi',
   },
   {
-    id: 't0-kuzu',
-    sira: 8,
+    id: 't0-besi',
+    sira: 11,
     baslik: 'Besi T1 tartım',
-    aciklama: 'Besi başı kilosu.',
+    aciklama: 'Besi başı kilosu (satın alım + besiye alınan kuzular).',
     href: '/(tabs)/suru',
   },
   {
-    id: 'tartim-kuzu',
-    sira: 9,
+    id: 'rasyon-besi',
+    sira: 12,
+    baslik: 'Besi rasyonu',
+    aciklama: 'Besi grubu günlük yem planı.',
+    href: '/(tabs)/rasyon',
+  },
+  {
+    id: 'besi-donem',
+    sira: 13,
+    baslik: 'Besi dönemi',
+    aciklama: 'Yem stok çıkışı ve takip.',
+    href: '/(tabs)/stok',
+  },
+  {
+    id: 'tartim-besi',
+    sira: 14,
     baslik: 'Besi ara tartım',
     aciklama: 'ADG ve FCR için ara tartım.',
     href: '/(tabs)/suru',
   },
   {
-    id: 'yonlendirme',
-    sira: 10,
-    baslik: 'Akıllı yönlendirme',
-    aciklama: 'Kuruya alma, doğum, sütten kesme uyarıları.',
-    href: '/(tabs)/akilli-kuzu',
-  },
-  {
     id: 'rapor',
-    sira: 11,
+    sira: 15,
     baslik: 'Süt + besi raporu',
     aciklama: 'Litre, laktasyon ve besi metrik özeti.',
     href: '/(tabs)/akilli-kuzu',
@@ -111,7 +144,7 @@ export const MOD5_ADIMLAR: Mod5Adim[] = [
 
 export type Mod5Ilerleme = { tamamlanan: Mod5AdimId[]; guncelleme: string };
 
-const KEY = 'sy_mod5_ilerleme';
+const KEY = 'sy_mod5_ilerleme_v2';
 
 export async function getMod5Ilerleme(): Promise<Mod5Ilerleme> {
   const raw = await AsyncStorage.getItem(KEY);

@@ -169,6 +169,22 @@ async function yolculukGorevi(): Promise<Gorev | null> {
       cta: 'Yolculuğa git',
     };
   }
+  if (modId === 'mod7') {
+    const { getMod7BirlesikIlerleme, sonrakiAcikAdimMod7 } = await import('@/kaynak/sut-etc');
+    const m = await getMod7BirlesikIlerleme();
+    const sonraki = sonrakiAcikAdimMod7(m.tamamlanan);
+    if (!sonraki) return null;
+    const kanit = m.kanitlar.find((k) => k.id === sonraki.id);
+    return {
+      id: `yolculuk-${sonraki.id}`,
+      seviye: 'sira',
+      kaynak: 'yolculuk',
+      baslik: `${mod.icon} ${sonraki.baslik}`,
+      aciklama: kanit?.kanit ?? sonraki.aciklama,
+      href: '/(tabs)/yolculuk',
+      cta: 'Yolculuğa git',
+    };
+  }
   return null;
 }
 
