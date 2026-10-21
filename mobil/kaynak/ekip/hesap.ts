@@ -118,3 +118,11 @@ export function pinDogru(k: Pick<Kisi, 'id' | 'pinOzet'>, pin: string): boolean 
 export function kisiEtiket(k: Pick<Kisi, 'ad' | 'rol'>): string {
   return `${k.ad} (${ROL_ETIKET[k.rol]})`;
 }
+
+/** Cihazdaki ekstra profil / PIN — bulut `ciftlik_uye` ile karıştırılmamalı */
+export function yerelEkipProfiliVar(d: EkipDurumu): boolean {
+  if (d.kisiler.length > 1) return true;
+  const k = d.kisiler[0];
+  if (!k) return false;
+  return !!k.pinOzet || k.ad !== 'Sahip' || k.rol !== 'sahip';
+}

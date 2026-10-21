@@ -3,6 +3,7 @@ import { finansMi, senkronlanirMi } from '@/kaynak/bulut/siniflama';
 import { bosMeta, senkronEt, type Tasiyici, type UzakBelge, type YerelDepo } from '@/kaynak/bulut/motor';
 import { fotoSenkron } from '@/kaynak/bulut/foto-senkron';
 import { BulutIstemci } from '@/kaynak/bulut/istemci';
+import { varsayilanEkip, yerelEkipProfiliVar } from '@/kaynak/ekip/hesap';
 import { readFileSync } from 'fs';
 import { test, type TestModul } from '../cerceve';
 
@@ -49,6 +50,7 @@ export const bulutModul: TestModul = {
     r.push(test(G, 'Env yokken bulut kapalı (özellik bayrağı)', !bulutAcik()));
     r.push(test(G, 'Ekip/PIN ve oturum cihazda kalır', !senkronlanirMi('sy_ekip_v1') && !senkronlanirMi('sy_bulut_oturum_v1') && !senkronlanirMi('sy_sync_queue')));
     r.push(test(G, 'Sürü kayıtları senkronlanır', senkronlanirMi('sy_animals') && senkronlanirMi('sy_foto_meta_v1')));
+    r.push(test(G, 'Yerel ekip profili ayırt edilir', !yerelEkipProfiliVar(varsayilanEkip()) && yerelEkipProfiliVar({ ...varsayilanEkip(), kisiler: [{ ...varsayilanEkip().kisiler[0], pinOzet: 'x' }] })));
     r.push(test(G, 'Maliyet/sigorta finans sayılır', finansMi('sy_maliyet_ayar_v1') && finansMi('sy_sigorta_policeler_v1') && !finansMi('sy_animals')));
 
     // Tek seferlik göç: yerel her şey yüklenir

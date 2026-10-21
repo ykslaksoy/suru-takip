@@ -1,5 +1,7 @@
 /** Hangi yerel anahtar buluta gider, hangisi finans verisidir. */
 
+/** Foto: `sy_foto_meta_v1` belge senkronunda gider; ham görüntüler `foto-senkron` + Storage. */
+
 /** Cihaza özel — asla senkronlanmaz (oturum, tercih, PIN, abonelik, kendi meta verimiz) */
 const CIHAZ_ON_EKLERI = ['sy_bulut_', 'suruyon_', 'sy_ses_', 'sy_gun1_oturum', 'sy_seri_oturum', 'sy_sayim_aktif'];
 const CIHAZ_ANAHTARLARI = new Set([

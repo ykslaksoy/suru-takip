@@ -83,6 +83,7 @@ export async function girisKoduDogrula(eposta: string, kod: string): Promise<voi
   const c = istemci();
   if (!c) return;
   await oturumKaydet(await c.kodDogrula(eposta.trim().toLowerCase(), kod));
+  if (await jsonOku<Uyelik>(CIFTLIK)) await simdiSenkronEt();
 }
 
 /** Sihirli bağlantı ile dönüldüyse oturumu al */
