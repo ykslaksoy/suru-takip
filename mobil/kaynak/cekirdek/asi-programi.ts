@@ -320,7 +320,7 @@ export const ASI_PROGRAMI: AsiProgramKalemi[] = [
     hatirlatmaGun: 14,
     dozHayvan: 1,
     mlHayvan: null,
-    dozNotu: 'Her 10 kiloya ml iğne',
+    dozNotu: 'Her 10 kiloya 0,2 ml iğne',
     kategori: 'parazit',
     uygulamaYeri: 'boyun deri altı',
   },
