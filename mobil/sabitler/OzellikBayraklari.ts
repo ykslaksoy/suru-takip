@@ -33,8 +33,8 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
   {
     id: 'bulut-senkron',
     ad: 'Bulut senkron',
-    durum: 'pilot',
-    aciklama: 'Supabase — web/PWA; çiftlik, ekip, foto eşitleme',
+    durum: 'yakinda',
+    aciklama: 'Yerel kuyruk hazır; EXPO_PUBLIC_API_URL ile stub test. Üretim API yakında.',
   },
   {
     id: 'ocr-kupe',
