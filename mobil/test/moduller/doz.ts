@@ -6,6 +6,7 @@ export const dozModul: TestModul = {
   grup: 'Doz etiketleri',
   calistir() {
     const iv = ASI_PROGRAMI.find((p) => p.id === 'ivermektin')!;
+    const dora = ASI_PROGRAMI.find((p) => p.id === 'doramektin')!;
     const alb = ASI_PROGRAMI.find((p) => p.id === 'albendazol')!;
     const karma = ASI_PROGRAMI.find((p) => p.id === 'karma')!;
     const selen = VITAMIN_PROGRAMI.find((v) => v.id === 'selen-e')!;
@@ -17,6 +18,11 @@ export const dozModul: TestModul = {
         'Doz etiketleri',
         'İvermektin her 10 kiloya 0,2 ml',
         asiDozEtiketi(iv).includes('Her 10 kiloya 0,2 ml'),
+      ),
+      test(
+        'Doz etiketleri',
+        'Doramektin her 10 kiloya 0,2 ml (ivermektin ile aynı etiket)',
+        asiDozEtiketi(dora) === asiDozEtiketi(iv),
       ),
       test(
         'Doz etiketleri',
