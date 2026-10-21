@@ -65,6 +65,7 @@ export default function RootLayout() {
                     <Stack.Screen name="hayvan/[id]/soy" options={{ title: 'Soy ağacı' }} />
                     <Stack.Screen name="hayvan/[id]/galeri" options={{ title: 'Fotoğraflar' }} />
                     <Stack.Screen name="hayvan/[id]/dogum" options={{ title: 'Doğum Kaydı', presentation: 'modal' }} />
+                    <Stack.Screen name="suru/padok/[ad]" options={{ title: 'Padok', headerBackTitle: 'Sürü' }} />
                     <Stack.Screen name="abonelik" options={{ title: 'Abonelik', presentation: 'modal' }} />
                     <Stack.Screen name="beta" options={{ title: 'Pilot Program' }} />
                     <Stack.Screen name="turkvet-aktar" options={{ title: 'TÜRKVET Dışa Aktarım' }} />
