@@ -6,7 +6,7 @@
 import { ASI_PROGRAMI, asiMlDozYerEtiketi, asiGorevOncelikliMi, asiKategori, hesaplaAsiStokDurumu } from '@/kaynak/cekirdek/asi-programi';
 import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
-import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hatirlatma';
+import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hafta-listesi';
 import { getAktifModId } from '@/sabitler/Modlar';
 import {
   aktifPlanOku,

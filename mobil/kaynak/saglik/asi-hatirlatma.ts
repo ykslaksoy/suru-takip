@@ -1,46 +1,66 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AsiStokDurum } from '@/kaynak/cekirdek/asi-programi';
+import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hafta-listesi';
+
+export type { AsiBuHaftaSatir } from '@/kaynak/saglik/asi-hafta-listesi';
+export { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hafta-listesi';
 
 const KEY = 'sy_asi_hatirlatma_son';
 
-export type AsiBuHaftaSatir = {
-  programId: string;
-  koruma: string;
-  asiAdi: string;
-  mlEtiket: string;
-  animalId: string;
-  earTag: string;
-  etiket: string;
-  durum: 'yapilacak' | 'yaklasiyor';
-  kalanGun: number | null;
+export type AsiHatirlatmaBanner = {
+  tip: 'web' | 'izin_yok' | 'planlandi';
+  metin: string;
+  satirSayisi: number;
 };
 
-/** Bu hafta / yapılacak + yaklaşan hayvan satırları */
-export function asiBuHaftaListesi(durumlar: AsiStokDurum[]): AsiBuHaftaSatir[] {
-  const out: AsiBuHaftaSatir[] = [];
-  for (const d of durumlar) {
-    for (const h of d.hayvanlar) {
-      if (h.durum !== 'yapilacak' && h.durum !== 'yaklasiyor') continue;
-      // yaklaşan: hatırlatma penceresinde; yapılacak: gecikmiş
-      if (h.durum === 'yaklasiyor' && h.kalanGun != null && h.kalanGun > 7) continue;
-      out.push({
-        programId: d.programId,
-        koruma: d.koruma,
-        asiAdi: d.asiAdi,
-        mlEtiket: d.mlEtiket,
-        animalId: h.animalId,
-        earTag: h.earTag,
-        etiket: h.etiket || h.earTag,
-        durum: h.durum,
-        kalanGun: h.kalanGun,
-      });
-    }
+/** Yerel bildirim yalnızca native istemcide planlanır. */
+export function asiNativeBildirimDestekleniyor(): boolean {
+  return Platform.OS !== 'web';
+}
+
+/** Web veya izin yokken uygulama içi hatırlatma şeridi metni. */
+export function asiHatirlatmaBanner(
+  durumlar: AsiStokDurum[],
+  opts?: { bildirimPlanlandi?: number; izinVar?: boolean },
+): AsiHatirlatmaBanner | null {
+  const satirlar = asiBuHaftaListesi(durumlar);
+  if (satirlar.length === 0) return null;
+
+  const yap = satirlar.filter((s) => s.durum === 'yapilacak').length;
+  const yak = satirlar.length - yap;
+
+  if (Platform.OS === 'web') {
+    const parca =
+      yap > 0
+        ? `${yap} aşı/parazit yapılacak`
+        : yak > 0
+          ? `${yak} aşı/parazit yaklaşıyor`
+          : `${satirlar.length} satır`;
+    return {
+      tip: 'web',
+      metin: `${parca} (toplam ${satirlar.length}). Web’de push bildirim yok; bu listeyi takip edin veya telefonda hatırlatma açın.`,
+      satirSayisi: satirlar.length,
+    };
   }
-  return out.sort((a, b) => {
-    if (a.durum !== b.durum) return a.durum === 'yapilacak' ? -1 : 1;
-    return (a.kalanGun ?? -999) - (b.kalanGun ?? -999);
-  });
+
+  if (opts?.izinVar === false) {
+    return {
+      tip: 'izin_yok',
+      metin: `${satirlar.length} hatırlatma satırı var; bildirim izni kapalı. Aşağıdan izin verin veya listeyi buradan takip edin.`,
+      satirSayisi: satirlar.length,
+    };
+  }
+
+  if (opts?.bildirimPlanlandi != null && opts.bildirimPlanlandi > 0) {
+    return {
+      tip: 'planlandi',
+      metin: `${opts.bildirimPlanlandi} yerel hatırlatma planlandı (${satirlar.length} satır).`,
+      satirSayisi: satirlar.length,
+    };
+  }
+
+  return null;
 }
 
 async function notificationsModulu() {

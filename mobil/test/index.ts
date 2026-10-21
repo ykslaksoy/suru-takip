@@ -11,6 +11,7 @@ import { gun1SecimModul } from './moduller/gun1-secim';
 import { padokModul } from './moduller/padok';
 import { gorevlerModul } from './moduller/gorevler';
 import { dozModul } from './moduller/doz';
+import { asiKatalogModul } from './moduller/asi-katalog';
 import { ortamModul } from './moduller/ortam';
 import { modlarModul } from './moduller/modlar';
 import { uretimModlariModul } from './moduller/uretim-modlari';
@@ -58,6 +59,7 @@ const MODULLER = [
   padokModul,
   gorevlerModul,
   dozModul,
+  asiKatalogModul,
   ortamModul,
   modlarModul,
   uretimModlariModul,
