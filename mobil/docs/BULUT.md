@@ -9,6 +9,8 @@ Bulut, **Supabase ortam değişkenleri** tanımlı olduğunda açılır. Değiş
 
 **Service role / secret key gerekmez** ve istemciye asla konmamalıdır.
 
+Bot koruması (Turnstile, OTP bekleme süresi): [BULUT-GUVENLIK.md](./BULUT-GUVENLIK.md).
+
 ### Vercel (superkuzu)
 
 Supabase ↔ Vercel entegrasyonu (proje ref `eferktaopilgoeetgggk`) varsayılan olarak `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `POSTGRES_URL_NON_POOLING` vb. ekler. Her production/preview **build** öncesi:
