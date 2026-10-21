@@ -1,6 +1,8 @@
 import { calculateADG, getAnimals, getLatestWeight, getLowStockItems } from '@/kaynak/cekirdek/veritabani';
 import { getBugunGorevleri, type Gorev } from '@/kaynak/gorevler/liste';
 import { getSmartSuggestions, type SmartSuggestion } from '@/kaynak/akilli-kuzu/oneri';
+import { getAsiTakvimiDurumu } from '@/kaynak/saglik/asi-takvimi';
+import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hafta-listesi';
 
 export const KILITLI_ANA_BASLIK = 'Akıllı Kuzu';
 export const KILITLI_SEZON_ETIKET = '2026 Sezonu';
@@ -37,6 +39,16 @@ export type AnaSayfaOzet = {
   ortAdgGram?: number | null;
   /** En acil 3 iş (kritik → acil görev → aksiyon → diğer görev) */
   bugunIsler?: AnaSayfaIs[];
+  /** Kilitli ana ekran aşı kısayolu */
+  asiKestirme?: AnaSayfaAsiKestirme | null;
+};
+
+export type AnaSayfaAsiKestirme = {
+  baslik: string;
+  aciklama: string;
+  href: string;
+  vurgu: boolean;
+  rozet?: string;
 };
 
 const ONERI_HREF: Record<SmartSuggestion['source'], string> = {
@@ -120,8 +132,43 @@ function sezonKuzuMu(id: string, padok: string): boolean {
   return Boolean(ek && id.startsWith(ek));
 }
 
+function asiKestirmesiHesapla(durumlar: Awaited<ReturnType<typeof getAsiTakvimiDurumu>>): AnaSayfaAsiKestirme {
+  const hafta = asiBuHaftaListesi(durumlar);
+  if (hafta.length > 0) {
+    const s = hafta[0];
+    const ek = hafta.length > 1 ? ` (+${hafta.length - 1})` : '';
+    return {
+      baslik: s.durum === 'yapilacak' ? 'Sıradaki aşı' : 'Yaklaşan aşı',
+      aciklama: `${s.koruma} (${s.asiAdi}) · ${s.etiket || s.earTag || 'kuzu'}${ek}`,
+      href: `/gorevler/asi/${s.programId}`,
+      vurgu: true,
+      rozet: s.durum === 'yapilacak' ? 'Yap' : undefined,
+    };
+  }
+  const yapilacak = durumlar.find((d) => d.yapilacakSayisi > 0);
+  if (yapilacak) {
+    return {
+      baslik: 'Aşı yapılacak',
+      aciklama: `${yapilacak.koruma} (${yapilacak.asiAdi}) · ${yapilacak.yapilacakSayisi} kuzu`,
+      href: `/gorevler/asi/${yapilacak.programId}`,
+      vurgu: true,
+      rozet: `${yapilacak.yapilacakSayisi}`,
+    };
+  }
+  return {
+    baslik: 'Aşı ve İlaç',
+    aciklama: 'Plan, katalog ve hatırlatmalar',
+    href: '/gorevler/asi',
+    vurgu: false,
+  };
+}
+
 export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
-  const [hayvanlar, gorevler] = await Promise.all([getAnimals(), getBugunGorevleri(3)]);
+  const [hayvanlar, gorevler, asiDurum] = await Promise.all([
+    getAnimals(),
+    getBugunGorevleri(3),
+    getAsiTakvimiDurumu().catch(() => [] as Awaited<ReturnType<typeof getAsiTakvimiDurumu>>),
+  ]);
   const aktif = (padok: string) =>
     hayvanlar.filter((a) => sezonKuzuMu(a.id, padok) && a.status !== 'sold' && a.status !== 'dead');
   const partiler = await Promise.all(
@@ -150,5 +197,6 @@ export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
     aksiyon: oneriler.filter((s) => s.urgency === 'action').length,
     ortAdgGram: ortAdg == null ? null : Math.round(ortAdg),
     bugunIsler: bugunIsleriniSec(gorevler, oneriler),
+    asiKestirme: asiKestirmesiHesapla(asiDurum),
   };
 }

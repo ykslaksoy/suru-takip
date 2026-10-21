@@ -177,7 +177,15 @@ export default function KuzuSaglikPlaniScreen() {
             <Text style={{ color: colors.warning, fontWeight: '800', fontSize: 16 }}>×</Text>
           </Pressable>
         ) : (
-          <Text style={{ color: colors.tint, fontWeight: '800' }}>→</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Pressable
+              onPress={() => router.push(`/gorevler/asi/katalog/${p.id}` as never)}
+              hitSlop={8}
+              accessibilityLabel={`${p.ad} katalog bilgisi`}>
+              <Text style={{ color: colors.textSecondary, fontWeight: '800', fontSize: 16 }}>ⓘ</Text>
+            </Pressable>
+            <Text style={{ color: colors.tint, fontWeight: '800' }}>→</Text>
+          </View>
         )}
       </Pressable>
     );

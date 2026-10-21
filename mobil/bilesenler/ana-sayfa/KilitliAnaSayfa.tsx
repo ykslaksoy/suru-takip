@@ -160,6 +160,39 @@ export function KilitliAnaSayfa() {
                 />
               )}
             </View>
+
+            {ozet.asiKestirme ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${ozet.asiKestirme.baslik}: ${ozet.asiKestirme.aciklama}`}
+                onPress={() => router.push(ozet.asiKestirme!.href as never)}
+                style={({ pressed }) =>
+                  StyleSheet.flatten([
+                    styles.asiKestirme,
+                    {
+                      backgroundColor: ozet.asiKestirme!.vurgu ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.12)',
+                      opacity: pressed ? 0.88 : 1,
+                    },
+                  ])
+                }>
+                <View style={styles.asiKestirmeSol}>
+                  <Ionicons name="medkit-outline" size={22} color="#fff" />
+                  <View style={styles.asiKestirmeMetin}>
+                    <Text style={styles.asiKestirmeBaslik}>{ozet.asiKestirme.baslik}</Text>
+                    <Text style={styles.asiKestirmeAlt} numberOfLines={2}>
+                      {ozet.asiKestirme.aciklama}
+                    </Text>
+                  </View>
+                </View>
+                {ozet.asiKestirme.rozet ? (
+                  <View style={styles.asiRozet}>
+                    <Text style={styles.asiRozetYazi}>{ozet.asiKestirme.rozet}</Text>
+                  </View>
+                ) : (
+                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.9)" />
+                )}
+              </Pressable>
+            ) : null}
           </View>
         </View>
 
@@ -405,6 +438,29 @@ const styles = StyleSheet.create({
   },
   statSayi: { color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
   statEtiket: { color: 'rgba(255,255,255,0.82)', fontSize: 13, fontWeight: '600', marginTop: 1 },
+  asiKestirme: {
+    marginTop: 14,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  asiKestirmeSol: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 },
+  asiKestirmeMetin: { flex: 1, minWidth: 0 },
+  asiKestirmeBaslik: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  asiKestirmeAlt: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600', marginTop: 2 },
+  asiRozet: {
+    backgroundColor: '#fff',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    minWidth: 32,
+    alignItems: 'center',
+  },
+  asiRozetYazi: { color: '#2d6a4f', fontWeight: '900', fontSize: 13 },
   bolum: { marginTop: 22, marginBottom: 22 },
   bolumBaslik: {
     flexDirection: 'row',

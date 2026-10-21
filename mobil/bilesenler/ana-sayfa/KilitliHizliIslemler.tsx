@@ -19,7 +19,7 @@ type BuyukIslem = {
 /** 2×2 büyük kutu — en sık kullanılan dört iş */
 const BUYUK_ISLEMLER: BuyukIslem[] = [
   { id: 'ses', label: 'Sesli Komut', alt: 'Konuşarak kaydet', href: '/ses', icon: 'mic', renk: '#2d6a4f' },
-  { id: 'hizli-tartim', label: 'Hızlı Tartım', alt: 'Seri ahır girişi', href: '/seri-giris', icon: 'speedometer', renk: '#2F80ED' },
+  { id: 'hizli-tartim', label: 'Hızlı Tartım', alt: 'Seri ağıl girişi', href: '/seri-giris', icon: 'speedometer', renk: '#2F80ED' },
   { id: 'asi', label: 'Aşı ve İlaç', alt: 'Plan ve uygulama', href: '/gorevler/asi', icon: 'medkit', renk: '#C0392B' },
   { id: 'kuzu-ekle', label: 'Kuzu Ekle', alt: 'Yeni giriş', href: '/hayvan/hizli-ekle', icon: 'add-circle', renk: '#D68910' },
 ];
