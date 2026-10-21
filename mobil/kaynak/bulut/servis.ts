@@ -10,6 +10,7 @@ import { bulutAyar } from './ayar';
 import { BulutIstemci, type Oturum, type Uyelik } from './istemci';
 import { bosMeta, META_ANAHTAR, senkronEt, type SenkronMeta, type SenkronRapor, type YerelDepo } from './motor';
 import { fotoSenkron } from './foto-senkron';
+import { otpGonderimKaydet, otpGonderimOnKontrol } from './otp-koruma';
 
 const OTURUM = 'sy_bulut_oturum_v1';
 const CIFTLIK = 'sy_bulut_ciftlik_v1';
@@ -65,11 +66,13 @@ async function gecerliOturum(): Promise<Oturum> {
   return o;
 }
 
-export async function girisKoduGonder(eposta: string): Promise<void> {
+export async function girisKoduGonder(eposta: string, turnstileToken?: string): Promise<void> {
   const c = istemci();
   if (!c) return;
+  await otpGonderimOnKontrol(turnstileToken);
   const geri = typeof window !== 'undefined' && window.location ? `${window.location.origin}/bulut` : undefined;
   await c.kodGonder(eposta.trim().toLowerCase(), geri);
+  await otpGonderimKaydet();
 }
 
 async function oturumKaydet(o: Oturum): Promise<void> {

@@ -19,6 +19,8 @@ import {
   type BulutDurum,
 } from '@/kaynak/bulut/servis';
 import { KullanimSartlariNotu } from '@/bilesenler/ortak/KullanimSartlariNotu';
+import { TurnstileKutusu } from '@/bilesenler/bulut/TurnstileKutusu';
+import { OTP_GONDER_BEKLEME_MS, otpGonderBeklemeKalanMs, turnstileKorumasiAktif } from '@/kaynak/bulut/otp-koruma';
 import { ekipAnlik, ekipDinle, ekipYukle } from '@/kaynak/ekip/depo';
 import { yerelEkipProfiliVar } from '@/kaynak/ekip/hesap';
 
@@ -45,6 +47,8 @@ export default function BulutEkrani() {
   const [ekip, setEkip] = useState<Awaited<ReturnType<typeof ekipListesi>>>([]);
   const [mesaj, setMesaj] = useState('');
   const [yerelEkip, setYerelEkip] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [beklemeSn, setBeklemeSn] = useState(0);
 
   const yenile = useCallback(async () => {
     const x = await bulutDurum();
@@ -58,6 +62,16 @@ export default function BulutEkrani() {
   useEffect(() => {
     void yenile();
   }, [yenile]);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setInterval> | undefined;
+    const guncelle = () => {
+      void otpGonderBeklemeKalanMs().then((ms) => setBeklemeSn(Math.ceil(ms / 1000)));
+    };
+    guncelle();
+    t = setInterval(guncelle, 1000);
+    return () => clearInterval(t);
+  }, [d?.oturum, kodGitti]);
 
   const calistir = (f: () => Promise<unknown>, basari?: string) => async () => {
     setMesaj('');
@@ -98,7 +112,23 @@ export default function BulutEkrani() {
           <TextInput style={s.girdi} placeholder="E-posta" autoCapitalize="none" keyboardType="email-address" value={eposta} onChangeText={setEposta} />
           <KullanimSartlariNotu />
           {!kodGitti ? (
-            <Dugme etiket="Kod gönder" onPress={calistir(async () => { await girisKoduGonder(eposta); setKodGitti(true); }, 'Kod gönderildi, e-postanı kontrol et.')} />
+            <>
+              {turnstileKorumasiAktif() ? <TurnstileKutusu onToken={setTurnstileToken} /> : null}
+              <Dugme
+                etiket={beklemeSn > 0 ? `Bekle (${beklemeSn} sn)` : 'Kod gönder'}
+                onPress={calistir(async () => {
+                  if (beklemeSn > 0) throw new Error(`Çok sık denedin. ${beklemeSn} saniye sonra tekrar dene.`);
+                  if (turnstileKorumasiAktif() && !turnstileToken) throw new Error('Önce bot kontrolünü tamamla.');
+                  await girisKoduGonder(eposta, turnstileToken ?? undefined);
+                  setKodGitti(true);
+                }, 'Kod gönderildi, e-postanı kontrol et.')}
+              />
+              {!turnstileKorumasiAktif() ? (
+                <Text style={s.metin}>
+                  Kod gönderimi en fazla {Math.round(OTP_GONDER_BEKLEME_MS / 1000)} saniyede bir. Tam bot koruması için Vercel’de Turnstile anahtarlarını tanımla (mobil/docs/BULUT-GUVENLIK.md).
+                </Text>
+              ) : null}
+            </>
           ) : (
             <>
               <TextInput style={s.girdi} placeholder="6 haneli kod" keyboardType="number-pad" value={kod} onChangeText={setKod} />
