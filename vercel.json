@@ -32,6 +32,10 @@
       "destination": "/hayvan/_id"
     },
     {
+      "source": "/gorevler/asi/katalog/:programId",
+      "destination": "/gorevler/asi/katalog/_programId"
+    },
+    {
       "source": "/gorevler/asi/:programId",
       "destination": "/gorevler/asi/_programId"
     },
