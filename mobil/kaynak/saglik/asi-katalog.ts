@@ -1,6 +1,7 @@
 import type { Animal, HealthRecord, StockItem } from '@/kaynak/cekirdek/tipler';
 import { getAnimals, getAllHealthRecordsForAsi, getStockItems } from '@/kaynak/cekirdek/veritabani';
 import { gorevTarihMetni } from '@/kaynak/gorevler/liste';
+import { tarihGunKismi, tarihZamani } from '@/kaynak/gorevler/tarih';
 import {
   ASI_PROGRAMI,
   asiKategori,
@@ -98,9 +99,10 @@ function sonAsiSurude(
           ...program.stokAnahtarlar,
         ]),
       )
-      .sort((x, y) => new Date(y.recordedAt).getTime() - new Date(x.recordedAt).getTime());
+      .sort((x, y) => tarihZamani(y.recordedAt) - tarihZamani(x.recordedAt));
     const t = related[0]?.recordedAt;
-    if (t && (!enSon || t > enSon)) enSon = t;
+    const gun = t ? tarihGunKismi(t) ?? t : null;
+    if (gun && (!enSon || tarihZamani(gun) > tarihZamani(enSon))) enSon = gun;
   }
   return enSon;
 }
@@ -113,9 +115,10 @@ function sonVitaminSurude(v: VitaminKalemi, animals: Animal[], health: HealthRec
       .filter((h) => h.animalId === a.id)
       .filter((h) => h.recordType === 'vaccine' || h.recordType === 'treatment')
       .filter((h) => eslesir(`${h.medicine} ${h.treatment} ${h.diagnosis}`, anahtarlar))
-      .sort((x, y) => new Date(y.recordedAt).getTime() - new Date(x.recordedAt).getTime());
+      .sort((x, y) => tarihZamani(y.recordedAt) - tarihZamani(x.recordedAt));
     const t = related[0]?.recordedAt;
-    if (t && (!enSon || t > enSon)) enSon = t;
+    const gun = t ? tarihGunKismi(t) ?? t : null;
+    if (gun && (!enSon || tarihZamani(gun) > tarihZamani(enSon))) enSon = gun;
   }
   return enSon;
 }

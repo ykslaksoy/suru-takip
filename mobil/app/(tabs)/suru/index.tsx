@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { meraHaritaAktif } from '@/sabitler/ozellik-acik';
 import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
@@ -20,6 +22,7 @@ type HayvanSatir = Animal & { latestWeight?: number | null; grade?: KuzuGrade };
 export default function FlockScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { padok: padokParam } = useLocalSearchParams<{ padok?: string }>();
   const { refreshKey, pendingSync, refresh, ready } = useDatabase();
   const { limit, tierLabel } = useSubscription();
   const [animals, setAnimals] = useState<HayvanSatir[]>([]);
@@ -56,6 +59,11 @@ export default function FlockScreen() {
     if (ready) void load();
   }, [ready, refreshKey, load]);
 
+  useEffect(() => {
+    const p = padokParam?.trim();
+    if (p) setPadokFiltre(p);
+  }, [padokParam]);
+
   const filters: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Tümü' },
     { key: 'male', label: 'Erkek' },
@@ -81,19 +89,36 @@ export default function FlockScreen() {
             {baslikAlt}
           </Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Hayvan ekle"
-          onPress={() =>
-            router.push(
-              padokFiltre
-                ? ({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: padokFiltre } } as never)
-                : ('/hayvan/hizli-ekle' as never),
-            )
-          }
-          style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
-          <Text style={styles.addText}>+ Ekle</Text>
-        </Pressable>
+        <View style={styles.headerAksiyon}>
+          {meraHaritaAktif() ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Mera haritası"
+              onPress={() =>
+                router.push(
+                  padokFiltre
+                    ? ({ pathname: '/mera', params: { padok: padokFiltre } } as never)
+                    : ('/mera' as never),
+                )
+              }
+              style={StyleSheet.flatten([styles.haritaBtn, { borderColor: colors.border }])}>
+              <Ionicons name="map-outline" size={20} color={colors.tint} />
+            </Pressable>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Hayvan ekle"
+            onPress={() =>
+              router.push(
+                padokFiltre
+                  ? ({ pathname: '/hayvan/hizli-ekle/tek-form', params: { padok: padokFiltre } } as never)
+                  : ('/hayvan/hizli-ekle' as never),
+              )
+            }
+            style={StyleSheet.flatten([styles.addBtn, { backgroundColor: colors.tint }])}>
+            <Text style={styles.addText}>+ Ekle</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Padoklar en üstte — seçince altta hayvanlar gelir */}
@@ -153,6 +178,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
+  headerAksiyon: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  haritaBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 48,
+    justifyContent: 'center',
+  },
   addBtn: {
     paddingHorizontal: 16,
     paddingVertical: 12,

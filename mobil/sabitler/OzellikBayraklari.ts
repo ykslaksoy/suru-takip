@@ -37,6 +37,12 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
     aciklama: 'Supabase — web/PWA; çiftlik, ekip, foto eşitleme',
   },
   {
+    id: 'mera-harita',
+    ad: 'Mera / padok haritası',
+    durum: 'pilot',
+    aciklama: 'Yerel GeoJSON · padok noktaları · /suru bağlantısı',
+  },
+  {
     id: 'ocr-kupe',
     ad: 'Küpe OCR',
     durum: 'simulasyon',

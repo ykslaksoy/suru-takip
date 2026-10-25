@@ -201,3 +201,61 @@ create policy kuzu_foto_guncelle on storage.objects for update
   using (bucket_id = 'kuzu-foto' and public.yazabilir(((storage.foldername(name))[1])::uuid));
 
 grant execute on function public.ciftlik_olustur(text), public.davet_olustur(uuid,text,boolean), public.davet_kabul(text,text) to authenticated;
+
+-- Admin panel (P0) — yalnız service role / sunucu API
+create table if not exists public.admin_kullanici (
+  kullanici_id uuid primary key references auth.users(id) on delete cascade,
+  eposta text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.destek_talebi (
+  id uuid primary key default gen_random_uuid(),
+  ciftlik_id uuid references public.ciftlik(id) on delete set null,
+  konu text not null,
+  oncelik text not null default 'normal' check (oncelik in ('dusuk','normal','yuksek')),
+  durum text not null default 'yeni' check (durum in ('yeni','inceleniyor','kapali')),
+  ic_not text not null default '',
+  musteri_eposta text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists destek_durum on public.destek_talebi (durum, created_at desc);
+
+create table if not exists public.admin_ozellik_bayrak (
+  id text primary key,
+  acik boolean not null default false,
+  aciklama text not null default '',
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.icerik_surum (
+  id text primary key default 'genel',
+  surum text not null default '1',
+  duyuru_metni text not null default '',
+  ek jsonb not null default '{}'::jsonb,
+  yayinlandi boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+insert into public.admin_ozellik_bayrak (id, acik, aciklama) values
+  ('bulut-senkron', true, 'Bulut senkron pilot'),
+  ('mera-harita', true, 'Mera haritası pilot')
+on conflict (id) do nothing;
+
+insert into public.icerik_surum (id, surum, duyuru_metni, yayinlandi) values
+  ('genel', '1', '', false)
+on conflict (id) do nothing;
+
+alter table public.admin_kullanici enable row level security;
+alter table public.destek_talebi enable row level security;
+alter table public.admin_ozellik_bayrak enable row level security;
+alter table public.icerik_surum enable row level security;
+
+create or replace function public.destek_guncelle_zaman() returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists destek_guncelle_zaman_t on public.destek_talebi;
+create trigger destek_guncelle_zaman_t before update on public.destek_talebi for each row execute function public.destek_guncelle_zaman();

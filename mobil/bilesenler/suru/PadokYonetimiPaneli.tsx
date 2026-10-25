@@ -12,6 +12,7 @@ import {
   silPadok,
   type Padok,
 } from '@/kaynak/suru/padok';
+import { meraHaritaAktif } from '@/sabitler/ozellik-acik';
 
 function uyar(baslik: string, mesaj: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -137,6 +138,24 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
             {ozet} · dokun → hayvanlar
           </Text>
         </View>
+        {meraHaritaAktif() ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Mera haritası"
+            onPress={() =>
+              router.push(
+                seciliPadok
+                  ? ({ pathname: '/mera', params: { padok: seciliPadok } } as never)
+                  : ('/mera' as never),
+              )
+            }
+            style={StyleSheet.flatten([
+              styles.haritaBtn,
+              { borderColor: colors.border, backgroundColor: colors.background },
+            ])}>
+            <Ionicons name="map-outline" size={20} color={colors.tint} />
+          </Pressable>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={formAcik ? 'Formu kapat' : 'Yeni padok'}
@@ -338,6 +357,14 @@ const styles = StyleSheet.create({
   },
   title: { fontWeight: '800', fontSize: 17, letterSpacing: -0.2 },
   hint: { fontSize: 12, marginTop: 2, fontWeight: '600' },
+  haritaBtn: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    minHeight: 48,
+    justifyContent: 'center',
+  },
   yeniBtn: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
