@@ -19,6 +19,8 @@ import {
   type BulutDurum,
 } from '@/kaynak/bulut/servis';
 import { KullanimSartlariNotu } from '@/bilesenler/ortak/KullanimSartlariNotu';
+import { ekipAnlik, ekipDinle, ekipYukle } from '@/kaynak/ekip/depo';
+import { yerelEkipProfiliVar } from '@/kaynak/ekip/hesap';
 
 const ROL_AD: Record<string, string> = { sahip: 'Sahip', ortak: 'Ortak', bakici: 'Bakıcı', veteriner: 'Veteriner' };
 const YESIL = '#2d6a4f';
@@ -42,11 +44,16 @@ export default function BulutEkrani() {
   const [yeniDavet, setYeniDavet] = useState<string | null>(null);
   const [ekip, setEkip] = useState<Awaited<ReturnType<typeof ekipListesi>>>([]);
   const [mesaj, setMesaj] = useState('');
+  const [yerelEkip, setYerelEkip] = useState(false);
 
   const yenile = useCallback(async () => {
     const x = await bulutDurum();
     setD(x);
     if (x.uyelik) setEkip(await ekipListesi().catch(() => []));
+  }, []);
+  useEffect(() => {
+    void ekipYukle().then(() => setYerelEkip(yerelEkipProfiliVar(ekipAnlik())));
+    return ekipDinle(() => setYerelEkip(yerelEkipProfiliVar(ekipAnlik())));
   }, []);
   useEffect(() => {
     void yenile();
@@ -95,7 +102,12 @@ export default function BulutEkrani() {
           ) : (
             <>
               <TextInput style={s.girdi} placeholder="6 haneli kod" keyboardType="number-pad" value={kod} onChangeText={setKod} />
-              <Dugme etiket="Giriş" onPress={calistir(() => girisKoduDogrula(eposta, kod))} />
+              <Dugme
+                etiket="Giriş"
+                onPress={calistir(async () => {
+                  await girisKoduDogrula(eposta, kod);
+                }, 'Giriş yapıldı; kayıtlar eşitleniyor.')}
+              />
             </>
           )}
         </View>
@@ -111,11 +123,27 @@ export default function BulutEkrani() {
             <Text style={s.baslik}>Davet koduyla katıl</Text>
             <TextInput style={s.girdi} placeholder="Adın" value={ad} onChangeText={setAd} />
             <TextInput style={s.girdi} placeholder="Davet kodu" autoCapitalize="characters" value={davetKod} onChangeText={setDavetKod} />
-            <Dugme etiket="Katıl" onPress={calistir(async () => { await davetKabul(davetKod, ad); await simdiSenkronEt(); }, 'Çiftliğe katıldın.')} />
+            <Dugme
+              etiket="Katıl"
+              onPress={calistir(async () => {
+                await davetKabul(davetKod, ad);
+                await simdiSenkronEt();
+                setEkip(await ekipListesi().catch(() => []));
+              }, 'Çiftliğe katıldın.')}
+            />
           </View>
         </>
       ) : (
         <>
+          {yerelEkip && (
+            <View style={s.ipucu}>
+              <Text style={s.ipucuBaslik}>Bu cihazda yerel ekip profilleri var</Text>
+              <Text style={s.ipucuMetin}>
+                Ayarlar → Ekip’teki kişiler ve PIN yalnız bu telefonda geçerli; buluta gitmez. Ortak çiftlik rolleri (Sahip, Ortak, Bakıcı…) sunucudaki ekip
+                listesinde; davet koduyla katılanlar orada görünür.
+              </Text>
+            </View>
+          )}
           <View style={s.kart}>
             <Text style={s.baslik}>Bağlı: {d.oturum.eposta}</Text>
             <Text style={s.metin}>Rolün: {ROL_AD[d.uyelik.rol]}{d.uyelik.rol === 'bakici' ? ' · para bilgileri bu cihaza gönderilmez' : ''}</Text>
@@ -173,4 +201,7 @@ const s = StyleSheet.create({
   satir: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   kod: { fontSize: 18, fontWeight: '800', color: YESIL, letterSpacing: 1 },
   uye: { gap: 6, paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  ipucu: { backgroundColor: '#fffbeb', borderRadius: 10, padding: 12, gap: 6, borderWidth: 1, borderColor: '#fcd34d' },
+  ipucuBaslik: { fontSize: 15, fontWeight: '700', color: '#92400e' },
+  ipucuMetin: { fontSize: 13, color: '#78350f', lineHeight: 19 },
 });
