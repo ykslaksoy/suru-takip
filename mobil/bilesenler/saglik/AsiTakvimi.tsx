@@ -10,8 +10,11 @@ import { getAsiTakvimiDurumu, type AsiStokDurum } from '@/kaynak/saglik';
 import {
   asiBildirimIzinIste,
   asiBuHaftaListesi,
+  asiHatirlatmaBanner,
   asiHatirlatmalariYenile,
+  asiNativeBildirimDestekleniyor,
   type AsiBuHaftaSatir,
+  type AsiHatirlatmaBanner,
 } from '@/kaynak/saglik/asi-hatirlatma';
 import { uygulaAsiHayvana } from '@/kaynak/akilli-veteriner/asi-uygula';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
@@ -23,6 +26,7 @@ export function AsiTakvimi() {
   const [list, setList] = useState<AsiStokDurum[]>([]);
   const [hafta, setHafta] = useState<AsiBuHaftaSatir[]>([]);
   const [loading, setLoading] = useState(true);
+  const [banner, setBanner] = useState<AsiHatirlatmaBanner | null>(null);
   const [hatirlatmaMsg, setHatirlatmaMsg] = useState('');
 
   const load = useCallback(async () => {
@@ -30,9 +34,19 @@ export function AsiTakvimi() {
     try {
       const durum = await getAsiTakvimiDurumu();
       setList(durum);
-      setHafta(asiBuHaftaListesi(durum));
-      const n = await asiHatirlatmalariYenile(durum);
-      if (n > 0) setHatirlatmaMsg(`${n} yerel hatırlatma planlandı`);
+      const haftaListe = asiBuHaftaListesi(durum);
+      setHafta(haftaListe);
+
+      let planlandi = 0;
+      let izinVar: boolean | undefined;
+      if (asiNativeBildirimDestekleniyor() && haftaListe.length > 0) {
+        izinVar = await asiBildirimIzinIste();
+        if (izinVar) {
+          planlandi = await asiHatirlatmalariYenile(durum);
+        }
+      }
+      setBanner(asiHatirlatmaBanner(durum, { bildirimPlanlandi: planlandi, izinVar }));
+      setHatirlatmaMsg('');
     } finally {
       setLoading(false);
     }
@@ -89,6 +103,19 @@ export function AsiTakvimi() {
         Yapılacak aşılar ile stok dozu karşılaştırılır. Eksik varsa Bugün kartında da görünür.
       </Text>
 
+      {banner ? (
+        <View
+          style={[
+            styles.banner,
+            {
+              backgroundColor: banner.tip === 'web' ? colors.warning + '22' : colors.tint + '14',
+              borderColor: banner.tip === 'web' ? colors.warning : colors.tint,
+            },
+          ]}>
+          <Text style={{ color: colors.text, fontWeight: '700', lineHeight: 20 }}>{banner.metin}</Text>
+        </View>
+      ) : null}
+
       {hafta.length > 0 ? (
         <View style={[styles.weekCard, { backgroundColor: colors.card, borderColor: colors.tint }]}>
           <Text style={[styles.title, { color: colors.text }]}>Bu hafta / yapılacak</Text>
@@ -109,19 +136,33 @@ export function AsiTakvimi() {
               </Text>
             </Pressable>
           ))}
-          <AnaButon
-            title="Hatırlatmaları aç"
-            variant="secondary"
-            onPress={async () => {
-              const ok = await asiBildirimIzinIste();
-              if (!ok) {
-                setHatirlatmaMsg('Bildirim izni verilmedi (cihaz / native gerekir)');
-                return;
-              }
-              const n = await asiHatirlatmalariYenile(list, true);
-              setHatirlatmaMsg(n > 0 ? `${n} hatırlatma planlandı` : 'Planlanacak satır yok');
-            }}
-          />
+          {asiNativeBildirimDestekleniyor() ? (
+            <AnaButon
+              title="Hatırlatmaları yenile"
+              variant="secondary"
+              onPress={async () => {
+                const ok = await asiBildirimIzinIste();
+                if (!ok) {
+                  setBanner(
+                    asiHatirlatmaBanner(list, { izinVar: false }) ?? {
+                      tip: 'izin_yok',
+                      metin: 'Bildirim izni verilmedi.',
+                      satirSayisi: hafta.length,
+                    },
+                  );
+                  return;
+                }
+                const n = await asiHatirlatmalariYenile(list, true);
+                setBanner(
+                  asiHatirlatmaBanner(list, { bildirimPlanlandi: n, izinVar: true }) ?? {
+                    tip: 'planlandi',
+                    metin: n > 0 ? `${n} hatırlatma planlandı` : 'Planlanacak satır yok',
+                    satirSayisi: hafta.length,
+                  },
+                );
+              }}
+            />
+          ) : null}
           {hatirlatmaMsg ? (
             <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 12 }}>{hatirlatmaMsg}</Text>
           ) : null}
@@ -163,7 +204,10 @@ export function AsiTakvimi() {
               <Text style={[styles.flag, { color: colors.warning }]}>Son kullanma tarihi yaklaşıyor</Text>
             ) : null}
             <View style={styles.actions}>
-              <Pressable onPress={() => router.push('/(tabs)/stok' as never)}>
+              <Pressable onPress={() => router.push(`/gorevler/asi/katalog/${d.programId}` as never)}>
+                <Text style={{ color: colors.tint, fontWeight: '700' }}>Katalog detayı →</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push('/(tabs)/stok' as never)} style={{ marginTop: 6 }}>
                 <Text style={{ color: colors.tint, fontWeight: '700' }}>Stoka git →</Text>
               </Pressable>
             </View>
@@ -177,6 +221,7 @@ export function AsiTakvimi() {
 const styles = StyleSheet.create({
   wrap: { padding: 16, paddingBottom: 32 },
   intro: { marginBottom: 12, lineHeight: 20 },
+  banner: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12 },
   weekCard: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 14 },
   weekRow: {
     flexDirection: 'row',

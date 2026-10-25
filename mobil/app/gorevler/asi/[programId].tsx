@@ -20,6 +20,8 @@ import {
   type TabancaDurum,
 } from '@/kaynak/akilli-veteriner/tabanca-ayar';
 import type { TabancaAyari, TabancaUygunDegil } from '@/kaynak/akilli-veteriner/asi-tabancasi';
+import { AsiKatalogOzetKarti } from '@/bilesenler/saglik/AsiKatalogOzetKarti';
+import { getTakviyeKatalogOzeti, type TakviyeKatalogOzeti } from '@/kaynak/saglik/asi-katalog';
 
 function durumEtiket(h: TakviyeGorevDetay['hayvanlar'][0]): string {
   if (h.planlananAt && h.kalanGun != null && h.kalanGun > 0) {
@@ -43,12 +45,14 @@ export default function AsiGorevDetayScreen() {
   const [hayvanListesi, setHayvanListesi] = useState<Animal[]>([]);
   const [tabanca, setTabanca] = useState<TabancaDurum | null>(null);
   const [tabancaAyar, setTabancaAyar] = useState<TabancaAyari | TabancaUygunDegil | null>(null);
+  const [katalog, setKatalog] = useState<TakviyeKatalogOzeti | null>(null);
 
   const load = useCallback(async () => {
     if (!programId) return;
     setLoading(true);
     try {
-      const d = await getTakviyeGorevDetay(programId);
+      const [d, kat] = await Promise.all([getTakviyeGorevDetay(programId), getTakviyeKatalogOzeti(programId)]);
+      setKatalog(kat);
       setDetay(d);
       setSecili(new Set(d?.hayvanlar.map((h) => h.animalId) ?? []));
       const hepsi = await getAnimals();
@@ -134,11 +138,20 @@ export default function AsiGorevDetayScreen() {
         {loading ? (
           <ActivityIndicator color={colors.tint} style={{ marginVertical: 32 }} />
         ) : !detay ? (
-          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 32 }}>
-            {sonuc ? `${sonuc}\nBu kalemde bekleyen kuzu kalmadı.` : 'Bu kalem için bekleyen kuzu bulunamadı.'}
-          </Text>
+          <>
+            {katalog ? <AsiKatalogOzetKarti ozet={katalog} katalogLink /> : null}
+            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 16 }}>
+              {sonuc ? `${sonuc}\nBu kalemde bekleyen kuzu kalmadı.` : 'Bu kalem için bekleyen kuzu bulunamadı.'}
+            </Text>
+            <Pressable
+              onPress={() => router.push('/gorevler/asi' as never)}
+              style={{ marginTop: 16, alignItems: 'center' }}>
+              <Text style={{ color: colors.tint, fontWeight: '800' }}>← Aşı planına dön</Text>
+            </Pressable>
+          </>
         ) : (
           <>
+            {katalog ? <AsiKatalogOzetKarti ozet={katalog} katalogLink compact /> : null}
             <View style={[styles.hero, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.baslik, { color: colors.text }]}>
                 <Text style={{ color: colors.tint }}>{tarihTam ?? 'Tarih yok'}</Text>

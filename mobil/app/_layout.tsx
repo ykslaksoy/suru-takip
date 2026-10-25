@@ -73,6 +73,7 @@ export default function RootLayout() {
                     <Stack.Screen name="gorevler/kategori/[id]" options={{ title: 'Kategori' }} />
                     <Stack.Screen name="gorevler/asi/index" options={{ title: 'Aşı ve İlaç' }} />
                     <Stack.Screen name="gorevler/asi/[programId]" options={{ title: 'Aşı görevi' }} />
+                    <Stack.Screen name="gorevler/asi/katalog/[programId]" options={{ title: 'Aşı katalog' }} />
                     <Stack.Screen name="gorevler/yem/[yemId]" options={{ title: 'Yem görevi' }} />
                     <Stack.Screen name="profesyonellik/index" options={{ title: 'Profesyonellik' }} />
                     <Stack.Screen name="profesyonellik/sistemim" options={{ title: 'Sistemimi gir' }} />
