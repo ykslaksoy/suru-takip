@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SuperKuzu — bulut rolleri, yerel ekip, foto senkron — SürüYön İşlem Raporu</title>
+  <style>
+    :root {
+      --bg: #f4f7f0;
+      --card: #fff;
+      --text: #1a2e1a;
+      --muted: #4a5f4a;
+      --tint: #2d6a4f;
+      --lock: #c1121f;
+      --ok: #2d6a4f;
+      --border: #d8e2d0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(160deg, #e8f0e4, var(--bg) 40%, #eef5ea);
+      color: var(--text); line-height: 1.5; min-height: 100vh;
+    }
+    header {
+      background: var(--tint); color: #fff; padding: 1.25rem 1.5rem;
+    }
+    header a { color: #c8f0d8; }
+    main { max-width: 820px; margin: 1.5rem auto; padding: 0 1rem 3rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+      box-shadow: 0 8px 24px rgba(45,106,79,.06);
+    }
+    .badge {
+      display: inline-block; padding: .35rem .7rem; border-radius: 999px;
+      font-size: .8rem; font-weight: 700;
+    }
+    .badge.lock { background: #ffe5e5; color: var(--lock); }
+    .badge.todo { background: #e8f5e9; color: var(--ok); }
+    .badge.open { background: #fff3cd; color: #856404; }
+    h1 { margin: .5rem 0 0; font-size: 1.45rem; }
+    pre, code { font-family: ui-monospace, monospace; font-size: .85rem; }
+    pre {
+      background: #1a241a; color: #e8f0e8; padding: 1rem; border-radius: 10px;
+      overflow-x: auto;
+    }
+    .meta { color: var(--muted); font-size: .9rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .55rem .4rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: .8rem; }
+    .cmd { background: #f0f5ee; padding: .75rem 1rem; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div><strong>SürüYön</strong> · İşlem Kontrol Raporu</div>
+    <div style="opacity:.85;font-size:.9rem;margin-top:.25rem">
+      <a href="index.html">← Tüm işlemler paneli</a>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <span class="badge lock">🔒 KİLİTLİ — şifresiz değiştirilemez</span>
+      <h1>SuperKuzu — bulut rolleri, yerel ekip, foto senkron</h1>
+      <p class="meta">Oluşturulma: 2026-10-25 02:59 UTC</p>
+    </div>
+    
+    <div class="card">
+      <table>
+        <tr><th>Durum</th><td>KILITLI</td></tr>
+        <tr><th>Dosya</th><td><code>29-superkuzu-bulut/02-roller-foto-bulut-senkron.md</code></td></tr>
+        <tr><th>status</th><td>DONE</td></tr>
+        <tr><th>kilitli</th><td>true</td></tr>
+      </table>
+    </div>
+    <div class="card"><p><em>**KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock &lt;dosya&gt;` + şifre.</em></p><p>**Durum:** kod hazır; tam uçtan uca test için Vercel’de `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` gerekir (panel adımları: `01-bulut-acma-vercel-supabase.md`).</p><p>| Katman | Depo / tablo | Ne işe yarar | Buluta gider mi? |</p><p>|--------|----------------|--------------|------------------|</p><p>| **Çiftlik üyeliği** | Supabase `ciftlik_uye` | Davet kodu, Sahip/Ortak/Bakıcı/Veteriner, finans RLS | Evet (API; `sy_ekip_v1` değil) |</p><p>| **Cihaz profili** | Yerel `sy_ekip_v1` | Aynı tablette “kim kullanıyor”, PIN, ince yetkiler | **Hayır** — `siniflama.ts` cihaz anahtarı |</p><p>Uygulama içi yetki kontrolleri (kayıt silme, finans ekranı vb.) **yerel aktif profile** bakar. Bulut rolü: hangi belgelerin/fotoğrafların indirileceği ve `/bulut` ekranındaki “Rolün” satırı.</p><p>- **Üst veri:** `sy_foto_meta_v1` → belge senkronu (`motor.ts` / `belge` tablosu).</p><p>- **Ham dosya:** `foto-senkron.ts` → Supabase Storage + `foto` tablosu; `simdiSenkronEt` belge senkronundan sonra çalışır.</p><p>1. `girisKoduDogrula` / magic link → `oturumKaydet` → kayıtlı `sy_bulut_ciftlik_v1` varsa **`simdiSenkronEt`** (veri + foto).</p><p>2. Çiftlik oluştur / davet kabul → UI yine `simdiSenkronEt` çağırır.</p><p>3. `bulutBaslat`: periyodik + `online` olayında tam senkron.</p><p>1. `01-bulut-acma-vercel-supabase.md` — şema, Auth URL, e-posta OTP, Vercel deploy.</p><p>2. Production’da `EXPO_PUBLIC_SUPABASE_*` dolu olduğunu doğrula; uygulamada Bulut ekranı “henüz açık değil” **göstermemeli**.</p><p>1. **Giriş + mevcut çiftlik:** E-posta kodu → giriş → “Son eşitleme” güncellenmeli; yeni foto çek → Şimdi eşitle → ikinci cihazda meta + görüntü gelmeli.</p><p>2. **Yerel ekip ipucu:** Ayarlar → Ekip’e ikinci kişi veya PIN ekle → Bulut → sarı kutu “yerel ekip profilleri” görünmeli; sunucu ekip listesi davetlileri göstermeli.</p><p>3. **Davet:** Sahip davet kodu → başka hesap Katıl → listede yeni üye; katılanın “Rolün” satırı doğru.</p><p>4. **Bakıcı:** Bakıcı hesabı — maliyet belgeleri inmemeli; sürü + foto (finans hariç) inmeli.</p><p>Yerel `npm test` (mobil) bulut modülünü çalıştırır; canlı Supabase gerekmez.</p></div>
+    
+        <div class="card">
+          <h2>Şifre kilidi</h2>
+          <p>Bu işlem <strong>tamam</strong> olarak kilitlendi. İstemeden değişmesin diye şifre gerekir.</p>
+          <div class="cmd">
+            <pre>python3 islemler/scripts/kilit.py unlock 29-superkuzu-bulut/02-roller-foto-bulut-senkron.md
+# şifre girin, düzenleyin, sonra:
+python3 islemler/scripts/kilit.py kilitle 29-superkuzu-bulut/02-roller-foto-bulut-senkron.md</pre>
+          </div>
+        </div>
+    
+  </main>
+</body>
+</html>

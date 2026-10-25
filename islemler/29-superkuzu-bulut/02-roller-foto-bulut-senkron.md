@@ -1,4 +1,11 @@
-# SuperKuzu — bulut rolleri, yerel ekip, foto senkron
+---
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-10-25
+---# [x] SuperKuzu — bulut rolleri, yerel ekip, foto senkron
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 **Durum:** kod hazır; tam uçtan uca test için Vercel’de `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` gerekir (panel adımları: `01-bulut-acma-vercel-supabase.md`).
 

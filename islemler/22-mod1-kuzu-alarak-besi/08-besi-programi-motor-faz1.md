@@ -1,9 +1,13 @@
 ---
-status: OPEN
-kilitli: false
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-10-25
 ---
 
-# [ ] Besi programı motoru — faz 1 (MVP)
+# [x] Besi programı motoru — faz 1 (MVP)
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 **Klasör:** `22-mod1-kuzu-alarak-besi`  
 **Spec:** proje store `docs/besi-programi-motoru-taslak.md`  
