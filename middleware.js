@@ -4,7 +4,7 @@
  */
 
 const YOL = '/api/bulut/otp-onay';
-const PENCERE_MS = 60_000;
+const PENCERE_MS = 60000;
 const MAX = 8;
 
 const ipPencere = new Map();
