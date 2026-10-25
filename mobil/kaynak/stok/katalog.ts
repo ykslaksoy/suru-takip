@@ -72,7 +72,7 @@ export const TAKVIYE_KATALOGU: StokKatalogKalemi[] = [
 export const ILAC_KATALOGU: StokKatalogKalemi[] = [
   k('albendazol', 'Albendazol hap', 'medicine', 'adet', 50, 'İç parazit · her 10 kiloya 1 hap'),
   k('ivermectin', 'İvermektin', 'medicine', 'ml', 100, 'İç-dış parazit · her 10 kiloya 0,2 ml iğne'),
-  k('doramectin', 'Doramektin', 'medicine', 'ml', 50, 'Parazit · her 10 kiloya ml iğne'),
+  k('doramectin', 'Doramektin', 'medicine', 'ml', 50, 'Parazit · her 10 kiloya 0,2 ml iğne'),
   k('levamizol', 'Levamizol', 'medicine', 'ml', 50, 'İç parazit · her 10 kiloya hap veya ml'),
   k('oksiklozanid', 'Oksiklozanid', 'medicine', 'ml', 50, 'Karaciğer kelebeği'),
   k('triklabendazol', 'Triklabendazol', 'medicine', 'ml', 50, 'Kelebek hapı / solüsyon'),
