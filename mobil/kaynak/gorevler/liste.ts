@@ -38,14 +38,16 @@ import {
   type GorevKaynak,
   type GorevSeviye,
 } from '@/kaynak/gorevler/siralama';
+import { tarihGunKismi } from '@/kaynak/gorevler/tarih';
 
 export type { Gorev, GorevKaynak, GorevSeviye } from '@/kaynak/gorevler/siralama';
 export { bugunTarih, gorevleriSirala, gorevTakviyeOncelikSira } from '@/kaynak/gorevler/siralama';
 
 /** Liste: "21 Eylül" — yıl yok. Detay için `yil: true`. */
 export function gorevTarihMetni(tarih?: string, opts?: { yil?: boolean }): string {
-  if (!tarih) return '—';
-  return new Date(`${tarih}T12:00:00`).toLocaleDateString('tr-TR', {
+  const gun = tarihGunKismi(tarih);
+  if (!gun) return '—';
+  return new Date(`${gun}T12:00:00`).toLocaleDateString('tr-TR', {
     day: 'numeric',
     month: 'long',
     ...(opts?.yil ? { year: 'numeric' as const } : {}),

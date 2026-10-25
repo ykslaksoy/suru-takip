@@ -54,6 +54,9 @@ import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
 import { ciftlesmeModul } from './moduller/ciftlesme';
 import { cevrimdisiModul } from './moduller/cevrimdisi';
+import { tarihModul } from './moduller/tarih';
+import { meraHaritaModul } from './moduller/mera-harita';
+import { adminSchemaModul } from './moduller/admin-schema';
 
 const MODULLER = [
   hizliBesiModul,
@@ -106,6 +109,9 @@ const MODULLER = [
   supabaseGuvenlikModul,
   bulutModul,
   bulutOtpKorumaModul,
+  tarihModul,
+  meraHaritaModul,
+  adminSchemaModul,
 ];
 
 async function main() {

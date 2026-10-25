@@ -9,6 +9,7 @@ export const ozellikModul: TestModul = {
     const bulut = OZELLIK_BAYRAKLARI.find((o) => o.id === 'bulut-senkron')!;
     const ocr = OZELLIK_BAYRAKLARI.find((o) => o.id === 'ocr-kupe')!;
     const iap = OZELLIK_BAYRAKLARI.find((o) => o.id === 'iap')!;
+    const mera = OZELLIK_BAYRAKLARI.find((o) => o.id === 'mera-harita')!;
     return [
       test('Özellik bayrakları', 'Mod1 tam işaretli', mod1.durum === 'tam'),
       test('Özellik bayrakları', 'Mod 2–7 tam', mod27.durum === 'tam'),
@@ -16,6 +17,7 @@ export const ozellikModul: TestModul = {
       test('Özellik bayrakları', 'OCR simülasyon', ocr.durum === 'simulasyon'),
       test('Özellik bayrakları', 'IAP simülasyon', iap.durum === 'simulasyon'),
       test('Özellik bayrakları', 'Tüm bayraklar açıklamalı', OZELLIK_BAYRAKLARI.every((o) => o.aciklama.length > 5)),
+      test('Özellik bayrakları', 'Mera haritası pilot', mera.durum === 'pilot'),
     ];
   },
 };

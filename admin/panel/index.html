@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SürüYön Admin</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #1a1a1a; background: #f4f6f8; }
+    body { margin: 0; padding: 16px; max-width: 960px; margin-inline: auto; }
+    h1 { font-size: 1.35rem; }
+    section { background: #fff; border: 1px solid #dde2e8; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    input, textarea, select, button { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #ccd3db; }
+    button { background: #1a7f4b; color: #fff; border: none; cursor: pointer; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+    .muted { color: #667; font-size: 13px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+    #hata { color: #b00020; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>SürüYön Admin (P0)</h1>
+  <p class="muted">Service role yalnız sunucuda. Oturum: Supabase Auth + <code>admin_kullanici</code> allowlist.</p>
+  <div id="hata"></div>
+
+  <section id="giris">
+    <h2>Giriş</h2>
+    <div class="row">
+      <input id="eposta" type="email" placeholder="admin@suruyon.app" style="flex:1;min-width:200px" />
+      <button type="button" id="kodGonder">Kod gönder</button>
+    </div>
+    <div class="row">
+      <input id="kod" placeholder="6 haneli kod" />
+      <button type="button" id="kodDogrula">Doğrula</button>
+    </div>
+    <p class="muted" id="oturum"></p>
+  </section>
+
+  <section id="icerik" hidden>
+    <h2>Çiftlikler</h2>
+    <div class="row">
+      <input id="ara" placeholder="Ad veya çiftlik id" style="flex:1" />
+      <button type="button" id="ciftlikYukle">Ara</button>
+    </div>
+    <table><thead><tr><th>Ad</th><th>Üye</th><th>Sahip</th><th>Oluşturma</th></tr></thead><tbody id="ciftlikTablo"></tbody></table>
+  </section>
+
+  <section id="destekBolum" hidden>
+    <h2>Destek talepleri</h2>
+    <div class="row">
+      <input id="destekKonu" placeholder="Yeni konu" style="flex:1" />
+      <button type="button" id="destekEkle">Kaydet</button>
+      <button type="button" id="destekYukle">Yenile</button>
+    </div>
+    <table><thead><tr><th>Konu</th><th>Durum</th><th>Öncelik</th><th>Not</th></tr></thead><tbody id="destekTablo"></tbody></table>
+  </section>
+
+  <section id="bayrakBolum" hidden>
+    <h2>Özellik bayrakları</h2>
+    <table><thead><tr><th>Id</th><th>Açık</th><th>Açıklama</th><th></th></tr></thead><tbody id="bayrakTablo"></tbody></table>
+  </section>
+
+  <section id="duyuruBolum" hidden>
+    <h2>İçerik sürümü</h2>
+    <div class="row">
+      <input id="duyuruSurum" placeholder="Sürüm" />
+      <label><input type="checkbox" id="duyuruYayin" /> Yayınlandı</label>
+    </div>
+    <textarea id="duyuruMetin" rows="3" style="width:100%"></textarea>
+    <div class="row"><button type="button" id="duyuruKaydet">Kaydet</button></div>
+  </section>
+
+  <script>
+    const SB_URL = '__SUPABASE_URL__';
+    const SB_ANON = '__SUPABASE_ANON__';
+    let oturum = null;
+
+    function hata(m) { document.getElementById('hata').textContent = m || ''; }
+    function token() { return oturum?.access_token || ''; }
+
+    async function sb(yol, init = {}) {
+      const r = await fetch(SB_URL + yol, {
+        ...init,
+        headers: {
+          apikey: SB_ANON,
+          'Content-Type': 'application/json',
+          ...(token() ? { Authorization: 'Bearer ' + token() } : {}),
+          ...(init.headers || {}),
+        },
+      });
+      const t = await r.text();
+      if (!r.ok) throw new Error(t || r.status);
+      return t ? JSON.parse(t) : null;
+    }
+
+    async function adminApi(yol, init) {
+      const r = await fetch(yol, {
+        ...init,
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token(), ...(init?.headers || {}) },
+      });
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.hata || 'API hatası');
+      return j;
+    }
+
+    function panelAcik(acik) {
+      for (const id of ['icerik', 'destekBolum', 'bayrakBolum', 'duyuruBolum']) {
+        document.getElementById(id).hidden = !acik;
+      }
+      document.getElementById('oturum').textContent = acik ? 'Oturum açık' : '';
+    }
+
+    document.getElementById('kodGonder').onclick = async () => {
+      hata('');
+      const email = document.getElementById('eposta').value.trim();
+      await sb('/auth/v1/otp', { method: 'POST', body: JSON.stringify({ email, create_user: false }) });
+      alert('Kod gönderildi (e-posta).');
+    };
+
+    document.getElementById('kodDogrula').onclick = async () => {
+      hata('');
+      try {
+        const email = document.getElementById('eposta').value.trim();
+        const kod = document.getElementById('kod').value.trim();
+        const j = await sb('/auth/v1/verify', {
+          method: 'POST',
+          body: JSON.stringify({ type: 'email', email, token: kod }),
+        });
+        oturum = j;
+        panelAcik(true);
+        await yukleHepsi();
+      } catch (e) {
+        hata(e.message);
+      }
+    };
+
+    async function yukleCiftlik() {
+      const q = document.getElementById('ara').value.trim();
+      const j = await adminApi('/api/admin/ciftlikler' + (q ? '?q=' + encodeURIComponent(q) : ''));
+      const tb = document.getElementById('ciftlikTablo');
+      tb.innerHTML = '';
+      for (const c of j.ciftlikler || []) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${c.ad}</td><td>${c.uye_sayisi}</td><td>${c.sahip_eposta}</td><td>${c.created_at?.slice(0, 10) || ''}</td>`;
+        tb.appendChild(tr);
+      }
+    }
+
+    async function yukleDestek() {
+      const j = await adminApi('/api/admin/destek');
+      const tb = document.getElementById('destekTablo');
+      tb.innerHTML = '';
+      for (const t of j.talepler || []) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${t.konu}</td><td>${t.durum}</td><td>${t.oncelik}</td><td>${t.ic_not || ''}</td>`;
+        tb.appendChild(tr);
+      }
+    }
+
+    async function yukleBayrak() {
+      const j = await adminApi('/api/admin/bayraklar');
+      const tb = document.getElementById('bayrakTablo');
+      tb.innerHTML = '';
+      for (const b of j.bayraklar || []) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${b.id}</td><td>${b.acik ? '✓' : '—'}</td><td>${b.aciklama}</td><td><button data-id="${b.id}" class="toggle">${b.acik ? 'Kapat' : 'Aç'}</button></td>`;
+        tb.appendChild(tr);
+      }
+      tb.querySelectorAll('.toggle').forEach((btn) => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          const acik = btn.textContent === 'Aç';
+          await adminApi('/api/admin/bayraklar', { method: 'PATCH', body: JSON.stringify({ id, acik }) });
+          await yukleBayrak();
+        };
+      });
+    }
+
+    async function yukleDuyuru() {
+      const j = await adminApi('/api/admin/icerik');
+      const c = j.icerik || {};
+      document.getElementById('duyuruSurum').value = c.surum || '1';
+      document.getElementById('duyuruMetin').value = c.duyuru_metni || '';
+      document.getElementById('duyuruYayin').checked = !!c.yayinlandi;
+    }
+
+    async function yukleHepsi() {
+      await yukleCiftlik();
+      await yukleDestek();
+      await yukleBayrak();
+      await yukleDuyuru();
+    }
+
+    document.getElementById('ciftlikYukle').onclick = () => yukleCiftlik().catch((e) => hata(e.message));
+    document.getElementById('destekYukle').onclick = () => yukleDestek().catch((e) => hata(e.message));
+    document.getElementById('destekEkle').onclick = async () => {
+      const konu = document.getElementById('destekKonu').value.trim();
+      await adminApi('/api/admin/destek', { method: 'POST', body: JSON.stringify({ konu }) });
+      document.getElementById('destekKonu').value = '';
+      await yukleDestek();
+    };
+    document.getElementById('duyuruKaydet').onclick = async () => {
+      await adminApi('/api/admin/icerik', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          surum: document.getElementById('duyuruSurum').value,
+          duyuru_metni: document.getElementById('duyuruMetin').value,
+          yayinlandi: document.getElementById('duyuruYayin').checked,
+        }),
+      });
+      alert('Kaydedildi');
+    };
+  </script>
+</body>
+</html>
