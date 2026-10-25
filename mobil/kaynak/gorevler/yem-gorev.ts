@@ -6,12 +6,12 @@
 import { hayvanAltEtiket, hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import {
-  BESI_PLAN_TAVAN_GUN,
   HIZLI_BESI_YEM_TAKVIM,
   asiGorunumBaslik,
   gunEtiket,
   type YemTakvimSatir,
 } from '@/kaynak/akilli-veteriner/hizli-besi-plani';
+import { besiUfukGunOku, normalizeBesiUfukGun, yemSatirlariUfukta } from '@/kaynak/besi-programi';
 import { getAktifModId } from '@/sabitler/Modlar';
 import { gozlemPadokMu } from '@/kaynak/suru/padok';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
@@ -84,16 +84,18 @@ function satirBul(yemId: string): YemTakvimSatir | undefined {
 /** Yeni kabul edilen kuzulara satış ufkuna kadar yem planı yaz */
 export async function yemPlaniHayvanlaraEkle(
   hayvanIds: string[],
-  opts?: { girisTarih?: Date },
+  opts?: { girisTarih?: Date; ufukGun?: number },
 ): Promise<number> {
   if (hayvanIds.length === 0) return 0;
   const giris = opts?.girisTarih ?? new Date();
+  const ufuk =
+    opts?.ufukGun != null ? normalizeBesiUfukGun(opts.ufukGun) : await besiUfukGunOku();
+  const yemSatirlari = yemSatirlariUfukta(ufuk);
   const depo = await oku();
   const mevcut = new Set(depo.durumlar.map((d) => `${d.animalId}|${d.yemId}`));
   let n = 0;
   for (const animalId of hayvanIds) {
-    for (const y of HIZLI_BESI_YEM_TAKVIM) {
-      if (y.gun > BESI_PLAN_TAVAN_GUN) continue;
+    for (const y of yemSatirlari) {
       const key = `${animalId}|${y.id}`;
       if (mevcut.has(key)) continue;
       depo.durumlar.push({

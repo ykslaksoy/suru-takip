@@ -7,6 +7,7 @@ import { bulutModul } from './moduller/bulut';
 import { supabaseGuvenlikModul } from './moduller/supabase-guvenlik';
 import { calistirTestModulleri, raporYaz } from './cerceve';
 import { hizliBesiModul } from './moduller/hizli-besi';
+import { besiProgramiMotorModul } from './moduller/besi-programi-motor';
 import { gun1SecimModul } from './moduller/gun1-secim';
 import { padokModul } from './moduller/padok';
 import { gorevlerModul } from './moduller/gorevler';
@@ -55,6 +56,7 @@ import { cevrimdisiModul } from './moduller/cevrimdisi';
 
 const MODULLER = [
   hizliBesiModul,
+  besiProgramiMotorModul,
   gun1SecimModul,
   padokModul,
   gorevlerModul,

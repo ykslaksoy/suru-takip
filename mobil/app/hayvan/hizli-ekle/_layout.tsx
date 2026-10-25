@@ -15,6 +15,7 @@ export default function HizliEkleLayout() {
             headerBackTitle: 'Geri',
           }}>
           <Stack.Screen name="index" options={{ title: 'Kuzu Ekle' }} />
+          <Stack.Screen name="besi-programi" options={{ title: 'Besi programı' }} />
           <Stack.Screen name="tek" options={{ title: 'Padok seç' }} />
           <Stack.Screen name="tek-form" options={{ title: 'Hızlı kuzu' }} />
           <Stack.Screen name="toplu" options={{ title: 'Toplu kabul' }} />
