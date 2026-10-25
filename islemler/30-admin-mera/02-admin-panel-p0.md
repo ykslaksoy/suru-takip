@@ -1,4 +1,11 @@
-# Admin panel P0 (seçenek C)
+---
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-10-25
+---# [x] Admin panel P0 (seçenek C)
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 **Durum:** uygulandı
 

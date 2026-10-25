@@ -1,4 +1,11 @@
-# Mera haritası P0
+---
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-10-25
+---# [x] Mera haritası P0
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 **Durum:** uygulandı
 

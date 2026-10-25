@@ -1,4 +1,11 @@
-# Aşı katalog — Invalid Date düzeltmesi
+---
+status: DONE
+kilitli: true
+kilit_tarihi: 2026-10-25
+---# [x] Aşı katalog — Invalid Date düzeltmesi
+
+
+> **KİLİTLİ — TAMAM (şifre korumalı).** Değiştirmek için: `python3 islemler/scripts/kilit.py unlock <dosya>` + şifre.
 
 **Durum:** uygulandı
 
