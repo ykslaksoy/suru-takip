@@ -4,6 +4,7 @@
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
 import { bulutModul } from './moduller/bulut';
+import { bulutOtpKorumaModul } from './moduller/bulut-otp-koruma';
 import { supabaseGuvenlikModul } from './moduller/supabase-guvenlik';
 import { calistirTestModulleri, raporYaz } from './cerceve';
 import { hizliBesiModul } from './moduller/hizli-besi';
@@ -104,6 +105,7 @@ const MODULLER = [
   cevrimdisiModul,
   supabaseGuvenlikModul,
   bulutModul,
+  bulutOtpKorumaModul,
 ];
 
 async function main() {
