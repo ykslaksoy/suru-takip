@@ -57,6 +57,7 @@ import { cevrimdisiModul } from './moduller/cevrimdisi';
 import { tarihModul } from './moduller/tarih';
 import { meraHaritaModul } from './moduller/mera-harita';
 import { adminSchemaModul } from './moduller/admin-schema';
+import { onayliPaket20261026Modul } from './moduller/onayli-paket-20261026';
 
 const MODULLER = [
   hizliBesiModul,
@@ -112,6 +113,7 @@ const MODULLER = [
   tarihModul,
   meraHaritaModul,
   adminSchemaModul,
+  onayliPaket20261026Modul,
 ];
 
 async function main() {

@@ -20,6 +20,8 @@ const FINANS_ANAHTARLARI = new Set([
   'sy_yem_alim_v1',
   'sy_satis_v1',
   'sy_fiyat_sorusu_gecilen_v1',
+  'sy_cari_hesaplar_v1',
+  'sy_verim_kayitlari_v1',
 ]);
 
 export function senkronlanirMi(anahtar: string): boolean {

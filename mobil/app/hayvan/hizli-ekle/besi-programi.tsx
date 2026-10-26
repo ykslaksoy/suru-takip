@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Stack, router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useAltGuvenliBosluk } from '@/bilesenler/ortak/guvenliAlan';
 import { BesiUfukSecici } from '@/bilesenler/hizli-kuzu/BesiUfukSecici';
 import {
+  besiRasyonDilimleri,
   besiUfukGunOku,
+  hesaplaBesiMaliyetTahmin,
   olusturBesiGorevZamanCizelgesi,
   type BesiProgramGorevSatir,
 } from '@/kaynak/besi-programi';
@@ -19,6 +21,12 @@ export default function BesiProgramiScreen() {
   const { scrollPadBottom } = useAltGuvenliBosluk(72);
   const [satirlar, setSatirlar] = useState<BesiProgramGorevSatir[]>([]);
   const [ufuk, setUfuk] = useState(90);
+  const [maliyetGirdi, setMaliyetGirdi] = useState({
+    bas: '50',
+    alis: '3500',
+    hedefKg: '45',
+    satisFiyat: '280',
+  });
 
   const yenile = useCallback(async (gun?: number) => {
     const u = gun ?? (await besiUfukGunOku());
@@ -29,6 +37,15 @@ export default function BesiProgramiScreen() {
   useEffect(() => {
     void yenile();
   }, [yenile]);
+
+  const dilimler = besiRasyonDilimleri(ufuk);
+  const tahmin = hesaplaBesiMaliyetTahmin({
+    ufukGun: ufuk,
+    basSayisi: parseInt(maliyetGirdi.bas, 10) || 1,
+    alisBasFiyat: parseFloat(maliyetGirdi.alis.replace(',', '.')) || 0,
+    hedefSatisKg: parseFloat(maliyetGirdi.hedefKg.replace(',', '.')) || 0,
+    satisKgFiyat: parseFloat(maliyetGirdi.satisFiyat.replace(',', '.')) || 0,
+  });
 
   const gunGruplari = satirlar.reduce<Map<number, BesiProgramGorevSatir[]>>((m, s) => {
     const list = m.get(s.gun) ?? [];
@@ -56,6 +73,45 @@ export default function BesiProgramiScreen() {
         <Text style={[styles.sub, { color: colors.textSecondary }]}>
           HIZLI_BESI_TAKVIM minimum standart — mevcut Görevler ekranına bağlı.
         </Text>
+
+        <Text style={[styles.lead, { color: colors.text, marginTop: 8 }]}>Rasyon dilimleri (Faz 2)</Text>
+        {dilimler.map((d) => (
+          <View key={d.id} style={[styles.gunKutu, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.gunBaslik, { color: colors.tint }]}>
+              Gün {d.gunBas}–{d.gunBitis} · {d.baslik}
+            </Text>
+            <Text style={[styles.satirNot, { color: colors.textSecondary }]}>
+              {d.rasyonAd} · ~{d.kgBasGun} kg/baş/gün — {d.aciklama}
+            </Text>
+            <Pressable onPress={() => router.push(d.href as never)} style={{ marginTop: 6 }}>
+              <Text style={{ color: colors.tint, fontWeight: '800' }}>Günlük rasyon ekranı →</Text>
+            </Pressable>
+          </View>
+        ))}
+
+        <Text style={[styles.lead, { color: colors.text, marginTop: 8 }]}>Tahmini maliyet / kâr</Text>
+        <View style={[styles.gunKutu, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          {(['bas', 'alis', 'hedefKg', 'satisFiyat'] as const).map((k) => (
+            <TextInput
+              key={k}
+              placeholder={k}
+              keyboardType="decimal-pad"
+              value={maliyetGirdi[k]}
+              onChangeText={(v) => setMaliyetGirdi({ ...maliyetGirdi, [k]: v })}
+              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+            />
+          ))}
+          <Text style={{ color: colors.text }}>
+            Yem ~{tahmin.tahminiYemKg} kg · {tahmin.tahminiYemMaliyet.toLocaleString('tr-TR')} ₺
+          </Text>
+          <Text style={{ color: colors.text }}>
+            Sağlık ~{tahmin.tahminiSaglikMaliyet.toLocaleString('tr-TR')} ₺ · Toplam{' '}
+            {tahmin.toplamMaliyet.toLocaleString('tr-TR')} ₺
+          </Text>
+          <Text style={{ color: tahmin.tahminiKar >= 0 ? colors.tint : '#c1121f', fontWeight: '800', marginTop: 6 }}>
+            Tahmini kâr: {tahmin.tahminiKar.toLocaleString('tr-TR')} ₺ ({tahmin.basBasiKar ?? 0} ₺/baş)
+          </Text>
+        </View>
 
         {[...gunGruplari.entries()]
           .sort(([a], [b]) => a - b)
@@ -91,4 +147,5 @@ const styles = StyleSheet.create({
   satir: { marginBottom: 8 },
   satirBaslik: { fontSize: 15, fontWeight: '700' },
   satirNot: { fontSize: 13, lineHeight: 18, marginTop: 2 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 8, fontSize: 15 },
 });
