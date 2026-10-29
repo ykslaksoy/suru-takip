@@ -6,6 +6,9 @@
  * Yerel / Expo: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY.
  * Web derlemede scripts/supabase-expo-public.js EXPO_PUBLIC_* alanlarını doldurur.
  */
+export const SUPERKUZU_REF = 'eferktaopilgoeetgggk';
+export const SUPERARI_REF = 'ssminvxldxaqnzizbrfy';
+
 export type BulutAyar = { url: string; anonKey: string };
 
 /** Expo derlemesine gömülmesi için her kaynak doğrudan process.env ile okunur. */
@@ -15,6 +18,13 @@ function envSatir(...anahtarlar: string[]): string {
     if (v) return v;
   }
   return '';
+}
+
+/** Yalnız SuperKuzu projesi; SüperArı DB'si asla kullanılmaz. */
+export function bulutAyarDogrula(url: string, anonKey: string): BulutAyar | null {
+  if (!url || !anonKey || !/^https:\/\//.test(url)) return null;
+  if (url.includes(SUPERARI_REF)) return null;
+  return { url, anonKey };
 }
 
 export function bulutAyar(): BulutAyar | null {
@@ -31,8 +41,7 @@ export function bulutAyar(): BulutAyar | null {
     'SUPABASE_PUBLISHABLE_KEY',
     'SUPABASE_ANON_KEY',
   );
-  if (!url || !anonKey || !/^https:\/\//.test(url)) return null;
-  return { url, anonKey };
+  return bulutAyarDogrula(url, anonKey);
 }
 
 export function bulutAcik(): boolean {

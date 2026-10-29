@@ -2,6 +2,8 @@
  * Sırt / padok no OCR — metin normalizasyonu.
  */
 
+import { ocrMetinOku } from './motor';
+
 export type OcrSirtSonuc = {
   ok: boolean;
   ham: string;
@@ -25,12 +27,8 @@ export function ocrSirtNormalize(ham: string): OcrSirtSonuc {
 
 export async function ocrSirtFotodan(opts: { metin?: string; uri?: string }): Promise<OcrSirtSonuc> {
   if (opts.metin?.trim()) return ocrSirtNormalize(opts.metin);
-  await new Promise((r) => setTimeout(r, 300));
-  const n = String(Math.floor(1 + Math.random() * 200));
-  return {
-    ok: true,
-    ham: n,
-    sirtNo: n,
-    message: opts.uri ? `Simüle sırt OCR → ${n}` : `Simüle → ${n}`,
-  };
+  if (!opts.uri) return { ok: false, ham: '', sirtNo: '', message: 'Sırt fotoğrafı çekin veya numarayı yazın.' };
+  const r = await ocrMetinOku(opts.uri);
+  if (!r.ok) return { ok: false, ham: '', sirtNo: '', message: r.message };
+  return ocrSirtNormalize(r.metin);
 }

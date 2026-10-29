@@ -60,7 +60,7 @@ export default function AbonelikEkrani() {
         const denemeButon =
           denemeHakki && !paket.ucretsiz
             ? `${UCRETSIZ_DENEME_AY} ay ücretsiz dene`
-            : 'Satın al (simülasyon)';
+            : 'Satın al';
         return (
           <View
             key={paket.id}
@@ -108,8 +108,8 @@ export default function AbonelikEkrani() {
       />
 
       <Text style={[styles.note, { color: colors.textSecondary }]}>
-        Deneme bir kez kullanılır (cihaz başına). Canlı sürümde App Store / Play Store ile otomatik yenileme
-        açılır.
+        Deneme bir kez kullanılır (cihaz başına). Ücretli paketler yalnız ödeme doğrulandıktan sonra açılır;
+        abonelik RevenueCat kaydından otomatik yenilenir.
       </Text>
     </ScrollView>
   );

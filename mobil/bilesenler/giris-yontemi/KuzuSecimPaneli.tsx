@@ -7,7 +7,8 @@ import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useGirisYontemi } from '@/baglam/GirisYontemiBaglami';
 import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
-import { ocrKupeFotodan, ocrKupeNormalize, ocrSirtNormalize } from '@/kaynak/ocr';
+import * as ImagePicker from 'expo-image-picker';
+import { ocrKupeFotodan, ocrKupeNormalize, ocrSirtFotodan, ocrSirtNormalize } from '@/kaynak/ocr';
 import { rfidHayvanBul, rfidOku } from '@/kaynak/rfid';
 import {
   etkinKuzuSecim,
@@ -29,6 +30,16 @@ type Props = {
   yeniKayit?: boolean;
 };
 
+async function fotoCek(): Promise<string | null> {
+  if (Platform.OS !== 'web') {
+    const izin = await ImagePicker.requestCameraPermissionsAsync();
+    if (izin.status !== 'granted') return null;
+  }
+  const r = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 });
+  if (r.canceled || !r.assets?.[0]) return null;
+  return r.assets[0].uri;
+}
+
 function uyar(baslik: string, mesaj: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     window.alert(`${baslik}\n\n${mesaj}`);
@@ -48,6 +59,7 @@ export function KuzuSecimPaneli({ value, onChange, yeniKayit = true }: Props) {
   const [aramaMetin, setAramaMetin] = useState('');
   const [dinliyor, setDinliyor] = useState(false);
   const [bulunan, setBulunan] = useState<string | null>(null);
+  const [ocrCalisiyor, setOcrCalisiyor] = useState(false);
 
   const inputStil = [
     styles.input,
@@ -110,7 +122,16 @@ export function KuzuSecimPaneli({ value, onChange, yeniKayit = true }: Props) {
   };
 
   const ocrKupeUygula = async () => {
-    const r = ocrMetin.trim() ? ocrKupeNormalize(ocrMetin) : await ocrKupeFotodan({});
+    let r;
+    if (ocrMetin.trim()) r = ocrKupeNormalize(ocrMetin);
+    else {
+      const uri = await fotoCek();
+      if (!uri) return;
+      setOcrCalisiyor(true);
+      r = await ocrKupeFotodan({ uri });
+      setOcrCalisiyor(false);
+      if (r.ham) setOcrMetin(r.ham);
+    }
     if (!r.ok) {
       uyar('OCR', r.message);
       return;
@@ -119,8 +140,17 @@ export function KuzuSecimPaneli({ value, onChange, yeniKayit = true }: Props) {
     uyar('OCR', r.message);
   };
 
-  const ocrSirtUygula = () => {
-    const r = ocrSirtNormalize(ocrSirtMetin);
+  const ocrSirtUygula = async () => {
+    let r;
+    if (ocrSirtMetin.trim()) r = ocrSirtNormalize(ocrSirtMetin);
+    else {
+      const uri = await fotoCek();
+      if (!uri) return;
+      setOcrCalisiyor(true);
+      r = await ocrSirtFotodan({ uri });
+      setOcrCalisiyor(false);
+      if (r.ham) setOcrSirtMetin(r.ham);
+    }
     if (!r.ok) {
       uyar('OCR', r.message);
       return;
@@ -211,11 +241,15 @@ export function KuzuSecimPaneli({ value, onChange, yeniKayit = true }: Props) {
           <TextInput
             value={ocrMetin}
             onChangeText={setOcrMetin}
-            placeholder="Etiketten okunan veya yapıştırılan metin"
+            placeholder="Boş bırakın → fotoğraf çekilir; ya da metni yazın"
             placeholderTextColor={colors.textSecondary}
             style={inputStil}
           />
-          <AnaButon title="OCR ile küpe doldur" variant="secondary" onPress={() => void ocrKupeUygula()} />
+          <AnaButon
+            title={ocrCalisiyor ? 'Okunuyor…' : ocrMetin.trim() ? 'Metinden küpe doldur' : 'Küpe fotoğrafı çek ve oku'}
+            variant="secondary"
+            onPress={() => void ocrKupeUygula()}
+          />
           {value.earTag ? (
             <Text style={{ color: colors.text, fontWeight: '700', marginTop: 8 }}>Küpe: {value.earTag}</Text>
           ) : null}
@@ -232,7 +266,11 @@ export function KuzuSecimPaneli({ value, onChange, yeniKayit = true }: Props) {
             placeholderTextColor={colors.textSecondary}
             style={inputStil}
           />
-          <AnaButon title="OCR ile sırt doldur" variant="secondary" onPress={ocrSirtUygula} />
+          <AnaButon
+            title={ocrCalisiyor ? 'Okunuyor…' : ocrSirtMetin.trim() ? 'Metinden sırt doldur' : 'Sırt fotoğrafı çek ve oku'}
+            variant="secondary"
+            onPress={() => void ocrSirtUygula()}
+          />
           <Text style={[styles.label, { color: colors.text, marginTop: 12 }]}>Kulak küpe *</Text>
           <TextInput
             value={value.earTag}
