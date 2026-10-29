@@ -18,7 +18,10 @@ import { countAnimals } from '@/kaynak/cekirdek/veritabani';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
 import { hizliTekKuzuEkle, VARSAYILAN_KABUL_CINSIYET } from '@/kaynak/suru/hizli-kuzu-kabul';
 import type { AnimalSex } from '@/kaynak/cekirdek/tipler';
-import { KuzuSecimPaneli } from '@/bilesenler/giris-yontemi/KuzuSecimPaneli';
+import {
+  KuzuSecimPaneli,
+  type KuzuSecimDeger,
+} from '@/bilesenler/giris-yontemi/KuzuSecimPaneli';
 import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
 
 function uyar(baslik: string, mesaj: string) {
@@ -39,7 +42,7 @@ export default function HizliTekFormScreen() {
   const params = useLocalSearchParams<{ padok?: string }>();
   const padok = typeof params.padok === 'string' ? params.padok : '';
 
-  const [kimlik, setKimlik] = useState({ earTag: '', sirtNo: '', gehisId: undefined as string | undefined });
+  const [kimlik, setKimlik] = useState<KuzuSecimDeger>({ earTag: '', sirtNo: '' });
   const [sex, setSex] = useState<AnimalSex>(VARSAYILAN_KABUL_CINSIYET);
   const [busy, setBusy] = useState(false);
 
