@@ -26,4 +26,3 @@ export {
   type TakviyeKatalogMeta,
   type TakviyeKatalogTip,
 } from './asi-katalog-meta';
-export { asiBuHaftaListesi, type AsiBuHaftaSatir } from './asi-hafta-listesi';

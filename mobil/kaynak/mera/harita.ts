@@ -79,7 +79,7 @@ export async function meraHaritaPadoklarlaSenkron(): Promise<MeraHaritaBelge> {
         properties: {
           padokAd: p.ad,
           padokId: p.id,
-          tur: p.karantina ? 'yonca' : 'padok',
+          tur: (p.karantina ? 'yonca' : 'padok') as MeraPadokTur,
           not: p.not || undefined,
           hayvan: d.hayvan,
           kapasite: p.kapasite,

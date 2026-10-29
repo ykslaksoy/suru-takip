@@ -5,7 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import { TurSecici } from '@/bilesenler/suru/TurSecici';
 import { PadokSecici } from '@/bilesenler/suru/PadokSecici';
-import { KuzuSecimPaneli } from '@/bilesenler/giris-yontemi/KuzuSecimPaneli';
+import {
+  KuzuSecimPaneli,
+  type KuzuSecimDeger,
+} from '@/bilesenler/giris-yontemi/KuzuSecimPaneli';
 import { YontemOzeti } from '@/bilesenler/giris-yontemi/YontemOzeti';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
@@ -40,7 +43,7 @@ export default function AddAnimalScreen() {
   const params = useLocalSearchParams<{ padok?: string }>();
   const padokParam = typeof params.padok === 'string' ? params.padok : '';
 
-  const [kimlik, setKimlik] = useState({ earTag: '', sirtNo: '', gehisId: undefined as string | undefined });
+  const [kimlik, setKimlik] = useState<KuzuSecimDeger>({ earTag: '', sirtNo: '' });
   const [form, setForm] = useState({
     turkvetNo: '',
     name: '',
