@@ -1,6 +1,7 @@
 ---
-status: devam
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "PR #25 main'e birleşti"
 ---
 
 # PR #25 — main birleştirme, Vercel derin link, test

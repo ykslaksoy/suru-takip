@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Kullanıcı davet et
+# [x] Kullanıcı davet et
 
 > **AÇIK İŞLEM.** Tamamlanınca status=DONE yapılır, `[x]` konur, `kilitli: true` yazılır — sonra dokunulmaz.
 

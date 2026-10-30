@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Aşı görevleri — Gözlem dahil + gün gün + yem ayrı + satışa kadar
+# [x] Aşı görevleri — Gözlem dahil + gün gün + yem ayrı + satışa kadar
 
 **Klasör:** `06-saglik`  
 **Kod:** `mobil/kaynak/gorevler/`, `mobil/kaynak/akilli-veteriner/hizli-besi-plani.ts`, `mobil/kaynak/suru/hizli-kuzu-kabul.ts`

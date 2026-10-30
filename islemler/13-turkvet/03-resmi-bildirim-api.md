@@ -1,6 +1,7 @@
 ---
-status: TODO
-kilitli: false
+status: ERTELENDI
+kilitli: true
+gerekce: "TÜRKVET'in üçüncü taraf uygulamalara açık resmi bildirim API'si yok; PR #42 ile CSV köprüsü (mobil/kaynak/turkvet/csv.ts) gerçek akış olarak kullanılıyor. Resmi API açılırsa yeniden açılır."
 ---
 
 # [ ] Otomatik resmi bildirim API

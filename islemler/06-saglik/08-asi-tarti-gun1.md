@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Gün 1 önce tartı — sonra aşı/iğne (v14)
+# [x] Gün 1 önce tartı — sonra aşı/iğne (v14)
 
 **Klasör:** `06-saglik`  
 **Kod:** `mobil/kaynak/akilli-veteriner/hizli-besi-plani.ts`, `mobil/kaynak/gorevler/{kategoriler,asi-gorev}.ts`, `mobil/app/gorevler/kategori/[id].tsx`

@@ -3,7 +3,7 @@
  *
  * Önerilen plan herkese açık DEĞİL: `onerilenPlanAcikMi()` varsayılan olarak kapalı döner.
  * Kapalıyken kendi plan BOŞ başlar (önerilen id’ler tohumlamada kullanılmaz).
- * İleride yönetici paneli (uzak bayrak) bu kontrolü besleyecek.
+ * Yönetici paneli bayrağı `onerilen_saglik_plani` (kaynak/urun/uzak-bayrak.ts) yalnız kapatabilir.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { ASI_PROGRAMI, asiKategori } from '@/kaynak/cekirdek/asi-programi';
@@ -15,6 +15,7 @@ import {
   onerilenPlanAcikMi as onerilenPlanAcikMiMod,
 } from './saglik-plani-mod';
 import type { PlanZaman } from './plan-takvim';
+import { BAYRAK_ONERILEN_SAGLIK_PLANI, bayrakBirlestir, uzakBayraklariGetir } from '@/kaynak/urun/uzak-bayrak';
 
 export type SaglikPlaniBolum = 'asi' | 'parazit' | 'vitamin';
 export type SaglikPlani = Record<SaglikPlaniBolum, string[]>;
@@ -54,10 +55,12 @@ export async function getEtkinPlan(): Promise<SaglikPlani> {
 
 /**
  * Önerilen plana erişim — Mod 1 kapalı (hızlı besi); hazır mod 2–6 açık.
- * TODO(yönetici paneli): uzak bayraktan (kullanıcı / işletme bazlı) oku.
+ * Yönetici paneli global bayrağı (`onerilen_saglik_plani`) ile AND'lenir; panel yalnız kapatabilir.
+ * Not: panel bayrakları global (admin_ozellik_bayrak); kullanıcı/işletme bazlı bayrak şeması yok.
  */
 export async function onerilenPlanAcikMi(): Promise<boolean> {
-  return onerilenPlanAcikMiMod();
+  const [yerel, harita] = await Promise.all([onerilenPlanAcikMiMod(), uzakBayraklariGetir()]);
+  return bayrakBirlestir(yerel, harita, BAYRAK_ONERILEN_SAGLIK_PLANI);
 }
 
 /** Önerilen plan — erişim yoksa null (id’ler dışarı verilmez). */

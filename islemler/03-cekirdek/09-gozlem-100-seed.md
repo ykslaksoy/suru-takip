@@ -1,6 +1,7 @@
 ---
 status: DONE
-kilitli: false
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
 # [x] Gözlem ~100 seed kalıcı

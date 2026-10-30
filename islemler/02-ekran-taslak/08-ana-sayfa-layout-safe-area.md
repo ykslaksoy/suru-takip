@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Ana sayfa layout — header + Hızlı İşlemler safe area
+# [x] Ana sayfa layout — header + Hızlı İşlemler safe area
 
 **Klasör:** `02-ekran-taslak`  
 **Kod:** `mobil/bilesenler/ana-sayfa/KilitliAnaSayfa.tsx`, `mobil/bilesenler/ortak/guvenliAlan.ts`, `mobil/app/+html.tsx`

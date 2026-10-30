@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Toplu kabul: başlangıç no önek max+1 önerisi
+# [x] Toplu kabul: başlangıç no önek max+1 önerisi
 
 **Klasör:** `02-ekran-taslak`  
 **Kod:** `mobil/app/hayvan/hizli-ekle/toplu.tsx`, `mobil/kaynak/suru/kupe-aralik.ts`

@@ -1,9 +1,11 @@
 ---
+status: ERTELENDI
 id: 05-superkuzu-vercel-root-fix
 baslik: SuperKuzu Vercel root/build düzeltmesi
 tarih: 2026-09-14
 durum: devam
-kilitli: false
+kilitli: true
+gerekce: "Kod tarafı (vercel.json root/rewrite) tamam; Vercel hesabında Resource provisioning failed — dashboard (Resume/Billing) çözülünce doğrulanacak"
 ---
 
 # SuperKuzu Vercel root/build düzeltmesi
