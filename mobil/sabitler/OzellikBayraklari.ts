@@ -2,7 +2,7 @@
  * Özellik olgunluk bayrakları — mağaza / pilot iletişiminde dürüst etiketler.
  */
 
-export type OzellikDurum = 'tam' | 'pilot' | 'simulasyon' | 'yakinda';
+export type OzellikDurum = 'tam' | 'pilot' | 'yakinda';
 
 export type OzellikBayrak = {
   id: string;
@@ -45,20 +45,20 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
   {
     id: 'ocr-kupe',
     ad: 'Küpe OCR',
-    durum: 'simulasyon',
-    aciklama: 'Fotoğraftan okuma simüle',
+    durum: 'pilot',
+    aciklama: 'Kamera fotoğrafından gerçek OCR (web: TextDetector / Tesseract)',
   },
   {
     id: 'rfid',
     ad: 'RFID okuyucu',
-    durum: 'simulasyon',
-    aciklama: 'BLE donanım bağlantısı yok',
+    durum: 'pilot',
+    aciklama: 'Web Bluetooth BLE okuyucu (Nordic UART / HM-10 / ISSC)',
   },
   {
     id: 'turkvet-api',
-    ad: 'TÜRKVET resmi API',
-    durum: 'yakinda',
-    aciklama: 'CSV dışa aktarım hazır',
+    ad: 'TÜRKVET CSV köprüsü',
+    durum: 'tam',
+    aciklama: 'CSV dışa + içe aktarım, alan doğrulama (Bakanlık açık API sunmuyor)',
   },
   {
     id: 'ureme-dogum',
@@ -75,14 +75,14 @@ export const OZELLIK_BAYRAKLARI: OzellikBayrak[] = [
   {
     id: 'iap',
     ad: 'Mağaza ödemesi',
-    durum: 'simulasyon',
-    aciklama: 'RevenueCat anahtarı + SDK sonraki sürüm',
+    durum: 'pilot',
+    aciklama: 'RevenueCat ödeme sayfası + abonelik doğrulama; ödeme olmadan ücretli paket açılmaz',
   },
   {
     id: 'cok-kullanici',
     ad: 'Çok kullanıcı / rol',
-    durum: 'yakinda',
-    aciklama: 'Tek cihaz · yerel profil',
+    durum: 'pilot',
+    aciklama: 'Bulut çiftlik: sahip / ortak / bakıcı / veteriner rolleri, davet kodu',
   },
 ];
 
@@ -90,7 +90,6 @@ export function ozellikDurumEtiketi(durum: OzellikDurum): string {
   const map: Record<OzellikDurum, string> = {
     tam: 'Hazır',
     pilot: 'Pilot',
-    simulasyon: 'Simülasyon',
     yakinda: 'Yakında',
   };
   return map[durum];

@@ -48,7 +48,7 @@ export const KUZU_SECIM_SECENEKLER: {
   {
     id: 'rfid',
     baslik: 'RFID',
-    aciklama: 'GEKİS / elektronik küpe okuyucu (Bluetooth simülasyon)',
+    aciklama: 'GEKİS / elektronik küpe okuyucu (Bluetooth BLE)',
   },
   {
     id: 'sirt-no-ocr',

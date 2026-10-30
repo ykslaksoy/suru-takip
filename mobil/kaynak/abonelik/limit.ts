@@ -29,15 +29,16 @@ export async function getSubscriptionTier(): Promise<SubscriptionTier> {
   return tierNormalize(tier);
 }
 
-export async function setSubscriptionTier(tier: SubscriptionTier, months = 12): Promise<void> {
+/** `bitis`: Date → mağaza bitişi; sayı → ay (deneme). */
+export async function setSubscriptionTier(tier: SubscriptionTier, bitis: Date | number = 12): Promise<void> {
   await AsyncStorage.setItem(TIER_KEY, tier);
   const paket = paketBul(tier);
   if (paket.ucretsiz) {
     await AsyncStorage.removeItem(EXPIRY_KEY);
     return;
   }
-  const expiry = new Date();
-  expiry.setMonth(expiry.getMonth() + months);
+  const expiry = bitis instanceof Date ? bitis : new Date();
+  if (!(bitis instanceof Date)) expiry.setMonth(expiry.getMonth() + bitis);
   await AsyncStorage.setItem(EXPIRY_KEY, expiry.toISOString());
 }
 
@@ -78,39 +79,28 @@ export function getTierInfo(tier: SubscriptionTier) {
   };
 }
 
-export async function purchaseSubscription(
-  tier: SubscriptionTier,
-  billing: 'monthly' | 'yearly',
-): Promise<{ success: boolean; message: string }> {
+/**
+ * Tek seferlik ücretsiz deneme (iş kuralı, ödeme yok). Deneme kullanıldıysa
+ * ücretli paket yalnız gerçek ödeme ile (iap.ts → RevenueCat) açılır.
+ */
+export async function denemeBaslat(tier: SubscriptionTier): Promise<{ success: boolean; message: string }> {
   const paket = paketBul(tier);
   if (paket.ucretsiz) {
     await setSubscriptionTier(VARSAYILAN_PAKET);
     return { success: true, message: '30 kuzu ücretsiz pakete geçildi.' };
   }
-
-  const price = SUBSCRIPTION_PRICES[tier][billing];
-  const billingEtiket = billing === 'yearly' ? 'yıl' : 'ay';
-
-  if (await denemeHakkiVarMi()) {
-    const bitis = new Date();
-    bitis.setMonth(bitis.getMonth() + UCRETSIZ_DENEME_AY);
-    await setSubscriptionTier(tier, UCRETSIZ_DENEME_AY);
-    await AsyncStorage.setItem(DENEME_KEY, '1');
-    await AsyncStorage.setItem(DENEME_BITIS_KEY, bitis.toISOString());
-    return {
-      success: true,
-      message:
-        `${paket.label} · ${UCRETSIZ_DENEME_AY} ay ücretsiz deneme başladı. ` +
-        `Deneme bitince ${price} TL/${billingEtiket} (simülasyon · mağaza IAP sonraki sürüm).`,
-    };
+  if (!(await denemeHakkiVarMi())) {
+    return { success: false, message: 'Ücretsiz deneme kullanıldı — paket için ödeme gerekli.' };
   }
-
-  const months = billing === 'yearly' ? 12 : 1;
-  await AsyncStorage.removeItem(DENEME_BITIS_KEY);
-  await setSubscriptionTier(tier, months);
+  const bitis = new Date();
+  bitis.setMonth(bitis.getMonth() + UCRETSIZ_DENEME_AY);
+  await setSubscriptionTier(tier, UCRETSIZ_DENEME_AY);
+  await AsyncStorage.setItem(DENEME_KEY, '1');
+  await AsyncStorage.setItem(DENEME_BITIS_KEY, bitis.toISOString());
+  const price = SUBSCRIPTION_PRICES[tier].monthly;
   return {
     success: true,
-    message: `${paket.label} paketi aktif (${price} TL/${billingEtiket}). App Store/Play Store entegrasyonu canlı sürümde tamamlanacak.`,
+    message: `${paket.label} · ${UCRETSIZ_DENEME_AY} ay ücretsiz deneme başladı. Deneme bitince ${price} TL/ay ödeme ile devam eder.`,
   };
 }
 
@@ -129,6 +119,6 @@ export async function limitAsimindaPaketAc(hayvanSayisi: number): Promise<{
     };
   }
   const hedef = paketHayvanIcin(Math.max(hayvanSayisi + 10, 50));
-  const sonuc = await purchaseSubscription(hedef.id, 'monthly');
+  const sonuc = await denemeBaslat(hedef.id);
   return { ...sonuc, tier: hedef.id };
 }

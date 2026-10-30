@@ -14,8 +14,9 @@ export const ozellikModul: TestModul = {
       test('Özellik bayrakları', 'Mod1 tam işaretli', mod1.durum === 'tam'),
       test('Özellik bayrakları', 'Mod 2–7 tam', mod27.durum === 'tam'),
       test('Özellik bayrakları', 'Bulut pilot', bulut.durum === 'pilot'),
-      test('Özellik bayrakları', 'OCR simülasyon', ocr.durum === 'simulasyon'),
-      test('Özellik bayrakları', 'IAP simülasyon', iap.durum === 'simulasyon'),
+      test('Özellik bayrakları', 'OCR gerçek (simülasyon yok)', ocr.durum !== ('simulasyon' as string)),
+      test('Özellik bayrakları', 'IAP gerçek (simülasyon yok)', iap.durum !== ('simulasyon' as string)),
+      test('Özellik bayrakları', 'Hiç simülasyon bayrağı yok', OZELLIK_BAYRAKLARI.every((o) => (o.durum as string) !== 'simulasyon')),
       test('Özellik bayrakları', 'Tüm bayraklar açıklamalı', OZELLIK_BAYRAKLARI.every((o) => o.aciklama.length > 5)),
       test('Özellik bayrakları', 'Mera haritası pilot', mera.durum === 'pilot'),
     ];

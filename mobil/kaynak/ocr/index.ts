@@ -8,3 +8,4 @@ export {
   ocrSirtFotodan,
   type OcrSirtSonuc,
 } from './sirt-no';
+export { ocrMetinOku, ocrMotorDestekleniyor, type OcrMotorSonuc } from './motor';

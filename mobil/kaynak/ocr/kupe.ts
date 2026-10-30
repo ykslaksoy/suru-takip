@@ -1,8 +1,9 @@
 /**
  * Küpe / etiket OCR yardımcıları.
- * Gerçek ML yok — kullanıcı veya foto etiketinden gelen metni normalize eder.
- * Aynı API ileride ML Kit / bulut OCR’ye bağlanır.
+ * Metin normalizasyonu + gerçek OCR (motor.ts) ile fotoğraftan okuma.
  */
+
+import { ocrMetinOku } from './motor';
 
 export type OcrKupeSonuc = {
   ok: boolean;
@@ -41,28 +42,13 @@ export function ocrKupeNormalize(ham: string): OcrKupeSonuc {
 }
 
 /**
- * “OCR” simülasyonu — foto URI’si kullanılmaz; etiket seçimine göre örnek metin.
- * Gerçek OCR bağlandığında URI burada işlenir.
+ * Fotoğraftan küpe oku — gerçek OCR motoru (ocr/motor.ts). Metin verilirse doğrudan normalize eder.
  */
-export async function ocrKupeFotodan(opts: {
-  uri?: string;
-  /** Kullanıcının girdiği / yapıştırdığı metin */
-  metin?: string;
-  tur?: 'yara' | 'ayak' | 'diski' | 'agiz' | 'genel' | 'etiket';
-}): Promise<OcrKupeSonuc> {
-  if (opts.metin?.trim()) {
-    return ocrKupeNormalize(opts.metin);
-  }
-  // Simülasyon: rastgele küpe (geliştirme)
-  await new Promise((r) => setTimeout(r, 400));
-  const n = String(Math.floor(100000 + Math.random() * 899999));
-  const ornek = `TR-34-${n}`;
-  return {
-    ok: true,
-    ham: ornek,
-    earTag: ornek,
-    message: opts.uri
-      ? `Simüle OCR (foto var) → ${ornek}. Gerçek OCR bağlanınca etiket okunur.`
-      : `Simüle OCR → ${ornek}`,
-  };
+export async function ocrKupeFotodan(opts: { uri?: string; metin?: string }): Promise<OcrKupeSonuc> {
+  if (opts.metin?.trim()) return ocrKupeNormalize(opts.metin);
+  if (!opts.uri) return { ok: false, ham: '', earTag: '', message: 'Küpe fotoğrafı çekin veya metni yazın.' };
+  const r = await ocrMetinOku(opts.uri);
+  if (!r.ok) return { ok: false, ham: '', earTag: '', message: r.message };
+  const n = ocrKupeNormalize(r.metin);
+  return { ...n, message: `${n.message} (${r.motor})` };
 }

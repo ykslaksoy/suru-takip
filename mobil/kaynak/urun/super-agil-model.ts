@@ -127,7 +127,7 @@ export const OZELLIK_MATRISI: OzellikSatiri[] = [
     },
     suruyonSkor: 8,
     suruyonDurum: 'var',
-    suruyonNot: 'Küpe, TÜRKVET, GEKİS, sırt no, arama; RFID simülasyon',
+    suruyonNot: 'Küpe, TÜRKVET, GEKİS, sırt no, arama; RFID BLE',
   },
   {
     id: 'padok',
@@ -463,7 +463,7 @@ export const OZELLIK_MATRISI: OzellikSatiri[] = [
     },
     suruyonSkor: 3,
     suruyonDurum: 'kismi',
-    suruyonNot: 'RFID/OCR simülasyon; canlı donanım yok',
+    suruyonNot: 'RFID Web Bluetooth + kamera OCR',
   },
   {
     id: 'resmi-entegrasyon',
