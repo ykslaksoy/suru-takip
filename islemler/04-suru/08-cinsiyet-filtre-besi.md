@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Besi cinsiyet filtreleri: Tümü · Erkek · Dişi
+# [x] Besi cinsiyet filtreleri: Tümü · Erkek · Dişi
 
 **Klasör:** `04-suru`  
 **Kod / doküman:** `mobil/app/(tabs)/suru/index.tsx`, hızlı ekle / toplu

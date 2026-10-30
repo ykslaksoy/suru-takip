@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Aşı/iğne — doz sayısı + uygulama yeri (v13)
+# [x] Aşı/iğne — doz sayısı + uygulama yeri (v13)
 
 **Klasör:** `06-saglik`  
 **Kod:** `mobil/kaynak/cekirdek/asi-programi.ts`, `mobil/kaynak/akilli-veteriner/{hizli-besi-plani,vitamin-programi}.ts`, `mobil/kaynak/gorevler/asi-gorev.ts`

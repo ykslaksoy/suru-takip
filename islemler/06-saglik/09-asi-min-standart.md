@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Minimum standart giriş paketi + soft tavsiye (v15)
+# [x] Minimum standart giriş paketi + soft tavsiye (v15)
 
 **Klasör:** `06-saglik`  
 **Kod:** `mobil/kaynak/akilli-veteriner/hizli-besi-plani.ts`, `mobil/kaynak/gorevler/gun1-secim.ts`, `mobil/bilesenler/gorevler/Gun1SecimPaneli.tsx`

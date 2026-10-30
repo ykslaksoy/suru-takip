@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Aşı doz metinleri — çoban dili (Saha UX)
+# [x] Aşı doz metinleri — çoban dili (Saha UX)
 
 **Klasör:** `06-saglik`  
 **Kod:** `mobil/kaynak/cekirdek/asi-programi.ts`, `mobil/kaynak/akilli-veteriner/vitamin-programi.ts`, `mobil/app/gorevler/kategori/[id].tsx`, stok/katalog + görev UI

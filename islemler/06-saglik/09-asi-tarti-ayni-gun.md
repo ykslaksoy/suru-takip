@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Gün 1 aynı seans + oturum seçimi (v14.2)
+# [x] Gün 1 aynı seans + oturum seçimi (v14.2)
 
 **Klasör:** `06-saglik`  
 **Kod:** `mobil/kaynak/gorevler/gun1-secim.ts`, `mobil/bilesenler/gorevler/Gun1SecimPaneli.tsx`, `mobil/app/gorevler/kategori/[id].tsx`, `hizli-besi-plani.ts`

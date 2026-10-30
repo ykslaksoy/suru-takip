@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Sürü kartı durum etiketi: Sağmal → Sağlıklı
+# [x] Sürü kartı durum etiketi: Sağmal → Sağlıklı
 
 **Klasör:** `04-suru`  
 **Kod / doküman:** `mobil/kaynak/cekirdek/tipler.ts` (`ANIMAL_STATUS_LABELS`)

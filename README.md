@@ -57,3 +57,37 @@ Kanonik ağaç: `dokumanlar/urun/uygulama-agaci.md`
 ## Lisans
 
 Proprietary — SürüYön
+
+## Gerçek akışlar (PR #42, Ekim 2026)
+
+Simülasyon yolları kaldırıldı; donanım/anahtar yoksa uygulama sahte veri üretmez, açık hata gösterir.
+
+| Akış | Uygulama | Kod |
+|------|----------|-----|
+| RFID | Web Bluetooth BLE okuyucu (Nordic UART, HM-10, ISSC profilleri); ISO 11784 → TR küpe | `mobil/kaynak/rfid/` |
+| OCR | Kamera görüntüsünden Tesseract.js ile küpe / sırt no okuma | `mobil/kaynak/ocr/` |
+| Abonelik | RevenueCat IAP; anahtar yoksa "yapılandırılmamış" (paket açılmaz) | `mobil/kaynak/abonelik/` |
+| TÜRKVET | CSV köprüsü (içe/dışa aktarım + doğrulama). Resmi API üçüncü taraflara açık değil | `mobil/kaynak/turkvet/` |
+
+## Besi programı motoru
+
+`mobil/kaynak/besi-programi/`: satış ufku (90 / 120 gün), görev zaman çizelgesi, rasyon dilimleri
+(alıştırma 0–5, büyütme 6–30, bitirme 31–ufuk), maliyet/kâr tahmini. Hedef satış kilosu verilmezse
+giriş kilosu + günlük 0,25 kg artış × ufuk kullanılır; başabaş ₺/kg, yem dönüşüm oranı, fire oranı ve dilim
+bazlı yem dökümü hesaplanır.
+
+## Yönetici paneli bayrakları
+
+`/api/ozellik-bayraklar` (admin_ozellik_bayrak). Mobil `kaynak/urun/uzak-bayrak.ts` ile okur; uzak bayrak yalnız
+**kapatabilir** (ör. `onerilen_saglik_plani`), yerel ürün kararını açamaz.
+
+## İşlem takibi
+
+`islemler/`: tüm maddeler DONE ya da gerekçeli ERTELENDI (TÜRKVET resmi API, ayrı sunucu projesi,
+donanım sipariş ekranı, sürekli bakım, Vercel provisioning). `python3 islemler/scripts/kilit.py durum`.
+
+## Test
+
+```bash
+cd mobil && npm test && npx tsc --noEmit
+```

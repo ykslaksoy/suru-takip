@@ -24,9 +24,11 @@ export default function BesiProgramiScreen() {
   const [maliyetGirdi, setMaliyetGirdi] = useState({
     bas: '50',
     alis: '3500',
+    girisKg: '22',
     hedefKg: '45',
     satisFiyat: '280',
   });
+  const sayiOku = (v: string) => parseFloat(v.replace(',', '.')) || 0;
 
   const yenile = useCallback(async (gun?: number) => {
     const u = gun ?? (await besiUfukGunOku());
@@ -43,7 +45,8 @@ export default function BesiProgramiScreen() {
     ufukGun: ufuk,
     basSayisi: parseInt(maliyetGirdi.bas, 10) || 1,
     alisBasFiyat: parseFloat(maliyetGirdi.alis.replace(',', '.')) || 0,
-    hedefSatisKg: parseFloat(maliyetGirdi.hedefKg.replace(',', '.')) || 0,
+    girisKg: sayiOku(maliyetGirdi.girisKg) || undefined,
+    hedefSatisKg: sayiOku(maliyetGirdi.hedefKg) || undefined,
     satisKgFiyat: parseFloat(maliyetGirdi.satisFiyat.replace(',', '.')) || 0,
   });
 
@@ -91,15 +94,18 @@ export default function BesiProgramiScreen() {
 
         <Text style={[styles.lead, { color: colors.text, marginTop: 8 }]}>Tahmini maliyet / kâr</Text>
         <View style={[styles.gunKutu, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          {(['bas', 'alis', 'hedefKg', 'satisFiyat'] as const).map((k) => (
+          {MALIYET_ALANLARI.map(({ k, etiket }) => (
+            <View key={k}>
+            <Text style={[styles.satirNot, { color: colors.textSecondary }]}>{etiket}</Text>
             <TextInput
-              key={k}
-              placeholder={k}
+              accessibilityLabel={etiket}
+              placeholder={etiket}
               keyboardType="decimal-pad"
               value={maliyetGirdi[k]}
               onChangeText={(v) => setMaliyetGirdi({ ...maliyetGirdi, [k]: v })}
               style={[styles.input, { color: colors.text, borderColor: colors.border }]}
             />
+            </View>
           ))}
           <Text style={{ color: colors.text }}>
             Yem ~{tahmin.tahminiYemKg} kg · {tahmin.tahminiYemMaliyet.toLocaleString('tr-TR')} ₺
@@ -110,6 +116,11 @@ export default function BesiProgramiScreen() {
           </Text>
           <Text style={{ color: tahmin.tahminiKar >= 0 ? colors.tint : '#c1121f', fontWeight: '800', marginTop: 6 }}>
             Tahmini kâr: {tahmin.tahminiKar.toLocaleString('tr-TR')} ₺ ({tahmin.basBasiKar ?? 0} ₺/baş)
+          </Text>
+          <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
+            Satış ~{tahmin.satisKgBas} kg/baş
+            {tahmin.basabasKgFiyat !== null ? ` · başabaş ${tahmin.basabasKgFiyat.toLocaleString('tr-TR')} ₺/kg` : ''}
+            {tahmin.yemDonusumOrani !== null ? ` · yem dönüşümü ${tahmin.yemDonusumOrani}:1` : ''}
           </Text>
         </View>
 
@@ -132,6 +143,14 @@ export default function BesiProgramiScreen() {
     </>
   );
 }
+
+const MALIYET_ALANLARI = [
+  { k: 'bas', etiket: 'Baş sayısı' },
+  { k: 'alis', etiket: 'Alış fiyatı (₺/baş)' },
+  { k: 'girisKg', etiket: 'Giriş ağırlığı (kg/baş)' },
+  { k: 'hedefKg', etiket: 'Hedef satış ağırlığı (kg/baş, boşsa günlük 250 g artıştan)' },
+  { k: 'satisFiyat', etiket: 'Satış fiyatı (₺/kg canlı)' },
+] as const;
 
 const styles = StyleSheet.create({
   scroll: { padding: 16 },

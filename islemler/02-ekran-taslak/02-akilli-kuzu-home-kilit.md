@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Akıllı Kuzu ana sayfa — Grok kilit (2026-09-07)
+# [x] Akıllı Kuzu ana sayfa — Grok kilit (2026-09-07)
 
 **Klasör:** `02-ekran-taslak`  
 **Kod / doküman:** `mobil/app/(tabs)/index.tsx`, `mobil/assets/home-locked/`

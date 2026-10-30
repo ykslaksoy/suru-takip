@@ -1,6 +1,7 @@
 ---
-status: TODO
-kilitli: false
+status: ERTELENDI
+kilitli: true
+gerekce: "Sipariş mantığı mobil/kaynak/donanim/siparis.ts'de var; ödeme/kargo sağlayıcısı seçilmediği için ekran yayına alınmadı (app/donanim boş)."
 ---
 
 # [ ] Donanım paket sipariş ekranı

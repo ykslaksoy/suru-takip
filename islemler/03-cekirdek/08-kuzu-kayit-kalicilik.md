@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Kuzu kayıt kalıcılığı + başlangıç 61
+# [x] Kuzu kayıt kalıcılığı + başlangıç 61
 
 **Klasör:** `03-cekirdek` / `02-ekran-taslak`  
 **Kod:** `web-kalici-depo`, `veritabani.web`, `ornek-veri`, `kupe-aralik`, `toplu.tsx`, `vercel.json`

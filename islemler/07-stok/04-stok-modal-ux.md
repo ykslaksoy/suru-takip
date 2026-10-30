@@ -1,6 +1,7 @@
 ---
-status: IN_PROGRESS
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
 # Stok giriş/çıkış modal UX iyileştirmesi

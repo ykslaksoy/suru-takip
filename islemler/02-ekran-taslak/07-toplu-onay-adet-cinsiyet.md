@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Toplu onay butonu + adet sınırı + cinsiyet varsayılanı
+# [x] Toplu onay butonu + adet sınırı + cinsiyet varsayılanı
 
 **Klasör:** `02-ekran-taslak`  
 **Kod:** `mobil/app/hayvan/hizli-ekle/`, `mobil/kaynak/suru/kupe-aralik.ts`, `mobil/kaynak/suru/hizli-kuzu-kabul.ts`

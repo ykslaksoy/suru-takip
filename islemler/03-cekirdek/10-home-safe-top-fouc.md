@@ -1,9 +1,11 @@
 ---
+status: DONE
 id: 10-home-safe-top-fouc
 baslik: Ana sayfa mobil safe-area FOUC + üst header
 tarih: 2026-09-16
 durum: devam
-kilitli: false
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
 # Ana sayfa — iPhone Safari ilk açılış üst header

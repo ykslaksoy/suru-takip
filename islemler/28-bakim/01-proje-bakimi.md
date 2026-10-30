@@ -1,6 +1,7 @@
 ---
-status: TODO
-kilitli: false
+status: ERTELENDI
+kilitli: true
+gerekce: "Sürekli bakım işi; tek seferlik kapanmaz. Her PR'da npm test + tsc ile yürütülür."
 ---
 
 # [ ] Proje bakım turu

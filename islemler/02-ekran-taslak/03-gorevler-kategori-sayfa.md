@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Görevler — kategori ayrı sayfa
+# [x] Görevler — kategori ayrı sayfa
 
 **Klasör:** `02-ekran-taslak`  
 **Kod:** `mobil/app/gorevler/`

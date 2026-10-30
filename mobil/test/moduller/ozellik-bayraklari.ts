@@ -1,5 +1,6 @@
 import { OZELLIK_BAYRAKLARI } from '@/sabitler/OzellikBayraklari';
 import { test, type TestModul } from '../cerceve';
+import { bayrakBirlestir, bayrakHaritasiCoz, BAYRAK_ONERILEN_SAGLIK_PLANI as B } from '@/kaynak/urun/uzak-bayrak';
 
 export const ozellikModul: TestModul = {
   grup: 'Özellik bayrakları',
@@ -19,6 +20,11 @@ export const ozellikModul: TestModul = {
       test('Özellik bayrakları', 'Hiç simülasyon bayrağı yok', OZELLIK_BAYRAKLARI.every((o) => (o.durum as string) !== 'simulasyon')),
       test('Özellik bayrakları', 'Tüm bayraklar açıklamalı', OZELLIK_BAYRAKLARI.every((o) => o.aciklama.length > 5)),
       test('Özellik bayrakları', 'Mera haritası pilot', mera.durum === 'pilot'),
+      test('Uzak bayrak', 'API yanıtı çözülür', bayrakHaritasiCoz({ ok: true, bayraklar: { [B]: { acik: false } } })[B]?.acik === false),
+      test('Uzak bayrak', 'Bozuk yanıt boş harita', Object.keys(bayrakHaritasiCoz({ bayraklar: { x: { acik: 'evet' } } })).length === 0),
+      test('Uzak bayrak', 'Panel kapatır', bayrakBirlestir(true, { [B]: { acik: false } }, B) === false),
+      test('Uzak bayrak', 'Panel Mod 1 kapalıyı açamaz', bayrakBirlestir(false, { [B]: { acik: true } }, B) === false),
+      test('Uzak bayrak', 'Tanımsız bayrak yerel karar', bayrakBirlestir(true, {}, B) === true),
     ];
   },
 };

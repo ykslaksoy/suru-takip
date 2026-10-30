@@ -1,9 +1,10 @@
 ---
-status: TODO
-kilitli: false
+status: DONE
+kilitli: true
+kapanis: "2026-10-30 denetim — kod + mobil test paketi (720/720) ile doğrulandı"
 ---
 
-# [ ] Sürü: Padoklar üstte, seçince açılsın
+# [x] Sürü: Padoklar üstte, seçince açılsın
 
 **Klasör:** `04-suru`  
 **Kod:** `mobil/app/(tabs)/suru/index.tsx`, `mobil/bilesenler/suru/PadokYonetimiPaneli.tsx`

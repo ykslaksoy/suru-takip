@@ -1,6 +1,7 @@
 ---
-status: TODO
-kilitli: false
+status: ERTELENDI
+kilitli: true
+gerekce: "Bulut senkron Supabase (SuperKuzu projesi) + Vercel api/ ile çalışıyor; ayrı sunucu/ projesi canlıya alınmadı. İhtiyaç doğarsa yeniden açılır."
 ---
 
 # [ ] server/ klasörü + API
