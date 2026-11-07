@@ -5,7 +5,7 @@
 import { YetkiKapisi } from '@/bilesenler/ekip/YetkiKapisi';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { setBirimFiyat } from '@/kaynak/stok/fiyat';
@@ -116,6 +116,18 @@ function MaliyetScreenIcerik() {
         <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
           Parti başına alış + yem + ilaç. Yem ve ilaç maliyeti stok çıkışlarından ve girişte yazdığın birim fiyattan hesaplanır; fiyatı olmayan kalemde referans tablodan tahmini fiyat kullanılır.
         </Text>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <Pressable
+            onPress={() => router.push('/maliyet/sat-devam' as never)}
+            style={[styles.linkBtn, { borderColor: colors.tint, backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.tint, fontWeight: '800' }}>Şimdi sat / Besiye devam</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/maliyet/besi-planlama' as never)}
+            style={[styles.linkBtn, { borderColor: colors.tint, backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.tint, fontWeight: '800' }}>Besi Planlama</Text>
+          </Pressable>
+        </View>
         {soru ? fiyatSor(soru) : null}
         {tahminiler.length ? (
           <View style={[styles.bilgi, { borderColor: colors.tint, backgroundColor: colors.accent + '22' }]}>
@@ -238,6 +250,7 @@ const styles = StyleSheet.create({
   girdiler: { flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap' },
   girdi: { flex: 1, minWidth: 100 },
   input: { borderWidth: 1, borderRadius: 10, padding: 10, marginTop: 4, fontSize: 16, minWidth: 0 },
+  linkBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, flex: 1, minWidth: 140 },
 });
 
 export default function MaliyetScreen() {

@@ -375,7 +375,14 @@ export default function AnimalDetailScreen() {
       ) : null}
 
       {animal.status !== 'sold' && animal.status !== 'dead' && ekip.yetki('duzenleme') ? (
-        <View style={[styles.actions, { marginTop: 10 }]}>
+        <View style={[styles.actions, { marginTop: 10, gap: 8 }]}>
+          <Pressable
+            onPress={() =>
+              router.push({ pathname: '/maliyet/sat-devam', params: { id: animal.id } } as never)
+            }
+            style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.tint }])}>
+            <Text style={StyleSheet.flatten([styles.actionText, { color: colors.tint }])}>Şimdi sat / besiye devam</Text>
+          </Pressable>
           <Pressable
             onPress={() => router.push(`/satis?id=${animal.id}`)}
             style={StyleSheet.flatten([styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: arinma ? colors.danger : colors.tint }])}>
