@@ -27,7 +27,7 @@ export function gozlemBeslemeBaglam(
   const karantina = Boolean(padok?.karantina);
   const otomatikOneriYok = gozlemAdi;
   const uyari = gozlemAdi
-    ? 'Gözlem / yeni kabul padoku: otomatik starter veya şablon uygulanmaz. Kayıtlı plan, adaptasyon notu veya elle giriş kullanın; hayvan sağlık durumu padok adından çıkarılmaz.'
+    ? 'Gözlem padoku: otomatik starter yok. İsteğe bağlı «Varış ve uyum beslemesi» planını siz kaydedin; tüm hayvanlara otomatik atanmaz. Karantina ≠ besleme adaptasyonu.'
     : null;
   return { gozlemAdi, padokNotu, karantina, otomatikOneriYok, uyari };
 }

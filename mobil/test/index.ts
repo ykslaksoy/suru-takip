@@ -53,6 +53,7 @@ import { rasyonFormulModul } from './moduller/rasyon-formul';
 import { rasyonStokPlanModul } from './moduller/rasyon-stok-plan';
 import { rasyonPadokDurumModul } from './moduller/rasyon-padok-durum';
 import { rasyonYemKaynagiModul } from './moduller/rasyon-yem-kaynagi';
+import { rasyonUyumBeslemeModul } from './moduller/rasyon-uyum-besleme';
 import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
@@ -110,6 +111,7 @@ const MODULLER = [
   rasyonStokPlanModul,
   rasyonPadokDurumModul,
   rasyonYemKaynagiModul,
+  rasyonUyumBeslemeModul,
   ekipModul,
   galeriModul,
   soyModul,

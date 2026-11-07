@@ -29,6 +29,11 @@ Modül: `rasyon-stok-plan`
 - Tam yem yalnız `tam:evet` / `tam:etiket` stok notu; isimden çıkarım yok.
 - Gözlem padokunda otomatik kg önerisi yok; padok notu adaptasyon bilgisi olarak gösterilir.
 
+## Varış ve uyum beslemesi (t284u)
+
+- İsteğe bağlı plan: 2–3 gün, `sy_uyum_besleme_v1`, yalnız kullanıcı kaydı.
+- Süre bitişi → inceleme gerekir; iştah/dışkı/rumen/genel notu + onay; otomatik rasyon/besi geçişi yok.
+
 ## Padok bağlamı (t279u)
 
 - Seçili padok kartı: kayıtlı aktif plan + son gerçek düşüm; «Aktif rasyon yok» / «Henüz yemleme kaydı yok».

@@ -32,6 +32,7 @@ import { RasyonModlari } from '@/bilesenler/yem/RasyonModlari';
 import { PadokRasyonDurumKarti } from '@/bilesenler/yem/PadokRasyonDurumKarti';
 import { padokRasyonDurumu } from '@/kaynak/yem/padok-durum';
 import { gozlemBeslemeBaglam, type GozlemBeslemeBaglam } from '@/kaynak/yem/gozlem-besleme';
+import { UyumBeslemePaneli } from '@/bilesenler/yem/UyumBeslemePaneli';
 import { getPadokByAd } from '@/kaynak/suru/padok';
 import { getBirimFiyatlar } from '@/kaynak/stok/fiyat';
 
@@ -306,6 +307,15 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
             seciliPadok={seciliPadok}
             onPadok={setSeciliPadok}
             gozlem={gozlemBaglam}
+          />
+        ) : null}
+
+        {seciliPadok ? (
+          <UyumBeslemePaneli
+            padok={seciliPadok}
+            rasyonId={padokDurum?.plan.rasyon?.id}
+            duzen={duzen}
+            onKaydedildi={() => void yukle()}
           />
         ) : null}
 
