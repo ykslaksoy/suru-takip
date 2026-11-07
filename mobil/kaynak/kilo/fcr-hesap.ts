@@ -113,7 +113,11 @@ export async function hesaplaFcrSonuc(
 
   const fcr = calculateFCR(totalFeedKg, donem.gainKg);
   if (fcr == null) {
-    return { durum: 'yok', neden: 'Yem veya kilo artışı yetersiz (FCR hesaplanamaz)', kod: 'yetersiz_girdi' };
+    return {
+      durum: 'yok',
+      neden: 'Yem veya kilo artışı yetersiz — Yemden yararlanma oranı (FCR) hesaplanamaz',
+      kod: 'yetersiz_girdi',
+    };
   }
 
   return {

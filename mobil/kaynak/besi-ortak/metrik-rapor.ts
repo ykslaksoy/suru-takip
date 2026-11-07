@@ -7,7 +7,7 @@ import {
 import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
 import { akilliRasyonOnerisi } from '@/kaynak/rasyon/akilli-oneri';
 import { rasyonKarsilastirma } from '@/kaynak/rasyon/karsilastirma';
-import { adgDeger, fcrDeger } from '@/sabitler/Metinler';
+import { adgDeger, fcrDeger, metrikYetersizVeri } from '@/sabitler/Metinler';
 
 export type Mod1MetrikRapor = {
   hayvanSayisi: number;
@@ -55,9 +55,9 @@ export async function hesaplaMod1MetrikRapor(): Promise<Mod1MetrikRapor | null> 
 
   const notlar: string[] = [];
   if (ortalamaAdg != null) notlar.push(`Sürü ort. ${adgDeger(ortalamaAdg)} (30 gün)`);
-  else notlar.push('ADG için en az iki tartım gerekli.');
+  else notlar.push(metrikYetersizVeri('GCAA'));
   if (ortalamaFcr != null) notlar.push(`Sürü ort. ${fcrDeger(ortalamaFcr)}`);
-  else notlar.push('FCR için tartım + yem kaydı gerekli.');
+  else notlar.push(metrikYetersizVeri('FCR'));
   if (oneri?.tahminiGunlukMaliyet != null) {
     notlar.push(`Tahmini günlük maliyet ≈ ${oneri.tahminiGunlukMaliyet} ₺`);
   }

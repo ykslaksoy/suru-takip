@@ -2,7 +2,7 @@ import { calculateADG, getAnimals, getLatestWeight, getWeightRecords } from '@/k
 import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
 import { akilliRasyonOnerisi } from '@/kaynak/rasyon/akilli-oneri';
 import { dailyFeedForAnimal, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
-import { adgDeger, fcrDeger } from '@/sabitler/Metinler';
+import { adgDeger, fcrDeger, metrikBaslik } from '@/sabitler/Metinler';
 
 export type KarsilastirmaDurum = 'iyi' | 'kotu' | 'notr';
 
@@ -77,8 +77,8 @@ export async function rasyonKarsilastirma(): Promise<RasyonKarsilastirma | null>
 
   const satirlar: KarsilastirmaSatiri[] = [
     satir('Günlük yem / hayvan', oneriYem, gercekYem, 'kg', true),
-    satir('Ort. ADG (30 gün)', hedefAdg, ortAdg, 'g/gün', false),
-    satir('Ort. FCR', 6.5, ortFcr, '', true),
+    satir(`Ort. ${metrikBaslik('GCAA')} (30 gün)`, hedefAdg, ortAdg, 'g/gün', false),
+    satir(`Ort. ${metrikBaslik('FCR')}`, 6.5, ortFcr, 'kg yem/kg artış', true),
   ];
 
   if (oneri.tahminiGunlukMaliyet != null && gercekYem != null && oneriYem > 0) {

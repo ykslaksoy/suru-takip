@@ -1,5 +1,5 @@
 /**
- * GCA (günlük canlı ağırlık artışı) — ölçülen tartımlardan; tahmin değil.
+ * GCAA (günlük canlı ağırlık artışı, g/gün) — ölçülen tartımlardan; tahmin değil.
  */
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { tartimKayitlariSonOnce } from '@/kaynak/kilo/tartim-siralama';

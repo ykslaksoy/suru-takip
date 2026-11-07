@@ -8,7 +8,8 @@ import { hesaplaFcrSonuc, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { sonYemSayimMiktari } from '@/kaynak/stok/yem-tuketim';
 import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
-import { fcrDeger, terim } from '@/sabitler/Metinler';
+import { fcrDeger, metrikBaslik, metrikTooltip, metrikYetersizVeri } from '@/sabitler/Metinler';
+import { fcrYemBazAciklamasi } from '@/kaynak/kilo/performans-metrik-etiket';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 
 const KAYNAK_ETIKET: Record<FcrHesap['kaynak'], string> = {
@@ -65,7 +66,7 @@ export function PerformansMetrikleri({
       <Text style={[styles.title, { color: colors.tint }]}>Performans</Text>
 
       <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
-        kg/gün iki anlama gelir: günlük yem veya günlük kilo artışı (ADG). Tabloda ikisi de notlu gösterilir.
+        {metrikTooltip('GCAA')}
       </Text>
 
       <YemAdgTablosu gunlukYemKg={dailyGivenKg} adgGram={adg} />
@@ -83,9 +84,11 @@ export function PerformansMetrikleri({
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 6 }]}>{terim('FCR')}</Text>
+      <Text style={[styles.label, { color: colors.text, fontWeight: '800', marginBottom: 6 }]}>
+        {metrikBaslik('FCR')}
+      </Text>
       <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
-        Tartım dönemi + günlük rasyon + stok/sayım birlikte hesaplanır.
+        {metrikTooltip('FCR')}
       </Text>
 
       {fcrHesap ? (
@@ -95,8 +98,10 @@ export function PerformansMetrikleri({
             {fcrHesap.startWeightKg} → {fcrHesap.endWeightKg} kg)
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 4 }}>
-            Verilen yem (dönem): {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg · kaynak:{' '}
-            {KAYNAK_ETIKET[fcrHesap.kaynak]}
+            Verilen yem (dönem): {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg · {KAYNAK_ETIKET[fcrHesap.kaynak]}
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, lineHeight: 17 }}>
+            {fcrYemBazAciklamasi(fcrHesap.kaynak)}
           </Text>
           {fcrHesap.stokToplamKg != null && fcrHesap.kaynak !== 'gunluk_rasyon' ? (
             <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
@@ -112,7 +117,7 @@ export function PerformansMetrikleri({
         </>
       ) : (
         <Text style={[styles.value, { color: colors.textSecondary }]}>
-          — {fcrNeden ?? 'Hesaplanamadı (yeterli tartım/yem verisi yok)'}
+          — {fcrNeden ?? metrikYetersizVeri('FCR')}
         </Text>
       )}
     </View>

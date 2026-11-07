@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { hesaplaMod1MetrikRapor, type Mod1MetrikRapor } from '@/kaynak/besi-ortak/metrik-rapor';
-import { adgDeger, fcrDeger, terim } from '@/sabitler/Metinler';
+import { adgDeger, fcrDeger, metrikBaslik, metrikTooltip } from '@/sabitler/Metinler';
 
 export function MetrikPanel() {
   const scheme = useColorScheme() ?? 'light';
@@ -43,8 +43,10 @@ export function MetrikPanel() {
       <Text style={{ color: colors.textSecondary, marginBottom: 10 }}>
         {rapor.hayvanSayisi} hayvan · Mod 1
       </Text>
-      <Info label={terim('ADG')} value={rapor.ortalamaAdg != null ? adgDeger(rapor.ortalamaAdg) : '—'} colors={colors} />
-      <Info label={terim('FCR')} value={rapor.ortalamaFcr != null ? fcrDeger(rapor.ortalamaFcr) : '—'} colors={colors} />
+      <Info label={metrikBaslik('GCAA')} value={rapor.ortalamaAdg != null ? adgDeger(rapor.ortalamaAdg) : '—'} colors={colors} />
+      <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 8, lineHeight: 16 }}>{metrikTooltip('GCAA')}</Text>
+      <Info label={metrikBaslik('FCR')} value={rapor.ortalamaFcr != null ? fcrDeger(rapor.ortalamaFcr) : '—'} colors={colors} />
+      <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 8, lineHeight: 16 }}>{metrikTooltip('FCR')}</Text>
       <Info
         label="Öneri yem / hayvan"
         value={rapor.oneriGunlukYemKg != null ? `${rapor.oneriGunlukYemKg} kg/gün` : '—'}

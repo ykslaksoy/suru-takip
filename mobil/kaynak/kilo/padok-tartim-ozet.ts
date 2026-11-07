@@ -1,6 +1,7 @@
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import { adgGramGunuOrNull } from '@/kaynak/kilo/adg';
+import { padokGcaaOzetEtiketi } from '@/kaynak/kilo/performans-metrik-etiket';
 
 export type PadokTartimOzet = {
   /** Şu an padok üyesi (sürü listesi) */
@@ -8,8 +9,9 @@ export type PadokTartimOzet = {
   tartilanSayisi: number;
   /** Yalnız tartılmış kuzuların son kilo ortalaması — tartımsızlar dahil değil */
   ortKg: number | null;
-  /** Ölçülen GCA ortalaması (yalnız tartılı + 2 tartımı olanlar) */
+  /** Ölçülen GCAA ortalaması (g/gün; yalnız tartılı + 2 tartımı olanlar) */
   ortAdgGram: number | null;
+  gcaaOzetEtiketi: string;
   kapsamMetni: string;
 };
 
@@ -41,11 +43,17 @@ export async function padokTartimOzeti(uyeler: Animal[]): Promise<PadokTartimOze
       ? 'Henüz tartılmış kuzu yok (özet tahmin değil)'
       : `Ölçülen kuzular: ${tartilanSayisi}/${uyeler.length} · ort. kg yalnız tartılılardan`;
 
+  const gcaaEk =
+    ortAdg != null
+      ? ` · ${padokGcaaOzetEtiketi()}: ${Math.round(ortAdg)} g/gün`
+      : ` · ${padokGcaaOzetEtiketi()}: — (yetersiz tartım)`;
+
   return {
     uyelerSayisi: uyeler.length,
     tartilanSayisi,
     ortKg: ortKg == null ? null : Math.round(ortKg * 10) / 10,
     ortAdgGram: ortAdg == null ? null : Math.round(ortAdg),
-    kapsamMetni,
+    kapsamMetni: kapsamMetni + gcaaEk,
+    gcaaOzetEtiketi: padokGcaaOzetEtiketi(),
   };
 }

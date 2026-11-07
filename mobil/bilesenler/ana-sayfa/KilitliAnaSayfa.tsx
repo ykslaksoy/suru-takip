@@ -149,7 +149,7 @@ export function KilitliAnaSayfa() {
               {ozet.ortAdgGram != null ? (
                 <HeroStat
                   sayi={`${ozet.ortAdgGram} g`}
-                  etiket="günlük artış"
+                  etiket="GCAA ort. (g/gün)"
                   onPress={() => router.push('/(tabs)/yolculuk' as never)}
                 />
               ) : (

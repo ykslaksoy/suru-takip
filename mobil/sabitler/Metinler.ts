@@ -1,5 +1,14 @@
 /** Kullanıcı arayüzünde görünen sabit metinler — yalnızca Türkçe. */
 
+import {
+  fcrDegerMetni,
+  gcaaDegerMetni,
+  metrikBaslik,
+  metrikTooltip,
+  metrikYetersizVeri,
+  PERFORMANS_METRIK,
+} from '@/kaynak/kilo/performans-metrik-etiket';
+
 export const BETA_KATEGORILER = {
   general: 'Genel',
   bug: 'Hata bildirimi',
@@ -10,8 +19,14 @@ export type BetaKategori = keyof typeof BETA_KATEGORILER;
 
 /** Kısa terim + Türkçe açıklama — arayüzde birlikte gösterilir. */
 export const TERIMLER = {
-  ADG: { kisa: 'ADG', aciklama: 'günlük kilo alım miktarı' },
-  FCR: { kisa: 'FCR', aciklama: '1 kg et için kaç kg yem gerekir' },
+  ADG: {
+    kisa: PERFORMANS_METRIK.GCAA.kisa,
+    aciklama: `${PERFORMANS_METRIK.GCAA.baslik}, ${PERFORMANS_METRIK.GCAA.birim}`,
+  },
+  FCR: {
+    kisa: PERFORMANS_METRIK.FCR.kisa,
+    aciklama: `${PERFORMANS_METRIK.FCR.baslik}, ${PERFORMANS_METRIK.FCR.birim}`,
+  },
   T1: { kisa: 'T1', aciklama: 'ilk tartım' },
   BCS: { kisa: 'BCS', aciklama: 'vücut kondisyon skoru' },
   SKT: { kisa: 'SKT', aciklama: 'son kullanma tarihi' },
@@ -22,29 +37,33 @@ export const TERIMLER = {
 
 export type TerimAnahtar = keyof typeof TERIMLER;
 
-/** Örn. "FCR (1 kg et için kaç kg yem gerekir)" */
+/** Örn. "Yemden yararlanma oranı (FCR)" */
 export function terim(key: TerimAnahtar): string {
+  if (key === 'FCR') return metrikBaslik('FCR');
+  if (key === 'ADG') return metrikBaslik('GCAA');
   const t = TERIMLER[key];
   return `${t.kisa} (${t.aciklama})`;
 }
 
-/** Yalnızca kısa ad — örn. "ADG" */
+/** Yalnızca kısa ad — performans için GCAA/FCR */
 export function terimKisa(key: TerimAnahtar): string {
+  if (key === 'ADG') return PERFORMANS_METRIK.GCAA.kisa;
+  if (key === 'FCR') return PERFORMANS_METRIK.FCR.kisa;
   return TERIMLER[key].kisa;
 }
 
-/** ADG değer metni — örn. "+250 g/gün · 0,25 kg/gün" */
+/** @deprecated ADG — gcaaDegerMetni kullanın */
 export function adgDeger(gramGun: number): string {
-  const kgGun = Math.round((gramGun / 1000) * 1000) / 1000;
-  return `+${gramGun} g/gün · ${kgGun.toLocaleString('tr-TR')} kg/gün`;
+  return gcaaDegerMetni(gramGun);
 }
 
-/** FCR değer metni — örn. "4,2 kg yem / 1 kg artış" */
 export function fcrDeger(orani: number): string {
-  return `${orani.toLocaleString('tr-TR')} kg yem / 1 kg artış`;
+  return fcrDegerMetni(orani);
 }
 
-/** Yem (kg/gün) ile ADG (g/gün) karışmasın diye tablo satırı */
+export { metrikBaslik, metrikTooltip, metrikYetersizVeri, gcaaDegerMetni, fcrDegerMetni };
+
+/** Yem (kg/gün) ile GCAA (g/gün) karışmasın diye tablo satırı */
 export type YemAdgTabloSatiri = {
   gosterge: string;
   deger: string;
@@ -53,7 +72,7 @@ export type YemAdgTabloSatiri = {
   vurgu?: boolean;
 };
 
-/** Performans ekranı — günlük yem + ADG + karşılaştırmalı örnekler (notlu). */
+/** Performans ekranı — günlük yem + GCAA + karşılaştırmalı örnekler (notlu). */
 export function yemAdgPerformansTablosu(opts: {
   gunlukYemKg?: number | null;
   adgGram?: number | null;
@@ -63,38 +82,35 @@ export function yemAdgPerformansTablosu(opts: {
   satirlar.push({
     gosterge: 'Günlük yem',
     deger: opts.gunlukYemKg != null ? opts.gunlukYemKg.toLocaleString('tr-TR') : '—',
-    birim: 'kg/gün',
-    not: 'Günde verilen yem miktarı. Canlı ağırlık artışı (ADG) değildir.',
+    birim: 'kg/gün (as-fed)',
+    not: 'Günde verilen yem miktarı. Günlük canlı ağırlık artışı (GCAA) değildir.',
     vurgu: opts.gunlukYemKg != null,
   });
 
   satirlar.push({
-    gosterge: terim('ADG'),
-    deger:
-      opts.adgGram != null
-        ? `+${opts.adgGram} g/gün · ${(opts.adgGram / 1000).toLocaleString('tr-TR')} kg/gün`
-        : '—',
-    birim: '30 gün ort.',
-    not: 'Tartımlardan: günde alınan canlı ağırlık artışı. Yem kg/gün ile karıştırılmaz.',
+    gosterge: metrikBaslik('GCAA'),
+    deger: opts.adgGram != null ? gcaaDegerMetni(opts.adgGram) : '—',
+    birim: PERFORMANS_METRIK.GCAA.birim,
+    not: metrikTooltip('GCAA'),
     vurgu: opts.adgGram != null,
+  });
+
+  satirlar.push({
+    gosterge: `Örnek · ${metrikBaslik('FCR')}`,
+    deger: '5,5',
+    birim: PERFORMANS_METRIK.FCR.birim,
+    not: 'Karşılaştırılabilir artışta ~145 g/gün GCAA ile uyumlu örnek (tahmin değil).',
   });
 
   satirlar.push({
     gosterge: 'Örnek · yem',
     deger: '0,8',
-    birim: 'kg/gün yem',
-    not: 'FCR 5,5 ile → ~145 g/gün ADG · 3 ayda (~90 gün) ~13 kg canlı artış',
-  });
-
-  satirlar.push({
-    gosterge: 'Örnek · ADG',
-    deger: '0,8',
-    birim: 'kg/gün artış',
-    not: '3 ayda ~72 kg artış — kuzu besisi için gerçekçi değil (yem sanılmasın)',
+    birim: 'kg/gün yem (as-fed)',
+    not: 'Günlük yem kg/gün değeri — canlı ağırlık artışı ile karıştırılmaz.',
   });
 
   return satirlar;
 }
 
 export const UI_KURAL =
-  'Tüm ekran metinleri Türkçe olmalıdır. Kısa terimler (ADG, FCR, T1, SKT vb.) kısaltma + parantez içinde açıklama ile gösterilir.';
+  'Tüm ekran metinleri Türkçe olmalıdır. Performans metrikleri: Yemden yararlanma oranı (FCR) ve Günlük canlı ağırlık artışı (GCAA, g/gün).';

@@ -25,7 +25,7 @@ import { RozetGorseli } from '@/bilesenler/kilo/RozetGorseli';
 import { KiloGrafigi } from '@/bilesenler/kilo/KiloGrafigi';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 import { hayvanSinifEtiketi, turEmoji } from '@/kaynak/suru/tur';
-import { terim, fcrDeger } from '@/sabitler/Metinler';
+import { fcrDeger, metrikBaslik, metrikTooltip } from '@/sabitler/Metinler';
 import { gebeIsaretle } from '@/kaynak/ureme';
 import { getPoliceler, hayvanPolicesi, kalanGun, tarihGoster, yerelTarih, type SigortaPolice } from '@/kaynak/sigorta';
 import { getAktifArinmalar, kesilemezMetni, type HayvanArinma } from '@/kaynak/arinma';
@@ -303,7 +303,8 @@ export default function AnimalDetailScreen() {
         <View style={{ marginTop: 8 }}>
           <YemAdgTablosu gunlukYemKg={dailyRation} adgGram={adg} />
         </View>
-        <InfoRow label={terim('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
+        <InfoRow label={metrikBaslik('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 }}>{metrikTooltip('FCR')}</Text>
       </View>
 
       {weightRecords.length >= 1 ? (

@@ -9,7 +9,8 @@ kilitli: false
 PR `cursor/tartim-analitik-duzeltme-09a5` — **Hızlı tartım UI PR #44’ten ayrı**.
 
 - Kanonik `kaydetTartimKaydi` (manuel, ses, excel, doğum, hızlı tartım main)
-- GCA `adg.ts`; FCR `hesaplaFcrSonuc` + açık `neden`
+- GCAA `adg.ts`; FCR `hesaplaFcrSonuc` + açık `neden`
+- UI etiketleri: `performans-metrik-etiket.ts` — Yemden yararlanma oranı (FCR), Günlük canlı ağırlık artışı (GCAA, g/gün); as-fed açıklaması
 - Padok özeti: ölçülen kapsam (`padokTartimOzeti`)
 - Hayvan kartı: tek tartımda da grafik
 - Test: `tartim-analitik` modülü

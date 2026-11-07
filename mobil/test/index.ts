@@ -34,6 +34,7 @@ import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
 import { tartimAnalitikModul } from './moduller/tartim-analitik';
+import { performansMetrikEtiketModul } from './moduller/performans-metrik-etiket';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
@@ -89,6 +90,7 @@ const MODULLER = [
   planTakvimModul,
   hizliTartimModul,
   tartimAnalitikModul,
+  performansMetrikEtiketModul,
   stokEslesmeModul,
   maliyetModul,
   zamanCizelgesiModul,
