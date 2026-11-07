@@ -14,6 +14,7 @@ import {
   etkinKuzuSecim,
   kupeNumarasiAyikla,
   sirtNumarasiAyikla,
+  type KuzuSecimYontemi,
 } from '@/kaynak/giris-yontemi';
 import { dinlemeyiBaslat, seslendirmeyiDurdur, type DinlemeKontrol } from '@/kaynak/ses';
 
@@ -28,6 +29,11 @@ type Props = {
   onChange: (next: KuzuSecimDeger) => void;
   /** Yeni kuzu kaydı mı (otomatik tanıma aramaz) */
   yeniKayit?: boolean;
+  /** Ekran bazlı yöntem (varsayılan: kayıtlı tercih) */
+  yontemOverride?: KuzuSecimYontemi;
+  /** Otomatik tanıma / ses sonrası eşleşen hayvan etiketi (yalnızca gösterim) */
+  eslesenEtiket?: string | null;
+  onEslesenEtiket?: (etiket: string | null) => void;
 };
 
 async function fotoCek(): Promise<string | null> {
@@ -48,17 +54,29 @@ function uyar(baslik: string, mesaj: string) {
   Alert.alert(baslik, mesaj);
 }
 
-export function KuzuSecimPaneli({ value, onChange, yeniKayit = true }: Props) {
+export function KuzuSecimPaneli({
+  value,
+  onChange,
+  yeniKayit = true,
+  yontemOverride,
+  eslesenEtiket: eslesenDis,
+  onEslesenEtiket,
+}: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { tercih } = useGirisYontemi();
-  const yontem = etkinKuzuSecim(tercih.kuzuSecim);
+  const yontem = yontemOverride ?? etkinKuzuSecim(tercih.kuzuSecim);
 
   const [ocrMetin, setOcrMetin] = useState('');
   const [ocrSirtMetin, setOcrSirtMetin] = useState('');
   const [aramaMetin, setAramaMetin] = useState('');
   const [dinliyor, setDinliyor] = useState(false);
-  const [bulunan, setBulunan] = useState<string | null>(null);
+  const [bulunanIc, setBulunanIc] = useState<string | null>(null);
+  const bulunan = eslesenDis !== undefined ? eslesenDis : bulunanIc;
+  const setBulunan = (v: string | null) => {
+    setBulunanIc(v);
+    onEslesenEtiket?.(v);
+  };
   const [ocrCalisiyor, setOcrCalisiyor] = useState(false);
 
   const inputStil = [

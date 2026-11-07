@@ -80,7 +80,8 @@ export default function RootLayout() {
                     <Stack.Screen name="profesyonellik/sonuc" options={{ title: 'Analiz sonucu' }} />
                     <Stack.Screen name="profesyonellik/oneri" options={{ title: 'Üst aşama' }} />
                     <Stack.Screen name="ses/index" options={{ title: 'Sesli komut' }} />
-                    <Stack.Screen name="seri-giris/index" options={{ title: 'Seri ahır modu' }} />
+                    <Stack.Screen name="seri-giris/index" options={{ title: 'Tartım' }} />
+                    <Stack.Screen name="seri-asi/index" options={{ title: 'Seri aşı' }} />
                     <Stack.Screen name="giris-yontemi/kurulum" options={{ title: 'Giriş yöntemi kurulumu' }} />
                     <Stack.Screen name="giris-yontemi/index" options={{ title: 'Kuzu seçim & tartım' }} />
                     <Stack.Screen name="maliyet/index" options={{ title: 'Maliyet ve Kâr' }} />
