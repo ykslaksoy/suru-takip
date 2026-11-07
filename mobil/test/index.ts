@@ -50,6 +50,12 @@ import { geriDonusumModul } from './moduller/geri-donusum';
 import { excelModul } from './moduller/excel';
 import { yemModul } from './moduller/yem';
 import { rasyonFormulModul } from './moduller/rasyon-formul';
+import { rasyonStokPlanModul } from './moduller/rasyon-stok-plan';
+import { rasyonPadokDurumModul } from './moduller/rasyon-padok-durum';
+import { rasyonYemKaynagiModul } from './moduller/rasyon-yem-kaynagi';
+import { rasyonUyumBeslemeModul } from './moduller/rasyon-uyum-besleme';
+import { rasyonUyumIncelemeModul } from './moduller/rasyon-uyum-inceleme';
+import { rasyonUyumBolmeModul } from './moduller/rasyon-uyum-bolme';
 import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
@@ -104,6 +110,12 @@ const MODULLER = [
   excelModul,
   yemModul,
   rasyonFormulModul,
+  rasyonStokPlanModul,
+  rasyonPadokDurumModul,
+  rasyonYemKaynagiModul,
+  rasyonUyumBeslemeModul,
+  rasyonUyumIncelemeModul,
+  rasyonUyumBolmeModul,
   ekipModul,
   galeriModul,
   soyModul,

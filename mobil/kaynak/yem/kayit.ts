@@ -1,12 +1,27 @@
 /** Yem/rasyon ham kayıtları (geri dönüşüm kutusu da buradan geri yükler) */
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
-import type { DusumKalemi, PartiRasyonu, YemAlimi } from './hesap';
+import type { DusumKalemi, PartiRasyonu, RasyonKalemi, YemAlimi } from './hesap';
 
 export const KEY_RASYON = 'sy_parti_rasyon_v1';
 export const KEY_ALIM = 'sy_yem_alim_v1';
 export const KEY_DUSUM = 'sy_yem_dusum_log_v1';
 
-export type DusumKaydi = { id: string; zaman: string; gun: string; kalemler: (DusumKalemi & { dusulen: number; eksik: number })[] };
+export type DusumRasyonAnlik = {
+  rasyonId: string;
+  parti: string;
+  ad?: string;
+  kalemler: RasyonKalemi[];
+  guncelleme: string;
+};
+
+export type DusumKaydi = {
+  id: string;
+  zaman: string;
+  gun: string;
+  kalemler: (DusumKalemi & { dusulen: number; eksik: number })[];
+  /** Düşüm anındaki plan görüntüsü — plan sonradan değişince geçmiş bozulmaz */
+  anlik?: DusumRasyonAnlik[];
+};
 
 async function oku<T>(k: string): Promise<T[]> {
   const raw = await kaliciGetItem(k);

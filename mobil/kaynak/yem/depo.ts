@@ -2,12 +2,14 @@
 import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { v4 as uuidv4 } from 'uuid';
 import { adjustStock, getAnimals, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { getPadokByAd } from '@/kaynak/suru/padok';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
 import { getLatestWeight } from '@/kaynak/cekirdek/veritabani';
 import { EKSIK_YEM_ADI, partiOrtalamaKg, rasyonOnerisi, rasyonsuzPartiler, type RasyonOnerisi } from './oneri';
 import type { RationPhase } from '@/kaynak/rasyon/hesapla';
 import { standartYem } from '@/kaynak/rasyon/yem-besin';
+import { rasyonKalemleriStokDogrula } from '@/kaynak/rasyon/stok-plan';
 import { etkinFiyatlar } from '@/kaynak/maliyet/tahmini-fiyat';
 import { copeAt, islemKaydet } from '@/kaynak/gecmis/gunluk';
 import { denetimYaz } from '@/kaynak/cekirdek/denetim';
@@ -157,6 +159,9 @@ async function dusumYap(bugun: string): Promise<DusumKaydi | null> {
   const ilerlet = new Set(ilerletilecekRasyonlar(rasyonlar, bugun));
   if (!ilerlet.size) return null;
   const plan = dusumPlani(rasyonlar, await partiBasSayilari(), bugun);
+  const rMap = new Map(rasyonlar.map((r) => [r.id, r]));
+  const anlik: NonNullable<DusumKaydi['anlik']> = [];
+  const anlikParti = new Set<string>();
   const kalan = new Map((await getYemler()).map((s) => [s.id, s.quantity]));
   const kalemler: DusumKaydi['kalemler'] = [];
   for (const d of plan) {
@@ -166,9 +171,28 @@ async function dusumYap(bugun: string): Promise<DusumKaydi | null> {
     if (dusulen > 0) await adjustStock(d.stockId, 'out', dusulen, dusumNotu(d));
     kalan.set(d.stockId, elde - dusulen);
     kalemler.push({ ...d, dusulen, eksik: Math.round((d.kg - dusulen) * 100) / 100 });
+    if (!anlikParti.has(d.parti)) {
+      const ra = rMap.get(d.rasyonId);
+      if (ra) {
+        anlikParti.add(d.parti);
+        anlik.push({
+          rasyonId: ra.id,
+          parti: ra.parti,
+          ad: ra.ad,
+          kalemler: ra.kalemler.map((k) => ({ ...k })),
+          guncelleme: ra.guncelleme,
+        });
+      }
+    }
   }
   await rasyonlariYaz(rasyonlar.map((r) => (ilerlet.has(r.id) ? { ...r, sonDusum: bugun } : r)));
-  const kayit: DusumKaydi = { id: uuidv4(), zaman: new Date().toISOString(), gun: bugun, kalemler };
+  const kayit: DusumKaydi = {
+    id: uuidv4(),
+    zaman: new Date().toISOString(),
+    gun: bugun,
+    kalemler,
+    anlik: anlik.length ? anlik : undefined,
+  };
   if (kalemler.length) {
     await dusumleriYaz([kayit, ...(await dusumleriOku())]);
     const top = kalemler.reduce((s, k) => s + k.dusulen, 0);
@@ -224,29 +248,31 @@ export async function rasyonsuzOneriler(fazlar: Record<string, RationPhase> = {}
   const ilgili = canli.filter((a) => set.has(a.paddock));
   const kg = await Promise.all(ilgili.map((a) => getLatestWeight(a.id).catch(() => null)));
   const ort = partiOrtalamaKg(ilgili.map((a, i) => ({ paddock: a.paddock, sonKg: kg[i] })));
-  return eksikler.map((p) => rasyonOnerisi({ parti: p, bas: bas[p], ortKg: ort[p] ?? null, faz: fazlar[p], yemler }));
+  return Promise.all(
+    eksikler.map(async (p) => {
+      const pad = await getPadokByAd(p);
+      return rasyonOnerisi({
+        parti: p,
+        bas: bas[p],
+        ortKg: ort[p] ?? null,
+        faz: fazlar[p],
+        yemler,
+        padokNot: pad?.not,
+        padokKarantina: pad?.karantina,
+      });
+    }),
+  );
 }
 
-/** Öneriyi rasyon olarak kaydet; stokta olmayan yem 0 kg ile stoğa eklenir (alım yapılınca düşüm başlar) */
+/** Öneriyi kaydet — yalnız stokta eşleşen kalemler; eksik kaba/kesif için 0 kg stoğu açılmaz */
 export async function oneriyiUygula(o: RasyonOnerisi): Promise<PartiRasyonu> {
   yetkiGerekli('duzenleme');
-  const yemler = await getYemler();
-  const kalemler: RasyonKalemi[] = [];
-  for (const k of o.kalemler) {
-    let id = k.stockId;
-    if (!id) {
-      const ad = EKSIK_YEM_ADI[k.sinif];
-      const ayni = yemler.find((s) => s.name.trim().toLocaleLowerCase('tr') === ad.toLocaleLowerCase('tr'));
-      const item =
-        ayni ?? (await upsertStockItem({ name: ad, type: 'feed', quantity: 0, unit: 'kg', minQuantity: 50, expiryDate: null, notes: 'Rasyon önerisiyle eklendi — alım gir' }));
-      if (!ayni) yemler.push(item);
-      id = item.id;
-    }
-    const var_ = kalemler.find((x) => x.stockId === id);
-    if (var_) var_.kgBasGun = Math.round((var_.kgBasGun + k.kgBasGun) * 100) / 100;
-    else kalemler.push({ stockId: id, kgBasGun: k.kgBasGun });
+  const stoklu = o.kalemler.filter((k) => !k.eksik && k.stockId);
+  if (!stoklu.length) {
+    throw new Error('Stokta kaba veya kesif yem yok — önce yem alımı girin.');
   }
-  return rasyonKaydet({ parti: o.parti, ad: 'Önerilen rasyon', kalemler });
+  const kalemler: RasyonKalemi[] = stoklu.map((k) => ({ stockId: k.stockId!, kgBasGun: k.kgBasGun }));
+  return rasyonKaydet({ parti: o.parti, ad: 'Stokla öneri', kalemler });
 }
 
 /** Görevler için: kuzusu olup rasyonu olmayan partiler */
@@ -262,24 +288,77 @@ export async function partiOrtalamalari(): Promise<Record<string, number | null>
   return partiOrtalamaKg(canli.map((a, i) => ({ paddock: a.paddock, sonKg: kg[i] })));
 }
 
-/** Ada göre stok yemine eşle (yoksa 0 kg ile stoğa ekle) ve rasyon olarak kaydet */
-export async function adliRasyonUygula(parti: string, ad: string, kalemler: { ad: string; stockId?: string; kgBasGun: number }[]): Promise<PartiRasyonu> {
+export type AdliRasyonSecenek = {
+  /** Stokta olmayan kalemler için 0 kg stok kaydı açma (varsayılan: atla) */
+  eksikStoktaOlusturma?: boolean;
+  /** Kayıt öncesi baş × gün stok miktarı doğrula */
+  stokMiktarKontrol?: boolean;
+  bas?: number;
+  gun?: number;
+};
+
+/** Ada göre stok yemine bağla; varsayılan: stokta olmayanı atla, 0 kg stoğu açma */
+export async function adliRasyonUygula(
+  parti: string,
+  ad: string,
+  kalemler: { ad: string; stockId?: string; kgBasGun: number }[],
+  secenek: AdliRasyonSecenek = {},
+): Promise<PartiRasyonu> {
   yetkiGerekli('duzenleme');
   const yemler = await getYemler();
   const norm = (s: string) => s.trim().toLocaleLowerCase('tr');
   const out: RasyonKalemi[] = [];
+  const atlanan: string[] = [];
   for (const k of kalemler) {
     if (!(k.kgBasGun > 0)) continue;
     let id = k.stockId && yemler.some((y) => y.id === k.stockId) ? k.stockId : undefined;
     if (!id) {
-      const ayni = yemler.find((y) => norm(y.name) === norm(k.ad)) ?? (() => { const st = standartYem(k.ad)?.ad; return st ? yemler.find((y) => standartYem(y.name)?.ad === st) : undefined; })();
-      const item = ayni ?? (await upsertStockItem({ name: k.ad, type: 'feed', quantity: 0, unit: 'kg', minQuantity: 50, expiryDate: null, notes: 'Rasyonla eklendi — alım gir' }));
-      if (!ayni) yemler.push(item);
-      id = item.id;
+      const ayni =
+        yemler.find((y) => norm(y.name) === norm(k.ad)) ??
+        (() => {
+          const st = standartYem(k.ad)?.ad;
+          return st ? yemler.find((y) => standartYem(y.name)?.ad === st) : undefined;
+        })();
+      if (ayni) id = ayni.id;
+      else if (secenek.eksikStoktaOlusturma) {
+        const item = await upsertStockItem({
+          name: k.ad,
+          type: 'feed',
+          quantity: 0,
+          unit: 'kg',
+          minQuantity: 50,
+          expiryDate: null,
+          notes: 'Rasyonla eklendi — alım gir',
+        });
+        yemler.push(item);
+        id = item.id;
+      } else {
+        atlanan.push(k.ad);
+        continue;
+      }
+    }
+    const y = yemler.find((i) => i.id === id);
+    if (!y || y.quantity <= 0) {
+      if (!secenek.eksikStoktaOlusturma) {
+        atlanan.push(k.ad);
+        continue;
+      }
     }
     const v = out.find((x) => x.stockId === id);
     if (v) v.kgBasGun = Math.round((v.kgBasGun + k.kgBasGun) * 1000) / 1000;
-    else out.push({ stockId: id, kgBasGun: Math.round(k.kgBasGun * 1000) / 1000 });
+    else out.push({ stockId: id!, kgBasGun: Math.round(k.kgBasGun * 1000) / 1000 });
+  }
+  if (!out.length) {
+    throw new Error(
+      atlanan.length
+        ? `Stokta uygulanabilir kalem yok: ${atlanan.slice(0, 5).join(', ')}${atlanan.length > 5 ? '…' : ''}`
+        : 'Rasyon kalemi yok',
+    );
+  }
+  const bas = secenek.bas ?? (await partiBasSayilari())[parti] ?? 0;
+  if (secenek.stokMiktarKontrol && bas > 0) {
+    const d = rasyonKalemleriStokDogrula(out, yemler, bas, secenek.gun ?? 1);
+    if (!d.tamam) throw new Error(d.eksikler.join('\n'));
   }
   const aktif = (await rasyonlariOku()).find((r) => r.parti === parti && r.aktif);
   return rasyonKaydet({ id: aktif?.id, parti, ad, kalemler: out });

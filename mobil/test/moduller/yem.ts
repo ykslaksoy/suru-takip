@@ -109,6 +109,8 @@ export const yemModul: TestModul = {
       t('kaba yem stokta yoksa eksik işaretli kalem', e.eksikVar && e.kalemler.some((k) => k.eksik && k.stockId === null && k.sinif === 'kaba'));
       const b = rasyonOnerisi({ parti: 'X', bas: 3, ortKg: null, yemler });
       t('tartım yoksa varsayılan kg', !b.tartimli && b.ortKg === VARSAYILAN_KG);
+      const gz = rasyonOnerisi({ parti: 'Gözlem', bas: 5, ortKg: null, yemler, padokNot: 'Yeni kabul', padokKarantina: true });
+      t('gözlem padok otomatik kg önerisi yok', gz.otomatikOneriYok === true && gz.kalemler.length === 0);
       const m = rasyonOnerisi({ parti: 'X', bas: 3, ortKg: 60, faz: 'maintenance', yemler });
       t('dönem değişince miktar değişir (bakım < besi)', m.faz === 'maintenance' && m.gunlukKgBas < rasyonOnerisi({ parti: 'X', bas: 3, ortKg: 60, yemler }).gunlukKgBas);
     }
