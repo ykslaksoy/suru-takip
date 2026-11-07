@@ -1,16 +1,16 @@
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
-import { adgGramGunuOrNull } from '@/kaynak/kilo/adg';
-import { padokGcaaOzetEtiketi } from '@/kaynak/kilo/performans-metrik-etiket';
+import { padokPerformansOzeti } from '@/kaynak/kilo/padok-performans-ozet';
 
 export type PadokTartimOzet = {
-  /** Şu an padok üyesi (sürü listesi) */
   uyelerSayisi: number;
   tartilanSayisi: number;
-  /** Yalnız tartılmış kuzuların son kilo ortalaması — tartımsızlar dahil değil */
   ortKg: number | null;
-  /** Ölçülen GCAA ortalaması (g/gün; yalnız tartılı + 2 tartımı olanlar) */
   ortAdgGram: number | null;
+  olculenGcaaSayisi: number;
+  uygunGcaaSayisi: number;
+  padokFcr: number | null;
+  padokFcrUyari: string | null;
   gcaaOzetEtiketi: string;
   kapsamMetni: string;
 };
@@ -22,38 +22,35 @@ function ortalama(sayilar: (number | null)[]): number | null {
 }
 
 /**
- * Padok özeti: güncel üyelik listesi; kilo/GCA yalnız ölçülen hayvanlardan.
- * Üye değişimi biyolojik artış gibi gösterilmez.
+ * Padok özeti: güncel üyelik; kilo yalnız tartılılardan; GCAA/FCR padok analitiği.
  */
 export async function padokTartimOzeti(uyeler: Animal[]): Promise<PadokTartimOzet> {
   const kilolar: (number | null)[] = [];
-  const adgler: (number | null)[] = [];
   for (const a of uyeler) {
     const kg = await getLatestWeight(a.id).catch(() => null);
     if (kg != null) kilolar.push(kg);
-    const records = await getWeightRecords(a.id).catch(() => []);
-    const adg = records.length >= 2 ? adgGramGunuOrNull(records) : null;
-    if (adg != null) adgler.push(adg);
+    await getWeightRecords(a.id).catch(() => []);
   }
   const tartilanSayisi = kilolar.length;
   const ortKg = ortalama(kilolar);
-  const ortAdg = ortalama(adgler);
-  const kapsamMetni =
-    tartilanSayisi === 0
-      ? 'Henüz tartılmış kuzu yok (özet tahmin değil)'
-      : `Ölçülen kuzular: ${tartilanSayisi}/${uyeler.length} · ort. kg yalnız tartılılardan`;
+  const padokAd = uyeler[0]?.paddock?.trim() ?? '';
+  const perf = await padokPerformansOzeti(uyeler, padokAd);
 
-  const gcaaEk =
-    ortAdg != null
-      ? ` · ${padokGcaaOzetEtiketi()}: ${Math.round(ortAdg)} g/gün`
-      : ` · ${padokGcaaOzetEtiketi()}: — (yetersiz tartım)`;
+  const kiloEk =
+    tartilanSayisi === 0
+      ? 'Henüz tartılmış kuzu yok'
+      : `Ölçülen kuzular: ${tartilanSayisi}/${uyeler.length} · ort. kg yalnız tartılılardan`;
 
   return {
     uyelerSayisi: uyeler.length,
     tartilanSayisi,
     ortKg: ortKg == null ? null : Math.round(ortKg * 10) / 10,
-    ortAdgGram: ortAdg == null ? null : Math.round(ortAdg),
-    kapsamMetni: kapsamMetni + gcaaEk,
-    gcaaOzetEtiketi: padokGcaaOzetEtiketi(),
+    ortAdgGram: perf.ortGcaaGram,
+    olculenGcaaSayisi: perf.olculenGcaaSayisi,
+    uygunGcaaSayisi: perf.uygunGcaaSayisi,
+    padokFcr: perf.padokFcr,
+    padokFcrUyari: perf.padokFcrUyari,
+    gcaaOzetEtiketi: perf.gcaaOzetEtiketi,
+    kapsamMetni: `${kiloEk} · ${perf.kapsamMetni}`,
   };
 }

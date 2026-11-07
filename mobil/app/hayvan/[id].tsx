@@ -18,7 +18,7 @@ import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etike
 import { ANIMAL_STATUS_LABELS } from '@/kaynak/cekirdek/tipler';
 import { TURKVET_FIELD_LABELS } from '@/kaynak/turkvet/dogrula';
 import { ageInMonths, bandForAge, gradeFromAdg, dereceEtiket, KUZU_GRADES, type KuzuGrade } from '@/kaynak/kilo/kuzu-derece';
-import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
+import { hesaplaFcrSonuc } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { DereceRozeti } from '@/bilesenler/kilo/DereceRozeti';
 import { RozetGorseli } from '@/bilesenler/kilo/RozetGorseli';
@@ -43,6 +43,7 @@ export default function AnimalDetailScreen() {
   const [adg, setAdg] = useState<number | null>(null);
   const [grade, setGrade] = useState<KuzuGrade | null>(null);
   const [fcrValue, setFcrValue] = useState<number | null>(null);
+  const [fcrNeden, setFcrNeden] = useState<string | null>(null);
   const [dailyRation, setDailyRation] = useState<number | null>(null);
   const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
   const [anneEtiket, setAnneEtiket] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export default function AnimalDetailScreen() {
         const w = await getLatestWeight(a.id);
         const g = await calculateADG(a.id);
         const records = await getWeightRecords(a.id);
-        const fcr = await hesaplaFcr(a, records);
+        const fcrSonuc = await hesaplaFcrSonuc(a, records);
         const plan = await ensureRationPlan(a, w);
         setWeightRecords(records);
         const [health, islemler, pl, policeler, arinmalar] = await Promise.all([
@@ -81,13 +82,21 @@ export default function AnimalDetailScreen() {
         setPadoklar(pl.map((x) => x.ad));
         setWeight(w);
         setAdg(g);
-        setFcrValue(fcr?.fcr ?? null);
-        setDailyRation(fcr?.dailyGivenKg ?? plan?.dailyGivenKg ?? null);
+        if (fcrSonuc.durum === 'hazir') {
+          setFcrValue(fcrSonuc.hesap.fcr);
+          setFcrNeden(fcrSonuc.hesap.tahsis ? fcrSonuc.hesap.yemAciklamasi : null);
+        } else {
+          setFcrValue(null);
+          setFcrNeden(fcrSonuc.neden);
+        }
+        setDailyRation(
+          fcrSonuc.durum === 'hazir' ? fcrSonuc.hesap.dailyGivenKg : plan?.dailyGivenKg ?? null,
+        );
         setGrade(
           gradeFromAdg(g, {
             birthDate: a.birthDate,
             isSick: a.status === 'sick',
-            fcr: fcr?.fcr ?? null,
+            fcr: fcrSonuc.durum === 'hazir' ? fcrSonuc.hesap.fcr : null,
           })
         );
         if (a.motherId) {
@@ -305,6 +314,11 @@ export default function AnimalDetailScreen() {
         </View>
         <InfoRow label={metrikBaslik('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 }}>{metrikTooltip('FCR')}</Text>
+        {fcrValue == null && fcrNeden ? (
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 }}>{fcrNeden}</Text>
+        ) : fcrNeden ? (
+          <Text style={{ color: colors.tint, fontSize: 12, marginTop: 4, lineHeight: 17 }}>{fcrNeden}</Text>
+        ) : null}
       </View>
 
       {weightRecords.length >= 1 ? (

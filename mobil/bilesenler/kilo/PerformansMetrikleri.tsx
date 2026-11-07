@@ -103,6 +103,16 @@ export function PerformansMetrikleri({
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, lineHeight: 17 }}>
             {fcrYemBazAciklamasi(fcrHesap.kaynak)}
           </Text>
+          <Text
+            style={{
+              color: fcrHesap.tahsis ? colors.tint : colors.textSecondary,
+              fontSize: 12,
+              marginBottom: 4,
+              lineHeight: 17,
+            }}
+          >
+            {fcrHesap.yemAciklamasi}
+          </Text>
           {fcrHesap.stokToplamKg != null && fcrHesap.kaynak !== 'gunluk_rasyon' ? (
             <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
               Rasyon tahmini: {fcrHesap.rasyonToplamKg.toLocaleString('tr-TR')} kg · Stok/sayım:{' '}

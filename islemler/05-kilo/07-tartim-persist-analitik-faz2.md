@@ -11,7 +11,9 @@ PR `cursor/tartim-analitik-duzeltme-09a5` — **Hızlı tartım UI PR #44’ten 
 - Kanonik `kaydetTartimKaydi` (manuel, ses, excel, doğum, hızlı tartım main)
 - GCAA `adg.ts`; FCR `hesaplaFcrSonuc` + açık `neden`
 - UI etiketleri: `performans-metrik-etiket.ts` — Yemden yararlanma oranı (FCR), Günlük canlı ağırlık artışı (GCAA, g/gün); as-fed açıklaması
-- Padok özeti: ölçülen kapsam (`padokTartimOzeti`)
+- Padok özeti: GCAA n/eligible + dönem; padok FCR = toplam yem / toplam artış (`padok-performans-analitik`, `padokTartimOzeti`)
+- Bireysel FCR: yem güveni (`fcr-yem-kaynagi`) — plan, padok tahsisi veya tahmin; yoksa neden
+- Sürü/ karşılaştırma: `suruFcrBirlestir` (oran ortalaması değil)
 - Hayvan kartı: tek tartımda da grafik
 - Test: `tartim-analitik` modülü
 

@@ -2,6 +2,11 @@ import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { adgHesapla } from '@/kaynak/kilo/adg';
 import { tartimKayitlariSonOnce } from '@/kaynak/kilo/tartim-siralama';
 import { calculateFCR } from '@/kaynak/kilo/fcr';
+import {
+  bireyselFcrGosterimMetni,
+  type FcrYemGuven,
+  type FcrYemKaynagiBilgi,
+} from '@/kaynak/kilo/fcr-yem-kaynagi';
 import { getAnimalRationPlan, dailyFeedForAnimal } from '@/kaynak/rasyon/hayvan-plani';
 import { hayvanBasinaYemTuketimi } from '@/kaynak/stok/yem-tuketim';
 import {
@@ -9,7 +14,7 @@ import {
   ESLESIK_KUZU_PADOK_B,
   ESLESIK_KUZU_PADOK_C,
 } from '@/kaynak/cekirdek/padok-b-kuzular';
-import { padokDonemOrtGunlukRasyon, padokGunlukRasyonKg } from '@/kaynak/cekirdek/padok-rasyon';
+import { padokDonemOrtGunlukRasyon } from '@/kaynak/cekirdek/padok-rasyon';
 
 const PADOKLAR = new Set([ESLESIK_KUZU_PADOK_A, ESLESIK_KUZU_PADOK_B, ESLESIK_KUZU_PADOK_C]);
 
@@ -39,13 +44,16 @@ export interface FcrHesap {
   kaynak: FcrKaynak;
   rasyonToplamKg: number;
   stokToplamKg: number | null;
+  yemGuven: FcrYemGuven;
+  yemAciklamasi: string;
+  tahsis: boolean;
 }
 
 export type FcrSonuc =
   | { durum: 'hazir'; hesap: FcrHesap }
   | { durum: 'yok'; neden: string; kod?: string };
 
-/** Tartım kayıtlarından dönem artışı ve gün sayısı (GCA ile tutarlı). */
+/** Tartım kayıtlarından dönem artışı ve gün sayısı (GCAA ile tutarlı). */
 export function tartimDonemi(records: WeightRecord[], maxDays = 30): TartimDonemi | null {
   const adg = adgHesapla(records, maxDays);
   if (adg.durum !== 'hazir') return null;
@@ -64,11 +72,41 @@ export function tartimDonemi(records: WeightRecord[], maxDays = 30): TartimDonem
   };
 }
 
+function yemKaynagiBilgi(
+  opts: {
+    stokKg: number | null;
+    stokKaynak: 'stok_cikis' | 'sayim_farki' | null;
+    planGunluk: number;
+    padokSimule: boolean;
+    donemGun: number;
+  },
+): FcrYemKaynagiBilgi | { guven: 'yok'; aciklama: string } {
+  if (opts.stokKg != null && opts.stokKg > 0 && opts.stokKaynak) {
+    return {
+      guven: 'padok_tahsis',
+      aciklama: `Dönemde padok yeminden başına ~${opts.stokKg} kg tahsis (${opts.stokKaynak}).`,
+      tahsis: true,
+    };
+  }
+  if (opts.planGunluk > 0) {
+    if (opts.padokSimule) {
+      return {
+        guven: 'tahmini_rasyon',
+        aciklama: `Padok besi programı ortalama rasyonu ~${opts.planGunluk} kg/gün × ${opts.donemGun} gün (tahmin).`,
+        tahsis: false,
+      };
+    }
+    return {
+      guven: 'bireysel_plan',
+      aciklama: `Kayıtlı günlük rasyon ${opts.planGunluk} kg/gün × ${opts.donemGun} gün.`,
+      tahsis: false,
+    };
+  }
+  return { guven: 'yok', aciklama: 'Karşılaştırılabilir bireysel yem kaydı yok' };
+}
+
 /**
- * FCR otomatik:
- * - Tartım → kilo artışı ve dönem günü
- * - Günlük verilen rasyon → plan × gün (yedek)
- * - Stok çıkışı / sayım farkı → gerçek tüketim (öncelikli)
+ * Bireysel FCR — GCAA ölçülen tartımdan; yem bireysel plan veya açık padok tahsisi.
  */
 export async function hesaplaFcrSonuc(
   animal: Animal,
@@ -87,18 +125,36 @@ export async function hesaplaFcrSonuc(
 
   const plan = await getAnimalRationPlan(animal.id);
   let dailyGivenKg = plan?.dailyGivenKg ?? plan?.dailyFeedKg ?? 0;
+  let padokSimule = false;
 
-  if (padokHayvanMi(animal)) {
-    // Güncel plan tek gün rasyonu; dönem FCR için simülasyon ortalaması (ADG ile tutarlı).
+  if (padokHayvanMi(animal) && dailyGivenKg <= 0) {
     dailyGivenKg = padokDonemOrtGunlukRasyon(donem.startWeightKg, donem.periodDays);
+    padokSimule = true;
   } else if (dailyGivenKg <= 0) {
     dailyGivenKg = dailyFeedForAnimal(animal, donem.endWeightKg);
+    padokSimule = false;
   }
 
   const rasyonToplamKg = Math.round(dailyGivenKg * donem.periodDays * 10) / 10;
 
   const stok = await hayvanBasinaYemTuketimi(animal, donem.startAt, donem.endAt);
   const stokToplamKg = stok?.kg ?? null;
+
+  const yemBilgi = yemKaynagiBilgi({
+    stokKg: stokToplamKg,
+    stokKaynak: stok?.kaynak ?? null,
+    planGunluk: dailyGivenKg,
+    padokSimule,
+    donemGun: donem.periodDays,
+  });
+
+  if (yemBilgi.guven === 'yok') {
+    return {
+      durum: 'yok',
+      neden: `${yemBilgi.aciklama}. Yemden yararlanma oranı (FCR) gösterilmez.`,
+      kod: 'yem_yok',
+    };
+  }
 
   let totalFeedKg: number;
   let kaynak: FcrKaynak;
@@ -111,6 +167,14 @@ export async function hesaplaFcrSonuc(
     kaynak = 'gunluk_rasyon';
   }
 
+  if (totalFeedKg <= 0) {
+    return {
+      durum: 'yok',
+      neden: 'Yem miktarı sıfır — FCR hesaplanamaz',
+      kod: 'yetersiz_girdi',
+    };
+  }
+
   const fcr = calculateFCR(totalFeedKg, donem.gainKg);
   if (fcr == null) {
     return {
@@ -119,6 +183,11 @@ export async function hesaplaFcrSonuc(
       kod: 'yetersiz_girdi',
     };
   }
+
+  const tamBilgi: FcrYemKaynagiBilgi =
+    yemBilgi.guven === 'yok'
+      ? { guven: 'yok', aciklama: yemBilgi.aciklama, tahsis: false }
+      : yemBilgi;
 
   return {
     durum: 'hazir',
@@ -133,6 +202,9 @@ export async function hesaplaFcrSonuc(
       kaynak,
       rasyonToplamKg,
       stokToplamKg,
+      yemGuven: tamBilgi.guven,
+      yemAciklamasi: bireyselFcrGosterimMetni(tamBilgi),
+      tahsis: tamBilgi.tahsis,
     },
   };
 }

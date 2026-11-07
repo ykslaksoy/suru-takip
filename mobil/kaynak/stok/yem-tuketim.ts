@@ -66,6 +66,36 @@ export async function hayvanBasinaYemTuketimi(
   return { kg: Math.round((tuketim / head) * 10) / 10, kaynak: 'sayim_farki' };
 }
 
+/** Padok düzeyi dönem tüketimi (kg) — başa bölünmez; FCR birleştirme için. */
+export async function padokToplamYemTuketimi(
+  paddock: string,
+  startAt: string,
+  endAt: string,
+): Promise<{ kg: number; kaynak: 'stok_cikis' | 'sayim_farki' } | null> {
+  const feedItems = await getStockItems('feed');
+  if (feedItems.length === 0) return null;
+
+  const feedIds = new Set(feedItems.map((f) => f.id));
+  const movements = await getStockMovements({ from: startAt, to: endAt });
+  const p = paddock.trim();
+
+  const cikis = donemCikislari(movements, feedIds, p);
+  if (cikis > 0) {
+    return { kg: Math.round(cikis * 10) / 10, kaynak: 'stok_cikis' };
+  }
+
+  const primary = feedItems[0];
+  const sayimBas = await sonSayimOncesi(primary.id, startAt);
+  const sayimSon = await sonSayimOncesi(primary.id, endAt);
+  if (!sayimBas || !sayimSon) return null;
+
+  const giris = donemGirisleri(movements, feedIds);
+  const tuketim = sayimBas.quantityKg + giris - sayimSon.quantityKg;
+  if (tuketim <= 0) return null;
+
+  return { kg: Math.round(tuketim * 10) / 10, kaynak: 'sayim_farki' };
+}
+
 export async function sonYemSayimMiktari(stockId?: string): Promise<number | null> {
   const items = stockId ? [{ id: stockId }] : await getStockItems('feed');
   if (items.length === 0) return null;
