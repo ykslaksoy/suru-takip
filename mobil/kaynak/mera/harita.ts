@@ -56,8 +56,16 @@ async function meraHaritaYaz(belge: MeraHaritaBelge): Promise<void> {
   await kaliciSetItem(MERA_HARITA_ANAHTAR, JSON.stringify(belge));
 }
 
+export type MeraHaritaSenkronSecenek = {
+  /** false = sadece önceden kayıtlı koordinatlar (ahır planı; uydurma GPS yok) */
+  uretimKoordinat?: boolean;
+};
+
 /** Padok listesinden nokta katmanı üretir veya mevcut koordinatları günceller. */
-export async function meraHaritaPadoklarlaSenkron(): Promise<MeraHaritaBelge> {
+export async function meraHaritaPadoklarlaSenkron(
+  secenek: MeraHaritaSenkronSecenek = {},
+): Promise<MeraHaritaBelge> {
+  const uretimKoordinat = secenek.uretimKoordinat !== false;
   const padoklar = await getPadoklar();
   const onceki = await meraHaritaOku();
   const koordinatMap = new Map<string, [number, number]>();
@@ -69,10 +77,20 @@ export async function meraHaritaPadoklarlaSenkron(): Promise<MeraHaritaBelge> {
   }
 
   const n = padoklar.length;
-  const features = await Promise.all(
+  const satirlar = await Promise.all(
     padoklar.map(async (p, i) => {
       const d = await padokDoluluk(p);
-      const coords = koordinatMap.get(p.ad) ?? padokKonum(p, i, n);
+      const kayitli = koordinatMap.get(p.ad);
+      const coords = kayitli ?? (uretimKoordinat ? padokKonum(p, i, n) : null);
+      return { p, d, coords, i };
+    }),
+  );
+
+  const features = satirlar
+    .filter((s) => s.coords != null)
+    .map((s) => {
+      const coords = s.coords as [number, number];
+      const { p, d } = s;
       return {
         type: 'Feature' as const,
         geometry: { type: 'Point' as const, coordinates: coords },
@@ -85,8 +103,7 @@ export async function meraHaritaPadoklarlaSenkron(): Promise<MeraHaritaBelge> {
           kapasite: p.kapasite,
         },
       };
-    }),
-  );
+    });
 
   const belge: MeraHaritaBelge = {
     meta: {

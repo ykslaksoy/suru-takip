@@ -1,4 +1,11 @@
 import { useCallback, useState } from 'react';
+import {
+  besiSekliOku,
+  haritaHedefRotasi,
+  icBesiModu,
+  type BesiSekli,
+} from '@/kaynak/suru/besi-sekli-yon';
+import { BesiSekliSecici } from '@/bilesenler/suru/BesiSekliSecici';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -28,18 +35,43 @@ export default function MeraEkrani() {
   const [alan, setAlan] = useState('');
   const [tasima, setTasima] = useState('4');
   const [uygulama, setUygulama] = useState({ ad: '', gun: '14', bitis: '', tur: 'ilac' as 'ilac' | 'gubre' });
+  const [besiSekli, setBesiSekli] = useState<BesiSekli>('karisik');
+
+  const icModaYonlendir = useCallback(
+    (sekil: BesiSekli) => {
+      setBesiSekli(sekil);
+      if (icBesiModu(sekil)) {
+        const h = haritaHedefRotasi(sekil, secili || padok);
+        router.replace(
+          h.params ? ({ pathname: h.pathname, params: h.params } as never) : (h.pathname as never),
+        );
+      }
+    },
+    [padok, secili],
+  );
 
   const yenile = useCallback(async () => {
+    const sekil = await besiSekliOku();
+    setBesiSekli(sekil);
+    if (icBesiModu(sekil)) {
+      const h = haritaHedefRotasi(sekil, padok?.trim() || secili);
+      router.replace(
+        h.params ? ({ pathname: h.pathname, params: h.params } as never) : (h.pathname as never),
+      );
+      return;
+    }
     const o = await meraKapasiteOzeti();
     setOzet(o);
     setAlan(String(o.ayar.alan || ''));
     setTasima(String(o.ayar.tasimaBasHa));
-  }, []);
+  }, [padok, secili]);
 
   useFocusEffect(
     useCallback(() => {
+      const p = padok?.trim();
+      if (p) setSecili(p);
       void yenile();
-    }, [yenile]),
+    }, [padok, yenile]),
   );
 
   if (!meraHaritaAktif()) {
@@ -62,6 +94,10 @@ export default function MeraEkrani() {
     <>
       <Stack.Screen options={{ title: 'Mera' }} />
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.panel, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <BesiSekliSecici onSekilDegisti={icModaYonlendir} />
+        </View>
+        {!icBesiModu(besiSekli) ? (
         <View style={[styles.panel, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <Text style={[styles.panelTitle, { color: colors.text }]}>Taşıma kapasitesi (Faz 2)</Text>
           <TextInput
@@ -103,7 +139,9 @@ export default function MeraEkrani() {
             </>
           ) : null}
         </View>
+        ) : null}
 
+        {!icBesiModu(besiSekli) ? (
         <View style={[styles.panel, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <Text style={[styles.panelTitle, { color: colors.text }]}>İlaç / gübre uygulaması</Text>
           <TextInput
@@ -149,6 +187,7 @@ export default function MeraEkrani() {
             </View>
           ) : null}
         </View>
+        ) : null}
 
         <MeraHarita
           seciliPadok={secili}

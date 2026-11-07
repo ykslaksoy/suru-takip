@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { meraHaritaAktif } from '@/sabitler/ozellik-acik';
+import { SuruHaritaGirisButonu } from '@/bilesenler/suru/SuruHaritaGirisButonu';
+import { BesiSekliSecici } from '@/bilesenler/suru/BesiSekliSecici';
 import { HayvanKarti } from '@/bilesenler/suru/HayvanKarti';
 import { CevrimdisiBanner } from '@/bilesenler/ortak/CevrimdisiBanner';
 import { AltButonlar } from '@/bilesenler/ortak/AltButonlar';
@@ -90,21 +90,7 @@ export default function FlockScreen() {
           </Text>
         </View>
         <View style={styles.headerAksiyon}>
-          {meraHaritaAktif() ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Mera haritası"
-              onPress={() =>
-                router.push(
-                  padokFiltre
-                    ? ({ pathname: '/mera', params: { padok: padokFiltre } } as never)
-                    : ('/mera' as never),
-                )
-              }
-              style={StyleSheet.flatten([styles.haritaBtn, { borderColor: colors.border }])}>
-              <Ionicons name="map-outline" size={20} color={colors.tint} />
-            </Pressable>
-          ) : null}
+          <SuruHaritaGirisButonu padok={padokFiltre} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Hayvan ekle"
@@ -123,6 +109,7 @@ export default function FlockScreen() {
 
       {/* Padoklar en üstte — seçince altta hayvanlar gelir */}
       <View style={styles.padokWrap}>
+        <BesiSekliSecici compact />
         <PadokYonetimiPaneli seciliPadok={padokFiltre} onPadokSec={setPadokFiltre} />
       </View>
 
@@ -179,14 +166,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
   headerAksiyon: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  haritaBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    minHeight: 48,
-    justifyContent: 'center',
-  },
   addBtn: {
     paddingHorizontal: 16,
     paddingVertical: 12,
