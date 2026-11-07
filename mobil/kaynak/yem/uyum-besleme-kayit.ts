@@ -2,6 +2,8 @@ import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo'
 import { v4 as uuidv4 } from 'uuid';
 import { uyumKayitDogrula, type UyumBeslemeKayit, type UyumIncelemeKarari } from './uyum-besleme';
 import { uyumKararUygula } from './uyum-inceleme';
+import { uyumBolmeDogrula, type UyumBolmeGirdi } from './uyum-inceleme-bolme';
+import { uyumBolmeOturumunuUygula } from './uyum-bolme-uygula';
 
 const KEY = 'sy_uyum_besleme_v1';
 
@@ -43,6 +45,9 @@ export async function uyumKaydet(
     incelemeKararlari: g.incelemeKararlari,
     uzatmaBitis: g.uzatmaBitis,
     besiyeGecisOnay: g.besiyeGecisOnay,
+    incelemeOturumlari: g.incelemeOturumlari,
+    hayvanUyumTakibi: g.hayvanUyumTakibi,
+    tasimaIdempotansi: g.tasimaIdempotansi,
   };
   await yaz([kayit, ...l.filter((x) => x.id !== kayit.id)]);
   return kayit;
@@ -77,4 +82,19 @@ export async function uyumIncelemeKararKaydet(
   l[i] = yeni;
   await yaz(l);
   return yeni;
+}
+
+export async function uyumBolmeIncelemeKaydet(
+  id: string,
+  girdi: UyumBolmeGirdi,
+): Promise<{ kayit: UyumBeslemeKayit | null; kismiHata: string | null }> {
+  const hata = uyumBolmeDogrula(girdi);
+  if (hata) throw new Error(hata);
+  const l = await oku();
+  const i = l.findIndex((x) => x.id === id);
+  if (i < 0) return { kayit: null, kismiHata: null };
+  const sonuc = await uyumBolmeOturumunuUygula(l[i], girdi);
+  l[i] = sonuc.kayit!;
+  await yaz(l);
+  return { kayit: sonuc.kayit, kismiHata: sonuc.kismiHata };
 }

@@ -55,6 +55,7 @@ import { rasyonPadokDurumModul } from './moduller/rasyon-padok-durum';
 import { rasyonYemKaynagiModul } from './moduller/rasyon-yem-kaynagi';
 import { rasyonUyumBeslemeModul } from './moduller/rasyon-uyum-besleme';
 import { rasyonUyumIncelemeModul } from './moduller/rasyon-uyum-inceleme';
+import { rasyonUyumBolmeModul } from './moduller/rasyon-uyum-bolme';
 import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
@@ -114,6 +115,7 @@ const MODULLER = [
   rasyonYemKaynagiModul,
   rasyonUyumBeslemeModul,
   rasyonUyumIncelemeModul,
+  rasyonUyumBolmeModul,
   ekipModul,
   galeriModul,
   soyModul,

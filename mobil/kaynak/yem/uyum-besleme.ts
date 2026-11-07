@@ -3,6 +3,7 @@
  * Süre sonunda otomatik rasyon veya sağlık durumu değişmez.
  */
 import { gunEkle } from './hesap';
+import type { UyumIncelemeOturumu } from './uyum-inceleme-bolme';
 
 export const UYUM_GUN_SECENEKLERI = [2, 3] as const;
 export type UyumGunSayisi = (typeof UYUM_GUN_SECENEKLERI)[number];
@@ -20,6 +21,7 @@ export type UyumIncelemeKarari = {
   /** Şüphe — teşhis değil */
   supheNotu?: string;
   hedefPadok?: string;
+  oturumId?: string;
 };
 
 export type UyumGozlemGirdisi = {
@@ -45,6 +47,9 @@ export type UyumBeslemeKayit = {
   uzatmaBitis?: string;
   /** Kullanıcı besiye geçiş onayı — planı otomatik başlatmaz */
   besiyeGecisOnay?: boolean;
+  incelemeOturumlari?: import('./uyum-inceleme-bolme').UyumIncelemeOturumu[];
+  hayvanUyumTakibi?: Record<string, import('./uyum-inceleme-bolme').HayvanUyumTakipSatir>;
+  tasimaIdempotansi?: Record<string, { oturumId: string; hedefPadok: string }>;
 };
 
 export type UyumDonemDurumu =
@@ -55,6 +60,7 @@ export type UyumDonemDurumu =
   | 'gozlem_uzatildi'
   | 'besiye_gecis_onay'
   | 'suphe_kaydi'
+  | 'karisik_bolme'
   | 'onaylandi';
 
 export function uyumBitisTarihi(baslangic: string, gunSayisi: UyumGunSayisi): string {
@@ -70,6 +76,15 @@ export function uyumEtkinBitis(kayit: UyumBeslemeKayit): string {
 
 function uyumKararlar(kayit: UyumBeslemeKayit): UyumIncelemeKarari[] {
   return kayit.incelemeKararlari ?? [];
+}
+
+function sonIncelemeOturumuKayit(kayit: UyumBeslemeKayit): UyumIncelemeOturumu | null {
+  const temelBitis = uyumBitisTarihi(kayit.baslangic, kayit.gunSayisi);
+  const liste = kayit.incelemeOturumlari ?? [];
+  if (!liste.length) return null;
+  const uygun = liste.filter((o) => o.zaman.slice(0, 10) >= temelBitis);
+  if (!uygun.length) return null;
+  return uygun.sort((a, b) => b.zaman.localeCompare(a.zaman))[0]!;
 }
 
 export function sonIncelemeKarari(kayit: UyumBeslemeKayit): UyumIncelemeKarari | null {
@@ -94,21 +109,58 @@ export function incelemeGerekliMi(kayit: UyumBeslemeKayit, bugun: string): boole
   if (bugun < kayit.baslangic) return false;
   const bitis = uyumEtkinBitis(kayit);
   if (bugun <= bitis) return false;
-  if (kayit.besiyeGecisOnay) return false;
+
+  const oturum = sonIncelemeOturumuKayit(kayit);
+  if (oturum) {
+    const yeniBitis = kayit.uzatmaBitis ?? bitis;
+    return bugun > yeniBitis;
+  }
+
   const son = sonIncelemeKarari(kayit);
   if (!son) return true;
   if (son.karar === 'gozlem_uzat') {
     const yeniBitis = kayit.uzatmaBitis ?? bitis;
     return bugun > yeniBitis;
   }
+  if (son.karar === 'besiye_gecis' && kayit.besiyeGecisOnay) return false;
+  if (son.karar === 'karantina_suphe') return false;
   return false;
 }
 
 export function uyumDonemDurumu(kayit: UyumBeslemeKayit | null | undefined, bugun: string): UyumDonemDurumu {
   if (!kayit) return 'yok';
   if (bugun < kayit.baslangic) return 'planli';
+  const temelBitis = uyumBitisTarihi(kayit.baslangic, kayit.gunSayisi);
   const bitis = uyumEtkinBitis(kayit);
-  if (bugun <= bitis) return 'devam';
+  const oturumErken = sonIncelemeOturumuKayit(kayit);
+  if (bugun <= bitis) {
+    if (oturumErken && bugun > temelBitis) {
+      const tipler = new Set(oturumErken.kollar.filter((k) => k.hayvanIds.length).map((k) => k.karar));
+      const karisik =
+        tipler.size > 1 ||
+        (oturumErken.degismeyenHayvanIds.length > 0 && oturumErken.kollar.some((k) => k.hayvanIds.length > 0));
+      if (karisik) return 'karisik_bolme';
+      if (tipler.has('gozlem_uzat')) return 'gozlem_uzatildi';
+      if (tipler.has('besiye_gecis')) return 'besiye_gecis_onay';
+      if (tipler.has('karantina_suphe')) return 'suphe_kaydi';
+    }
+    return 'devam';
+  }
+
+  const oturum = oturumErken;
+  if (oturum) {
+    if (incelemeGerekliMi(kayit, bugun)) return 'inceleme_gerekli';
+    const tipler = new Set(oturum.kollar.filter((k) => k.hayvanIds.length).map((k) => k.karar));
+    const karisik =
+      tipler.size > 1 ||
+      (oturum.degismeyenHayvanIds.length > 0 && oturum.kollar.some((k) => k.hayvanIds.length > 0));
+    if (karisik) return 'karisik_bolme';
+    if (tipler.has('karantina_suphe')) return 'suphe_kaydi';
+    if (tipler.has('besiye_gecis')) return 'besiye_gecis_onay';
+    if (tipler.has('gozlem_uzat')) return 'gozlem_uzatildi';
+    return 'gozlem_uzatildi';
+  }
+
   if (kayit.besiyeGecisOnay) return 'besiye_gecis_onay';
   const son = sonIncelemeKarari(kayit);
   if (son?.karar === 'karantina_suphe') return 'suphe_kaydi';
@@ -134,6 +186,9 @@ export function uyumIncelemeMetni(durum: UyumDonemDurumu, bitis: string): string
   }
   if (durum === 'suphe_kaydi') {
     return 'Şüphe ve seçili hayvan taşıması kayıtlı (teşhis yok). Veteriner planı yoksa «eylem gerekli» — ilaç buradan eklenmez.';
+  }
+  if (durum === 'karisik_bolme') {
+    return 'Grup bölündü: seçilenler hedef padoklara taşındı veya gözlem uzatıldı; seçilmeyenler sessizce taşınmaz. Besi planı konumdan otomatik değişmez.';
   }
   if (durum === 'onaylandi') {
     return 'İnceleme kaydedildi. Sonraki besleme planına geçişi elle seçin; yoğun besiye otomatik geçilmez.';

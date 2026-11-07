@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { UyumBolmeIncelemeFormu } from '@/bilesenler/yem/UyumBolmeIncelemeFormu';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { yerelGun } from '@/kaynak/arinma/depo';
-import { getAnimals, getAllHealthRecordsForAsi } from '@/kaynak/cekirdek/veritabani';
-import { getAktifTakipler } from '@/kaynak/akilli-veteriner/takip';
+import { getAnimals } from '@/kaynak/cekirdek/veritabani';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
+import type { UyumBolmeGirdi } from '@/kaynak/yem/uyum-inceleme-bolme';
 import {
   UYUM_GUN_SECENEKLERI,
   uyumDonemDurumu,
@@ -14,14 +15,11 @@ import {
   uyumUyariMetni,
   type UyumBeslemeKayit,
   type UyumGunSayisi,
-  type UyumIncelemeKararTipi,
 } from '@/kaynak/yem/uyum-besleme';
-import { UYUM_FAZ_BASLIK, uyumUzatmaOneriBitis } from '@/kaynak/yem/uyum-inceleme';
-import { uyumVeterinerOzeti } from '@/kaynak/yem/uyum-veteriner-baglam';
-import { uyumHayvanKarantinaAktar, uyumKarantinaPadokSecenekleri } from '@/kaynak/yem/uyum-karantina-aktar';
+import { UYUM_FAZ_BASLIK } from '@/kaynak/yem/uyum-inceleme';
 import {
   padokUyumKaydi,
-  uyumIncelemeKararKaydet,
+  uyumBolmeIncelemeKaydet,
   uyumIncelemeKaydet,
   uyumKaydet,
   uyumKayitlariniOku,
@@ -47,14 +45,8 @@ export function UyumBeslemePaneli(p: {
   const [genel, setGenel] = useState('');
   const [hata, setHata] = useState<string | null>(null);
   const [mesgul, setMesgul] = useState(false);
-  const [kararTip, setKararTip] = useState<UyumIncelemeKararTipi | null>(null);
-  const [neden, setNeden] = useState('');
-  const [sonrakiInceleme, setSonrakiInceleme] = useState('');
-  const [supheNotu, setSupheNotu] = useState('');
-  const [hedefPadok, setHedefPadok] = useState('');
-  const [karantinaPadoklari, setKarantinaPadoklari] = useState<string[]>([]);
   const [padokHayvanlari, setPadokHayvanlari] = useState<{ id: string; etiket: string }[]>([]);
-  const [seciliHayvanlar, setSeciliHayvanlar] = useState<string[]>([]);
+  const [kismiUyari, setKismiUyari] = useState<string | null>(null);
 
   const yukle = useCallback(async () => {
     const l = await uyumKayitlariniOku();
@@ -73,7 +65,6 @@ export function UyumBeslemePaneli(p: {
       .filter((a) => a.paddock.trim() === p.padok.trim() && a.status !== 'sold' && a.status !== 'dead')
       .map((a) => ({ id: a.id, etiket: hayvanAnaEtiket(a) }));
     setPadokHayvanlari(ph);
-    setKarantinaPadoklari(await uyumKarantinaPadokSecenekleri());
   }, [p.padok]);
 
   useEffect(() => {
@@ -84,45 +75,6 @@ export function UyumBeslemePaneli(p: {
   const durum = uyumDonemDurumu(kayit, bugun);
   const bitis = kayit ? uyumEtkinBitis(kayit) : null;
   const inceleme = uyumIncelemeMetni(durum, bitis ?? bugun);
-
-  const vetOzet = useMemo(() => {
-    if (!seciliHayvanlar.length) return null;
-    return uyumVeterinerOzeti(seciliHayvanlar, [], []);
-  }, [seciliHayvanlar]);
-
-  useEffect(() => {
-    if (kararTip !== 'karantina_suphe' || !seciliHayvanlar.length) return;
-    void (async () => {
-      const saglik = await getAllHealthRecordsForAsi();
-      const takipler = await getAktifTakipler();
-      setVetOzetState(
-        uyumVeterinerOzeti(
-          seciliHayvanlar,
-          saglik.map((s) => ({
-            animalId: s.animalId,
-            recordType: s.recordType,
-            treatment: s.treatment,
-            medicine: s.medicine,
-            diagnosis: s.diagnosis,
-            vetName: s.vetName,
-          })),
-          takipler.map((t) => ({
-            animalId: t.animalId,
-            asama: t.asama,
-            tedaviUygulandi: t.tedaviUygulandi,
-            vetDanisildi: t.vetDanisildi,
-          })),
-        ),
-      );
-    })();
-  }, [kararTip, seciliHayvanlar]);
-
-  const [vetOzetState, setVetOzetState] = useState(vetOzet);
-
-  useEffect(() => {
-    if (!hedefPadok && karantinaPadoklari.length) setHedefPadok(karantinaPadoklari[0]!);
-    if (!sonrakiInceleme && kayit) setSonrakiInceleme(uyumUzatmaOneriBitis(bugun, 2));
-  }, [karantinaPadoklari, hedefPadok, sonrakiInceleme, kayit, bugun]);
 
   const gozlemKaydet = async () => {
     if (!kayit || !p.duzen) return;
@@ -144,28 +96,17 @@ export function UyumBeslemePaneli(p: {
     }
   };
 
-  const kararKaydet = async () => {
-    if (!kayit || !p.duzen || !kararTip) return;
+  const bolmeOnayla = async (girdi: UyumBolmeGirdi) => {
+    if (!kayit || !p.duzen) return;
     setHata(null);
+    setKismiUyari(null);
     setMesgul(true);
     try {
       await gozlemKaydet();
-      if (kararTip === 'karantina_suphe') {
-        for (const id of seciliHayvanlar) {
-          const r = await uyumHayvanKarantinaAktar(id, hedefPadok, supheNotu, neden);
-          if (!r.ok) throw new Error(r.message);
-        }
-      }
-      const k = await uyumIncelemeKararKaydet(kayit.id, {
-        karar: kararTip,
-        neden: neden.trim(),
-        sonrakiInceleme: kararTip === 'gozlem_uzat' ? sonrakiInceleme : undefined,
-        hayvanIds: kararTip === 'karantina_suphe' ? seciliHayvanlar : [],
-        supheNotu: kararTip === 'karantina_suphe' ? supheNotu : undefined,
-        hedefPadok: kararTip === 'karantina_suphe' ? hedefPadok : undefined,
-      });
-      setKayit(k);
-      setKararTip(null);
+      const { kayit: yeni, kismiHata } = await uyumBolmeIncelemeKaydet(kayit.id, girdi);
+      setKayit(yeni);
+      if (kismiHata) setKismiUyari(kismiHata);
+      await yukle();
       p.onKaydedildi?.();
     } catch (e) {
       setHata(e instanceof Error ? e.message : String(e));
@@ -198,12 +139,6 @@ export function UyumBeslemePaneli(p: {
   const incelemeAcik =
     durum === 'inceleme_gerekli' || durum === 'devam' || durum === 'gozlem_uzatildi' || durum === 'onaylandi';
 
-  const toggleHayvan = (id: string) => {
-    setSeciliHayvanlar((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
-  const gosterilenVet = vetOzetState ?? vetOzet;
-
   return (
     <View style={[s.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <Pressable onPress={() => setAcik((v) => !v)}>
@@ -224,6 +159,18 @@ export function UyumBeslemePaneli(p: {
             </Text>
           )}
           {inceleme ? <Text style={{ color: colors.warning, fontWeight: '700', fontSize: 12 }}>{inceleme}</Text> : null}
+
+          {kayit?.incelemeOturumlari?.length ? (
+            <View style={{ gap: 4 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '700' }}>Bölme oturumları</Text>
+              {kayit.incelemeOturumlari.map((o) => (
+                <Text key={o.id} style={{ color: colors.text, fontSize: 11 }}>
+                  {gunTR(o.zaman.slice(0, 10))} · {o.kollar.reduce((n, k) => n + k.hayvanIds.length, 0)} atama ·{' '}
+                  {o.degismeyenHayvanIds.length} değişmedi
+                </Text>
+              ))}
+            </View>
+          ) : null}
 
           {kayit?.incelemeKararlari?.length ? (
             <View style={{ gap: 4 }}>
@@ -286,117 +233,23 @@ export function UyumBeslemePaneli(p: {
                     />
                   ))}
 
-                  {(durum === 'inceleme_gerekli' || durum === 'gozlem_uzatildi') && (
-                    <View style={{ gap: 6, marginTop: 6 }}>
-                      <Text style={{ color: colors.text, fontWeight: '800', fontSize: 13 }}>İnceleme kararı (zorunlu)</Text>
-                      <View style={s.row}>
-                        {(
-                          [
-                            ['gozlem_uzat', 'Gözlemi uzat'],
-                            ['besiye_gecis', 'Besiye geçiş'],
-                            ['karantina_suphe', 'Şüphe → karantina'],
-                          ] as const
-                        ).map(([tip, label]) => (
-                          <Pressable
-                            key={tip}
-                            onPress={() => setKararTip(tip)}
-                            style={[
-                              s.chip,
-                              {
-                                borderColor: kararTip === tip ? colors.tint : colors.border,
-                                backgroundColor: kararTip === tip ? `${colors.tint}22` : colors.background,
-                              },
-                            ]}>
-                            <Text style={{ color: colors.text, fontSize: 11, fontWeight: '600' }}>{label}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-
-                      <TextInput
-                        value={neden}
-                        onChangeText={setNeden}
-                        placeholder="Gerekçe (zorunlu)"
-                        placeholderTextColor={colors.textSecondary}
-                        style={[s.inp, { color: colors.text, borderColor: colors.border }]}
-                      />
-
-                      {kararTip === 'gozlem_uzat' ? (
-                        <TextInput
-                          value={sonrakiInceleme}
-                          onChangeText={setSonrakiInceleme}
-                          placeholder="Yeni inceleme tarihi YYYY-MM-DD"
-                          placeholderTextColor={colors.textSecondary}
-                          style={[s.inp, { color: colors.text, borderColor: colors.border }]}
-                        />
-                      ) : null}
-
-                      {kararTip === 'karantina_suphe' ? (
-                        <>
-                          <TextInput
-                            value={supheNotu}
-                            onChangeText={setSupheNotu}
-                            placeholder="Şüphe notu — teşhis yazmayın"
-                            placeholderTextColor={colors.textSecondary}
-                            style={[s.inp, { color: colors.text, borderColor: colors.border }]}
-                          />
-                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Hedef karantina padoku</Text>
-                          <View style={s.row}>
-                            {karantinaPadoklari.map((pad) => (
-                              <Pressable
-                                key={pad}
-                                onPress={() => setHedefPadok(pad)}
-                                style={[
-                                  s.chip,
-                                  {
-                                    borderColor: hedefPadok === pad ? colors.tint : colors.border,
-                                    backgroundColor: hedefPadok === pad ? `${colors.tint}22` : colors.background,
-                                  },
-                                ]}>
-                                <Text style={{ color: colors.text, fontSize: 11 }}>{pad}</Text>
-                              </Pressable>
-                            ))}
-                          </View>
-                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Taşınacak hayvanlar (grup değil)</Text>
-                          {padokHayvanlari.length === 0 ? (
-                            <Text style={{ color: colors.warning, fontSize: 12 }}>Padokta seçilebilir hayvan yok</Text>
-                          ) : (
-                            padokHayvanlari.map((h) => (
-                              <Pressable key={h.id} onPress={() => toggleHayvan(h.id)} style={s.hayvanSatir}>
-                                <Text style={{ color: seciliHayvanlar.includes(h.id) ? colors.tint : colors.textSecondary }}>
-                                  {seciliHayvanlar.includes(h.id) ? '✓ ' : '○ '}
-                                  {h.etiket}
-                                </Text>
-                              </Pressable>
-                            ))
-                          )}
-                          {gosterilenVet ? (
-                            <Text
-                              style={{
-                                color: gosterilenVet.eylemGerekli ? colors.danger : colors.textSecondary,
-                                fontSize: 12,
-                                lineHeight: 16,
-                              }}>
-                              {gosterilenVet.eylemGerekli ? '⚠ Eylem gerekli: ' : ''}
-                              {gosterilenVet.ozet}
-                            </Text>
-                          ) : null}
-                        </>
-                      ) : null}
-
-                      {kararTip ? (
-                        <Pressable onPress={() => void kararKaydet()} style={[s.btn, { borderWidth: 1, borderColor: colors.tint }]}>
-                          <Text style={{ color: colors.tint, fontWeight: '800' }}>
-                            Kararı kaydet (otomatik rasyon/sağlık yok)
-                          </Text>
-                        </Pressable>
-                      ) : null}
-                    </View>
-                  )}
+                  {(durum === 'inceleme_gerekli' || durum === 'gozlem_uzatildi') && kayit ? (
+                    <UyumBolmeIncelemeFormu
+                      padokHayvanlari={padokHayvanlari}
+                      kaynakPadok={p.padok}
+                      bugun={bugun}
+                      duzen={p.duzen}
+                      mesgul={mesgul}
+                      onIptal={() => setHata(null)}
+                      onOnayla={(g) => void bolmeOnayla(g)}
+                    />
+                  ) : null}
                 </View>
               ) : null}
             </>
           ) : null}
           {hata ? <Text style={{ color: colors.danger }}>{hata}</Text> : null}
+          {kismiUyari ? <Text style={{ color: colors.warning }}>{kismiUyari}</Text> : null}
         </View>
       ) : null}
     </View>
@@ -409,5 +262,4 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   btn: { borderRadius: 10, padding: 12, alignItems: 'center', marginTop: 4 },
-  hayvanSatir: { paddingVertical: 4 },
 });

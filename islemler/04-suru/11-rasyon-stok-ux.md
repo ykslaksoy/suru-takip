@@ -44,6 +44,13 @@ Modül: `rasyon-stok-plan`
 - Uzatma aktif uyum planını korur; karar geçmişi `incelemeKararlari`.
 - Test: `rasyon-uyum-inceleme`.
 
+## Grup bölme incelemesi (t287u)
+
+- Aynı gelen grupta incelemede alt kümeler: normal padok, gözlem uzatma, karantina şüphesi — bireysel/alt küme; toplu sessiz taşıma yok.
+- Hedef padok kapasite kontrolü; çift seçim yok; kısmi taşıma hatası yüzeye çıkar, idempotent yeniden deneme.
+- `hayvanUyumTakibi` ve `incelemeOturumlari` denetimi; konumdan besi/klinik planı çıkarılmaz.
+- Test: `rasyon-uyum-bolme`.
+
 ## Padok bağlamı (t279u)
 
 - Seçili padok kartı: kayıtlı aktif plan + son gerçek düşüm; «Aktif rasyon yok» / «Henüz yemleme kaydı yok».
