@@ -1,4 +1,6 @@
 import type { Animal, WeightRecord } from '@/kaynak/cekirdek/tipler';
+import { adgHesapla } from '@/kaynak/kilo/adg';
+import { tartimKayitlariSonOnce } from '@/kaynak/kilo/tartim-siralama';
 import { calculateFCR } from '@/kaynak/kilo/fcr';
 import { getAnimalRationPlan, dailyFeedForAnimal } from '@/kaynak/rasyon/hayvan-plani';
 import { hayvanBasinaYemTuketimi } from '@/kaynak/stok/yem-tuketim';
@@ -39,33 +41,26 @@ export interface FcrHesap {
   stokToplamKg: number | null;
 }
 
-/** Tartım kayıtlarından dönem artışı ve gün sayısı. */
+export type FcrSonuc =
+  | { durum: 'hazir'; hesap: FcrHesap }
+  | { durum: 'yok'; neden: string; kod?: string };
+
+/** Tartım kayıtlarından dönem artışı ve gün sayısı (GCA ile tutarlı). */
 export function tartimDonemi(records: WeightRecord[], maxDays = 30): TartimDonemi | null {
-  if (records.length < 2) return null;
-  const sorted = [...records].sort(
-    (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
-  );
+  const adg = adgHesapla(records, maxDays);
+  if (adg.durum !== 'hazir') return null;
+  const sorted = tartimKayitlariSonOnce(records);
   const latest = sorted[0];
   const cutoff = new Date(latest.recordedAt);
   cutoff.setDate(cutoff.getDate() - maxDays);
   const older = sorted.find((r) => new Date(r.recordedAt) <= cutoff) ?? sorted[sorted.length - 1];
-  if (older.id === latest.id) return null;
-
-  const periodDays = Math.ceil(
-    (new Date(latest.recordedAt).getTime() - new Date(older.recordedAt).getTime()) / 86400000
-  );
-  if (periodDays <= 0) return null;
-
-  const gainKg = latest.weightKg - older.weightKg;
-  if (gainKg <= 0) return null;
-
   return {
-    gainKg: Math.round(gainKg * 100) / 100,
-    periodDays,
+    gainKg: adg.gainKg,
+    periodDays: Math.ceil(adg.periodDays),
     startWeightKg: older.weightKg,
     endWeightKg: latest.weightKg,
-    startAt: older.recordedAt,
-    endAt: latest.recordedAt,
+    startAt: adg.startAt,
+    endAt: adg.endAt,
   };
 }
 
@@ -75,13 +70,20 @@ export function tartimDonemi(records: WeightRecord[], maxDays = 30): TartimDonem
  * - Günlük verilen rasyon → plan × gün (yedek)
  * - Stok çıkışı / sayım farkı → gerçek tüketim (öncelikli)
  */
-export async function hesaplaFcr(
+export async function hesaplaFcrSonuc(
   animal: Animal,
   records: WeightRecord[],
-  maxDays = 30
-): Promise<FcrHesap | null> {
+  maxDays = 30,
+): Promise<FcrSonuc> {
+  const adg = adgHesapla(records, maxDays);
   const donem = tartimDonemi(records, maxDays);
-  if (!donem) return null;
+  if (!donem || adg.durum !== 'hazir') {
+    return {
+      durum: 'yok',
+      neden: adg.durum === 'yok' ? adg.neden : 'Dönem hesaplanamadı',
+      kod: adg.durum === 'yok' ? adg.kod : undefined,
+    };
+  }
 
   const plan = await getAnimalRationPlan(animal.id);
   let dailyGivenKg = plan?.dailyGivenKg ?? plan?.dailyFeedKg ?? 0;
@@ -110,18 +112,32 @@ export async function hesaplaFcr(
   }
 
   const fcr = calculateFCR(totalFeedKg, donem.gainKg);
-  if (fcr == null) return null;
+  if (fcr == null) {
+    return { durum: 'yok', neden: 'Yem veya kilo artışı yetersiz (FCR hesaplanamaz)', kod: 'yetersiz_girdi' };
+  }
 
   return {
-    fcr,
-    gainKg: donem.gainKg,
-    periodDays: donem.periodDays,
-    dailyGivenKg,
-    totalFeedKg,
-    startWeightKg: donem.startWeightKg,
-    endWeightKg: donem.endWeightKg,
-    kaynak,
-    rasyonToplamKg,
-    stokToplamKg,
+    durum: 'hazir',
+    hesap: {
+      fcr,
+      gainKg: donem.gainKg,
+      periodDays: donem.periodDays,
+      dailyGivenKg,
+      totalFeedKg,
+      startWeightKg: donem.startWeightKg,
+      endWeightKg: donem.endWeightKg,
+      kaynak,
+      rasyonToplamKg,
+      stokToplamKg,
+    },
   };
+}
+
+export async function hesaplaFcr(
+  animal: Animal,
+  records: WeightRecord[],
+  maxDays = 30,
+): Promise<FcrHesap | null> {
+  const sonuc = await hesaplaFcrSonuc(animal, records, maxDays);
+  return sonuc.durum === 'hazir' ? sonuc.hesap : null;
 }

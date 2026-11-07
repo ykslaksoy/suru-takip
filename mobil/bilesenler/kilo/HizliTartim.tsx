@@ -8,10 +8,10 @@ import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addWeightRecord, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { kaydetTartimKaydi } from '@/kaynak/kilo/tartim-kayit';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { hayvanBul } from '@/kaynak/ses/uygula';
-import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import {
   analizOzeti,
@@ -68,8 +68,16 @@ export function HizliTartim() {
     const at = new Date().toISOString();
     const onceki = await getWeightRecords(animal.id);
     const analiz = tartimAnaliz(onceki, { kg, at }, ayar);
-    await addWeightRecord({ animalId: animal.id, weightKg: kg, recordedAt: at, notes: 'Hızlı tartım' });
-    await upsertRationPlanFromWeight(animal, kg).catch(() => {});
+    const kayit = await kaydetTartimKaydi({
+      animalId: animal.id,
+      weightKg: kg,
+      recordedAt: at,
+      notes: 'Hızlı tartım',
+    });
+    if (!kayit.ok) {
+      setHata(kayit.neden);
+      return;
+    }
     void islemKaydet({ tur: 'tartim', ozet: `${hayvanAnaEtiket(animal)} · ${kg} kg`, detay: 'Hızlı tartım', animalId: animal.id });
     setSonuclar((s) => [{ id: `${Date.now()}`, animalId: animal.id, etiket: hayvanAnaEtiket(animal), analiz }, ...s].slice(0, 30));
     setKupe('');

@@ -33,6 +33,12 @@ import { girisYontemiModul } from './moduller/giris-yontemi';
 import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
+import { tartimAnalitikModul } from './moduller/tartim-analitik';
+import { rotaNavigasyonModul } from './moduller/rota-navigasyon';
+import { sesKomutModul } from './moduller/ses-komut';
+import { sesMikrofonSeviyeModul } from './moduller/ses-mikrofon-seviye';
+import { sesTranskriptModul } from './moduller/ses-transkript';
+import { sesGelismisKomutModul } from './moduller/ses-gelismis-komut';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
@@ -87,6 +93,12 @@ const MODULLER = [
   topluModul,
   planTakvimModul,
   hizliTartimModul,
+  tartimAnalitikModul,
+  rotaNavigasyonModul,
+  sesKomutModul,
+  sesMikrofonSeviyeModul,
+  sesTranskriptModul,
+  sesGelismisKomutModul,
   stokEslesmeModul,
   maliyetModul,
   zamanCizelgesiModul,

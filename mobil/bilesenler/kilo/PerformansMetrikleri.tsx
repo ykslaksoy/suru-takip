@@ -4,7 +4,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { getAnimal } from '@/kaynak/cekirdek/veritabani';
-import { hesaplaFcr, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
+import { hesaplaFcrSonuc, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { sonYemSayimMiktari } from '@/kaynak/stok/yem-tuketim';
 import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
@@ -29,6 +29,7 @@ export function PerformansMetrikleri({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [fcrHesap, setFcrHesap] = useState<FcrHesap | null>(null);
+  const [fcrNeden, setFcrNeden] = useState<string | null>(null);
   const [dailyGivenKg, setDailyGivenKg] = useState<number | null>(null);
   const [phaseLabel, setPhaseLabel] = useState<string>('');
   const [sonSayim, setSonSayim] = useState<number | null>(null);
@@ -45,7 +46,14 @@ export function PerformansMetrikleri({
     setDailyGivenKg(plan?.dailyGivenKg ?? null);
     setPhaseLabel(plan ? PHASE_LABELS[plan.phase] : '');
     setSonSayim(await sonYemSayimMiktari());
-    setFcrHesap(await hesaplaFcr(a, records));
+    const fcr = await hesaplaFcrSonuc(a, records);
+    if (fcr.durum === 'hazir') {
+      setFcrHesap(fcr.hesap);
+      setFcrNeden(null);
+    } else {
+      setFcrHesap(null);
+      setFcrNeden(fcr.neden);
+    }
   }, [animalId, records]);
 
   useEffect(() => {
@@ -104,7 +112,7 @@ export function PerformansMetrikleri({
         </>
       ) : (
         <Text style={[styles.value, { color: colors.textSecondary }]}>
-          — (en az 2 tartım, pozitif artış ve rasyon gerekir)
+          — {fcrNeden ?? 'Hesaplanamadı (yeterli tartım/yem verisi yok)'}
         </Text>
       )}
     </View>

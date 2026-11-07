@@ -306,10 +306,15 @@ export default function AnimalDetailScreen() {
         <InfoRow label={terim('FCR')} value={fcrValue != null ? fcrDeger(fcrValue) : '—'} colors={colors} />
       </View>
 
-      {weightRecords.length >= 2 ? (
+      {weightRecords.length >= 1 ? (
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.tint }]}>Kilo Grafiği</Text>
+          <Text style={[styles.sectionTitle, { color: colors.tint }]}>Kilo grafiği (ölçülen)</Text>
           <KiloGrafigi records={weightRecords} />
+          {weightRecords.length < 2 ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 6 }}>
+              Günlük artış için en az iki farklı tartım gerekir.
+            </Text>
+          ) : null}
         </View>
       ) : null}
 

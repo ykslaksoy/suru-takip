@@ -4,7 +4,7 @@
  * İşlem kaydı: her ekleme / değişiklik / silme — kim, ne zaman, eski → yeni.
  */
 import { useEkip, yetkiUyar } from '@/bilesenler/ekip/useEkip';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -51,7 +51,13 @@ export default function GecmisScreen() {
   const colors = Colors[scheme];
   const { refresh } = useDatabase();
   const params = useLocalSearchParams<{ sekme?: string }>();
-  const [sekme, setSekme] = useState<Sekme>(params.sekme === 'cop' || params.sekme === 'kayit' ? params.sekme : 'gecmis');
+  const sekmeFromParam = (s?: string): Sekme =>
+    s === 'cop' || s === 'kayit' ? s : 'gecmis';
+  const [sekme, setSekme] = useState<Sekme>(sekmeFromParam(params.sekme));
+
+  useEffect(() => {
+    setSekme(sekmeFromParam(params.sekme));
+  }, [params.sekme]);
   const [islemler, setIslemler] = useState<Islem[]>([]);
   const [denetim, setDenetim] = useState<DenetimKaydi[]>([]);
   const [cop, setCop] = useState<CopKaydi[]>([]);

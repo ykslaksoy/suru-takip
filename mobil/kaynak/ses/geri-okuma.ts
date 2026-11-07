@@ -1,3 +1,4 @@
+import { partiAdiCoz } from '@/kaynak/toplu/secim';
 import type { SesKomutEylemi } from './tipler';
 import { onayIpucuMetni } from './onay';
 import { kupeOku, sayiOku } from './sayi-oku';
@@ -39,6 +40,32 @@ export function geriOkumaMetni(eylem: SesKomutEylemi): string {
         `${formatKilo(eylem.miktar)} ${eylem.birim}. ` +
         onayIpucuMetni()
       );
+    case 'bilgi':
+      return eylem.soru === 'son_kilo'
+        ? `Bilgi: ${eylem.kupeArama ?? '?'} son tartım sorgusu. Gönder ile oku.`
+        : 'Bilgi: bugün planlı aşı görevleri. Gönder ile oku.';
+    case 'padok_tasi':
+      return `Padok taşıma: küpe ${eylem.kupeArama} → ${eylem.padokHedef}. ${onayIpucuMetni()}`;
+    case 'gozlem_hatirlat':
+      return (
+        `Sağlık gözlemi: küpe ${eylem.kupeArama}, «${eylem.gozlem}». ` +
+        `Uygulama hatırlatması ${eylem.hatirlatmaTarihi}. Teşhis/doz yok. ${onayIpucuMetni()}`
+      );
+    case 'padok_yem':
+      return (
+        `Gerçek padok yemi (plan değil): ${partiAdiCoz(eylem.padokHam)} ${eylem.tarih}, ` +
+        `${formatKilo(eylem.miktarKg)} kg. Tek stok çıkışı. ${onayIpucuMetni()}`
+      );
+    case 'dogum':
+      return (
+        `Doğum: anne ${eylem.anneArama}, ${eylem.birthDate}, ${eylem.kuzular.length} kuzu ` +
+        `(${eylem.kuzular.map((k) => k.earTag).join(', ')}). ${onayIpucuMetni()}`
+      );
+    case 'tartim_duzelt':
+      return (
+        `Tartım düzeltme: küpe ${eylem.kupeArama}, eski ${eylem.eskiKg ?? '?'} kg → yeni ${formatKilo(eylem.yeniKg)} kg. ` +
+        onayIpucuMetni()
+      );
     default:
       return onayIpucuMetni();
   }
@@ -65,6 +92,10 @@ export function uygulandiMetni(eylem: SesKomutEylemi): string {
 
 export function iptalMetni(): string {
   return 'Tamam, iptal ettim. Yeni komut söyleyebilirsin.';
+}
+
+export function kullaniciIptalMetni(): string {
+  return 'Oturum iptal edildi (İptal düğmesi veya «vazgeç»). Kayıt yok. Yeni komut verebilirsiniz.';
 }
 
 function asiAdiSesli(ad: string): string {
