@@ -155,7 +155,9 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
     setMesgul(true);
     try {
       for (const on of liste) await oneriyiUygula(on);
-      setMesaj(`Önerilen rasyon ${liste.length > 1 ? `${liste.length} padoka` : liste[0].parti + ' için'} uygulandı.${liste.some((l) => l.eksikVar) ? ' Stokta olmayan yem 0 kg ile eklendi; alım gir.' : ''}`);
+      setMesaj(
+        `Stokla öneri ${liste.length > 1 ? `${liste.length} padoka` : liste[0].parti + ' için'} kaydedildi.${liste.some((l) => l.eksikVar) ? ' Eksik kaba/kesif için önce alım girin.' : ''}`,
+      );
       setAcikOneri(null);
       await gunlukYemDusumu().catch(() => null);
       refresh();
@@ -252,7 +254,7 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
                       </View>
                       {on.kalemler.map((k, i) => (
                         <Text key={i} style={{ color: k.eksik ? colors.danger : colors.text, lineHeight: 22 }}>
-                          • {k.ad}: {kg(k.kgBasGun)}/baş/gün{k.eksik ? ' — stokta yok, 0 kg ile eklenecek' : ''}
+                          • {k.ad}: {kg(k.kgBasGun)}/baş/gün{k.eksik ? ' — alış listesi (stokta yok)' : ''}
                         </Text>
                       ))}
                       <Text style={{ color: colors.text, fontWeight: '700', marginTop: 4 }}>

@@ -1,5 +1,5 @@
 /**
- * Rasyon kurma modları: Hazır rasyon · Kendi rasyonum · Elimdeki malzemeler (en düşük maliyet).
+ * Rasyon: Stokla plan (varsayılan) · Referans şablon · Kendi rasyonum.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -24,6 +24,7 @@ import { adliRasyonUygula, partiOrtalamalari } from '@/kaynak/yem/depo';
 import { sayiOku } from '@/kaynak/yem/hesap';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { VARSAYILAN_KG } from '@/kaynak/yem/oneri';
+import { hazirSablonStokPlani, yemStokEsle } from '@/kaynak/rasyon/stok-plan';
 
 type Mod = 'hazir' | 'kendi' | 'elimdeki';
 type Karisim = { ad: string; yuzde: number }[];
@@ -45,7 +46,9 @@ export function RasyonModlari(p: {
 }) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const [mod, setMod] = useState<Mod>('hazir');
+  const [mod, setMod] = useState<Mod>('elimdeki');
+  const [adim, setAdim] = useState(1);
+  const [sablonAcik, setSablonAcik] = useState(false);
   const [parti, setParti] = useState<string | undefined>(p.varsayilanParti ?? p.partiler[0]);
   const [ort, setOrt] = useState<Record<string, number | null>>({});
   const [faz, setFaz] = useState<RationPhase>('lamb_fattening');
@@ -79,22 +82,23 @@ export function RasyonModlari(p: {
   const karisim: Karisim = duzenler[hazir.id] ?? hazir.karisim;
   const gunluk = sayiOku(gunlukStr) ?? g.yemKg;
 
-  /** stoktaki eşleşen yem (fiyat ve stockId için) */
-  const stokEsle = (ad: string) => {
-    const st = standartYem(ad)?.ad;
-    return p.yemler.find((y) => y.name.trim().toLocaleLowerCase('tr') === ad.toLocaleLowerCase('tr')) ?? (st ? p.yemler.find((y) => standartYem(y.name)?.ad === st) : undefined);
-  };
+  const stokEsle = (ad: string) => yemStokEsle(ad, p.yemler);
 
   const hazirKalemler = useMemo(() => karisimKg(karisim, gunluk), [karisim, gunluk]);
-  const hazirKontrol = besinKontrol(hazirKalemler.map((k) => ({ m: malzemeOlustur(k.ad, 0), kg: k.kgBasGun })), g);
-  const hazirTl = hazirKalemler.reduce((s, k) => {
-    const y = stokEsle(k.ad);
-    return s + k.kgBasGun * ((y && p.fiyatlar[y.id]) || standartYem(k.ad)?.tahminiFiyat || 0);
+  const hazirStok = useMemo(
+    () => hazirSablonStokPlani(karisim, gunluk, g, p.yemler, bas, 1),
+    [karisim, gunluk, g, p.yemler, bas],
+  );
+  const hazirTl = hazirStok.stokta.reduce((s, k) => {
+    const y = p.yemler.find((x) => x.id === k.stockId);
+    return s + k.kgBasGunPlan * ((y && p.fiyatlar[y.id]) || standartYem(k.ad)?.tahminiFiyat || 0);
   }, 0);
-  const fiyatsiz = hazirKalemler.filter((k) => {
-    const y = stokEsle(k.ad);
+  const fiyatsiz = hazirStok.stokta.filter((k) => {
+    const y = p.yemler.find((x) => x.id === k.stockId);
     return !(y && p.fiyatlar[y.id]);
   }).length;
+
+  const stoktakiYemler = useMemo(() => p.yemler.filter((y) => y.quantity > 0), [p.yemler]);
 
   const karisimYaz = (k: Karisim | null) => {
     const yeni = { ...duzenler };
@@ -104,14 +108,27 @@ export function RasyonModlari(p: {
     void kaliciSetItem(KEY_HAZIR, JSON.stringify(yeni));
   };
 
-  const uygula = async (ad: string, kalemler: { ad: string; stockId?: string; kgBasGun: number }[]) => {
+  const uygula = async (
+    ad: string,
+    kalemler: { ad: string; stockId?: string; kgBasGun: number }[],
+    tamStok = true,
+  ) => {
     if (!parti) return setHata('Padok seç');
     setHata(null);
     setMesgul(true);
     try {
-      await adliRasyonUygula(parti, ad, kalemler.map((k) => ({ ...k, stockId: k.stockId ?? stokEsle(k.ad)?.id })));
+      const kayit = await adliRasyonUygula(
+        parti,
+        ad,
+        kalemler.map((k) => ({ ...k, stockId: k.stockId ?? stokEsle(k.ad)?.id })),
+        { eksikStoktaOlusturma: false, stokMiktarKontrol: tamStok, bas, gun: 1 },
+      );
       setSonuc(null);
-      p.onUygulandi(`${ad} ${parti} için uygulandı. Stokta olmayan yemler 0 kg ile eklendi.`);
+      p.onUygulandi(
+        tamStok
+          ? `${ad} · ${parti} kaydedildi (plan). Stok düşümü yalnız gerçek besleme günlerinde yapılır.`
+          : `${ad} · ${parti}: yalnız stoktaki ${kayit.kalemler.length} kalem kaydedildi — eksikler tamamlanmadan tam şablon uygulanamaz.`,
+      );
     } catch (e) {
       setHata(e instanceof Error ? e.message : String(e));
     } finally {
@@ -148,22 +165,36 @@ export function RasyonModlari(p: {
     <View style={[s.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <Text style={[s.baslik, { color: colors.text }]}>🧪 Rasyon kur</Text>
       <View style={s.chipSatir}>
-        <Chip t="Hazır rasyon" sec={mod === 'hazir'} onPress={() => setMod('hazir')} />
+        <Chip t="Stokla plan" sec={mod === 'elimdeki'} onPress={() => { setMod('elimdeki'); setAdim(1); }} />
+        <Chip t="Referans şablon" sec={mod === 'hazir'} onPress={() => setMod('hazir')} />
         <Chip t="Kendi rasyonum" sec={mod === 'kendi'} onPress={() => setMod('kendi')} />
-        <Chip t="Elimdeki malzemeler" sec={mod === 'elimdeki'} onPress={() => setMod('elimdeki')} />
       </View>
 
       {mod !== 'kendi' ? (
         <>
-          <Text style={[s.etiket, { color: colors.textSecondary, marginTop: 10 }]}>Padok</Text>
+          <Text style={[s.etiket, { color: colors.textSecondary, marginTop: 10 }]}>
+            {mod === 'elimdeki' ? `Adım ${adim}/3 · ` : ''}Padok
+          </Text>
           <View style={s.chipSatir}>
             {p.partiler.map((x) => (
-              <Chip key={x} t={`${x} · ${p.basSayisi[x]}`} sec={parti === x} onPress={() => { setParti(x); setSonuc(null); setHazirId(null); }} />
+              <Chip
+                key={x}
+                t={`${x} · ${p.basSayisi[x]}`}
+                sec={parti === x}
+                onPress={() => {
+                  setParti(x);
+                  setSonuc(null);
+                  setHazirId(null);
+                  if (mod === 'elimdeki') setAdim((a) => Math.max(a, 1));
+                }}
+              />
             ))}
           </View>
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
-            Ort. {kgF(ortKg)}{tartimli ? ' (son tartım)' : ' (tartım yok, varsayılan)'} · KM {kgF(g.kmKg)}/baş · ME ≥ {g.meMJkg} · HP ≥ %{g.hpYuzde}
-          </Text>
+          {(mod === 'hazir' || (mod === 'elimdeki' && adim >= 2)) ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
+              Ort. {kgF(ortKg)}{tartimli ? ' (son tartım)' : ' (varsayılan)'} · yem {kgF(gunluk)}/baş/gün (yedirildiği hâli) · KM {kgF(g.kmKg)}/baş
+            </Text>
+          ) : null}
         </>
       ) : null}
 
@@ -174,77 +205,157 @@ export function RasyonModlari(p: {
         </View>
       ) : mod === 'hazir' ? (
         <View style={{ marginTop: 8 }}>
+          <Text style={{ color: colors.warning, fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
+            Bilgi amaçlı şablon — besleme planı için «Stokla plan» kullanın.
+          </Text>
           <View style={s.chipSatir}>
             {HAZIR_RASYONLAR.map((h) => (
               <Chip key={h.id} t={`${h.ad}${duzenler[h.id] ? ' ✎' : ''}`} sec={hazir.id === h.id} onPress={() => setHazirId(h.id)} />
             ))}
           </View>
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginVertical: 6 }}>{hazir.aciklama} · karışım %, yedirildiği hâliyle</Text>
-          {karisim.map((k, i) => (
-            <View key={k.ad + i} style={[s.satir, { borderColor: colors.border }]}>
-              <Text style={{ color: colors.text, flex: 1 }}>{k.ad}{stokEsle(k.ad) ? '' : ' · stokta yok'}</Text>
-              <TextInput
-                value={String(k.yuzde).replace('.', ',')}
-                onChangeText={(t) => karisimYaz(karisim.map((x, j) => (j === i ? { ...x, yuzde: sayiOku(t) ?? 0 } : x)))}
-                keyboardType="decimal-pad"
-                style={[inp, { width: 70, textAlign: 'right', paddingVertical: 4 }]}
-              />
-              <Text style={{ color: colors.textSecondary, width: 70, textAlign: 'right' }}>{kgF(hazirKalemler.find((h) => h.ad === k.ad)?.kgBasGun ?? 0)}</Text>
-            </View>
-          ))}
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 8 }}>
-            <Text style={{ color: colors.text, flex: 1 }}>Günlük yem (kg/baş)</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginVertical: 6 }}>{hazir.aciklama}</Text>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <Text style={{ color: colors.text, flex: 1 }}>Günlük yem (kg/baş, yedirildiği hâli)</Text>
             <TextInput value={gunlukStr} onChangeText={setGunlukStr} placeholder={String(g.yemKg).replace('.', ',')} placeholderTextColor={colors.textSecondary} keyboardType="decimal-pad" style={[inp, { width: 90, textAlign: 'right' }]} />
           </View>
-          <Kontrol k={hazirKontrol} />
-          {p.finans ? (
+
+          <Text style={[s.etiket, { color: colors.text }]}>Besleme planı (stokta olanlar)</Text>
+          {hazirStok.stokta.length ? (
+            hazirStok.stokta.map((k) => (
+              <View key={k.stockId} style={[s.satir, { borderColor: colors.border }]}>
+                <Text style={{ color: colors.text, flex: 1, fontWeight: '600' }}>{k.ad}</Text>
+                <Text style={{ color: colors.textSecondary, width: 88, textAlign: 'right' }}>{kgF(k.kgBasGunPlan)}/baş</Text>
+                <Text style={{ color: colors.textSecondary, width: 72, textAlign: 'right', fontSize: 11 }}>{kgF(k.stokKg)} stok</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={{ color: colors.danger, fontSize: 13 }}>Stokta şablondan eşleşen yem yok.</Text>
+          )}
+
+          {hazirStok.eksik.length ? (
+            <View style={[s.form, { borderColor: colors.warning, marginTop: 10 }]}>
+              <Text style={{ color: colors.warning, fontWeight: '800' }}>Alış / eksik listesi</Text>
+              {hazirStok.eksik.map((k) => (
+                <Text key={k.ad} style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+                  {k.ad} · {kgF(k.kgBasGun)}/baş/gün · padok {kgF(k.gunlukPadokKg)}/gün
+                </Text>
+              ))}
+            </View>
+          ) : null}
+
+          {hazirStok.stokKontrol ? (
+            <>
+              <Text style={[s.etiket, { color: colors.text, marginTop: 10 }]}>Besin kontrolü (yalnız stoktaki miktarlar)</Text>
+              <Kontrol k={hazirStok.stokKontrol} />
+            </>
+          ) : null}
+
+          <Pressable onPress={() => setSablonAcik((v) => !v)} style={{ marginTop: 10 }}>
+            <Text style={{ color: colors.tint, fontWeight: '700' }}>{sablonAcik ? '▼' : '▶'} Referans karışım (% ve düzenleme)</Text>
+          </Pressable>
+          {sablonAcik ? (
+            <>
+              {karisim.map((k, i) => (
+                <View key={k.ad + i} style={[s.satir, { borderColor: colors.border }]}>
+                  <Text style={{ color: colors.textSecondary, flex: 1 }}>{k.ad}</Text>
+                  <TextInput
+                    value={String(k.yuzde).replace('.', ',')}
+                    onChangeText={(t) => karisimYaz(karisim.map((x, j) => (j === i ? { ...x, yuzde: sayiOku(t) ?? 0 } : x)))}
+                    keyboardType="decimal-pad"
+                    style={[inp, { width: 70, textAlign: 'right', paddingVertical: 4 }]}
+                  />
+                  <Text style={{ color: colors.textSecondary, width: 70, textAlign: 'right' }}>{kgF(hazirKalemler.find((h) => h.ad === k.ad)?.kgBasGun ?? 0)}</Text>
+                </View>
+              ))}
+              <Text style={[s.etiket, { color: colors.textSecondary, marginTop: 6 }]}>Şablon hedefi (tam karışım — referans)</Text>
+              <Kontrol k={hazirStok.referansKontrol} />
+            </>
+          ) : null}
+
+          {hazirStok.uyarilar.map((u) => (
+            <Text key={u} style={{ color: colors.danger, fontSize: 12, marginTop: 6 }}>{u}</Text>
+          ))}
+          {p.finans && hazirStok.stokta.length ? (
             <Text style={{ color: colors.text, fontWeight: '800', marginTop: 6 }}>
-              {tlF(hazirTl)}/baş/gün · padok {tlF(hazirTl * bas)}/gün{fiyatsiz ? ` (${fiyatsiz} yem tahmini fiyatla)` : ''}
+              {tlF(hazirTl)}/baş/gün (stok kalemleri){fiyatsiz ? ` · ${fiyatsiz} tahmini fiyat` : ''}
             </Text>
           ) : null}
           <Uzman />
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-            <View style={{ flex: 1 }}>
-              <Btn t="Varsayılana dön" onPress={() => { karisimYaz(null); setGunlukStr(''); }} />
-            </View>
-            {p.duzen ? (
-              <View style={{ flex: 1 }}>
-                <Btn t="Uygula" birincil onPress={() => void uygula(hazir.ad, hazirKalemler)} />
-              </View>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <Btn t="Varsayılana dön" onPress={() => { karisimYaz(null); setGunlukStr(''); }} />
+            {p.duzen && hazirStok.uygulanabilir ? (
+              <Btn
+                t="Stokla kaydet"
+                birincil
+                onPress={() =>
+                  void uygula(
+                    `${hazir.ad} (stok)`,
+                    hazirStok.stokta.map((k) => ({ ad: k.ad, stockId: k.stockId, kgBasGun: k.kgBasGunPlan })),
+                    true,
+                  )
+                }
+              />
+            ) : null}
+            {p.duzen && hazirStok.kismiKayit && !hazirStok.uygulanabilir ? (
+              <Btn
+                t="Kısmi plan (stoktakiler)"
+                onPress={() =>
+                  void uygula(
+                    `${hazir.ad} (kısmi)`,
+                    hazirStok.stokta.map((k) => ({ ad: k.ad, stockId: k.stockId, kgBasGun: k.kgBasGunPlan })),
+                    false,
+                  )
+                }
+              />
             ) : null}
           </View>
         </View>
       ) : (
         <View style={{ marginTop: 8 }}>
-          <Text style={[s.etiket, { color: colors.textSecondary }]}>Dönem</Text>
-          <View style={s.chipSatir}>
-            {(Object.keys(PHASE_LABELS) as RationPhase[]).map((f) => (
-              <Chip key={f} t={PHASE_LABELS[f]} sec={faz === f} onPress={() => { setFaz(f); setSonuc(null); }} />
-            ))}
-          </View>
-          <Text style={[s.etiket, { color: colors.textSecondary, marginTop: 8 }]}>Elimdeki yemler</Text>
-          <View style={s.chipSatir}>
-            {STANDART_YEMLER.map((y) => {
-              const var_ = secili.some((m) => m.ad === y.ad);
-              return (
-                <Chip
-                  key={y.ad}
-                  t={y.ad}
-                  sec={var_}
-                  onPress={() => {
-                    setSonuc(null);
-                    if (var_) setSecili(secili.filter((m) => m.ad !== y.ad));
-                    else {
-                      const st = stokEsle(y.ad);
-                      setSecili([...secili, malzemeOlustur(y.ad, st ? p.fiyatlar[st.id] ?? 0 : 0, st?.id)]);
-                    }
-                  }}
-                />
-              );
-            })}
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-            <TextInput value={ozelAd} onChangeText={setOzelAd} placeholder="Başka yem (ör. Fiğ otu)" placeholderTextColor={colors.textSecondary} style={[inp, { flex: 1 }]} />
+          {adim === 1 ? (
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Padok seçin, sonra besi dönemi.</Text>
+              <Btn t="İleri → dönem" birincil onPress={() => parti && setAdim(2)} />
+            </View>
+          ) : null}
+          {adim >= 2 ? (
+            <>
+              <Text style={[s.etiket, { color: colors.textSecondary }]}>Besleme dönemi</Text>
+              <View style={s.chipSatir}>
+                {(Object.keys(PHASE_LABELS) as RationPhase[]).map((f) => (
+                  <Chip key={f} t={PHASE_LABELS[f]} sec={faz === f} onPress={() => { setFaz(f); setSonuc(null); }} />
+                ))}
+              </View>
+              {adim === 2 ? <Btn t="İleri → yemler" birincil onPress={() => setAdim(3)} /> : null}
+            </>
+          ) : null}
+          {adim >= 3 ? (
+            <>
+              <Text style={[s.etiket, { color: colors.textSecondary, marginTop: 8 }]}>Stoktaki yemler (miktar &gt; 0)</Text>
+              <View style={s.chipSatir}>
+                {stoktakiYemler.length ? (
+                  stoktakiYemler.map((y) => {
+                    const ad = standartYem(y.name)?.ad ?? y.name;
+                    const var_ = secili.some((m) => m.ad === ad || m.stockId === y.id);
+                    return (
+                      <Chip
+                        key={y.id}
+                        t={`${y.name} · ${kgF(y.quantity)}`}
+                        sec={var_}
+                        onPress={() => {
+                          setSonuc(null);
+                          if (var_) setSecili(secili.filter((m) => m.stockId !== y.id && m.ad !== ad));
+                          else setSecili([...secili, malzemeOlustur(ad, p.fiyatlar[y.id] ?? 0, y.id)]);
+                        }}
+                      />
+                    );
+                  })
+                ) : (
+                  <Text style={{ color: colors.danger, fontSize: 13 }}>Yem stoğu boş — önce alım girin.</Text>
+                )}
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+            <TextInput value={ozelAd} onChangeText={setOzelAd} placeholder="Stoktaki başka yem adı" placeholderTextColor={colors.textSecondary} style={[inp, { flex: 1 }]} />
             <Btn
               t="+ Ekle"
               onPress={() => {
@@ -308,12 +419,19 @@ export function RasyonModlari(p: {
               ))}
               {secili.some((m) => !m.fiyatKg) ? <Text style={{ color: colors.warning, marginTop: 4 }}>Fiyatı girilmeyen yem bedava sayıldı.</Text> : null}
               <Uzman />
-              {p.duzen && sonuc.kalemler.length ? (
+              {p.duzen && sonuc.kalemler.length && sonuc.uygun ? (
                 <View style={{ marginTop: 10 }}>
-                  <Btn t="Uygula" birincil onPress={() => void uygula('En ucuz rasyon', sonuc.kalemler)} />
+                  <Btn t="Stokla kaydet" birincil onPress={() => void uygula('Stokla plan', sonuc.kalemler, true)} />
                 </View>
               ) : null}
+              {sonuc && !sonuc.uygun ? (
+                <Text style={{ color: colors.danger, marginTop: 8, fontSize: 12 }}>
+                  Hedefler karşılanamıyor — kayıt yok; eksik yem ekleyin veya uyarıları düzeltin.
+                </Text>
+              ) : null}
             </View>
+          ) : null}
+            </>
           ) : null}
         </View>
       )}

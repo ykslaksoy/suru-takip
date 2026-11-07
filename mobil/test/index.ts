@@ -50,6 +50,7 @@ import { geriDonusumModul } from './moduller/geri-donusum';
 import { excelModul } from './moduller/excel';
 import { yemModul } from './moduller/yem';
 import { rasyonFormulModul } from './moduller/rasyon-formul';
+import { rasyonStokPlanModul } from './moduller/rasyon-stok-plan';
 import { ekipModul } from './moduller/ekip';
 import { galeriModul } from './moduller/galeri';
 import { soyModul } from './moduller/soy';
@@ -104,6 +105,7 @@ const MODULLER = [
   excelModul,
   yemModul,
   rasyonFormulModul,
+  rasyonStokPlanModul,
   ekipModul,
   galeriModul,
   soyModul,
