@@ -125,7 +125,7 @@ function MaliyetScreenIcerik() {
           <Pressable
             onPress={() => router.push('/maliyet/besi-planlama' as never)}
             style={[styles.linkBtn, { borderColor: colors.tint, backgroundColor: colors.card }]}>
-            <Text style={{ color: colors.tint, fontWeight: '800' }}>Besi Planlama</Text>
+            <Text style={{ color: colors.tint, fontWeight: '800' }}>Besi Yönetimi</Text>
           </Pressable>
         </View>
         {soru ? fiyatSor(soru) : null}

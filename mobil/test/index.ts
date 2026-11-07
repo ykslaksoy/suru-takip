@@ -37,6 +37,7 @@ import { tartimAnalitikModul } from './moduller/tartim-analitik';
 import { analitikPadokFcrModul } from './moduller/analitik-padok-fcr';
 import { performansEsikModul } from './moduller/performans-esik';
 import { besiPlanSatDevamModul } from './moduller/besi-plan-sat-devam';
+import { besiEkonomiModul } from './moduller/besi-ekonomi';
 import { performansMetrikEtiketModul } from './moduller/performans-metrik-etiket';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
@@ -96,6 +97,7 @@ const MODULLER = [
   analitikPadokFcrModul,
   performansEsikModul,
   besiPlanSatDevamModul,
+  besiEkonomiModul,
   performansMetrikEtiketModul,
   stokEslesmeModul,
   maliyetModul,

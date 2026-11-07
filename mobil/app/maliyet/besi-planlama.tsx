@@ -11,6 +11,13 @@ import {
 } from '@/kaynak/maliyet/besi-plan-tipler';
 import { hesaplaBesiPlanProjeksiyon } from '@/kaynak/maliyet/besi-plan-hesap';
 import { karsilastirAdaySatisGunleri } from '@/kaynak/maliyet/dongu-ekonomi-hesap';
+import { varsayilanKalemlerBos } from '@/kaynak/maliyet/besi-ekonomi-kalem';
+import { hesaplaBesiEkonomiSenaryo } from '@/kaynak/maliyet/besi-ekonomi-senaryo';
+import { partiMaliyettenOzet } from '@/kaynak/maliyet/besi-ekonomi-gercek';
+import { maliyetTopla } from '@/kaynak/maliyet/topla';
+import { BesiEkonomiKalemFormu } from '@/bilesenler/maliyet/BesiEkonomiKalemFormu';
+import type { BesiEkonomiKalem } from '@/kaynak/maliyet/besi-ekonomi-kalem';
+import type { PartiGercekMaliyetOzet } from '@/kaynak/maliyet/besi-ekonomi-gercek';
 import {
   getBesiPlanDepo,
   iptalBesiPlanSenaryo,
@@ -57,6 +64,8 @@ export default function BesiPlanlamaScreen() {
   const [satisFiyat, setSatisFiyat] = useState('');
   const [adayGunler, setAdayGunler] = useState('60,90');
   const [bosDonguGun, setBosDonguGun] = useState('');
+  const [ekonomiKalemler, setEkonomiKalemler] = useState<BesiEkonomiKalem[]>(varsayilanKalemlerBos());
+  const [gercekParti, setGercekParti] = useState<PartiGercekMaliyetOzet | null>(null);
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -72,6 +81,39 @@ export default function BesiPlanlamaScreen() {
     basSayisi: sayi(basSayisi) != null ? Math.floor(sayi(basSayisi)!) : null,
     donemler,
   });
+
+  const ekonomiSenaryo =
+    projeksiyon.durum === 'hazir' && sayi(satisFiyat) != null
+      ? hesaplaBesiEkonomiSenaryo({
+          basSayisi: Math.floor(sayi(basSayisi) ?? 1),
+          toplamGun: projeksiyon.toplamGun,
+          girisCanliKg: sayi(girisKg),
+          satisGelirBas:
+            sayi(satisFiyat) != null && projeksiyon.cikisKg != null
+              ? projeksiyon.cikisKg * sayi(satisFiyat)!
+              : null,
+          kalemler: ekonomiKalemler,
+          planDegiskenToplam: projeksiyon.toplamMaliyet,
+          gercekParti,
+          donguArasiBosGun: sayi(bosDonguGun),
+        })
+      : null;
+
+  const gercekPartiYukle = async () => {
+    const padokAd = padok?.trim();
+    const { satirlar } = await maliyetTopla();
+    const parti = padokAd ? satirlar.find((s) => s.parti === padokAd) : satirlar[0];
+    if (parti) {
+      setGercekParti(partiMaliyettenOzet(parti));
+      setEkonomiKalemler((ks) =>
+        ks.map((k) =>
+          k.ciftSayimAnahtar && parti.yem > 0 && k.kod === 'yem'
+            ? { ...k, kaynak: 'gercek_parti_maliyet', degerDurumu: 'bilinmiyor' as const }
+            : k,
+        ),
+      );
+    }
+  };
 
   const adayKarsilastirma =
     projeksiyon.durum === 'hazir' && sayi(girisKg) != null && sayi(alis) != null && sayi(satisFiyat) != null
@@ -120,6 +162,7 @@ export default function BesiPlanlamaScreen() {
       hedefCanliKg: projeksiyon.durum === 'hazir' ? projeksiyon.cikisKg : null,
       hedefGun: projeksiyon.durum === 'hazir' ? projeksiyon.toplamGun : null,
       donemler,
+      ekonomiKalemler,
     });
     setSenaryoId(s.id);
     await yukle();
@@ -195,7 +238,7 @@ export default function BesiPlanlamaScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Besi Planlama' }} />
+      <Stack.Screen options={{ title: 'Besi Yönetimi — planlama' }} />
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
           Besi öncesi taslak bütçe. Dönemler (varış, uyum, büyüme, bitirme) ayrı; toplam FCR birleşik yem/artış.
@@ -235,7 +278,38 @@ export default function BesiPlanlamaScreen() {
         </View>
 
         <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 8, marginBottom: 6 }}>
-          Döngü ekonomisi (t303u)
+          Besi Yönetimi — maliyet kalemleri (t306u)
+        </Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
+          Alış, nakliye, yem, çoban, kira, su/elektrik, yatak, veteriner, sermaye (ops.), diğer. Gerçek parti stok değerlerini okuyabilir; muhasebeye yazmaz.
+        </Text>
+        <Pressable onPress={() => void gercekPartiYukle()} style={{ marginBottom: 8 }}>
+          <Text style={{ color: colors.tint, fontWeight: '700' }}>
+            Parti gerçek maliyetini oku (stok çıkışı) {gercekParti ? `· ${gercekParti.parti}` : ''}
+          </Text>
+        </Pressable>
+        <BesiEkonomiKalemFormu kalemler={ekonomiKalemler} onChange={setEkonomiKalemler} colors={colors} />
+
+        {ekonomiSenaryo && ekonomiSenaryo.durum !== 'eksik' ? (
+          <View style={[styles.kutu, { borderColor: colors.border, backgroundColor: colors.card, marginTop: 8 }]}>
+            <Text style={{ color: colors.text, fontWeight: '800' }}>
+              Tam döngü ({ekonomiSenaryo.tamamlik}): net {ekonomiSenaryo.dongu.netKar.toLocaleString('tr-TR')} ₺
+            </Text>
+            {ekonomiSenaryo.kalemlerDokum
+              .filter((x) => !x.atlandi && x.tutar != null)
+              .slice(0, 8)
+              .map((x) => (
+                <Text key={x.etiket} style={{ color: colors.textSecondary, fontSize: 12 }}>
+                  {x.etiket}: {x.tutar?.toLocaleString('tr-TR')} ₺ ({x.kaynak})
+                </Text>
+              ))}
+          </View>
+        ) : ekonomiSenaryo?.durum === 'eksik' ? (
+          <Text style={{ color: colors.warning, marginTop: 8 }}>{ekonomiSenaryo.eksikler.join(' · ')}</Text>
+        ) : null}
+
+        <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 12, marginBottom: 6 }}>
+          Döngü ekonomisi — aday günler (t303u)
         </Text>
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8, lineHeight: 17 }}>
           Aylık kira/maaş ay adımı + sözleşme minimumu; günlük orantı yok. Tam döngü net ≠ marjinal şimdi-sat (hayvan ekranı).
@@ -312,6 +386,7 @@ export default function BesiPlanlamaScreen() {
                   setGirisKg(s.girisKg != null ? String(s.girisKg) : '');
                   setAlis(s.alisBasFiyat != null ? String(s.alisBasFiyat) : '');
                   setDonemler(s.donemler);
+                  if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);
                 }}
                 style={{ paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
                 <Text style={{ color: colors.text }}>

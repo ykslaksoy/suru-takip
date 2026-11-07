@@ -16,14 +16,29 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 ## t303u — Döngü ekonomisi
 
 - `dongu-ekonomi-hesap.ts`: aylık adım + sözleşme min, paylaşımlı baş×gün, aday satış günleri
-- Besi Planlama içinde bölüm; «Besi Yönetimi» yeniden adlandırma yapılmadı
 - Tam döngü net vs marjinal şimdi-sat ayrımı (kira/maaş sözleşmesi marjinalde yok)
+
+## t306u — Besi Yönetimi maliyet kalemleri (taslak)
+
+- `besi-ekonomi-kalem.ts` — alış (baş/kg/parti), nakliye, yem, çoban, kira, su, yatak, vet, ops. sermaye, diğer; ödeme şekli + bilinmiyor/sıfır/tutar
+- `besi-ekonomi-gercek.ts` — `maliyetTopla` / `PartiMaliyet` salt okunur özet; `CiftSayimAnahtar` ile stok çift sayım uyarısı
+- `besi-ekonomi-senaryo.ts` — kalem + plan + döngü birleşik; eksik fiyat → kısmi/tam etiketi, sahte kesin kâr yok
+- UI: aynı `/maliyet/besi-planlama` (başlık Besi Yönetimi); `ekonomiKalemler` taslak depoda
+- Üretim alış/gider kaydı yazılmaz
+
+### Test (804)
+
+- `besi-ekonomi`: alış bazları, kira min ay, çift sayım atla, bilinmiyor/sıfır
+- `besi-plan-sat-devam`: marjinal/sat, aday günler, aylık adım (mevcut)
+
+### Blokaj / eksik
+
+- Fatura/defter satırı API yok — yalnız stok çıkışı parti maliyeti
+- Dinamik «+ diğer kalem» satırı UI’da yok (tek şablon `diger`)
+- Paylaşımlı overhead sadece tip/hesap; form alanı sonraki
+- `sat-devam` henüz tam `hesaplaBesiEkonomiSenaryo` marjinal break-even ile birleşmedi
 
 ## Bilinçli sınırlar
 
 - Gerçekleşen vs plan otomatik stok karşılaştırması sonraki adım
 - Konservatif/temel senaryo çoğaltma — kullanıcı çoğaltarak taslak
-
-## Test
-
-`besi-plan-sat-devam` modülü

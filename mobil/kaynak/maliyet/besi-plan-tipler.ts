@@ -1,5 +1,7 @@
 /** Besi planlama — taslak; onay stok/rasyon/hayvan kaydı değiştirmez. */
 
+import type { BesiEkonomiKalem } from '@/kaynak/maliyet/besi-ekonomi-kalem';
+
 export type BesiDonemTuru = 'varis_gozlem' | 'uyum' | 'buyume' | 'bitirme';
 
 export const BESI_DONEM_ETIKET: Record<BesiDonemTuru, string> = {
@@ -36,6 +38,8 @@ export type BesiPlanSenaryo = {
   hedefCanliKg: number | null;
   hedefGun: number | null;
   donemler: BesiPlanDonemGirdi[];
+  /** Besi Yönetimi maliyet kalemleri (taslak) */
+  ekonomiKalemler?: BesiEkonomiKalem[];
   olusturma: string;
   guncelleme: string;
   onayTarihi?: string;
