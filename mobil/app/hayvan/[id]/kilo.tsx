@@ -9,10 +9,10 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { addWeightRecord, calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { calculateADG, getAnimal, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
+import { kaydetTartimKaydi } from '@/kaynak/kilo/tartim-kayit';
 import { hayvanAnaEtiket, hayvanAltEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
-import { upsertRationPlanFromWeight } from '@/kaynak/rasyon/hayvan-plani';
 import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import {
   analizOzeti,
@@ -65,14 +65,16 @@ export default function WeightScreen() {
       Alert.alert('Hata', 'Geçerli bir kilo girin');
       return;
     }
-    await addWeightRecord({
+    const sonuc = await kaydetTartimKaydi({
       animalId: id,
       weightKg: w,
-      recordedAt: new Date().toISOString(),
       notes: notes.trim(),
     });
+    if (!sonuc.ok) {
+      Alert.alert('Hata', sonuc.neden);
+      return;
+    }
     const animal = await getAnimal(id);
-    if (animal) await upsertRationPlanFromWeight(animal, w);
     await islemKaydet({ tur: 'tartim', ozet: `${animal ? hayvanAnaEtiket(animal) : id} · ${w} kg`, animalId: id });
     setModal(false);
     setWeight('');

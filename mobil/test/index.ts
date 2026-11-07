@@ -33,6 +33,7 @@ import { girisYontemiModul } from './moduller/giris-yontemi';
 import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
+import { tartimAnalitikModul } from './moduller/tartim-analitik';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
@@ -87,6 +88,7 @@ const MODULLER = [
   topluModul,
   planTakvimModul,
   hizliTartimModul,
+  tartimAnalitikModul,
   stokEslesmeModul,
   maliyetModul,
   zamanCizelgesiModul,

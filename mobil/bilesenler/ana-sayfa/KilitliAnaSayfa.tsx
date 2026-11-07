@@ -286,10 +286,15 @@ export function KilitliAnaSayfa() {
                   {p.yasEtiket}
                 </Text>
                 {p.ortKg != null ? (
-                  <Text style={StyleSheet.flatten([styles.partiYas, { color: colors.textSecondary }])} numberOfLines={1}>
-                    ort. {p.ortKg.toLocaleString('tr-TR')} kg
+                  <Text style={StyleSheet.flatten([styles.partiYas, { color: colors.textSecondary }])} numberOfLines={2}>
+                    Ölçülen ort. {p.ortKg.toLocaleString('tr-TR')} kg
+                    {p.tartilanSayisi != null && p.bas > 0 ? ` (${p.tartilanSayisi}/${p.bas})` : ''}
                   </Text>
-                ) : null}
+                ) : (
+                  <Text style={StyleSheet.flatten([styles.partiYas, { color: colors.textSecondary }])} numberOfLines={1}>
+                    Tartım yok — ortalama gösterilmez
+                  </Text>
+                )}
                 <View style={StyleSheet.flatten([styles.serit, { backgroundColor: renk }])} />
               </Pressable>
             );
