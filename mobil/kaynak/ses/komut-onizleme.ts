@@ -1,6 +1,6 @@
 import type { EksikKayit } from './komut';
 import { eksikKayitAyikla, eksikSorusu, komutAyikla } from './komut';
-import { grupEtiketi } from '@/kaynak/toplu/secim';
+import { grupEtiketi, partiAdiCoz } from '@/kaynak/toplu/secim';
 import type { SesKomutEylemi } from './tipler';
 
 export type KomutOnizlemeAlan = {
@@ -44,6 +44,44 @@ export function komutOnizlemeSatirlari(eylem: SesKomutEylemi): KomutOnizlemeAlan
         islem: `Stok ${eylem.yon === 'giris' ? 'girişi' : 'çıkışı'}`,
         deger: `${eylem.stokAdi}, ${eylem.miktar} ${eylem.birim}`,
         tam: true,
+      };
+    case 'bilgi':
+      return {
+        hayvan: eylem.kupeArama ?? '—',
+        islem: 'Bilgi (kayıt yok)',
+        deger: eylem.soru === 'son_kilo' ? 'Son tartım' : 'Bugün aşı görevleri',
+        tam: true,
+      };
+    case 'padok_tasi':
+      return { hayvan: `Küpe ${eylem.kupeArama}`, islem: 'Padok taşı', deger: eylem.padokHedef, tam: true };
+    case 'gozlem_hatirlat':
+      return {
+        hayvan: `Küpe ${eylem.kupeArama}`,
+        islem: 'Gözlem + hatırlatma',
+        deger: `${eylem.gozlem} · ${eylem.hatirlatmaTarihi}`,
+        tam: true,
+      };
+    case 'padok_yem':
+      return {
+        hayvan: partiAdiCoz(eylem.padokHam),
+        islem: 'Gerçek padok yemi',
+        deger: `${eylem.miktarKg} kg · ${eylem.tarih}`,
+        tam: true,
+      };
+    case 'dogum':
+      return {
+        hayvan: `Anne ${eylem.anneArama}`,
+        islem: 'Doğum',
+        deger: `${eylem.kuzular.length} kuzu · ${eylem.birthDate}`,
+        tam: true,
+      };
+    case 'tartim_duzelt':
+      return {
+        hayvan: `Küpe ${eylem.kupeArama}`,
+        islem: 'Tartım düzelt',
+        deger: `${eylem.eskiKg ?? '?'} → ${eylem.yeniKg} kg`,
+        tam: eylem.kayitId != null && eylem.eskiKg != null,
+        not: eylem.kayitId ? undefined : 'Onay öncesi son kayıt seçilir',
       };
     default:
       return { hayvan: '—', islem: '—', deger: '—', tam: false };

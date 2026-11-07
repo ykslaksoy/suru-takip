@@ -33,6 +33,7 @@ const ASAMA_ETIKET: Record<string, string> = {
   uygulandi: 'kaydedildi',
   iptal: 'iptal',
   anlasilmadi: 'anlaşılmadı',
+  bilgi_yaniti: 'bilgi yanıtı (kayıt yok)',
 };
 
 const IOS_IPUCU =
@@ -40,10 +41,11 @@ const IOS_IPUCU =
 
 const ORNEKLER = [
   'küpe 1234, 68 kilo',
+  'küpe 1234 son tartım kaç kilo',
+  'küpe 1234 padok B ye taşı',
+  'ikinci padoka bugün 50 kilo yem verildi',
   'küpe TR-34-001235 aşı çiçek',
   '3. parti karma aşısı yapıldı',
-  'tüm kuzular ivermektin',
-  'stok giriş yem 50 kg',
   'tamam',
 ];
 

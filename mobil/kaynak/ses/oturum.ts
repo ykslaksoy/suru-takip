@@ -3,6 +3,7 @@ import {
   eksikSorusu,
   eksikTamamla,
   kiloYakala,
+  gelismisEksikMesaji,
   komutAyikla,
   kupeYakala,
   sayiYakala,
@@ -20,6 +21,9 @@ import {
   uygulandiMetni,
 } from './geri-okuma';
 import { duzeltmeIstegiMi, kesinOnayMi, tamIptalMi } from './onay';
+import { bilgiSorgula } from './bilgi-sorgu';
+import { hayvanBulKesin } from './hayvan-kesin';
+import { sonTartimKaydi } from '@/kaynak/kilo/tartim-duzelt';
 import { grupHayvanSayisi, grupTabancaMl, komutuUygula } from './uygula';
 import type { SesKomutEylemi, SesKomutSonucu } from './tipler';
 
@@ -93,9 +97,20 @@ export class SesKomutOturumu {
   }
 
   /** Yeni (bağımsız) komut: tam ise geri oku, eksikse soru sor */
-  private yeniKomut(metin: string): SesKomutSonucu {
+  private async yeniKomut(metin: string): Promise<SesKomutSonucu> {
     const eylem = komutAyikla(metin);
+    if (eylem?.tur === 'bilgi') {
+      const yanit = await bilgiSorgula(eylem);
+      this.durum = { tip: 'bos' };
+      if (!yanit.ok) return { asama: 'anlasilmadi', okumaMetni: yanit.hata, bekleyenEylem: null };
+      return { asama: 'bilgi_yaniti', okumaMetni: yanit.metin, bekleyenEylem: null };
+    }
     if (eylem) return this.onayaGec(eylem, metin);
+    const gel = gelismisEksikMesaji(metin);
+    if (gel) {
+      this.durum = { tip: 'bos' };
+      return { asama: 'anlasilmadi', okumaMetni: gel, bekleyenEylem: null };
+    }
     const eksik = eksikKayitAyikla(metin);
     if (eksik) return this.eksigeGec(eksik);
     this.durum = { tip: 'bos' };
@@ -128,6 +143,33 @@ export class SesKomutOturumu {
   async metinAl(metin: string): Promise<SesKomutSonucu> {
     const r = await this.metinAlIc(metin);
     const e = r.bekleyenEylem;
+    if (
+      e?.tur === 'tartim_duzelt' &&
+      (e.kayitId == null || e.eskiKg == null) &&
+      (this.durum.tip === 'onay' || this.durum.tip === 'duzeltme')
+    ) {
+      const h = await hayvanBulKesin(e.kupeArama);
+      if (!h.ok) {
+        this.durum = { tip: 'bos' };
+        return { asama: 'anlasilmadi', okumaMetni: h.hata, bekleyenEylem: null };
+      }
+      const son = await sonTartimKaydi(h.animal.id);
+      if (!son) {
+        this.durum = { tip: 'bos' };
+        return { asama: 'anlasilmadi', okumaMetni: 'Bu hayvan için düzeltilecek tartım kaydı yok.', bekleyenEylem: null };
+      }
+      const zengin = { ...e, kayitId: son.id, eskiKg: son.weightKg };
+      this.durum = { ...this.durum, eylem: zengin };
+      if (r.asama === 'onay_bekliyor') {
+        return {
+          ...r,
+          bekleyenEylem: zengin,
+          okumaMetni: geriOkumaMetni(zengin),
+          konusmaMetni: onayCumlesi(zengin),
+        };
+      }
+      return { ...r, bekleyenEylem: zengin };
+    }
     if (e?.tur === 'grup_asi' && e.hayvanSayisi == null && (this.durum.tip === 'onay' || this.durum.tip === 'duzeltme')) {
       const sayi = await grupHayvanSayisi(e);
       if (sayi === 0) {
@@ -233,7 +275,7 @@ export class SesKomutOturumu {
       return this.anlasilmadi();
     }
 
-    return this.yeniKomut(trimmed);
+    return await this.yeniKomut(trimmed);
   }
 
   /** Kullanıcı komut kutusunu değiştirdi — bekleyen onay/düzeltme geçersiz */

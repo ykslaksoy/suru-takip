@@ -1,5 +1,6 @@
 import type { SesKomutEylemi } from './tipler';
 import { grupKomutAyikla } from './grup';
+import { gelismisEksikAyikla, parseGelismisKomut } from './gelismis-parse';
 
 function normalize(metin: string): string {
   return metin.trim().replace(/\s+/g, ' ');
@@ -129,7 +130,14 @@ export function komutAyikla(metin: string): SesKomutEylemi | null {
   const n = normalize(metin);
   if (!n) return null;
 
-  return grupKomutAyikla(n) ?? parseTartim(n) ?? parseAsi(n) ?? parseStok(n);
+  return (
+    parseGelismisKomut(n) ?? grupKomutAyikla(n) ?? parseTartim(n) ?? parseAsi(n) ?? parseStok(n)
+  );
+}
+
+/** Gelişmiş komutlarda eksik alan mesajı */
+export function gelismisEksikMesaji(metin: string): string | null {
+  return gelismisEksikAyikla(metin);
 }
 
 /** Bir alanı eksik kayıt — kullanıcıya soru sorulur */
@@ -151,6 +159,7 @@ export function eksikSorusu(e: EksikKayit): string {
 export function eksikKayitAyikla(metin: string): EksikKayit | null {
   const n = normalize(metin);
   if (!n) return null;
+  if (gelismisEksikAyikla(n)) return null;
   if (ASI_RE.test(n)) {
     const kupe = kupeBul(n)?.kupe;
     const asiAdi = asiAdiBul(n) ?? undefined;

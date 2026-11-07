@@ -1,5 +1,62 @@
-/** Sesli komut türleri — onay sonrası uygulanır */
-export type SesKomutTuru = 'tartim' | 'asi' | 'stok' | 'grup_asi';
+/** Sesli komut türleri — onay sonrası uygulanır (bilgi = salt okunur) */
+export type SesKomutTuru =
+  | 'tartim'
+  | 'asi'
+  | 'stok'
+  | 'grup_asi'
+  | 'bilgi'
+  | 'padok_tasi'
+  | 'gozlem_hatirlat'
+  | 'padok_yem'
+  | 'dogum'
+  | 'tartim_duzelt';
+
+export type BilgiSoru = 'son_kilo' | 'bugun_asi_ozet';
+
+export interface BilgiKomutu {
+  tur: 'bilgi';
+  soru: BilgiSoru;
+  kupeArama?: string;
+}
+
+export interface PadokTasiKomutu {
+  tur: 'padok_tasi';
+  kupeArama: string;
+  padokHedef: string;
+}
+
+export interface GozlemHatirlatKomutu {
+  tur: 'gozlem_hatirlat';
+  kupeArama: string;
+  gozlem: string;
+  hatirlatmaTarihi: string;
+}
+
+export interface PadokYemKomutu {
+  tur: 'padok_yem';
+  padokHam: string;
+  miktarKg: number;
+  yemAdi?: string;
+  tarih: string;
+}
+
+export type DogumKuzuSes = { earTag: string; sex: 'male' | 'female' };
+
+export interface DogumKomutu {
+  tur: 'dogum';
+  anneArama: string;
+  birthDate: string;
+  kuzular: DogumKuzuSes[];
+  paddock?: string;
+}
+
+export interface TartimDuzeltKomutu {
+  tur: 'tartim_duzelt';
+  kupeArama: string;
+  yeniKg: number;
+  kayitId?: string;
+  eskiKg?: number;
+}
 
 export type SesOturumAsamasi =
   | 'bos'
@@ -10,7 +67,9 @@ export type SesOturumAsamasi =
   /** Kayıt için bir alan eksik (örn. küpe var, kilo yok) — soru soruldu */
   | 'eksik_bilgi'
   /** Kullanıcı "dur / yanlış" dedi — kaydedilmedi, düzeltme bekleniyor */
-  | 'duzeltme';
+  | 'duzeltme'
+  /** Salt okunur yanıt — kayıt yok */
+  | 'bilgi_yaniti';
 
 export interface TartimKomutu {
   tur: 'tartim';
@@ -45,7 +104,17 @@ export interface GrupAsiKomutu {
   tabancaMl?: number;
 }
 
-export type SesKomutEylemi = TartimKomutu | AsiKomutu | StokKomutu | GrupAsiKomutu;
+export type SesKomutEylemi =
+  | TartimKomutu
+  | AsiKomutu
+  | StokKomutu
+  | GrupAsiKomutu
+  | BilgiKomutu
+  | PadokTasiKomutu
+  | GozlemHatirlatKomutu
+  | PadokYemKomutu
+  | DogumKomutu
+  | TartimDuzeltKomutu;
 
 export interface SesKomutSonucu {
   asama: SesOturumAsamasi;
