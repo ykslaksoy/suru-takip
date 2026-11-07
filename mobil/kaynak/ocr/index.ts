@@ -9,3 +9,4 @@ export {
   type OcrSirtSonuc,
 } from './sirt-no';
 export { ocrMetinOku, ocrMotorDestekleniyor, type OcrMotorSonuc } from './motor';
+export { ocrBaskulEkranFotodan, ocrBaskulEkranNormalize, type OcrBaskulSonuc } from './baskul-ekran';

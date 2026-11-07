@@ -16,14 +16,16 @@ export function hayvanKesinEslestir(terim: string, liste: Animal[]): HayvanEsles
   const upper = term.toUpperCase();
   const digits = term.replace(/\D/g, '');
 
-  const tam = liste.filter(
-    (a) =>
-      a.sirtNo?.trim() === term ||
-      (digits && a.sirtNo?.trim() === digits) ||
+  const tam = liste.filter((a) => {
+    const sirt = a.sirtNo?.trim() ?? '';
+    const sirtTam = sirt === term || (digits.length > 0 && sirt === digits);
+    return (
+      sirtTam ||
       a.earTag.toUpperCase() === upper ||
       (a.gehisId ?? '').toUpperCase() === upper ||
-      a.turkvetNo.toUpperCase() === upper,
-  );
+      a.turkvetNo.toUpperCase() === upper
+    );
+  });
   if (tam.length === 1) return { durum: 'bulundu', hayvan: tam[0] };
   if (tam.length > 1) return { durum: 'belirsiz', adaylar: tam };
 
@@ -62,4 +64,49 @@ export function tartimKaydaHazirMi(
   const k = kiloDogrula(kiloHam);
   if (!k.ok) return { hazir: false, hata: k.hata };
   return { hazir: true, kg: k.kg };
+}
+
+export function sonrakiKuzuIcinSadeceHayvanSifirla(): {
+  onayliHayvanId: null;
+  kiloHam: string;
+  manuelArama: string;
+} {
+  return { onayliHayvanId: null, kiloHam: '', manuelArama: '' };
+}
+
+export function ciftTartimKaydiMi(
+  onceki: { animalId: string; kg: number; atMs: number } | null,
+  animalId: string,
+  kg: number,
+  nowMs: number,
+  pencereMs = 4000,
+): boolean {
+  if (!onceki) return false;
+  return onceki.animalId === animalId && onceki.kg === kg && nowMs - onceki.atMs < pencereMs;
+}
+
+export function hizliTartimYontemOzeti(
+  kuzuEtiket: string,
+  tartimEtiket: string,
+  tartimYontem: 'baskul' | 'baskul-ocr' | 'diger',
+  ekDurum?: string,
+): string {
+  if (tartimYontem === 'baskul') {
+    return `Kuzu: ${kuzuEtiket} · Kilo: ${tartimEtiket} (${ekDurum ?? 'bağlantı bekleniyor'})`;
+  }
+  if (tartimYontem === 'baskul-ocr') {
+    return `Kuzu: ${kuzuEtiket} · Kilo: ${tartimEtiket} (ekran OCR — onaylı)`;
+  }
+  return `Kuzu: ${kuzuEtiket} · Kilo: ${tartimEtiket}`;
+}
+
+/** Baskül yöntemi: bağlı değilken kayıt kapalı */
+export function hizliTartimKayitEtkin(
+  onayli: boolean,
+  tartimYontem: string,
+  baskulBagli: boolean,
+): boolean {
+  if (!onayli) return false;
+  if (tartimYontem === 'baskul' && !baskulBagli) return false;
+  return true;
 }
