@@ -29,6 +29,8 @@ import { calculateRation, PHASE_LABELS, type RationPhase } from '@/kaynak/rasyon
 import { AkilliOneriKarti } from '@/bilesenler/rasyon/AkilliOneriKarti';
 import { KarsilastirmaTablosu } from '@/bilesenler/rasyon/KarsilastirmaTablosu';
 import { RasyonModlari } from '@/bilesenler/yem/RasyonModlari';
+import { PadokRasyonDurumKarti } from '@/bilesenler/yem/PadokRasyonDurumKarti';
+import { padokRasyonDurumu } from '@/kaynak/yem/padok-durum';
 import { getBirimFiyatlar } from '@/kaynak/stok/fiyat';
 
 function onayla(mesaj: string, evet: () => void) {
@@ -69,6 +71,7 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
   const [acikOneri, setAcikOneri] = useState<string | null>(null);
   const [arac, setArac] = useState<'hesapla' | 'akilli' | 'karsilastirma' | null>(null);
   const [hes, setHes] = useState({ kg: '30', bas: '50', faz: 'lamb_fattening' as RationPhase, kalite: 'medium' as 'low' | 'medium' | 'high' });
+  const [seciliPadok, setSeciliPadok] = useState<string>('');
 
   const yukle = useCallback(async () => {
     await gunlukYemDusumu().catch(() => null);
@@ -77,6 +80,11 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
     setGercek(g);
     setDusumler(d);
     setOneriler(await rasyonsuzOneriler(fazlar).catch(() => []));
+    setSeciliPadok((onceki) => {
+      const partiler = oz.partiler;
+      if (partiler.length && (!onceki || !partiler.includes(onceki))) return partiler[0];
+      return onceki || partiler[0] || '';
+    });
   }, [fazlar]);
 
   useFocusEffect(
@@ -101,6 +109,11 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
 
   const yemAdi = (id: string) => o.yemler.find((y) => y.id === id)?.name ?? 'silinmiş yem';
   const uyarilar = o.durumlar.filter((d) => d.uyari === 'bitti' || d.uyari === 'az');
+  const padokDurum =
+    seciliPadok && o
+      ? padokRasyonDurumu(seciliPadok, o.basSayisi[seciliPadok] ?? 0, o.rasyonlar, dusumler, yemAdi)
+      : null;
+  const oneriSecili = oneriler.find((x) => x.parti === seciliPadok);
 
   const alimKaydet = async () => {
     if (!alim) return;
@@ -271,15 +284,50 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
           </View>
         ) : null}
 
+        {padokDurum ? (
+          <PadokRasyonDurumKarti
+            durum={padokDurum}
+            yemAdi={yemAdi}
+            partiler={o.partiler}
+            basSayisi={o.basSayisi}
+            seciliPadok={seciliPadok}
+            onPadok={setSeciliPadok}
+          />
+        ) : null}
+
+        {oneriSecili && duzen ? (
+          <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 12 }]}>
+            <Text style={[styles.baslik, { color: colors.text }]}>Öneri (kayıtlı değil) · {oneriSecili.parti}</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+              Son tartım / baş sayısına göre taslak — «Stokla öner» ile plan olur; şu an uygulanmış sayılmaz.
+            </Text>
+            <Pressable style={{ marginTop: 8 }} onPress={() => setAcikOneri(acikOneri === oneriSecili.parti ? null : oneriSecili.parti)}>
+              <Text style={{ color: colors.tint, fontWeight: '800' }}>{acikOneri === oneriSecili.parti ? 'Gizle' : 'Öneriyi göster'}</Text>
+            </Pressable>
+            {acikOneri === oneriSecili.parti ? (
+              <View style={{ marginTop: 8 }}>
+                {oneriSecili.kalemler.map((k, i) => (
+                  <Text key={i} style={{ color: k.eksik ? colors.danger : colors.text }}>
+                    • {k.ad}: {kg(k.kgBasGun)}/baş/gün{k.eksik ? ' — alış listesi' : ''}
+                  </Text>
+                ))}
+                <View style={{ marginTop: 8 }}>
+                  <Btn t="Stokla öneriyi kaydet" birincil onPress={() => void uygula([oneriSecili])} />
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
         <RasyonModlari
           partiler={o.partiler}
           basSayisi={o.basSayisi}
           yemler={o.yemler}
           fiyatlar={o.fiyatlar}
-          varsayilanParti={oneriler[0]?.parti}
+          seciliPadok={seciliPadok}
           duzen={duzen}
           finans={finans}
-          onKendi={() => setForm({ partiler: new Set(), miktar: {} })}
+          onKendi={() => setForm({ partiler: new Set([seciliPadok]), miktar: {} })}
           onUygulandi={(m) => {
             setMesaj(m);
             void gunlukYemDusumu().catch(() => null).then(() => { refresh(); return yukle(); });

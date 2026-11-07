@@ -22,6 +22,12 @@ cd mobil && npx tsx test/index.ts
 
 Modül: `rasyon-stok-plan`
 
+## Padok bağlamı (t279u)
+
+- Seçili padok kartı: kayıtlı aktif plan + son gerçek düşüm; «Aktif rasyon yok» / «Henüz yemleme kaydı yok».
+- Plan/şablon oluşturma ayrı akış; şablon seçimi kayıtlı plan değil.
+- Yeni düşüm kayıtlarında `anlik` plan görüntüsü (eski kayıtlar değişmez).
+
 ## Sınırlar
 
 - Otomatik yem ikamesi / ticari besleme servisi yok.

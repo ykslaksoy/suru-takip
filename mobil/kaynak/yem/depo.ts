@@ -158,6 +158,9 @@ async function dusumYap(bugun: string): Promise<DusumKaydi | null> {
   const ilerlet = new Set(ilerletilecekRasyonlar(rasyonlar, bugun));
   if (!ilerlet.size) return null;
   const plan = dusumPlani(rasyonlar, await partiBasSayilari(), bugun);
+  const rMap = new Map(rasyonlar.map((r) => [r.id, r]));
+  const anlik: NonNullable<DusumKaydi['anlik']> = [];
+  const anlikParti = new Set<string>();
   const kalan = new Map((await getYemler()).map((s) => [s.id, s.quantity]));
   const kalemler: DusumKaydi['kalemler'] = [];
   for (const d of plan) {
@@ -167,9 +170,28 @@ async function dusumYap(bugun: string): Promise<DusumKaydi | null> {
     if (dusulen > 0) await adjustStock(d.stockId, 'out', dusulen, dusumNotu(d));
     kalan.set(d.stockId, elde - dusulen);
     kalemler.push({ ...d, dusulen, eksik: Math.round((d.kg - dusulen) * 100) / 100 });
+    if (!anlikParti.has(d.parti)) {
+      const ra = rMap.get(d.rasyonId);
+      if (ra) {
+        anlikParti.add(d.parti);
+        anlik.push({
+          rasyonId: ra.id,
+          parti: ra.parti,
+          ad: ra.ad,
+          kalemler: ra.kalemler.map((k) => ({ ...k })),
+          guncelleme: ra.guncelleme,
+        });
+      }
+    }
   }
   await rasyonlariYaz(rasyonlar.map((r) => (ilerlet.has(r.id) ? { ...r, sonDusum: bugun } : r)));
-  const kayit: DusumKaydi = { id: uuidv4(), zaman: new Date().toISOString(), gun: bugun, kalemler };
+  const kayit: DusumKaydi = {
+    id: uuidv4(),
+    zaman: new Date().toISOString(),
+    gun: bugun,
+    kalemler,
+    anlik: anlik.length ? anlik : undefined,
+  };
   if (kalemler.length) {
     await dusumleriYaz([kayit, ...(await dusumleriOku())]);
     const top = kalemler.reduce((s, k) => s + k.dusulen, 0);

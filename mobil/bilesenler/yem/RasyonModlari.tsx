@@ -12,7 +12,6 @@ import {
   enUcuzRasyon,
   gereksinim,
   HAZIR_RASYONLAR,
-  hazirSec,
   karisimKg,
   malzemeOlustur,
   type FormulSonuc,
@@ -25,6 +24,7 @@ import { sayiOku } from '@/kaynak/yem/hesap';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { VARSAYILAN_KG } from '@/kaynak/yem/oneri';
 import { hazirSablonStokPlani, yemStokEsle } from '@/kaynak/rasyon/stok-plan';
+import { onerilenSablonId } from '@/kaynak/yem/padok-durum';
 
 type Mod = 'hazir' | 'kendi' | 'elimdeki';
 type Karisim = { ad: string; yuzde: number }[];
@@ -38,7 +38,8 @@ export function RasyonModlari(p: {
   basSayisi: Record<string, number>;
   yemler: StockItem[];
   fiyatlar: Record<string, number>;
-  varsayilanParti?: string;
+  seciliPadok: string;
+  onPadokDegisti?: (padok: string) => void;
   duzen: boolean;
   finans: boolean;
   onKendi: () => void;
@@ -49,7 +50,8 @@ export function RasyonModlari(p: {
   const [mod, setMod] = useState<Mod>('elimdeki');
   const [adim, setAdim] = useState(1);
   const [sablonAcik, setSablonAcik] = useState(false);
-  const [parti, setParti] = useState<string | undefined>(p.varsayilanParti ?? p.partiler[0]);
+  const [planAcik, setPlanAcik] = useState(false);
+  const parti = p.seciliPadok;
   const [ort, setOrt] = useState<Record<string, number | null>>({});
   const [faz, setFaz] = useState<RationPhase>('lamb_fattening');
   const [hazirId, setHazirId] = useState<string | null>(null);
@@ -71,13 +73,18 @@ export function RasyonModlari(p: {
     });
   }, []);
   useEffect(() => {
-    if (!parti && p.partiler.length) setParti(p.varsayilanParti ?? p.partiler[0]);
-  }, [p.partiler, p.varsayilanParti, parti]);
+    setAdim(1);
+    setSonuc(null);
+    setHazirId(null);
+    setSablonAcik(false);
+  }, [parti]);
 
   const ortKg = (parti && ort[parti]) || VARSAYILAN_KG;
   const tartimli = !!(parti && ort[parti]);
   const bas = parti ? p.basSayisi[parti] ?? 0 : 0;
-  const hazir = HAZIR_RASYONLAR.find((h) => h.id === (hazirId ?? hazirSec(ortKg)))!;
+  const onerilenId = onerilenSablonId(ort[parti] ?? null, VARSAYILAN_KG);
+  const sablonId = mod === 'hazir' ? hazirId ?? onerilenId : onerilenId;
+  const hazir = HAZIR_RASYONLAR.find((h) => h.id === sablonId) ?? HAZIR_RASYONLAR[0];
   const g = gereksinim(ortKg, mod === 'hazir' ? hazir.faz : faz);
   const karisim: Karisim = duzenler[hazir.id] ?? hazir.karisim;
   const gunluk = sayiOku(gunlukStr) ?? g.yemKg;
@@ -161,9 +168,30 @@ export function RasyonModlari(p: {
   );
   const Uzman = () => <Text style={{ color: colors.warning, fontSize: 12, marginTop: 6, fontWeight: '700' }}>Öneri; uzman/veteriner onayı önerilir.</Text>;
 
+  if (!planAcik) {
+    return (
+      <View style={[s.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[s.baslik, { color: colors.text }]}>Yeni plan veya öneri</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 10 }}>
+          {parti} padoku için taslak oluşturun. Kayıtlı aktif plan yukarıdaki karttadır; şablon seçimi otomatik uygulanmaz.
+        </Text>
+        {p.duzen ? (
+          <Btn t="Plan / şablon oluştur" birincil onPress={() => setPlanAcik(true)} />
+        ) : (
+          <Text style={{ color: colors.textSecondary }}>Düzenleme yetkisi gerekir.</Text>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={[s.kart, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[s.baslik, { color: colors.text }]}>🧪 Rasyon kur</Text>
+      <View style={s.chipSatir}>
+        <Text style={[s.baslik, { color: colors.text, flex: 1, marginBottom: 0 }]}>🧪 {parti} · plan oluştur</Text>
+        <Pressable onPress={() => setPlanAcik(false)}>
+          <Text style={{ color: colors.tint, fontWeight: '800' }}>Kapat</Text>
+        </Pressable>
+      </View>
       <View style={s.chipSatir}>
         <Chip t="Stokla plan" sec={mod === 'elimdeki'} onPress={() => { setMod('elimdeki'); setAdim(1); }} />
         <Chip t="Referans şablon" sec={mod === 'hazir'} onPress={() => setMod('hazir')} />
@@ -171,31 +199,11 @@ export function RasyonModlari(p: {
       </View>
 
       {mod !== 'kendi' ? (
-        <>
-          <Text style={[s.etiket, { color: colors.textSecondary, marginTop: 10 }]}>
-            {mod === 'elimdeki' ? `Adım ${adim}/3 · ` : ''}Padok
-          </Text>
-          <View style={s.chipSatir}>
-            {p.partiler.map((x) => (
-              <Chip
-                key={x}
-                t={`${x} · ${p.basSayisi[x]}`}
-                sec={parti === x}
-                onPress={() => {
-                  setParti(x);
-                  setSonuc(null);
-                  setHazirId(null);
-                  if (mod === 'elimdeki') setAdim((a) => Math.max(a, 1));
-                }}
-              />
-            ))}
-          </View>
-          {(mod === 'hazir' || (mod === 'elimdeki' && adim >= 2)) ? (
-            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
-              Ort. {kgF(ortKg)}{tartimli ? ' (son tartım)' : ' (varsayılan)'} · yem {kgF(gunluk)}/baş/gün (yedirildiği hâli) · KM {kgF(g.kmKg)}/baş
-            </Text>
-          ) : null}
-        </>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 8 }}>
+          Ort. {kgF(ortKg)}{tartimli ? ' (son tartım)' : ' (varsayılan)'}
+          {mod === 'elimdeki' ? ` · adım ${adim}/3` : ''}
+          {mod === 'hazir' && !hazirId ? ` · önerilen aşama: ${HAZIR_RASYONLAR.find((h) => h.id === onerilenId)?.ad ?? '—'} (kayıtlı değil)` : ''}
+        </Text>
       ) : null}
 
       {mod === 'kendi' ? (
@@ -208,9 +216,10 @@ export function RasyonModlari(p: {
           <Text style={{ color: colors.warning, fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
             Bilgi amaçlı şablon — besleme planı için «Stokla plan» kullanın.
           </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 6 }}>Şablon seçimi — kayıtlı plan değildir</Text>
           <View style={s.chipSatir}>
             {HAZIR_RASYONLAR.map((h) => (
-              <Chip key={h.id} t={`${h.ad}${duzenler[h.id] ? ' ✎' : ''}`} sec={hazir.id === h.id} onPress={() => setHazirId(h.id)} />
+              <Chip key={h.id} t={`${h.ad}${duzenler[h.id] ? ' ✎' : ''}`} sec={hazirId === h.id} onPress={() => setHazirId(h.id)} />
             ))}
           </View>
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginVertical: 6 }}>{hazir.aciklama}</Text>
