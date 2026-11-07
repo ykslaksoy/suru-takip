@@ -1,6 +1,8 @@
 import { calculateADG, getAnimals, getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
 import { hesaplaFcrSonuc } from '@/kaynak/kilo/fcr-hesap';
 import { suruFcrBirlestir } from '@/kaynak/kilo/padok-performans-analitik';
+import { getPerformansEsikDepo } from '@/kaynak/kilo/performans-esik-depo';
+import { cozumlePerformansEsikleri } from '@/kaynak/kilo/performans-esik-oncelik';
 import { akilliRasyonOnerisi } from '@/kaynak/rasyon/akilli-oneri';
 import { dailyFeedForAnimal, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { adgDeger, fcrDeger, metrikBaslik } from '@/sabitler/Metinler';
@@ -77,12 +79,15 @@ export async function rasyonKarsilastirma(): Promise<RasyonKarsilastirma | null>
   const ortFcr = suruFcrBirlestir(fcrParcalar).fcr;
   const gercekYem = verilenSay ? Math.round((toplamVerilen / verilenSay) * 100) / 100 : null;
   const oneriYem = oneri.hesap.dailyFeedKg;
-  const hedefAdg = 180;
+  const esikDepo = await getPerformansEsikDepo();
+  const ciftlikEsik = cozumlePerformansEsikleri(esikDepo, '', 'lamb_fattening');
+  const hedefAdg = ciftlikEsik.gcaaAltGram;
+  const hedefFcr = ciftlikEsik.fcrUst;
 
   const satirlar: KarsilastirmaSatiri[] = [
     satir('Günlük yem / hayvan', oneriYem, gercekYem, 'kg', true),
     satir(`Ort. ${metrikBaslik('GCAA')} (30 gün)`, hedefAdg, ortAdg, 'g/gün', false),
-    satir(`Ort. ${metrikBaslik('FCR')}`, 6.5, ortFcr, 'kg yem/kg artış', true),
+    satir(`Ort. ${metrikBaslik('FCR')}`, hedefFcr, ortFcr, 'kg yem/kg artış', true),
   ];
 
   if (oneri.tahminiGunlukMaliyet != null && gercekYem != null && oneriYem > 0) {

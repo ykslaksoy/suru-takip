@@ -2,6 +2,8 @@ import { getAnimals, getLowStockItems } from '@/kaynak/cekirdek/veritabani';
 import { padokTartimOzeti } from '@/kaynak/kilo/padok-tartim-ozet';
 import { getBugunGorevleri, type Gorev } from '@/kaynak/gorevler/liste';
 import { getSmartSuggestions, type SmartSuggestion } from '@/kaynak/akilli-kuzu/oneri';
+import { getPerformansEsikDepo } from '@/kaynak/kilo/performans-esik-depo';
+import { suruOrtGcaaEsikDegerlendir } from '@/kaynak/kilo/performans-esik-suruk';
 import { getAsiTakvimiDurumu } from '@/kaynak/saglik/asi-takvimi';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hafta-listesi';
 
@@ -191,12 +193,24 @@ export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
     tartimKapsam: tartim.kapsamMetni,
   }));
   const ortAdg = ortalama(partiVerileri.map((x) => x.tartim.ortAdgGram));
-  // Gerçek veriden bağlam (eski sabit demo bağlamı yerine): düşük stok + ortalama günlük artış
   const dusukStok = await getLowStockItems().catch(() => []);
+  const esikDepo = await getPerformansEsikDepo();
+  const padokAd = partiVerileri[0]?.sablon.ad ?? 'Padok A';
+  const gcaaEsik = suruOrtGcaaEsikDegerlendir(esikDepo, ortAdg, padokAd);
+  const gcaaHedefAltinda =
+    gcaaEsik.durum === 'hedef_alti'
+      ? {
+          ortGcaa: gcaaEsik.ortGcaa,
+          hedefGram: gcaaEsik.hedef,
+          kaynak: gcaaEsik.kaynak,
+          kontrolListesi: gcaaEsik.kontrolListesi,
+        }
+      : undefined;
   const oneriler = getSmartSuggestions({
     lowStock: dusukStok.length > 0,
     lowStockAdlar: dusukStok.map((s) => s.name),
     adgGrams: ortAdg == null ? null : Math.round(ortAdg),
+    gcaaHedefAltinda,
   });
   return {
     hayvanSayisi: partiler.reduce((s, p) => s + p.bas, 0),

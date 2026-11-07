@@ -55,6 +55,13 @@ export function getSmartSuggestions(ctx?: {
   needsVaccine?: boolean;
   needsWeigh?: boolean;
   adgGrams?: number | null;
+  /** Çiftlik GCAA alt hedefi — yalnız yeterli veri + tanımlı hedef */
+  gcaaHedefAltinda?: {
+    ortGcaa: number;
+    hedefGram: number;
+    kaynak: string;
+    kontrolListesi: readonly string[];
+  };
 }): SmartSuggestion[] {
   const out: SmartSuggestion[] = [];
   const qDay = ctx?.quarantineDay;
@@ -96,15 +103,19 @@ export function getSmartSuggestions(ctx?: {
     });
   }
 
-  if (ctx?.adgGrams != null && ctx.adgGrams < 150) {
+  if (ctx?.gcaaHedefAltinda) {
+    const h = ctx.gcaaHedefAltinda;
     out.push({
-      id: 'adg-low',
-      title: `${terimKisa('ADG')} düşük`,
-      body: `Ortalama ${terim('ADG')}: ~${ctx.adgGrams} g/gün`,
-      voice: `Hedef aralığın altında. Rasyon protein/enerji dengesini, padok stresini ve hastalık belirtilerini kontrol edin. Gerekirse rasyon önerisini güncelleyin.`,
+      id: 'gcaa-hedef-alti',
+      title: `GCAA çiftlik hedefinin altında`,
+      body: `Ölçülen ortalama ~${h.ortGcaa} g/gün · hedef ≥${h.hedefGram} g/gün (${h.kaynak})`,
+      voice: [
+        `Çiftlik hedefi; tıbbi normal aralık değil. Otomatik ilaç/rasyon/padok değişikliği yapılmaz.`,
+        ...h.kontrolListesi,
+      ].join(' '),
       urgency: 'alert',
       source: 'rasyon',
-      cta: 'Rasyon önerisi',
+      cta: 'Performans hedefleri',
     });
   }
 

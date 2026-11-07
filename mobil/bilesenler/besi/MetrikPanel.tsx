@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { hesaplaMod1MetrikRapor, type Mod1MetrikRapor } from '@/kaynak/besi-ortak/metrik-rapor';
+import { PerformansEsikAyarlari } from '@/bilesenler/kilo/PerformansEsikAyarlari';
 import { adgDeger, fcrDeger, metrikBaslik, metrikTooltip } from '@/sabitler/Metinler';
 
 export function MetrikPanel() {
@@ -68,6 +69,7 @@ export function MetrikPanel() {
           • {n}
         </Text>
       ))}
+      <PerformansEsikAyarlari onKayit={load} />
       <Pressable onPress={() => router.push('/maliyet' as never)} style={{ marginTop: 10 }}>
         <Text style={{ color: colors.tint, fontWeight: '800' }}>Parti maliyet ve kâr →</Text>
       </Pressable>

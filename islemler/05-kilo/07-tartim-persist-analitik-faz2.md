@@ -14,6 +14,7 @@ PR `cursor/tartim-analitik-duzeltme-09a5` — **Hızlı tartım UI PR #44’ten 
 - Padok özeti: GCAA n/eligible + dönem; padok FCR = toplam yem / toplam artış (`padok-performans-analitik`, `padokTartimOzeti`)
 - Bireysel FCR: yem güveni (`fcr-yem-kaynagi`) — plan, padok tahsisi veya tahmin; yoksa neden
 - Sürü/ karşılaştırma: `suruFcrBirlestir` (oran ortalaması değil)
+- t292u: Çiftlik performans hedefleri (`performans-esik-*`) — GCAA alt / FCR üst; padok·faz önceliği; gözlem/karantinada baskı; tanısız kontrol listesi
 - Hayvan kartı: tek tartımda da grafik
 - Test: `tartim-analitik` modülü
 

@@ -35,6 +35,7 @@ import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
 import { tartimAnalitikModul } from './moduller/tartim-analitik';
 import { analitikPadokFcrModul } from './moduller/analitik-padok-fcr';
+import { performansEsikModul } from './moduller/performans-esik';
 import { performansMetrikEtiketModul } from './moduller/performans-metrik-etiket';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
@@ -92,6 +93,7 @@ const MODULLER = [
   hizliTartimModul,
   tartimAnalitikModul,
   analitikPadokFcrModul,
+  performansEsikModul,
   performansMetrikEtiketModul,
   stokEslesmeModul,
   maliyetModul,

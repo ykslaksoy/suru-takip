@@ -10,6 +10,7 @@ import { sonYemSayimMiktari } from '@/kaynak/stok/yem-tuketim';
 import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
 import { fcrDeger, metrikBaslik, metrikTooltip, metrikYetersizVeri } from '@/sabitler/Metinler';
 import { fcrYemBazAciklamasi } from '@/kaynak/kilo/performans-metrik-etiket';
+import { hayvanPerformansEsikOzeti } from '@/kaynak/kilo/performans-esik-hayvan';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 
 const KAYNAK_ETIKET: Record<FcrHesap['kaynak'], string> = {
@@ -34,6 +35,8 @@ export function PerformansMetrikleri({
   const [dailyGivenKg, setDailyGivenKg] = useState<number | null>(null);
   const [phaseLabel, setPhaseLabel] = useState<string>('');
   const [sonSayim, setSonSayim] = useState<number | null>(null);
+  const [esikUyari, setEsikUyari] = useState<string | null>(null);
+  const [esikAktif, setEsikAktif] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const a = await getAnimal(animalId);
@@ -55,6 +58,9 @@ export function PerformansMetrikleri({
       setFcrHesap(null);
       setFcrNeden(fcr.neden);
     }
+    const esik = await hayvanPerformansEsikOzeti(a, records);
+    setEsikAktif(esik.aktifEsik);
+    setEsikUyari(esik.uyariBaslik ? `${esik.uyariBaslik}${esik.uyariGovde ? ` · ${esik.uyariGovde}` : ''}` : null);
   }, [animalId, records]);
 
   useEffect(() => {
@@ -130,6 +136,12 @@ export function PerformansMetrikleri({
           — {fcrNeden ?? metrikYetersizVeri('FCR')}
         </Text>
       )}
+
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+      <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 17 }}>{esikAktif}</Text>
+      {esikUyari ? (
+        <Text style={{ color: colors.tint, fontSize: 12, marginTop: 6, lineHeight: 17 }}>{esikUyari}</Text>
+      ) : null}
     </View>
   );
 }
