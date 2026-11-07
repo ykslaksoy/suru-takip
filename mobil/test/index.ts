@@ -36,6 +36,7 @@ import { hizliTartimModul } from './moduller/hizli-tartim';
 import { tartimAnalitikModul } from './moduller/tartim-analitik';
 import { rotaNavigasyonModul } from './moduller/rota-navigasyon';
 import { sesKomutModul } from './moduller/ses-komut';
+import { sesMikrofonSeviyeModul } from './moduller/ses-mikrofon-seviye';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
@@ -93,6 +94,7 @@ const MODULLER = [
   tartimAnalitikModul,
   rotaNavigasyonModul,
   sesKomutModul,
+  sesMikrofonSeviyeModul,
   stokEslesmeModul,
   maliyetModul,
   zamanCizelgesiModul,
