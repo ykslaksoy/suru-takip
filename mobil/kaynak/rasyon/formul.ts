@@ -111,11 +111,11 @@ export function enUcuzRasyon(malz: Malzeme[], g: Gereksinim): FormulSonuc {
 export type HazirRasyon = { id: string; ad: string; faz: RationPhase; aciklama: string; karisim: { ad: string; yuzde: number }[] };
 
 export const HAZIR_RASYONLAR: HazirRasyon[] = [
-  { id: 'besi-baslangic', ad: 'Besi başlangıç', faz: 'lamb_fattening', aciklama: '15–25 kg, ilk 2–3 hafta',
+  { id: 'besi-baslangic', ad: 'Erken besi dönemi', faz: 'lamb_fattening', aciklama: 'Çiftlik karışımı şablonu · 15–25 kg · ticari starter değildir',
     karisim: [{ ad: 'Arpa', yuzde: 30 }, { ad: 'Mısır', yuzde: 15 }, { ad: 'Soya küspesi', yuzde: 12 }, { ad: 'Ayçiçeği küspesi', yuzde: 8 }, { ad: 'Buğday kepeği', yuzde: 5 }, { ad: 'Yonca kuru otu', yuzde: 28 }, { ad: 'Mermer tozu (kireçtaşı)', yuzde: 1.2 }, { ad: 'Tuz', yuzde: 0.5 }, { ad: 'Vitamin-mineral premiksi', yuzde: 0.3 }] },
-  { id: 'besi-buyutme', ad: 'Besi büyütme', faz: 'lamb_fattening', aciklama: '25–35 kg',
+  { id: 'besi-buyutme', ad: 'Büyütme dönemi', faz: 'lamb_fattening', aciklama: 'Çiftlik karışımı şablonu · 25–35 kg',
     karisim: [{ ad: 'Arpa', yuzde: 35 }, { ad: 'Mısır', yuzde: 15 }, { ad: 'Ayçiçeği küspesi', yuzde: 12 }, { ad: 'Soya küspesi', yuzde: 5 }, { ad: 'Buğday kepeği', yuzde: 5 }, { ad: 'Yonca kuru otu', yuzde: 18 }, { ad: 'Buğday samanı', yuzde: 8 }, { ad: 'Mermer tozu (kireçtaşı)', yuzde: 1.2 }, { ad: 'Tuz', yuzde: 0.5 }, { ad: 'Vitamin-mineral premiksi', yuzde: 0.3 }] },
-  { id: 'besi-bitirme', ad: 'Besi bitirme', faz: 'lamb_fattening', aciklama: '35 kg üstü, kesime kadar',
+  { id: 'besi-bitirme', ad: 'Bitirme dönemi', faz: 'lamb_fattening', aciklama: 'Çiftlik karışımı şablonu · 35 kg üstü',
     karisim: [{ ad: 'Arpa', yuzde: 40 }, { ad: 'Mısır', yuzde: 20 }, { ad: 'Ayçiçeği küspesi', yuzde: 10 }, { ad: 'Buğday kepeği', yuzde: 5 }, { ad: 'Yonca kuru otu', yuzde: 10 }, { ad: 'Buğday samanı', yuzde: 13 }, { ad: 'Mermer tozu (kireçtaşı)', yuzde: 1.2 }, { ad: 'Tuz', yuzde: 0.5 }, { ad: 'Vitamin-mineral premiksi', yuzde: 0.3 }] },
   { id: 'bakim', ad: 'Bakım', faz: 'maintenance', aciklama: 'Yetişkin, verim yok',
     karisim: [{ ad: 'Arpa', yuzde: 15 }, { ad: 'Ayçiçeği küspesi', yuzde: 5 }, { ad: 'Yonca kuru otu', yuzde: 35 }, { ad: 'Buğday samanı', yuzde: 44.2 }, { ad: 'Tuz', yuzde: 0.5 }, { ad: 'Vitamin-mineral premiksi', yuzde: 0.3 }] },

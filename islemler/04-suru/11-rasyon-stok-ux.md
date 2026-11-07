@@ -22,6 +22,13 @@ cd mobil && npx tsx test/index.ts
 
 Modül: `rasyon-stok-plan`
 
+## Yem kaynağı vs faz (t283u)
+
+- Tercih: çiftlik üretim karışımı / ticari hazır yem / her ikisi (`sy_besleme_yem_kaynagi_v1`).
+- Besleme dönemi (faz) ayrı etiket; `besi-baslangic` → «Erken besi dönemi» çiftlik şablonu, ticari starter değil.
+- Tam yem yalnız `tam:evet` / `tam:etiket` stok notu; isimden çıkarım yok.
+- Gözlem padokunda otomatik kg önerisi yok; padok notu adaptasyon bilgisi olarak gösterilir.
+
 ## Padok bağlamı (t279u)
 
 - Seçili padok kartı: kayıtlı aktif plan + son gerçek düşüm; «Aktif rasyon yok» / «Henüz yemleme kaydı yok».

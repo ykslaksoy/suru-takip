@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { PadokRasyonDurumu } from '@/kaynak/yem/padok-durum';
+import type { GozlemBeslemeBaglam } from '@/kaynak/yem/gozlem-besleme';
+import { padokAdaptasyonMetni } from '@/kaynak/yem/gozlem-besleme';
 
 const kg = (n: number) => `${n.toLocaleString('tr-TR', { maximumFractionDigits: n < 10 ? 2 : 0 })} kg`;
 const gunTR = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
@@ -14,6 +16,7 @@ export function PadokRasyonDurumKarti(p: {
   basSayisi: Record<string, number>;
   seciliPadok: string;
   onPadok: (padok: string) => void;
+  gozlem?: GozlemBeslemeBaglam | null;
 }) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -106,6 +109,14 @@ export function PadokRasyonDurumKarti(p: {
         )}
       </View>
 
+      {p.gozlem?.uyari ? (
+        <Text style={{ color: colors.warning, fontSize: 12, marginTop: 8, lineHeight: 18 }}>{p.gozlem.uyari}</Text>
+      ) : null}
+      {p.gozlem ? (
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
+          {padokAdaptasyonMetni(p.gozlem)}
+        </Text>
+      ) : null}
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 8, lineHeight: 16 }}>{p.durum.oneriNotu}</Text>
     </View>
   );

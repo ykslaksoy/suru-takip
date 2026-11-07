@@ -5,7 +5,7 @@
  * hesaplayıcı, akıllı öneri ve öneri vs gerçek karşılaştırması da burada.
  */
 import { useEkip } from '@/bilesenler/ekip/useEkip';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -31,6 +31,8 @@ import { KarsilastirmaTablosu } from '@/bilesenler/rasyon/KarsilastirmaTablosu';
 import { RasyonModlari } from '@/bilesenler/yem/RasyonModlari';
 import { PadokRasyonDurumKarti } from '@/bilesenler/yem/PadokRasyonDurumKarti';
 import { padokRasyonDurumu } from '@/kaynak/yem/padok-durum';
+import { gozlemBeslemeBaglam, type GozlemBeslemeBaglam } from '@/kaynak/yem/gozlem-besleme';
+import { getPadokByAd } from '@/kaynak/suru/padok';
 import { getBirimFiyatlar } from '@/kaynak/stok/fiyat';
 
 function onayla(mesaj: string, evet: () => void) {
@@ -72,6 +74,7 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
   const [arac, setArac] = useState<'hesapla' | 'akilli' | 'karsilastirma' | null>(null);
   const [hes, setHes] = useState({ kg: '30', bas: '50', faz: 'lamb_fattening' as RationPhase, kalite: 'medium' as 'low' | 'medium' | 'high' });
   const [seciliPadok, setSeciliPadok] = useState<string>('');
+  const [gozlemBaglam, setGozlemBaglam] = useState<GozlemBeslemeBaglam | null>(null);
 
   const yukle = useCallback(async () => {
     await gunlukYemDusumu().catch(() => null);
@@ -92,6 +95,16 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
       void yukle();
     }, [yukle, refreshKey]),
   );
+
+  useEffect(() => {
+    if (!seciliPadok) {
+      setGozlemBaglam(null);
+      return;
+    }
+    void getPadokByAd(seciliPadok).then((pad) => {
+      setGozlemBaglam(gozlemBeslemeBaglam(seciliPadok, pad));
+    });
+  }, [seciliPadok]);
 
   const aktifRasyon = useMemo(() => {
     const m = new Map<string, PartiRasyonu>();
@@ -292,10 +305,11 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
             basSayisi={o.basSayisi}
             seciliPadok={seciliPadok}
             onPadok={setSeciliPadok}
+            gozlem={gozlemBaglam}
           />
         ) : null}
 
-        {oneriSecili && duzen ? (
+        {oneriSecili && duzen && !oneriSecili.otomatikOneriYok ? (
           <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 12 }]}>
             <Text style={[styles.baslik, { color: colors.text }]}>Öneri (kayıtlı değil) · {oneriSecili.parti}</Text>
             <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
@@ -315,6 +329,16 @@ export function YemRasyonEkrani({ sekme = false }: { sekme?: boolean }) {
                   <Btn t="Stokla öneriyi kaydet" birincil onPress={() => void uygula([oneriSecili])} />
                 </View>
               </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {oneriSecili?.otomatikOneriYok ? (
+          <View style={[styles.kart, { backgroundColor: colors.card, borderColor: colors.warning, marginBottom: 12 }]}>
+            <Text style={[styles.baslik, { color: colors.text }]}>Otomatik öneri yok · {oneriSecili.parti}</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{oneriSecili.uyari}</Text>
+            {oneriSecili.adaptasyonNotu ? (
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 6 }}>{oneriSecili.adaptasyonNotu}</Text>
             ) : null}
           </View>
         ) : null}

@@ -2,6 +2,7 @@
 import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { v4 as uuidv4 } from 'uuid';
 import { adjustStock, getAnimals, getStockItems, upsertStockItem } from '@/kaynak/cekirdek/veritabani';
+import { getPadokByAd } from '@/kaynak/suru/padok';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import { getBirimFiyatlar, setBirimFiyat } from '@/kaynak/stok/fiyat';
 import { getLatestWeight } from '@/kaynak/cekirdek/veritabani';
@@ -247,7 +248,20 @@ export async function rasyonsuzOneriler(fazlar: Record<string, RationPhase> = {}
   const ilgili = canli.filter((a) => set.has(a.paddock));
   const kg = await Promise.all(ilgili.map((a) => getLatestWeight(a.id).catch(() => null)));
   const ort = partiOrtalamaKg(ilgili.map((a, i) => ({ paddock: a.paddock, sonKg: kg[i] })));
-  return eksikler.map((p) => rasyonOnerisi({ parti: p, bas: bas[p], ortKg: ort[p] ?? null, faz: fazlar[p], yemler }));
+  return Promise.all(
+    eksikler.map(async (p) => {
+      const pad = await getPadokByAd(p);
+      return rasyonOnerisi({
+        parti: p,
+        bas: bas[p],
+        ortKg: ort[p] ?? null,
+        faz: fazlar[p],
+        yemler,
+        padokNot: pad?.not,
+        padokKarantina: pad?.karantina,
+      });
+    }),
+  );
 }
 
 /** Öneriyi kaydet — yalnız stokta eşleşen kalemler; eksik kaba/kesif için 0 kg stoğu açılmaz */

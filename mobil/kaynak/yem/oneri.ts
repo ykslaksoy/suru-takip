@@ -6,6 +6,7 @@
 import { calculateRation, type RationPhase } from '@/kaynak/rasyon/hesapla';
 import type { StockItem } from '@/kaynak/cekirdek/tipler';
 import type { PartiRasyonu } from './hesap';
+import { gozlemBeslemeBaglam, padokAdaptasyonMetni } from './gozlem-besleme';
 
 export type YemSinifi = 'kaba' | 'kesif';
 
@@ -40,6 +41,9 @@ export type RasyonOnerisi = {
   toplamGunlukKg: number;
   kalemler: OneriKalemi[];
   eksikVar: boolean;
+  otomatikOneriYok?: boolean;
+  uyari?: string;
+  adaptasyonNotu?: string | null;
 };
 
 const yuv = (n: number) => Math.round(n * 100) / 100;
@@ -50,7 +54,26 @@ export function rasyonOnerisi(g: {
   ortKg: number | null;
   faz?: RationPhase;
   yemler: Pick<StockItem, 'id' | 'name'>[];
+  padokNot?: string;
+  padokKarantina?: boolean;
 }): RasyonOnerisi {
+  const baglam = gozlemBeslemeBaglam(g.parti, g.padokNot != null ? { not: g.padokNot, karantina: g.padokKarantina ?? false } : null);
+  if (baglam.otomatikOneriYok) {
+    return {
+      parti: g.parti,
+      bas: g.bas,
+      ortKg: g.ortKg ?? VARSAYILAN_KG,
+      tartimli: g.ortKg != null && g.ortKg > 0,
+      faz: g.faz ?? VARSAYILAN_FAZ,
+      gunlukKgBas: 0,
+      toplamGunlukKg: 0,
+      kalemler: [],
+      eksikVar: true,
+      otomatikOneriYok: true,
+      uyari: baglam.uyari ?? undefined,
+      adaptasyonNotu: padokAdaptasyonMetni(baglam),
+    };
+  }
   const faz = g.faz ?? VARSAYILAN_FAZ;
   const tartimli = g.ortKg != null && g.ortKg > 0;
   const ortKg = tartimli ? (g.ortKg as number) : VARSAYILAN_KG;

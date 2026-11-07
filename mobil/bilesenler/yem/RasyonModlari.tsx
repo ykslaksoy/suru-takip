@@ -25,6 +25,8 @@ import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo'
 import { VARSAYILAN_KG } from '@/kaynak/yem/oneri';
 import { hazirSablonStokPlani, yemStokEsle } from '@/kaynak/rasyon/stok-plan';
 import { onerilenSablonId } from '@/kaynak/yem/padok-durum';
+import { stokKaynagaUygun, yemAnalizOzeti, type YemKaynagiTercih } from '@/kaynak/yem/yem-kaynagi';
+import { yemKaynagiKaydet, yemKaynagiOku } from '@/kaynak/yem/yem-kaynagi-tercih';
 
 type Mod = 'hazir' | 'kendi' | 'elimdeki';
 type Karisim = { ad: string; yuzde: number }[];
@@ -63,8 +65,10 @@ export function RasyonModlari(p: {
   const [sonuc, setSonuc] = useState<FormulSonuc | null>(null);
   const [hata, setHata] = useState<string | null>(null);
   const [mesgul, setMesgul] = useState(false);
+  const [yemKaynagi, setYemKaynagi] = useState<YemKaynagiTercih>('her_ikisi');
 
   useEffect(() => {
+    void yemKaynagiOku().then(setYemKaynagi);
     void partiOrtalamalari().then(setOrt).catch(() => undefined);
     void kaliciGetItem(KEY_HAZIR).then((r) => {
       try {
@@ -105,7 +109,10 @@ export function RasyonModlari(p: {
     return !(y && p.fiyatlar[y.id]);
   }).length;
 
-  const stoktakiYemler = useMemo(() => p.yemler.filter((y) => y.quantity > 0), [p.yemler]);
+  const stoktakiYemler = useMemo(
+    () => p.yemler.filter((y) => y.quantity > 0 && stokKaynagaUygun(y, yemKaynagi)),
+    [p.yemler, yemKaynagi],
+  );
 
   const karisimYaz = (k: Karisim | null) => {
     const yeni = { ...duzenler };
@@ -192,9 +199,31 @@ export function RasyonModlari(p: {
           <Text style={{ color: colors.tint, fontWeight: '800' }}>Kapat</Text>
         </Pressable>
       </View>
+      <Text style={[s.etiket, { color: colors.textSecondary }]}>Yem kaynağı (besleme döneminden ayrı)</Text>
+      <View style={s.chipSatir}>
+        {(
+          [
+            ['uretim', 'Çiftlikte üretim karışımı'],
+            ['ticari', 'Ticari hazır yem'],
+            ['her_ikisi', 'Her ikisi'],
+          ] as const
+        ).map(([id, label]) => (
+          <Chip
+            key={id}
+            t={label}
+            sec={yemKaynagi === id}
+            onPress={() => {
+              setYemKaynagi(id);
+              void yemKaynagiKaydet(id);
+              setSecili([]);
+              setSonuc(null);
+            }}
+          />
+        ))}
+      </View>
       <View style={s.chipSatir}>
         <Chip t="Stokla plan" sec={mod === 'elimdeki'} onPress={() => { setMod('elimdeki'); setAdim(1); }} />
-        <Chip t="Referans şablon" sec={mod === 'hazir'} onPress={() => setMod('hazir')} />
+        <Chip t="Karışım şablonu" sec={mod === 'hazir'} onPress={() => setMod('hazir')} />
         <Chip t="Kendi rasyonum" sec={mod === 'kendi'} onPress={() => setMod('kendi')} />
       </View>
 
@@ -214,8 +243,13 @@ export function RasyonModlari(p: {
       ) : mod === 'hazir' ? (
         <View style={{ marginTop: 8 }}>
           <Text style={{ color: colors.warning, fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
-            Bilgi amaçlı şablon — besleme planı için «Stokla plan» kullanın.
+            Çiftlik karışımı referans şablonu — ticari starter/complet yem değildir. Ticari yemde «Stokla plan» + stoktaki ürün kullanın.
           </Text>
+          {yemKaynagi === 'ticari' ? (
+            <Text style={{ color: colors.danger, fontSize: 12, marginBottom: 6 }}>
+              Ticari mod: yüzde şablonu yerine stoktaki hazır yemi kg/baş ile planlayın.
+            </Text>
+          ) : null}
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 6 }}>Şablon seçimi — kayıtlı plan değildir</Text>
           <View style={s.chipSatir}>
             {HAZIR_RASYONLAR.map((h) => (
@@ -329,7 +363,7 @@ export function RasyonModlari(p: {
           ) : null}
           {adim >= 2 ? (
             <>
-              <Text style={[s.etiket, { color: colors.textSecondary }]}>Besleme dönemi</Text>
+              <Text style={[s.etiket, { color: colors.textSecondary }]}>Besleme dönemi (faz — yem kaynağı değil)</Text>
               <View style={s.chipSatir}>
                 {(Object.keys(PHASE_LABELS) as RationPhase[]).map((f) => (
                   <Chip key={f} t={PHASE_LABELS[f]} sec={faz === f} onPress={() => { setFaz(f); setSonuc(null); }} />
@@ -377,6 +411,11 @@ export function RasyonModlari(p: {
               }}
             />
           </View>
+          {secili.length ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 6 }}>
+              {yemAnalizOzeti({ name: secili[0].ad, notes: '' }).uyari}
+            </Text>
+          ) : null}
           {secili.map((m, i) => {
             const set = (alan: keyof Malzeme, v: number | boolean) => { setSonuc(null); setSecili(secili.map((x, j) => (j === i ? { ...x, [alan]: v } : x))); };
             return (
