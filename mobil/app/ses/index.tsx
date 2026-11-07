@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SesDinlemeGostergesi } from '@/bilesenler/ses/SesDinlemeGostergesi';
+import { SesKomutOnizleme } from '@/bilesenler/ses/SesKomutOnizleme';
 import { Stack, router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
@@ -21,6 +22,7 @@ import {
 } from '@/kaynak/ses';
 import type { SesDinlemeDurumu } from '@/kaynak/ses/dinleme-durumu';
 import { azalanHareketTercihi, mikrofonSeviyeDestekleniyor } from '@/kaynak/ses/mikrofon-seviye';
+import { komutOnizle, komutOnizlemeSatirlari, type KomutOnizlemeAlan } from '@/kaynak/ses/komut-onizleme';
 
 const ASAMA_ETIKET: Record<string, string> = {
   hazir: 'hazır',
@@ -63,10 +65,13 @@ export default function SesKomutScreen() {
   const [sesliTekrar, setSesliTekrar] = useState(true);
   const [ipucu, setIpucu] = useState<string | null>(null);
   const [sonAlgilanan, setSonAlgilanan] = useState<string | null>(null);
+  const [araTranskript, setAraTranskript] = useState<string | null>(null);
+  const [transkriptKesin, setTranskriptKesin] = useState(true);
+  const [onizleme, setOnizleme] = useState<KomutOnizlemeAlan | null>(null);
+  const sonGonderilenMetinRef = useRef('');
   const [uygulanan, setUygulanan] = useState(0);
   const dinlemeRef = useRef<DinlemeKontrol | null>(null);
   const islemeKilidi = useRef(false);
-  const metinIsleniyorRef = useRef(false);
   const ahirRef = useRef(true);
   const sesliRef = useRef(true);
   const durum = useMemo(() => konusmaDurumu(), []);
@@ -112,17 +117,33 @@ export default function SesKomutScreen() {
 
   const isleRef = useRef<(girdi: string) => Promise<void>>(async () => {});
 
+  /** Dinleme sonrası yalnızca kutuya yazar — otomatik kayıt yok (t268u) */
+  const transkriptiKaydet = useCallback((t: string, kesin: boolean) => {
+    const met = t.trim();
+    if (!met) return;
+    setAraTranskript(kesin ? null : met);
+    setTranskriptKesin(kesin);
+    if (kesin) {
+      setMetin(met);
+      setSonAlgilanan(met);
+      setAraTranskript(null);
+      setIpucu('Metni kontrol edip Gönder’e basın. Kayıt otomatik yapılmaz.');
+    }
+  }, []);
+
   const dinlemeHataIsle = useCallback((mesaj: string, kod: string | undefined, otomatik: boolean) => {
     setDinliyor(false);
     setDinlemeDurumu('hata');
     setSeviyeCubuklari([]);
     setSeviyeOlcumAktif(false);
+    setAraTranskript(null);
     if (otomatik) {
       setIpucu(IOS_IPUCU);
       return;
     }
-    if (!ahirRef.current) Alert.alert('Dinleme', mesaj);
-    else setIpucu(mesaj);
+    const ek = kod === 'no-speech' ? ' Tekrar Dinle veya elle yazın.' : '';
+    if (!ahirRef.current) Alert.alert('Dinleme', mesaj + ek);
+    else setIpucu(mesaj + ek);
   }, []);
 
   /** Kullanıcı Dinle — seviye ölçümü açık */
@@ -141,32 +162,29 @@ export default function SesKomutScreen() {
         setSeviyeCubuklari(cubuklar);
         setSeviyeOlcumAktif(cubuklar.length > 0 || sesVar);
       },
+      onAraSonuc: transkriptiKaydet,
       onBasladi: () => {
         setDinliyor(true);
         setIpucu(null);
+        setAraTranskript(null);
       },
       onSonuc: (t) => {
         setDinliyor(false);
-        metinIsleniyorRef.current = true;
-        setDinlemeDurumu('isleniyor');
-        setMetin(t);
-        setSonAlgilanan(t);
+        setDinlemeDurumu('durdu');
         setSeviyeCubuklari([]);
         setSeviyeOlcumAktif(false);
-        void isleRef.current(t).finally(() => {
-          metinIsleniyorRef.current = false;
-          setDinlemeDurumu('durdu');
-        });
+        transkriptiKaydet(t, true);
+        setOnizleme(komutOnizle(t.trim()));
       },
       onBitti: () => {
         setDinliyor(false);
-        if (!metinIsleniyorRef.current) setDinlemeDurumu('durdu');
+        setDinlemeDurumu('durdu');
       },
       onHata: (mesaj, kod) => dinlemeHataIsle(mesaj, kod, false),
     });
     dinlemeRef.current = ctrl;
     if (!ctrl) dinlemeHataIsle('Dinleme açılamadı.', 'unsupported', false);
-  }, [dinlemeHataIsle, seviyeDestek]);
+  }, [dinlemeHataIsle, seviyeDestek, transkriptiKaydet]);
 
   /** Otomatik: TTS sonrası — seviye ölçümü yok (t267u) */
   const dinlemeyiAcOtomatik = useCallback(() => {
@@ -174,21 +192,18 @@ export default function SesKomutScreen() {
     setSeviyeCubuklari([]);
     setSeviyeOlcumAktif(false);
     const ctrl = dinlemeyiBaslatOtomatik({
+      onAraSonuc: transkriptiKaydet,
       onBasladi: () => {
         setDinliyor(true);
         setDinlemeDurumu('dinliyor');
         setIpucu(null);
+        setAraTranskript(null);
       },
       onSonuc: (t) => {
         setDinliyor(false);
-        metinIsleniyorRef.current = true;
-        setDinlemeDurumu('isleniyor');
-        setMetin(t);
-        setSonAlgilanan(t);
-        void isleRef.current(t).finally(() => {
-          metinIsleniyorRef.current = false;
-          setDinlemeDurumu('durdu');
-        });
+        setDinlemeDurumu('durdu');
+        transkriptiKaydet(t, true);
+        setIpucu('Cevabı kontrol edip Gönder’e basın (otomatik kayıt yok).');
       },
       onBitti: () => {
         setDinliyor(false);
@@ -201,13 +216,15 @@ export default function SesKomutScreen() {
       setDinliyor(false);
       setIpucu(IOS_IPUCU);
     }
-  }, [dinlemeHataIsle]);
+  }, [dinlemeHataIsle, transkriptiKaydet]);
 
   /** Sonucu göster + (açıksa) sesli oku; cevap bekleniyorsa konuşma bitince dinle */
   const sonucuSun = useCallback(
     (sonuc: SesKomutSonucu) => {
       setOkuma(sonuc.okumaMetni);
       setAsama(sonuc.asama);
+      if (sonuc.bekleyenEylem) setOnizleme(komutOnizlemeSatirlari(sonuc.bekleyenEylem));
+      else if (sonuc.asama === 'uygulandi' || sonuc.asama === 'iptal') setOnizleme(null);
       if (sonuc.duzeltmeMetni) setMetin(sonuc.duzeltmeMetni);
       else if (sonuc.asama === 'uygulandi') setSonAlgilanan(null);
 
@@ -251,9 +268,30 @@ export default function SesKomutScreen() {
 
   isleRef.current = isle;
 
+  const komutMetniDegis = (t: string) => {
+    setMetin(t);
+    setAraTranskript(null);
+    const degisti =
+      (asama === 'onay_bekliyor' || asama === 'duzeltme' || asama === 'eksik_bilgi') &&
+      t.trim() !== sonGonderilenMetinRef.current;
+    if (degisti) {
+      oturum.metinDisiOnayiBoz();
+      setAsama('hazir');
+      setOkuma('Metin değişti — önceki onay geçersiz. Düzenleyip Gönder’e basın.');
+      setOnizleme(komutOnizle(t));
+    } else if (asama === 'hazir' || asama === 'anlasilmadi' || asama === 'iptal' || asama === 'bos') {
+      setOnizleme(komutOnizle(t));
+    }
+  };
+
   const gonder = async () => {
+    if (!metin.trim()) {
+      setIpucu('Önce komut yazın, Dinle ile tanıtın veya örnek seçin.');
+      return;
+    }
     seslendirmeKilidiAc(); // iOS: dokunuş anında konuşmayı aç
     setIpucu(null);
+    sonGonderilenMetinRef.current = metin.trim();
     await isle(metin);
   };
 
@@ -314,9 +352,24 @@ export default function SesKomutScreen() {
             {dinliyor ? ' · dinleniyor…' : ''}
             {uygulanan > 0 ? ` · Bu oturumda ${uygulanan} kayıt` : ''}
           </Text>
+          {araTranskript ? (
+            <Text style={{ color: colors.warning, marginTop: 8, fontSize: 13 }}>
+              Tahmini (ara): <Text style={{ fontStyle: 'italic' }}>{araTranskript}</Text>
+            </Text>
+          ) : null}
           {sonAlgilanan ? (
-            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 13 }}>
-              Algılanan: <Text style={{ color: colors.text, fontWeight: '600' }}>{sonAlgilanan}</Text>
+            <Text
+              style={{ color: colors.textSecondary, marginTop: 8, fontSize: 13 }}
+              accessibilityLabel={`Kesin transkript: ${sonAlgilanan}`}>
+              Kesin transkript:{' '}
+              <Text style={{ color: colors.text, fontWeight: '600' }}>
+                {sonAlgilanan}
+                {transkriptKesin ? '' : ' (düzenlenebilir)'}
+              </Text>
+            </Text>
+          ) : !araTranskript && !dinliyor ? (
+            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 12 }}>
+              Tanınan metin burada görünür; kayıt için Gönder gerekir.
             </Text>
           ) : null}
           {ipucu ? (
@@ -336,6 +389,18 @@ export default function SesKomutScreen() {
           ))}
         </View>
 
+        {onizleme ? (
+          <SesKomutOnizleme
+            onizleme={onizleme}
+            onayBekliyor={asama === 'onay_bekliyor'}
+            tint={colors.tint}
+            border={colors.border}
+            text={colors.text}
+            textSecondary={colors.textSecondary}
+            warning={colors.warning}
+          />
+        ) : null}
+
         {dinlemeDurumu !== 'durdu' ? (
           <SesDinlemeGostergesi
             durum={dinlemeDurumu}
@@ -354,11 +419,14 @@ export default function SesKomutScreen() {
           placeholder='Örn: "küpe TR-34-001235, 52 kilo" sonra "tamam"'
           placeholderTextColor={colors.textSecondary}
           value={metin}
-          onChangeText={setMetin}
+          onChangeText={komutMetniDegis}
           style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
         />
         <AnaButon title={dinliyor ? 'Dinlemeyi durdur' : 'Dinle'} variant="secondary" onPress={dinle} />
-        <AnaButon title="Gönder" onPress={() => void gonder()} />
+        <AnaButon
+          title={asama === 'onay_bekliyor' ? 'Gönder (onay / düzelt)' : 'Gönder'}
+          onPress={() => void gonder()}
+        />
         <AnaButon
           title="İptal"
           variant="secondary"
@@ -370,6 +438,9 @@ export default function SesKomutScreen() {
             setAsama(r.asama);
             setMetin('');
             setSonAlgilanan(null);
+            setAraTranskript(null);
+            setOnizleme(null);
+            sonGonderilenMetinRef.current = '';
             setIpucu(null);
             if (sesliRef.current) metniSeslendir(r.okumaMetni);
           }}

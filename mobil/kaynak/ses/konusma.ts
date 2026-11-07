@@ -7,6 +7,7 @@
 import { dinlemeHataMesaji } from './dinleme-hata';
 import type { SesDinlemeDurumu } from './dinleme-durumu';
 import { azalanHareketTercihi, mikrofonSeviyeOturumuBaslat, type MikrofonSeviyeOturum } from './mikrofon-seviye';
+import { sttGuncelSatir } from './stt-sonuc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -144,7 +145,10 @@ export type DinlemeSeviyeBildirimi = {
  * `kullaniciBaslatti`: true ise (yalnız Dinle düğmesi) canlı seviye ölçümü denenir; STT ile çakışırsa STT öncelikli, çubuk kapatılır.
  */
 export function dinlemeyiBaslat(opts: {
+  /** Kesin (final) transkript — kayıt/işlem yapmaz */
   onSonuc: (metin: string) => void;
+  /** Ara veya kesin transkript (kesin=false «tahmini») */
+  onAraSonuc?: (metin: string, kesin: boolean) => void;
   /** kod: tarayıcı hata kodu (örn. 'not-allowed' — iOS’ta dokunuşsuz başlatma engeli) */
   onHata?: (mesaj: string, kod?: string) => void;
   onBasladi?: () => void;
@@ -163,7 +167,7 @@ export function dinlemeyiBaslat(opts: {
 
   const rec = new Rec();
   rec.lang = 'tr-TR';
-  rec.interimResults = false;
+  rec.interimResults = Boolean(opts.onAraSonuc);
   rec.maxAlternatives = 1;
   rec.continuous = false;
 
@@ -198,15 +202,16 @@ export function dinlemeyiBaslat(opts: {
     opts.onHata?.(dinlemeHataMesaji(kod), kod);
   };
   rec.onresult = (ev: any) => {
-    const text = String(ev?.results?.[0]?.[0]?.transcript ?? '').trim();
-    if (text) {
-      sonucGeldi = true;
-      seviyeOturum?.durdur();
-      seviyeOturum = null;
-      opts.onDinlemeDurumu?.('isleniyor');
-      opts.onSeviye?.({ cubuklar: [], ortalama: 0, sesVar: false });
-      opts.onSonuc(text);
-    }
+    const satir = sttGuncelSatir(ev?.results ?? { length: 0 }, ev?.resultIndex ?? 0);
+    if (!satir) return;
+    opts.onAraSonuc?.(satir.metin, satir.kesin);
+    if (!satir.kesin) return;
+    sonucGeldi = true;
+    seviyeOturum?.durdur();
+    seviyeOturum = null;
+    opts.onDinlemeDurumu?.('isleniyor');
+    opts.onSeviye?.({ cubuklar: [], ortalama: 0, sesVar: false });
+    opts.onSonuc(satir.metin);
   };
   rec.onend = () => {
     if (!sonucGeldi && !temizlendi) {

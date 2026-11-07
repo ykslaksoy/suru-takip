@@ -236,6 +236,13 @@ export class SesKomutOturumu {
     return this.yeniKomut(trimmed);
   }
 
+  /** Kullanıcı komut kutusunu değiştirdi — bekleyen onay/düzeltme geçersiz */
+  metinDisiOnayiBoz(): void {
+    if (this.durum.tip === 'onay' || this.durum.tip === 'duzeltme' || this.durum.tip === 'eksik') {
+      this.durum = { tip: 'bos' };
+    }
+  }
+
   /** UI «İptal» düğmesi — sesli «vazgeç» ile aynı metin */
   iptalEt(): SesKomutSonucu {
     this.durum = { tip: 'bos' };
