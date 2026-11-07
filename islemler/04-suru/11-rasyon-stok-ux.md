@@ -34,6 +34,16 @@ Modül: `rasyon-stok-plan`
 - İsteğe bağlı plan: 2–3 gün, `sy_uyum_besleme_v1`, yalnız kullanıcı kaydı.
 - Süre bitişi → inceleme gerekir; iştah/dışkı/rumen/genel notu + onay; otomatik rasyon/besi geçişi yok.
 
+## Gözlem inceleme akışı (t285u/t286u)
+
+- Faz etiketi: **Varış sonrası gözlem ve uyum** (başlangıç fazı karantina değil).
+- Süre sonu: kullanıcı **uzat** (inceleme tarihi), **besiye geçiş** veya **şüphe → karantina** (seçili hayvanlar).
+- Zamanlayıcı ile otomatik sağlık onayı, besi geçişi veya karantina yok.
+- Karantina: mevcut padok/sağlık kaydı (`checkup`, boş teşhis); geçmiş padok notları relabel edilmez.
+- Veteriner: mevcut tedavi/takip özeti; plan yoksa «eylem gerekli»; otomatik doz/ilaç yok.
+- Uzatma aktif uyum planını korur; karar geçmişi `incelemeKararlari`.
+- Test: `rasyon-uyum-inceleme`.
+
 ## Padok bağlamı (t279u)
 
 - Seçili padok kartı: kayıtlı aktif plan + son gerçek düşüm; «Aktif rasyon yok» / «Henüz yemleme kaydı yok».

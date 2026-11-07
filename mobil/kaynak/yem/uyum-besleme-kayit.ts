@@ -1,6 +1,7 @@
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { v4 as uuidv4 } from 'uuid';
-import { uyumKayitDogrula, type UyumBeslemeKayit } from './uyum-besleme';
+import { uyumKayitDogrula, type UyumBeslemeKayit, type UyumIncelemeKarari } from './uyum-besleme';
+import { uyumKararUygula } from './uyum-inceleme';
 
 const KEY = 'sy_uyum_besleme_v1';
 
@@ -39,6 +40,9 @@ export async function uyumKaydet(
     kayitZaman: new Date().toISOString(),
     gozlem: g.gozlem,
     incelemeOnay: g.incelemeOnay,
+    incelemeKararlari: g.incelemeKararlari,
+    uzatmaBitis: g.uzatmaBitis,
+    besiyeGecisOnay: g.besiyeGecisOnay,
   };
   await yaz([kayit, ...l.filter((x) => x.id !== kayit.id)]);
   return kayit;
@@ -57,6 +61,19 @@ export async function uyumIncelemeKaydet(
     gozlem: { ...gozlem, onayZaman: incelemeOnay ? new Date().toISOString() : undefined },
     incelemeOnay,
   };
+  l[i] = yeni;
+  await yaz(l);
+  return yeni;
+}
+
+export async function uyumIncelemeKararKaydet(
+  id: string,
+  karar: Omit<UyumIncelemeKarari, 'id' | 'zaman'> & { id?: string; zaman?: string },
+): Promise<UyumBeslemeKayit | null> {
+  const l = await oku();
+  const i = l.findIndex((x) => x.id === id);
+  if (i < 0) return null;
+  const yeni = uyumKararUygula(l[i], karar);
   l[i] = yeni;
   await yaz(l);
   return yeni;
