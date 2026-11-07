@@ -1,4 +1,5 @@
-import { addHealthRecord, addWeightRecord, adjustStock, getAnimals, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { addHealthRecord, adjustStock, getAnimals, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { kaydetTartimKaydi } from '@/kaynak/kilo/tartim-kayit';
 import { getTabancaDurum, tabancaAyariGetir } from '@/kaynak/akilli-veteriner/tabanca-ayar';
 import { hayvanAnaEtiket } from '@/kaynak/cekirdek/hayvan-etiket';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,13 +51,12 @@ export async function komutuUygula(eylem: SesKomutEylemi): Promise<{ ok: true } 
       if (!animal) {
         return { ok: false, hata: `${eylem.kupeArama} kayıtlı hayvan bulunamadı.` };
       }
-      await addWeightRecord({
-        id: uuidv4(),
+      const tartim = await kaydetTartimKaydi({
         animalId: animal.id,
         weightKg: eylem.kiloKg,
-        recordedAt: new Date().toISOString(),
         notes: 'Sesli komut',
       });
+      if (!tartim.ok) return { ok: false, hata: tartim.neden };
       await islemKaydet({ tur: 'tartim', ozet: `${hayvanAnaEtiket(animal)} · ${eylem.kiloKg} kg`, detay: 'Sesli komut', animalId: animal.id });
       return { ok: true };
     }

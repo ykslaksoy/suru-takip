@@ -1,11 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
-import {
-  addWeightRecord,
-  countAnimals,
-  getAnimal,
-  upsertAnimal,
-} from '@/kaynak/cekirdek/veritabani';
+import { countAnimals, getAnimal, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { kaydetTartimKaydi } from '@/kaynak/kilo/tartim-kayit';
 import { dogumGirdiDogrula, type DogumKayitGirdi } from './dogum-dogrula';
 
 export type DogumKayitSonuc =
@@ -67,11 +63,12 @@ export async function dogumKaydet(girdi: DogumKayitGirdi): Promise<DogumKayitSon
     created.push(kuzu);
 
     if (k.birthWeightKg != null && k.birthWeightKg > 0) {
-      await addWeightRecord({
+      await kaydetTartimKaydi({
         animalId: kuzuId,
         weightKg: k.birthWeightKg,
         recordedAt: `${girdi.birthDate.trim()}T12:00:00.000Z`,
         notes: 'Doğum kilosu',
+        yinelenenPencereMs: 0,
       });
     }
   }

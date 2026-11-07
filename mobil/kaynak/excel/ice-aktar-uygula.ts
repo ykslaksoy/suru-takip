@@ -1,7 +1,8 @@
 /** İçe aktarma önizlemesini depoya yazar (kuzu + isteğe bağlı ilk tartım) */
 import { yetkiGerekli } from '@/kaynak/ekip/kapi';
 import { v4 as uuidv4 } from 'uuid';
-import { addWeightRecord, getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { getAnimals, upsertAnimal } from '@/kaynak/cekirdek/veritabani';
+import { kaydetTartimKaydi } from '@/kaynak/kilo/tartim-kayit';
 import type { Animal } from '@/kaynak/cekirdek/tipler';
 import { islemKaydet } from '@/kaynak/gecmis/gunluk';
 import { kupeAnahtar, uygulanacaklar, type Onizleme, type TekrarPolitika } from './ice-aktar';
@@ -78,13 +79,14 @@ export async function iceAktarUygula(o: Onizleme, politika: TekrarPolitika): Pro
       if (baba && baba.id !== y.a.id && y.a.fatherId !== baba.id) y.a = await upsertAnimal({ ...y.a, fatherId: baba.id });
     }
     if (y.kiloKg) {
-      await addWeightRecord({
+      const t = await kaydetTartimKaydi({
         animalId: y.a.id,
         weightKg: y.kiloKg,
         recordedAt: `${y.kiloTarih ?? bugun}T12:00:00.000Z`,
         notes: 'Excel içe aktarma',
+        yinelenenPencereMs: 0,
       });
-      tartim += 1;
+      if (t.ok && !t.yinelenenAtlandi) tartim += 1;
     }
   }
   const atlanan = o.satirlar.length - secilen.length;

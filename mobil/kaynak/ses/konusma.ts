@@ -4,6 +4,11 @@
  * Native: metin yolu; canlı mikrofon sonra native STT ile açılır.
  */
 
+import { dinlemeHataMesaji } from './dinleme-hata';
+import type { SesDinlemeDurumu } from './dinleme-durumu';
+import { azalanHareketTercihi, mikrofonSeviyeOturumuBaslat, type MikrofonSeviyeOturum } from './mikrofon-seviye';
+import { sttGuncelSatir } from './stt-sonuc';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type KonusmaDurumu = {
@@ -128,61 +133,142 @@ export type DinlemeKontrol = {
   durdur: () => void;
 };
 
+export type DinlemeSeviyeBildirimi = {
+  cubuklar: number[];
+  ortalama: number;
+  sesVar: boolean;
+};
+
 /**
  * Kısa dinleme oturumu. Destek yoksa null döner.
  * Sonuç metin olarak onSonuc ile gelir.
+ * `kullaniciBaslatti`: true ise (yalnız Dinle düğmesi) canlı seviye ölçümü denenir; STT ile çakışırsa STT öncelikli, çubuk kapatılır.
  */
 export function dinlemeyiBaslat(opts: {
+  /** Kesin (final) transkript — kayıt/işlem yapmaz */
   onSonuc: (metin: string) => void;
+  /** Ara veya kesin transkript (kesin=false «tahmini») */
+  onAraSonuc?: (metin: string, kesin: boolean) => void;
   /** kod: tarayıcı hata kodu (örn. 'not-allowed' — iOS’ta dokunuşsuz başlatma engeli) */
   onHata?: (mesaj: string, kod?: string) => void;
   onBasladi?: () => void;
   /** Sonuç gelmeden dinleme bittiğinde */
   onBitti?: () => void;
+  kullaniciBaslatti?: boolean;
+  onDinlemeDurumu?: (durum: SesDinlemeDurumu) => void;
+  onSeviye?: (b: DinlemeSeviyeBildirimi) => void;
 }): DinlemeKontrol | null {
   const { Rec } = webApis();
   if (!Rec) {
-    opts.onHata?.(
-      'Bu ortamda mikrofon dinleme yok. Komutu kutuya yazıp Gönder’e basın.'
-    );
+    opts.onHata?.('Bu ortamda mikrofon dinleme yok. Komutu kutuya yazıp Gönder’e basın.', 'unsupported');
+    opts.onDinlemeDurumu?.('hata');
     return null;
   }
 
   const rec = new Rec();
   rec.lang = 'tr-TR';
-  rec.interimResults = false;
+  rec.interimResults = Boolean(opts.onAraSonuc);
   rec.maxAlternatives = 1;
   rec.continuous = false;
 
-  rec.onstart = () => opts.onBasladi?.();
   let sonucGeldi = false;
-  rec.onerror = (ev: any) =>
-    opts.onHata?.('Dinleme başarısız. Metin ile deneyin.', String(ev?.error ?? ''));
-  rec.onresult = (ev: any) => {
-    const text = String(ev?.results?.[0]?.[0]?.transcript ?? '').trim();
-    if (text) {
-      sonucGeldi = true;
-      opts.onSonuc(text);
+  let temizlendi = false;
+  let seviyeOturum: MikrofonSeviyeOturum | null = null;
+  let seviyeOlcumVar = false;
+
+  const tamamenDurdur = (durum: SesDinlemeDurumu = 'durdu') => {
+    if (temizlendi) return;
+    temizlendi = true;
+    seviyeOturum?.durdur();
+    seviyeOturum = null;
+    try {
+      rec.stop();
+    } catch {
+      /* ignore */
     }
+    opts.onDinlemeDurumu?.(durum);
+    opts.onSeviye?.({ cubuklar: [], ortalama: 0, sesVar: false });
+  };
+
+  rec.onstart = () => {
+    opts.onBasladi?.();
+    opts.onDinlemeDurumu?.('dinliyor');
+  };
+  rec.onerror = (ev: any) => {
+    if (sonucGeldi || temizlendi) return;
+    const kod = String(ev?.error ?? '');
+    sonucGeldi = true;
+    tamamenDurdur('hata');
+    opts.onHata?.(dinlemeHataMesaji(kod), kod);
+  };
+  rec.onresult = (ev: any) => {
+    const satir = sttGuncelSatir(ev?.results ?? { length: 0 }, ev?.resultIndex ?? 0);
+    if (!satir) return;
+    opts.onAraSonuc?.(satir.metin, satir.kesin);
+    if (!satir.kesin) return;
+    sonucGeldi = true;
+    seviyeOturum?.durdur();
+    seviyeOturum = null;
+    opts.onDinlemeDurumu?.('isleniyor');
+    opts.onSeviye?.({ cubuklar: [], ortalama: 0, sesVar: false });
+    opts.onSonuc(satir.metin);
   };
   rec.onend = () => {
-    if (!sonucGeldi) opts.onBitti?.();
+    if (!sonucGeldi && !temizlendi) {
+      tamamenDurdur('hata');
+      opts.onHata?.(dinlemeHataMesaji('no-speech'), 'no-speech');
+      opts.onBitti?.();
+    } else if (!temizlendi) {
+      tamamenDurdur('durdu');
+      opts.onBitti?.();
+    }
   };
 
-  try {
-    rec.start();
-  } catch (e: any) {
-    opts.onHata?.('Mikrofon başlatılamadı.', String(e?.name ?? 'start-failed'));
-    return null;
-  }
+  const sttBaslat = () => {
+    try {
+      rec.start();
+    } catch (e: any) {
+      tamamenDurdur('hata');
+      const kod = String(e?.name ?? 'start-failed');
+      opts.onHata?.(dinlemeHataMesaji(kod), kod);
+    }
+  };
+
+  const baslat = async () => {
+    if (opts.kullaniciBaslatti && opts.onSeviye) {
+      opts.onDinlemeDurumu?.('izin_istek');
+      const reduced = azalanHareketTercihi();
+      seviyeOturum = await mikrofonSeviyeOturumuBaslat({
+        reducedMotion: reduced,
+        onHazir: () => {
+          seviyeOlcumVar = true;
+        },
+        onHata: () => {
+          seviyeOlcumVar = false;
+        },
+        onSeviye: (cubuklar, ortalama, sesVar) => {
+          if (temizlendi) return;
+          opts.onSeviye?.({ cubuklar, ortalama, sesVar });
+          if (sesVar) opts.onDinlemeDurumu?.('ses_algilandi');
+        },
+      });
+      if (!seviyeOturum) {
+        seviyeOlcumVar = false;
+        opts.onSeviye({ cubuklar: [], ortalama: 0, sesVar: false });
+      }
+    }
+    if (temizlendi) return;
+    sttBaslat();
+  };
+
+  void baslat();
 
   return {
-    durdur: () => {
-      try {
-        rec.stop();
-      } catch {
-        /* ignore */
-      }
-    },
+    durdur: () => tamamenDurdur('durdu'),
   };
+}
+
+/** Otomatik (TTS sonrası) dinleme — seviye ölçümü yok; iOS uyumu için dokunuşsuz STT */
+export function dinlemeyiBaslatOtomatik(opts: Parameters<typeof dinlemeyiBaslat>[0]): DinlemeKontrol | null {
+  return dinlemeyiBaslat({ ...opts, kullaniciBaslatti: false });
 }
