@@ -132,7 +132,7 @@ export default function SeriGirisScreen() {
             {mod === 'hizli' ? (
               <>
                 <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
-                  Küpeyi yaz, Enter → kiloyu yaz, Enter: kaydedilir ve sıradaki kuzuya geçilir.
+                  Önce kuzuyu tanımlayıp onaylayın, sonra kiloyu girin. Yöntemleri üstteki seçeneklerden tek dokunuşla değiştirebilirsiniz.
                 </Text>
                 <HizliTartim />
               </>

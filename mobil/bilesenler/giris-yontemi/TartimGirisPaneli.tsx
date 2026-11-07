@@ -10,6 +10,7 @@ import {
   kiloAyikla,
   tartimGirisEtiket,
   tartimYontemYakinindaMi,
+  type TartimGirisYontemi,
 } from '@/kaynak/giris-yontemi';
 import { dinlemeyiBaslat, seslendirmeyiDurdur } from '@/kaynak/ses';
 
@@ -17,6 +18,9 @@ type Props = {
   value: string;
   onChange: (kg: string) => void;
   placeholder?: string;
+  yontemOverride?: TartimGirisYontemi;
+  /** Kilo alanı devre dışı (hayvan onayı bekleniyor) */
+  devreDisi?: boolean;
 };
 
 function uyar(baslik: string, mesaj: string) {
@@ -27,11 +31,17 @@ function uyar(baslik: string, mesaj: string) {
   Alert.alert(baslik, mesaj);
 }
 
-export function TartimGirisPaneli({ value, onChange, placeholder = 'Kilo (kg)' }: Props) {
+export function TartimGirisPaneli({
+  value,
+  onChange,
+  placeholder = 'Kilo (kg)',
+  yontemOverride,
+  devreDisi = false,
+}: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { tercih } = useGirisYontemi();
-  const secilen = tercih.tartimGiris;
+  const secilen = yontemOverride ?? tercih.tartimGiris;
   const yontem = etkinTartimGiris(secilen);
   const yakininda = tartimYontemYakinindaMi(secilen);
   const [dinliyor, setDinliyor] = useState(false);
@@ -81,12 +91,13 @@ export function TartimGirisPaneli({ value, onChange, placeholder = 'Kilo (kg)' }
       {yontem === 'manuel' || yakininda ? (
         <>
           <TextInput
+            editable={!devreDisi}
             placeholder={placeholder}
             keyboardType="decimal-pad"
             value={value}
             onChangeText={onChange}
             placeholderTextColor={colors.textSecondary}
-            style={inputStil}
+            style={[inputStil, devreDisi ? { opacity: 0.5 } : null]}
           />
         </>
       ) : null}
@@ -96,15 +107,17 @@ export function TartimGirisPaneli({ value, onChange, placeholder = 'Kilo (kg)' }
           <AnaButon
             title={dinliyor ? 'Dinleniyor…' : 'Kiloyu söyle (ör: 68 kilo)'}
             variant="secondary"
+            disabled={devreDisi}
             onPress={sesleKilo}
           />
           <TextInput
+            editable={!devreDisi}
             placeholder={placeholder}
             keyboardType="decimal-pad"
             value={value}
             onChangeText={onChange}
             placeholderTextColor={colors.textSecondary}
-            style={[inputStil, { marginTop: 10 }]}
+            style={[inputStil, { marginTop: 10 }, devreDisi ? { opacity: 0.5 } : null]}
           />
         </>
       ) : null}
