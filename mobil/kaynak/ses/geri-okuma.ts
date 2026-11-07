@@ -67,6 +67,10 @@ export function iptalMetni(): string {
   return 'Tamam, iptal ettim. Yeni komut söyleyebilirsin.';
 }
 
+export function kullaniciIptalMetni(): string {
+  return 'Oturum iptal edildi (İptal düğmesi veya «vazgeç»). Kayıt yok. Yeni komut verebilirsiniz.';
+}
+
 function asiAdiSesli(ad: string): string {
   const a = ad.trim();
   return /aşı/i.test(a) ? a : `${a} aşısı`;

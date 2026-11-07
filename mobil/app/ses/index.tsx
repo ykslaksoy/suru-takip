@@ -53,8 +53,10 @@ export default function SesKomutScreen() {
   const [ahirModu, setAhirModu] = useState(true);
   const [sesliTekrar, setSesliTekrar] = useState(true);
   const [ipucu, setIpucu] = useState<string | null>(null);
+  const [sonAlgilanan, setSonAlgilanan] = useState<string | null>(null);
   const [uygulanan, setUygulanan] = useState(0);
   const dinlemeRef = useRef<DinlemeKontrol | null>(null);
+  const islemeKilidi = useRef(false);
   const ahirRef = useRef(true);
   const sesliRef = useRef(true);
   const durum = useMemo(() => konusmaDurumu(), []);
@@ -91,6 +93,7 @@ export default function SesKomutScreen() {
       onSonuc: (t) => {
         setDinliyor(false);
         setMetin(t);
+        setSonAlgilanan(t);
         void isleRef.current(t);
       },
       onBitti: () => setDinliyor(false),
@@ -98,10 +101,6 @@ export default function SesKomutScreen() {
         setDinliyor(false);
         if (otomatik) {
           setIpucu(IOS_IPUCU);
-          return;
-        }
-        if (kod === 'no-speech' || kod === 'aborted') {
-          setIpucu('Ses duyulmadı. Tekrar Dinle’ye basın veya yazın.');
           return;
         }
         if (!ahirRef.current) Alert.alert('Dinleme', mesaj);
@@ -121,7 +120,7 @@ export default function SesKomutScreen() {
       setOkuma(sonuc.okumaMetni);
       setAsama(sonuc.asama);
       if (sonuc.duzeltmeMetni) setMetin(sonuc.duzeltmeMetni);
-      else if (sonuc.asama === 'onay_bekliyor' || sonuc.asama === 'eksik_bilgi') setMetin('');
+      else if (sonuc.asama === 'uygulandi') setSonAlgilanan(null);
 
       const sonraDinle =
         durum.sttHazir &&
@@ -142,13 +141,21 @@ export default function SesKomutScreen() {
 
   const isle = useCallback(
     async (girdi: string) => {
-      const sonuc = await oturum.metinAl(girdi);
-      if (sonuc.asama === 'uygulandi') {
-        refresh();
-        setUygulanan((n) => n + 1);
-        setMetin('');
+      if (islemeKilidi.current) return;
+      islemeKilidi.current = true;
+      try {
+        const trimmed = girdi.trim();
+        if (trimmed) setSonAlgilanan(trimmed);
+        const sonuc = await oturum.metinAl(girdi);
+        if (sonuc.asama === 'uygulandi') {
+          refresh();
+          setUygulanan((n) => n + 1);
+          setMetin('');
+        }
+        sonucuSun(sonuc);
+      } finally {
+        islemeKilidi.current = false;
       }
-      sonucuSun(sonuc);
     },
     [oturum, refresh, sonucuSun]
   );
@@ -219,6 +226,11 @@ export default function SesKomutScreen() {
             {dinliyor ? ' · dinleniyor…' : ''}
             {uygulanan > 0 ? ` · Bu oturumda ${uygulanan} kayıt` : ''}
           </Text>
+          {sonAlgilanan ? (
+            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 13 }}>
+              Algılanan: <Text style={{ color: colors.text, fontWeight: '600' }}>{sonAlgilanan}</Text>
+            </Text>
+          ) : null}
           {ipucu ? (
             <Text style={{ color: colors.warning, marginTop: 8, fontSize: 12, fontWeight: '700' }}>{ipucu}</Text>
           ) : null}
@@ -255,6 +267,8 @@ export default function SesKomutScreen() {
             const r = oturum.iptalEt();
             setOkuma(r.okumaMetni);
             setAsama(r.asama);
+            setMetin('');
+            setSonAlgilanan(null);
             setIpucu(null);
             if (sesliRef.current) metniSeslendir(r.okumaMetni);
           }}

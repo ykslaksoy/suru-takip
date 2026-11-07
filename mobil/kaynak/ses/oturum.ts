@@ -14,6 +14,7 @@ import {
   duzeltmeSorusu,
   geriOkumaMetni,
   iptalMetni,
+  kullaniciIptalMetni,
   komutMetni,
   onayCumlesi,
   uygulandiMetni,
@@ -209,7 +210,16 @@ export class SesKomutOturumu {
     }
 
     if (d.tip === 'eksik') {
-      if (tamIptalMi(trimmed) || duzeltmeIstegiMi(trimmed)) return this.iptal();
+      if (tamIptalMi(trimmed)) return this.iptal();
+      if (duzeltmeIstegiMi(trimmed)) {
+        this.durum = { tip: 'bos' };
+        return {
+          asama: 'anlasilmadi',
+          okumaMetni:
+            'Tamam, baştan komut söyleyin veya kutuya yazıp Gönder’e basın. (Kayıt yok — iptal değil.)',
+          bekleyenEylem: null,
+        };
+      }
       const tam = komutAyikla(trimmed);
       if (tam) return this.onayaGec(tam, trimmed);
       const t = eksikTamamla(d.eksik, trimmed);
@@ -226,8 +236,10 @@ export class SesKomutOturumu {
     return this.yeniKomut(trimmed);
   }
 
+  /** UI «İptal» düğmesi — sesli «vazgeç» ile aynı metin */
   iptalEt(): SesKomutSonucu {
-    return this.iptal();
+    this.durum = { tip: 'bos' };
+    return { asama: 'iptal', okumaMetni: kullaniciIptalMetni(), bekleyenEylem: null };
   }
 }
 

@@ -4,6 +4,8 @@
  * Native: metin yolu; canlı mikrofon sonra native STT ile açılır.
  */
 
+import { dinlemeHataMesaji } from './dinleme-hata';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type KonusmaDurumu = {
@@ -156,8 +158,12 @@ export function dinlemeyiBaslat(opts: {
 
   rec.onstart = () => opts.onBasladi?.();
   let sonucGeldi = false;
-  rec.onerror = (ev: any) =>
-    opts.onHata?.('Dinleme başarısız. Metin ile deneyin.', String(ev?.error ?? ''));
+  rec.onerror = (ev: any) => {
+    if (sonucGeldi) return;
+    const kod = String(ev?.error ?? '');
+    sonucGeldi = true;
+    opts.onHata?.(dinlemeHataMesaji(kod), kod);
+  };
   rec.onresult = (ev: any) => {
     const text = String(ev?.results?.[0]?.[0]?.transcript ?? '').trim();
     if (text) {
@@ -166,13 +172,17 @@ export function dinlemeyiBaslat(opts: {
     }
   };
   rec.onend = () => {
-    if (!sonucGeldi) opts.onBitti?.();
+    if (!sonucGeldi) {
+      opts.onHata?.(dinlemeHataMesaji('no-speech'), 'no-speech');
+      opts.onBitti?.();
+    }
   };
 
   try {
     rec.start();
   } catch (e: any) {
-    opts.onHata?.('Mikrofon başlatılamadı.', String(e?.name ?? 'start-failed'));
+    const kod = String(e?.name ?? 'start-failed');
+    opts.onHata?.(dinlemeHataMesaji(kod), kod);
     return null;
   }
 
