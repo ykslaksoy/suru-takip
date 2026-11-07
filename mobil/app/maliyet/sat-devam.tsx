@@ -84,7 +84,8 @@ export default function SatDevamScreen() {
       <Stack.Screen options={{ title: 'Şimdi sat / Besiye devam' }} />
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
-          Marjinal karar: bugünkü satış geliri ile {ekGun || '…'} gün daha beklemenin net farkı. Batık (alış vb.) kararda kullanılmaz; ayrıca gösterilir.
+          Marjinal karar: bugünkü satış geliri ile {ekGun || '…'} gün daha beklemenin net farkı. Batık (alış vb.) ve aylık sözleşme (kira/maaş) kararda kullanılmaz; ayrıca gösterilir.
+          Tam alım–satış döngüsü için Besi Planlama → Döngü ekonomisi.
           Piyasa fiyatı ve artış sizin varsayımınız — garanti yok.
         </Text>
         <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 8 }}>Kapsam: {etiket}</Text>

@@ -13,6 +13,12 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/sat-devam`, `/maliyet/besi-planlama`, hayvan kartından erişim
 - Mevcut `hesaplaBesiMaliyetTahmin` / parti maliyet motoru ayrı (çift motor yok)
 
+## t303u — Döngü ekonomisi
+
+- `dongu-ekonomi-hesap.ts`: aylık adım + sözleşme min, paylaşımlı baş×gün, aday satış günleri
+- Besi Planlama içinde bölüm; «Besi Yönetimi» yeniden adlandırma yapılmadı
+- Tam döngü net vs marjinal şimdi-sat ayrımı (kira/maaş sözleşmesi marjinalde yok)
+
 ## Bilinçli sınırlar
 
 - Gerçekleşen vs plan otomatik stok karşılaştırması sonraki adım

@@ -10,6 +10,7 @@ import {
   type BesiPlanSenaryo,
 } from '@/kaynak/maliyet/besi-plan-tipler';
 import { hesaplaBesiPlanProjeksiyon } from '@/kaynak/maliyet/besi-plan-hesap';
+import { karsilastirAdaySatisGunleri } from '@/kaynak/maliyet/dongu-ekonomi-hesap';
 import {
   getBesiPlanDepo,
   iptalBesiPlanSenaryo,
@@ -47,6 +48,15 @@ export default function BesiPlanlamaScreen() {
   const [donemler, setDonemler] = useState<BesiPlanDonemGirdi[]>(VARSAYILAN_DONEMLER.map(bosDonem));
   const [senaryoId, setSenaryoId] = useState<string | undefined>();
   const [kayitli, setKayitli] = useState<BesiPlanSenaryo[]>([]);
+  const [kira, setKira] = useState('');
+  const [kiraMinAy, setKiraMinAy] = useState('3');
+  const [maas, setMaas] = useState('');
+  const [maasMinAy, setMaasMinAy] = useState('1');
+  const [paylasim, setPaylasim] = useState('');
+  const [kapasiteBasGun, setKapasiteBasGun] = useState('');
+  const [satisFiyat, setSatisFiyat] = useState('');
+  const [adayGunler, setAdayGunler] = useState('60,90');
+  const [bosDonguGun, setBosDonguGun] = useState('');
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -62,6 +72,37 @@ export default function BesiPlanlamaScreen() {
     basSayisi: sayi(basSayisi) != null ? Math.floor(sayi(basSayisi)!) : null,
     donemler,
   });
+
+  const adayKarsilastirma =
+    projeksiyon.durum === 'hazir' && sayi(girisKg) != null && sayi(alis) != null && sayi(satisFiyat) != null
+      ? karsilastirAdaySatisGunleri({
+          basSayisi: Math.floor(sayi(basSayisi) ?? 1),
+          alisBas: sayi(alis),
+          girisKg: sayi(girisKg)!,
+          donemler,
+          aylikKalemler: [
+            ...(sayi(kira)
+              ? [{ id: 'kira', etiket: 'Kira', aylikTutar: sayi(kira)!, minSozlesmeAy: Math.floor(sayi(kiraMinAy) ?? 1), marjinaldeArtar: false }]
+              : []),
+            ...(sayi(maas)
+              ? [{ id: 'maas', etiket: 'Çoban maaşı', aylikTutar: sayi(maas)!, minSozlesmeAy: Math.floor(sayi(maasMinAy) ?? 1), marjinaldeArtar: false }]
+              : []),
+          ],
+          donguSabitToplam: null,
+          paylasimli:
+            sayi(paylasim) && sayi(kapasiteBasGun)
+              ? [{ id: 'p', etiket: 'Ortak gider', toplamTutar: sayi(paylasim)!, kapasiteBasGun: sayi(kapasiteBasGun)! }]
+              : [],
+          donguArasiBosGun: sayi(bosDonguGun),
+          adayGunler: adayGunler
+            .split(',')
+            .map((x) => parseInt(x.trim(), 10))
+            .filter((n) => Number.isFinite(n) && n > 0),
+          satisFiyatKg: sayi(satisFiyat)!,
+          satisBirimi: 'canli_kg',
+          karkasVerim: null,
+        })
+      : null;
 
   const kaydet = async () => {
     const s = await kaydetBesiPlanTaslak({
@@ -192,6 +233,57 @@ export default function BesiPlanlamaScreen() {
             </>
           )}
         </View>
+
+        <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 8, marginBottom: 6 }}>
+          Döngü ekonomisi (t303u)
+        </Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8, lineHeight: 17 }}>
+          Aylık kira/maaş ay adımı + sözleşme minimumu; günlük orantı yok. Tam döngü net ≠ marjinal şimdi-sat (hayvan ekranı).
+        </Text>
+        <Mini label="Kira ₺/ay" value={kira} onChange={setKira} colors={colors} />
+        <Mini label="Kira min. sözleşme (ay)" value={kiraMinAy} onChange={setKiraMinAy} colors={colors} />
+        <Mini label="Çoban maaşı ₺/ay" value={maas} onChange={setMaas} colors={colors} />
+        <Mini label="Maaş min. süre (ay)" value={maasMinAy} onChange={setMaasMinAy} colors={colors} />
+        <Mini label="Paylaşımlı gider toplam ₺" value={paylasim} onChange={setPaylasim} colors={colors} />
+        <Mini label="Paylaşım paydası (baş×gün)" value={kapasiteBasGun} onChange={setKapasiteBasGun} colors={colors} />
+        <Mini label="Satış ₺/kg canlı (varsayım)" value={satisFiyat} onChange={setSatisFiyat} colors={colors} />
+        <Mini label="Aday satış günleri (virgülle)" value={adayGunler} onChange={setAdayGunler} colors={colors} />
+        <Mini label="Döngü arası boş gün (yıllık devir için)" value={bosDonguGun} onChange={setBosDonguGun} colors={colors} />
+
+        {adayKarsilastirma ? (
+          <View style={[styles.kutu, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            {adayKarsilastirma.enIyiGun != null ? (
+              <Text style={{ color: colors.text, fontWeight: '800' }}>
+                Modellenen adaylar içinde en yüksek net: {adayKarsilastirma.enIyiGun} gün ·{' '}
+                {adayKarsilastirma.enIyiNetKar?.toLocaleString('tr-TR')} ₺ (garanti değil)
+              </Text>
+            ) : (
+              <Text style={{ color: colors.warning, fontWeight: '800' }}>Aday gün karşılaştırması için girdi eksik</Text>
+            )}
+            {adayKarsilastirma.satirlar.map((s) =>
+              s.ekonomi.durum === 'hazir' ? (
+                <View key={s.gun} style={{ marginTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border, paddingTop: 6 }}>
+                  <Text style={{ color: colors.text, fontWeight: '700' }}>
+                    {s.gun} gün · ~{s.satisKgVarsayim} kg · net {s.ekonomi.netKar.toLocaleString('tr-TR')} ₺
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                    Baş başı {s.ekonomi.basBasiKar.toLocaleString('tr-TR')} ₺ · yer-gün {s.ekonomi.yerGunKar ?? '—'} ₺ ·
+                    aylık adım {s.ekonomi.aylikAdimAySayisi} ay
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                    Tam döngü batık+sözleşme: {s.ekonomi.batikVeSozlesme.toLocaleString('tr-TR')} ₺ · marjinal günlük (yem/bakım):{' '}
+                    {s.ekonomi.marjinalGunlukMaliyetBas ?? '—'} ₺/baş/gün
+                  </Text>
+                </View>
+              ) : null,
+            )}
+            {adayKarsilastirma.duyarlilik.map((d) => (
+              <Text key={d} style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4 }}>
+                {d}
+              </Text>
+            ))}
+          </View>
+        ) : null}
 
         <Pressable onPress={() => void kaydet()} style={[styles.btn, { backgroundColor: colors.tint }]}>
           <Text style={{ color: '#fff', fontWeight: '800' }}>Taslak kaydet</Text>
