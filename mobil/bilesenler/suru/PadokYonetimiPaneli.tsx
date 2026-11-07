@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
@@ -12,7 +11,7 @@ import {
   silPadok,
   type Padok,
 } from '@/kaynak/suru/padok';
-import { meraHaritaAktif } from '@/sabitler/ozellik-acik';
+import { SuruHaritaGirisButonu } from '@/bilesenler/suru/SuruHaritaGirisButonu';
 
 function uyar(baslik: string, mesaj: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -138,24 +137,7 @@ export function PadokYonetimiPaneli({ seciliPadok = null, onPadokSec }: Props) {
             {ozet} · dokun → hayvanlar
           </Text>
         </View>
-        {meraHaritaAktif() ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Mera haritası"
-            onPress={() =>
-              router.push(
-                seciliPadok
-                  ? ({ pathname: '/mera', params: { padok: seciliPadok } } as never)
-                  : ('/mera' as never),
-              )
-            }
-            style={StyleSheet.flatten([
-              styles.haritaBtn,
-              { borderColor: colors.border, backgroundColor: colors.background },
-            ])}>
-            <Ionicons name="map-outline" size={20} color={colors.tint} />
-          </Pressable>
-        ) : null}
+        <SuruHaritaGirisButonu padok={seciliPadok} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={formAcik ? 'Formu kapat' : 'Yeni padok'}

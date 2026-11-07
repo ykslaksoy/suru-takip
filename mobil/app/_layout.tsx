@@ -87,6 +87,7 @@ export default function RootLayout() {
                     <Stack.Screen name="cari/index" options={{ title: 'Cari hesaplar' }} />
                     <Stack.Screen name="verim/index" options={{ title: 'Süt & yapağı verim' }} />
                     <Stack.Screen name="mera/index" options={{ title: 'Mera' }} />
+                    <Stack.Screen name="padok-plani/index" options={{ title: 'Padok planı' }} />
                     <Stack.Screen name="sigorta/index" options={{ title: 'Sigorta (TARSİM)' }} />
                     <Stack.Screen name="arinma/index" options={{ title: 'İlaç arınma süreleri' }} />
                     <Stack.Screen name="satis/index" options={{ title: 'Satış / çıkış' }} />

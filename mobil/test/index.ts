@@ -57,6 +57,7 @@ import { ciftlesmeModul } from './moduller/ciftlesme';
 import { cevrimdisiModul } from './moduller/cevrimdisi';
 import { tarihModul } from './moduller/tarih';
 import { meraHaritaModul } from './moduller/mera-harita';
+import { besiSekliPadokPlaniModul } from './moduller/besi-sekli-padok-plani';
 import { adminSchemaModul } from './moduller/admin-schema';
 import { onayliPaket20261026Modul } from './moduller/onayli-paket-20261026';
 
@@ -114,6 +115,7 @@ const MODULLER = [
   bulutOtpKorumaModul,
   tarihModul,
   meraHaritaModul,
+  besiSekliPadokPlaniModul,
   adminSchemaModul,
   onayliPaket20261026Modul,
 ];
