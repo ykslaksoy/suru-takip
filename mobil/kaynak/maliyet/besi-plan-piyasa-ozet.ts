@@ -10,6 +10,9 @@ import { satisGelirBasHesapla, type SatisFiyatBirimi } from './besi-plan-satis';
 import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
 import type { BesiPlanIrkTaslak } from './besi-plan-irk';
 import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from './besi-plan-irk';
+import type { BesiPlanBeslemeTaslak } from './besi-plan-besleme';
+import { varsayilanBeslemeTaslak } from './besi-plan-besleme';
+import { VERIM_KAVRAM, cozPlanAdg } from './besi-plan-adg-besleme';
 import {
   birimForSatisKaynak,
   cozPiyasaFiyat,
@@ -35,6 +38,7 @@ export type BesiPiyasaOzetGirdi = {
   yemFireYuzde?: number | null;
   olcumGcaa?: number | null;
   irkTaslak?: BesiPlanIrkTaslak | null;
+  beslemeTaslak?: BesiPlanBeslemeTaslak | null;
 };
 
 export type UfukEkonomi = {
@@ -62,12 +66,14 @@ function yemBas(
   donemler: BesiPlanDonemGirdi[],
   illustrasyon: boolean,
   fireYuzde: number | null | undefined,
+  besleme: BesiPlanBeslemeTaslak,
 ): { tutar: number | null; kaynak: UfukEkonomi['yemKaynak'] } {
   const plan = planMaliyetVeKgGunHedef(girisKg, donemler, gun);
   if (plan && plan.yemMaliyet > 0) return { tutar: plan.yemMaliyet, kaynak: 'plan_faz' };
   if (illustrasyon) {
-    const ill = hesaplaYemIllustrasyon60({ aktif: true, fireYuzde });
-    const t = ill.fireDahil ?? ill.araToplam;
+    const ill = hesaplaYemIllustrasyon60({ aktif: true, fireYuzde, beslemeYontem: besleme.yontem });
+    const baz = ill.fireDahil ?? ill.araToplam;
+    const t = baz != null && Number.isFinite(baz) ? Math.round((baz / 60) * gun * 100) / 100 : null;
     return { tutar: t, kaynak: 'illustrasyon' };
   }
   return { tutar: null, kaynak: 'eksik' };
@@ -79,12 +85,13 @@ function ufuk(
   fiyatKg: number | null,
   birim: SatisFiyatBirimi,
 ): UfukEkonomi {
-  const kars = karsilastir60ve90(g.girisKg, g.donemler, g.adgSenaryo, g.adgKanit);
+  const besleme = g.beslemeTaslak ?? varsayilanBeslemeTaslak();
+  const kars = karsilastir60ve90(g.girisKg, g.donemler, g.adgSenaryo, g.adgKanit, g.irkTaslak, besleme);
   const h = gun === 60 ? kars.gun60 : kars.gun90;
   let cikisKg = h.cikisKg;
   const irk = g.irkTaslak;
-  const efektif = irk ? efektifGcaaGramGun(g.adgKanit, irk) : null;
-  if (irk?.olcumGcaaGramGun != null && efektif?.gcaa != null) {
+  const efektif = irk ? efektifGcaaGramGun(g.adgKanit, irk, besleme) : null;
+  if (efektif?.gcaa != null) {
     cikisKg = Math.round((g.girisKg + (efektif.gcaa / 1000) * gun) * 10) / 10;
   } else if (cikisKg == null) {
     cikisKg = hedefCanliKgKanit(g.girisKg, gun, g.adgKanit);
@@ -98,7 +105,7 @@ function ufuk(
           karkasVerim: g.karkasVerim,
         })
       : { gelirBas: null, eksikler: ['Satış'] };
-  const yem = yemBas(g.girisKg, gun, g.donemler, g.yemIllustrasyon, g.yemFireYuzde);
+  const yem = yemBas(g.girisKg, gun, g.donemler, g.yemIllustrasyon, g.yemFireYuzde, besleme);
   const brutKar = hesaplaBrutKar({ satisBas: satis.gelirBas, alisBas: g.alisBas, yemBas: yem.tutar });
   return {
     gun,
@@ -133,11 +140,24 @@ export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
 
   const irkPolitikasi = irkAdgPolitikasi(g.irkTaslak ?? varsayilanIrkTaslak());
   uyari.push(...irkPolitikasi.uyari.slice(0, 2));
+  const besleme = g.beslemeTaslak ?? varsayilanBeslemeTaslak();
+  const adgCoz = cozPlanAdg(g.adgKanit, g.irkTaslak ?? varsayilanIrkTaslak(), besleme);
+  uyari.push(
+    `ADG bandı ${adgCoz.grup}: muh ${adgCoz.muhafazakar} / bek ${adgCoz.beklenen} / iyim ${adgCoz.iyimser} g·gün`,
+  );
+  uyari.push(...adgCoz.uyari.slice(0, 2));
+  uyari.push(VERIM_KAVRAM.not);
+
+  const efektifKanit = efektifGcaaGramGun(g.adgKanit, g.irkTaslak ?? varsayilanIrkTaslak(), besleme);
 
   return {
     piyasa: piyasaKayitOku().kayitlar,
     karsilastirma: piyasaKarsilastirma(g.satisKaynak),
-    kanit: kanitGcaa(g.adgKanit),
+    kanit: {
+      ...kanitGcaa(g.adgKanit),
+      gcaaGramGun: efektifKanit.gcaa ?? kanitGcaa(g.adgKanit).gcaaGramGun,
+      kaynakAd: efektifKanit.kaynak,
+    },
     irkPolitikasi,
     ufuk60: ufuk(60, g, px.fiyatKg, birim),
     ufuk90: ufuk(90, g, px.fiyatKg, birim),

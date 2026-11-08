@@ -1,6 +1,7 @@
 /** t355u/t366u — örnek 60 gün yem miktarı; fiyatlar referans+override katmanından. */
 import { efektifBirimFiyat } from './besi-referans-override';
 import { fiyatReferansDepoOku } from './fiyat-referans-depo';
+import type { BesiPlanBeslemeYontemi } from './besi-plan-besleme';
 
 export type YemIllustrasyonSonuc = {
   aktif: boolean;
@@ -28,13 +29,30 @@ function refFiyat(id: string, fallback: number | null): number | null {
   return k?.fiyat ?? fallback;
 }
 
+function beslemeKg(yontem: BesiPlanBeslemeYontemi | undefined): { hazir: number; yonca: number; saman: number } {
+  switch (yontem) {
+    case 'mera_kaba':
+      return { hazir: 22, yonca: 32, saman: 18 };
+    case 'ev_karisimi':
+      return { hazir: 48, yonca: 20, saman: 8 };
+    case 'karma':
+      return { hazir: 40, yonca: 24, saman: 10 };
+    case 'belirsiz':
+      return { hazir: 35, yonca: 22, saman: 10 };
+    default:
+      return { hazir: 60, yonca: 18, saman: 6 };
+  }
+}
+
 export function hesaplaYemIllustrasyon60(opts: {
   aktif: boolean;
   fireYuzde?: number | null;
+  beslemeYontem?: BesiPlanBeslemeYontemi;
 }): YemIllustrasyonSonuc {
-  const hazirKg = 60;
-  const yoncaKg = 18;
-  const samanKg = 6;
+  const mix = beslemeKg(opts.beslemeYontem);
+  const hazirKg = mix.hazir;
+  const yoncaKg = mix.yonca;
+  const samanKg = mix.saman;
   const hazirRef = refFiyat('fabrika-kuzu', 21.5) ?? refFiyat('besi-yemi', 19.11);
   const yoncaRef = refFiyat('yonca-kuru', 12.91);
   const samanRef = refFiyat('saman-bugday', 4.38);

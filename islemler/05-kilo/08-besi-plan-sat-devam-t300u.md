@@ -130,6 +130,13 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `BesiReferansOverridePaneli`, `OndalikFiyatGirdi`, piyasa panelinde yenile düğmesi
 - **Manuel / desteklenmeyen:** Balıkesir PDF bülteni, besi yemi TZOB satırı (USK sayfasında yok), Abalıoğlu pelet illüstrasyonu
 
+### t372u — ırk + besleme ADG
+
+- `besi-plan-adg-besleme.ts` — 5 kanıt grubu (genel_belirsiz, yerli_koyun, merinos_tip, gelistirilmis_melez, yabanci_et); 31 ırk sabiti yok
+- `besi-plan-besleme.ts` + `BesiBeslemeAdgPaneli` — hazır pelet / ev karışımı / mera / karma; katkı ADG artırmaz
+- 60/90 çıkış kg ve illüstrasyon yem gün ile ölçeklenir; verim% = karkas kesim ayrı
+- Test: `besi-plan-adg-besleme` (917 toplam)
+
 ### t368u — otomatik senkron
 
 - İstemci **6 saat TTL** — açılış, sekme odağı (`useFocusEffect`), `AppState` resume; paralel istek **dedup**

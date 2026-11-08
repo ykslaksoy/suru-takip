@@ -2,6 +2,9 @@
 
 import type { AdgKanitSenaryo } from './besi-adg-kanit';
 import { kanitGcaa } from './besi-adg-kanit';
+import { cozPlanAdg } from './besi-plan-adg-besleme';
+import type { BesiPlanBeslemeTaslak } from './besi-plan-besleme';
+import { varsayilanBeslemeTaslak } from './besi-plan-besleme';
 import {
   HEDEF_IRK_ETIKET,
   type BesiHedefIrkKodu,
@@ -144,15 +147,17 @@ export function adgSenaryoIrkUygunMu(senaryo: AdgKanitSenaryo, politika: IrkAdgP
 export function efektifGcaaGramGun(
   senaryo: AdgKanitSenaryo,
   t: BesiPlanIrkTaslak,
-): { gcaa: number | null; kaynak: string } {
-  if (t.olcumGcaaGramGun != null && t.olcumGcaaGramGun > 0) {
-    return { gcaa: t.olcumGcaaGramGun, kaynak: 'tartım eğilimi' };
+  besleme: BesiPlanBeslemeTaslak = varsayilanBeslemeTaslak(),
+): { gcaa: number | null; kaynak: string; cozum: ReturnType<typeof cozPlanAdg> } {
+  const cozum = cozPlanAdg(senaryo, t, besleme);
+  if (cozum.seciliGcaa == null) {
+    const k = kanitGcaa(senaryo);
+    return { gcaa: k.gcaaGramGun, kaynak: `${k.kaynakAd} (yedek)`, cozum };
   }
   const p = irkAdgPolitikasi(t);
-  const k = kanitGcaa(senaryo);
-  let gcaa = k.gcaaGramGun;
+  let gcaa = cozum.seciliGcaa;
   if (senaryo === 'iyimser' && p.iyimserGcaaUst != null && gcaa > p.iyimserGcaaUst) {
     gcaa = p.iyimserGcaaUst;
   }
-  return { gcaa, kaynak: `${p.etiket} · ${k.kaynakAd}` };
+  return { gcaa, kaynak: `${cozum.grup} · ${cozum.kaynakOzet}`, cozum };
 }

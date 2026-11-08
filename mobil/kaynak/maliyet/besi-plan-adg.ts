@@ -2,6 +2,10 @@ import type { AdgKanitSenaryo } from './besi-adg-kanit';
 import { kanitGcaa } from './besi-adg-kanit';
 import type { BesiPlanDonemGirdi } from './besi-plan-tipler';
 import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
+import type { BesiPlanIrkTaslak } from './besi-plan-irk';
+import { efektifGcaaGramGun } from './besi-plan-irk';
+import type { BesiPlanBeslemeTaslak } from './besi-plan-besleme';
+import { varsayilanBeslemeTaslak } from './besi-plan-besleme';
 
 export type AdgSenaryoTur = 'plan_gcaa' | 'olcum_pencere' | 'iyimser_max' | 'senaryo_taban';
 
@@ -20,6 +24,8 @@ export type AdgSenaryoGirdi = {
   kapsam?: string | null;
   /** İyimser üst senaryo — kanıt yoksa kullanıcı açar */
   iyimserGcaaGramGun?: number | null;
+  irkTaslak?: BesiPlanIrkTaslak | null;
+  beslemeTaslak?: BesiPlanBeslemeTaslak | null;
 };
 
 export type HedefKgSonuc = {
@@ -85,10 +91,17 @@ export function hedefKgHesapla(g: AdgSenaryoGirdi): HedefKgSonuc {
     uyari.push('İyimser üst senaryo — genetik tavan garantisi değil');
     if (gcaa != null && gcaa > MAX_GCAA_UYARI) uyari.push(`GCAA ${gcaa} g/gün şüpheli — doğrulama gerekir`);
   } else if (g.tur === 'senaryo_taban') {
-    const k = g.adgKanitSenaryo != null ? kanitGcaa(g.adgKanitSenaryo) : null;
-    gcaa = g.olcumGcaaGramGun ?? k?.gcaaGramGun ?? null;
+    const irk = g.irkTaslak;
+    const besleme = g.beslemeTaslak ?? varsayilanBeslemeTaslak();
+    if (irk && g.adgKanitSenaryo) {
+      const ef = efektifGcaaGramGun(g.adgKanitSenaryo, irk, besleme);
+      gcaa = g.olcumGcaaGramGun ?? ef.gcaa ?? null;
+    } else {
+      const k = g.adgKanitSenaryo != null ? kanitGcaa(g.adgKanitSenaryo) : null;
+      gcaa = g.olcumGcaaGramGun ?? k?.gcaaGramGun ?? null;
+    }
     guvenilirlik = g.olcumGcaaGramGun != null ? 'olcum' : gcaa != null ? 'plan' : 'eksik';
-    uyari.push('Literatür senaryosu — ölçüm varsa öncelik ölçümde');
+    uyari.push('Irk+besleme bandı — ölçüm varsa öncelik ölçümde');
   } else {
     gcaa = ortalamaPlanGcaa(g.donemler, g.hedefGun);
     guvenilirlik = gcaa != null ? 'plan' : 'eksik';
@@ -148,9 +161,12 @@ export function karsilastir60ve90(
   donemler: BesiPlanDonemGirdi[],
   tur: AdgSenaryoTur,
   adgKanitSenaryo?: AdgKanitSenaryo,
+  irkTaslak?: BesiPlanIrkTaslak | null,
+  beslemeTaslak?: BesiPlanBeslemeTaslak | null,
 ): UfukKarsilastirma {
-  const gun60 = hedefKgHesapla({ tur, girisKg, hedefGun: 60, donemler, adgKanitSenaryo });
-  const gun90 = hedefKgHesapla({ tur, girisKg, hedefGun: 90, donemler, adgKanitSenaryo });
+  const ek = { irkTaslak, beslemeTaslak: beslemeTaslak ?? varsayilanBeslemeTaslak() };
+  const gun60 = hedefKgHesapla({ tur, girisKg, hedefGun: 60, donemler, adgKanitSenaryo, ...ek });
+  const gun90 = hedefKgHesapla({ tur, girisKg, hedefGun: 90, donemler, adgKanitSenaryo, ...ek });
   const p60 = planMaliyetVeKgGunHedef(girisKg, donemler, 60);
   const p90 = planMaliyetVeKgGunHedef(girisKg, donemler, 90);
   return {

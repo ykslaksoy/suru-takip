@@ -51,6 +51,8 @@ import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { BesiBolgeSecimi, varsayilanBolgeTaslak } from '@/bilesenler/maliyet/BesiBolgeSecimi';
 import { BesiIrkKokenSecimi } from '@/bilesenler/maliyet/BesiIrkKokenSecimi';
+import { BesiBeslemeAdgPaneli } from '@/bilesenler/maliyet/BesiBeslemeAdgPaneli';
+import { varsayilanBeslemeTaslak, type BesiPlanBeslemeTaslak } from '@/kaynak/maliyet/besi-plan-besleme';
 import {
   varsayilanIrkTaslak,
   type BesiPlanIrkTaslak,
@@ -118,6 +120,7 @@ export default function BesiPlanlamaScreen() {
   const [refTick, setRefTick] = useState(0);
   const { meta: refSyncMeta, sonDurum: refSyncDurum } = useBesiReferansOtomatik();
   const [irkTaslak, setIrkTaslak] = useState<BesiPlanIrkTaslak>(varsayilanIrkTaslak());
+  const [beslemeTaslak, setBeslemeTaslak] = useState<BesiPlanBeslemeTaslak>(varsayilanBeslemeTaslak());
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -239,6 +242,7 @@ export default function BesiPlanlamaScreen() {
           yemFireYuzde: 5,
           olcumGcaa: irkTaslak.olcumGcaaGramGun,
           irkTaslak,
+          beslemeTaslak,
         })
       : null;
 
@@ -262,6 +266,7 @@ export default function BesiPlanlamaScreen() {
             kullaniciBolgeSatisKg: bolgeTaslak.kullaniciSatisKg,
             isletmeGiderBas: isletmeGiderBas.trim() ? sayi(isletmeGiderBas) : null,
             olumOranYuzde: olumOran.trim() ? sayi(olumOran) : null,
+            beslemeTaslak,
           },
           sayi(satisFiyat),
         )
@@ -409,6 +414,14 @@ export default function BesiPlanlamaScreen() {
             setIrkTaslak(t);
             if (t.olcumGcaaGramGun == null) setAdgKanit(kararVarsayilanSenaryo(t));
           }}
+          colors={colors}
+          planKilitli={planKilitli}
+        />
+        <BesiBeslemeAdgPaneli
+          irk={irkTaslak}
+          besleme={beslemeTaslak}
+          adgSenaryo={adgKanit}
+          onBeslemeChange={setBeslemeTaslak}
           colors={colors}
           planKilitli={planKilitli}
         />
