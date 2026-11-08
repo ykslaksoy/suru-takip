@@ -69,6 +69,11 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t362u — Bölge + satış kaynağı
+
+- `BesiBolgeSecimi` — serbest il, UKON 7 bölge + TOBB Edirne/Gaziantep + Balıkesir; karşılaştırma tablosu
+- `bolgeTaslagi` plan kaydı — ırktan ayrı; yenileme hâlâ `manuel_only`
+
 ## t359u — Karar simülasyonu (muhafazakar varsayılan)
 
 - Pazar/karışık → **muhafazakar 200 g/gün** başlangıç; 320 varsayılan değil

@@ -3,6 +3,7 @@
 import type { BesiEkonomiKalem } from '@/kaynak/maliyet/besi-ekonomi-kalem';
 import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
 import type { BesiPlanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
+import type { IsletmeBolgeTaslak } from '@/kaynak/maliyet/besi-plan-bolge-tipler';
 
 export type BesiDonemTuru = 'varis_gozlem' | 'uyum' | 'buyume' | 'bitirme';
 
@@ -50,6 +51,8 @@ export type BesiPlanSenaryo = {
   butceTaslagi?: ButceTaslak;
   /** Plan hedef ırk/köken — hayvan kaydına yazılmaz */
   irkTaslagi?: BesiPlanIrkTaslak;
+  /** İşletme ili + satış referansı — ırktan bağımsız */
+  bolgeTaslagi?: IsletmeBolgeTaslak;
   olusturma: string;
   guncelleme: string;
   onayTarihi?: string;

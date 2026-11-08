@@ -79,9 +79,9 @@ const GOMULU: PiyasaFiyatKaydi[] = [
     alinmaTarihi: '2026-11-08',
     kaynakAd: 'Balıkesir TB Ağustos 2026 bülteni (HMS satırı)',
     kaynakUrl: 'https://www.balikesirborsa.org.tr/panel/upload/bultenler/8-agustos.pdf',
-    durum: 'gömülü',
+    durum: 'bayat',
     gelecekGarantiYok: true,
-    not: '8 Kas günlük TOBB çekimi yok — en yakın resmi aylık bülten Ağustos 2026',
+    not: 'Kasım 2026 günlük canlı yok — Ağu 2026 bülteni; başka ile sessiz geçirilmez',
   },
   {
     id: 'balikesir-kuzu-kemikli-eylul2026',
@@ -96,11 +96,59 @@ const GOMULU: PiyasaFiyatKaydi[] = [
     alinmaTarihi: '2026-11-08',
     kaynakAd: 'Balıkesir TB Eylül 2026 bülteni (HMS)',
     kaynakUrl: 'https://www.balikesirborsa.org.tr/panel/upload/bultenler/9-eylul.pdf',
-    durum: 'gömülü',
+    durum: 'bayat',
     gelecekGarantiYok: true,
     not: 'Kemikli et kg — UKON yağsız karkas ile aynı kategori değil',
   },
+  {
+    id: 'tobb-gaziantep-kasaplik-kuzu',
+    kategori: 'canli_kg',
+    bolge: 'edirne_tobb',
+    etiket: 'OT KUZUSU — Gaziantep TB',
+    deger: 362.29,
+    min: 361,
+    max: 363.35,
+    birim: 'TL/kg',
+    islemTarihi: '2026-10-08',
+    alinmaTarihi: '2026-11-08',
+    kaynakAd: 'TOBB ürün fiyatı (Gaziantep)',
+    kaynakUrl: 'https://borsa.tobb.org.tr/fiyat_urun3.php?alt_kod=108&ana_kod=13',
+    durum: 'gömülü',
+    gelecekGarantiYok: true,
+    not: 'Edirne ile aynı satır değil — Güneydoğu canlı referans',
+  },
+  ...ukonBolgeKayitlari('2026-11-05'),
 ];
+
+function ukonBolgeKayitlari(islemTarihi: string): PiyasaFiyatKaydi[] {
+  const url = 'https://www.ukon.org.tr/fiyatlar';
+  const satirlar: [id: string, etiket: string, deger: number, min: number, max: number][] = [
+    ['ukon-kuzu-ege', 'UKON yağsız kuzu karkası — Ege', 665, 665, 665],
+    ['ukon-kuzu-akdeniz', 'UKON yağsız kuzu karkası — Akdeniz', 605, 605, 605],
+    ['ukon-kuzu-marmara', 'UKON yağsız kuzu karkası — Marmara', 700, 700, 700],
+    ['ukon-kuzu-ic-anadolu', 'UKON yağsız kuzu karkası — İç Anadolu', 580, 580, 580],
+    ['ukon-kuzu-dogu-anadolu', 'UKON yağsız kuzu karkası — Doğu Anadolu', 555, 555, 555],
+    ['ukon-kuzu-guneydogu', 'UKON yağsız kuzu karkası — Güneydoğu', 555, 555, 555],
+    ['ukon-kuzu-karadeniz', 'UKON yağsız kuzu karkası — Karadeniz', 645, 645, 645],
+  ];
+  return satirlar.map(([id, etiket, deger, min, max]) => ({
+    id,
+    kategori: 'karkas_kg' as const,
+    bolge: 'ukon' as const,
+    etiket,
+    deger,
+    min,
+    max,
+    birim: 'TL/kg' as const,
+    islemTarihi,
+    alinmaTarihi: '2026-11-08',
+    kaynakAd: 'UKON haftalık fiyat',
+    kaynakUrl: url,
+    durum: 'gömülü' as const,
+    gelecekGarantiYok: true as const,
+    not: 'Canlı kg değil — yağsız karkas bıçak',
+  }));
+}
 
 const KEY = 'sy_besi_piyasa_kayit_v1';
 
@@ -190,4 +238,12 @@ export function piyasaManuelIceAktar(yeni: PiyasaFiyatKaydi): { kayitlar: Piyasa
 
 export function piyasaKaydiBul(id: string): PiyasaFiyatKaydi | undefined {
   return piyasaKayitOku().kayitlar.find((k) => k.id === id);
+}
+
+/** null fiyat ≠ 0; bayat ayrı etiket */
+export function piyasaTazelikEtiketi(k: PiyasaFiyatKaydi): string {
+  if (k.deger == null) return 'veri yok';
+  if (k.durum === 'bayat') return `bayat · işlem ${k.islemTarihi ?? '—'}`;
+  if (k.durum === 'arastirma_bekleniyor') return 'araştırma bekleniyor';
+  return `işlem ${k.islemTarihi ?? '—'} · ${k.durum}`;
 }

@@ -6,6 +6,9 @@ import { hesaplaBrutKar, BRUT_KAR_ETIKET } from '@/kaynak/maliyet/besi-plan-brut
 import { ortakGiderMutabakat } from '@/kaynak/maliyet/besi-plan-butce-hesap';
 import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
 import { hesaplaKararSimulasyon, kararVarsayilanSenaryo } from '@/kaynak/maliyet/besi-plan-karar-sim';
+import { cozPiyasaFiyat, piyasaKarsilastirma } from '@/kaynak/maliyet/besi-plan-piyasa-kaynak';
+import { ilIcinOneriler } from '@/kaynak/maliyet/besi-plan-bolge-tipler';
+import { piyasaTazelikEtiketi } from '@/kaynak/maliyet/besi-piyasa-kayit';
 
 const g = 'Besi piyasa ADG t355u';
 
@@ -93,6 +96,15 @@ export const besiPiyasaAdgModul: TestModul = {
           test(g, 't359u breakeven kg', (k.breakevenCanliFiyatKg60 ?? 0) > 300),
         ];
       })(),
+      test(g, 't362u UKON ege 665', cozPiyasaFiyat('ukon_ege', null, null).fiyatKg === 665),
+      test(g, 't362u balikesir null değil 0', (cozPiyasaFiyat('balikesir_canli', null, null).fiyatKg ?? 0) > 0),
+      test(g, 't362u balikesir bayat', piyasaTazelikEtiketi(bal!).includes('bayat')),
+      test(g, 't362u karkas birim ukon', cozPiyasaFiyat('ukon_marmara', null, null).kayit?.kategori === 'karkas_kg'),
+      test(g, 't362u bolge fiyat eksik', cozPiyasaFiyat('kullanici_bolge_fiyat', null, null).fiyatKg == null),
+      test(g, 't362u bolge fiyat 400', cozPiyasaFiyat('kullanici_bolge_fiyat', null, 400).fiyatKg === 400),
+      test(g, 't362u karsilastirma satir', piyasaKarsilastirma('edirne_tobb').length >= 10),
+      test(g, 't362u balikesir oneri', ilIcinOneriler('Balıkesir').ukon === 'ege'),
+      test(g, 't362u gaziantep canlı', cozPiyasaFiyat('gaziantep_tobb', null, null).fiyatKg === 362.29),
     ].flat();
   },
 };

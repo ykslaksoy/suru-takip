@@ -1,17 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { BesiPiyasaOzet, PiyasaSatisKaynak } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
+import type { BesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { piyasaReferansYenile } from '@/kaynak/maliyet/besi-piyasa-kayit';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
-
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string; card: string };
-
-const SATIS: { kod: PiyasaSatisKaynak; etiket: string }[] = [
-  { kod: 'edirne_tobb', etiket: 'TOBB Edirne canlı' },
-  { kod: 'ukon', etiket: 'UKON karkas' },
-  { kod: 'balikesir_canli', etiket: 'Balıkesir canlı (Ağu26)' },
-  { kod: 'balikesir_kemikli', etiket: 'Balıkesir kemikli (Eyl26)' },
-  { kod: 'kullanici_senaryo', etiket: 'Kullanıcı senaryo' },
-];
 
 const ADG: { kod: AdgKanitSenaryo; etiket: string }[] = [
   { kod: 'beklenen', etiket: 'Beklenen 250' },
@@ -24,17 +15,14 @@ export function BesiPiyasaAdgPaneli({
   satisKaynak,
   adgKanit,
   yemIllustrasyon,
-  onSatisKaynak,
   onAdgKanit,
   onYemIllustrasyon,
   refreshDurum,
   colors,
 }: {
   ozet: BesiPiyasaOzet;
-  satisKaynak: PiyasaSatisKaynak;
   adgKanit: AdgKanitSenaryo;
   yemIllustrasyon: boolean;
-  onSatisKaynak: (k: PiyasaSatisKaynak) => void;
   onAdgKanit: (k: AdgKanitSenaryo) => void;
   onYemIllustrasyon: (v: boolean) => void;
   refreshDurum: string | null;
@@ -66,24 +54,23 @@ export function BesiPiyasaAdgPaneli({
       </Pressable>
       {refreshDurum ? <Text style={{ color: colors.textSecondary, fontSize: 10 }}>{refreshDurum}</Text> : null}
 
-      <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4 }}>Satış fiyat kaynağı</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-        {SATIS.map((s) => (
-          <Pressable
-            key={s.kod}
-            onPress={() => onSatisKaynak(s.kod)}
-            style={{
-              padding: 6,
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: satisKaynak === s.kod ? colors.tint : colors.border,
-            }}>
-            <Text style={{ color: colors.text, fontSize: 10 }}>{s.etiket}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 11, marginTop: 4 }}>Bölgesel karşılaştırma (temel karıştırma)</Text>
+      {ozet.karsilastirma.map((k) => (
+        <Text
+          key={k.kod}
+          style={{
+            color: k.secili ? colors.tint : colors.textSecondary,
+            fontSize: 10,
+            fontWeight: k.secili ? '700' : '400',
+          }}>
+          {k.secili ? '★ ' : '· '}
+          {k.etiket}: {k.deger?.toLocaleString('tr-TR') ?? '—'} ₺/{k.birim === 'canli_kg' ? 'canlı kg' : 'karkas kg'}{' '}
+          ({k.islemTarihi ?? '—'}, {k.durum}
+          {k.min != null && k.max != null && k.min !== k.max ? `, ${k.min}–${k.max}` : ''})
+        </Text>
+      ))}
 
-      <Text style={{ color: colors.textSecondary, fontSize: 11 }}>ADG kanıt senaryosu (25 kg giriş)</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 8 }}>ADG kanıt senaryosu (25 kg giriş)</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
         {ADG.map((a) => (
           <Pressable
@@ -112,14 +99,6 @@ export function BesiPiyasaAdgPaneli({
           İllüstrasyon yem 60g: {yemIllustrasyon ? 'AÇIK' : 'kapalı'} (plan yem yoksa)
         </Text>
       </Pressable>
-
-      {ozet.piyasa
-        .filter((p) => p.bolge === 'balikesir' || p.bolge === 'edirne_tobb' || p.bolge === 'ukon')
-        .map((p) => (
-          <Text key={p.id} style={{ color: colors.textSecondary, fontSize: 10 }}>
-            · {p.etiket}: {p.deger?.toLocaleString('tr-TR') ?? '—'} ({p.islemTarihi ?? '—'}) — {p.durum}
-          </Text>
-        ))}
 
       {satir(ozet.ufuk60, '60 gün')}
       {satir(ozet.ufuk90, '90 gün')}

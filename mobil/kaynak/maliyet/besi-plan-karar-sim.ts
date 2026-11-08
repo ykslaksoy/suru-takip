@@ -9,6 +9,7 @@ import { efektifGcaaGramGun } from './besi-plan-irk';
 import { hesaplaBrutKar, BRUT_KAR_ETIKET } from './besi-plan-brut-kar';
 import type { BesiPiyasaOzetGirdi } from './besi-plan-piyasa-ozet';
 import { hesaplaBesiPiyasaOzet } from './besi-plan-piyasa-ozet';
+import { birimForSatisKaynak, cozPiyasaFiyat } from './besi-plan-piyasa-kaynak';
 import { satisGelirBasHesapla, type SatisFiyatBirimi } from './besi-plan-satis';
 
 const SENARYOLAR: AdgKanitSenaryo[] = ['muhafazakar', 'beklenen', 'iyimser'];
@@ -53,17 +54,11 @@ function cikisKg(girisKg: number, gun: number, senaryo: AdgKanitSenaryo, irk: Be
 
 function satisFiyatKg(g: KararSimGirdi, satisFiyatKgOverride: number | null): number | null {
   if (satisFiyatKgOverride != null) return satisFiyatKgOverride;
-  const ozet = hesaplaBesiPiyasaOzet(g);
-  if (g.satisKaynak === 'edirne_tobb') return ozet.piyasa.find((p) => p.id === 'tobb-edirne-kasaplik-kuzu')?.deger ?? null;
-  if (g.satisKaynak === 'balikesir_canli')
-    return ozet.piyasa.find((p) => p.id === 'balikesir-kuzu-canli-kg-agustos2026')?.deger ?? null;
-  if (g.satisKaynak === 'ukon') return ozet.piyasa.find((p) => p.id === 'ukon-karkas-yagsiz-kuzu')?.deger ?? null;
-  return null;
+  return cozPiyasaFiyat(g.satisKaynak, g.kullaniciSatisFiyatKg, g.kullaniciBolgeSatisKg).fiyatKg;
 }
 
 function birimForKaynak(k: KararSimGirdi['satisKaynak']): SatisFiyatBirimi {
-  if (k === 'ukon' || k === 'balikesir_kemikli') return 'karkas_kg';
-  return 'canli_kg';
+  return birimForSatisKaynak(k);
 }
 
 function ufukBrut(

@@ -43,7 +43,8 @@ import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
 import { hesaplaButceMutabakat, ornekButce12000, ornekButce12500 } from '@/kaynak/maliyet/besi-plan-butce-hesap';
 import { BesiPiyasaAdgPaneli } from '@/bilesenler/maliyet/BesiPiyasaAdgPaneli';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
-import { hesaplaBesiPiyasaOzet, type PiyasaSatisKaynak } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
+import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
+import { BesiBolgeSecimi, varsayilanBolgeTaslak } from '@/bilesenler/maliyet/BesiBolgeSecimi';
 import { BesiIrkKokenSecimi } from '@/bilesenler/maliyet/BesiIrkKokenSecimi';
 import { varsayilanIrkTaslak, type BesiPlanIrkTaslak, adgSenaryoIrkUygunMu, irkAdgPolitikasi } from '@/kaynak/maliyet/besi-plan-irk';
 import { BesiKararSimulasyonPaneli } from '@/bilesenler/maliyet/BesiKararSimulasyonPaneli';
@@ -96,7 +97,7 @@ export default function BesiPlanlamaScreen() {
   const [ekonomiKalemler, setEkonomiKalemler] = useState<BesiEkonomiKalem[]>(varsayilanKalemlerBos());
   const [gercekParti, setGercekParti] = useState<PartiGercekMaliyetOzet | null>(null);
   const [butceTaslak, setButceTaslak] = useState<ButceTaslak | null>(null);
-  const [satisKaynak, setSatisKaynak] = useState<PiyasaSatisKaynak>('edirne_tobb');
+  const [bolgeTaslak, setBolgeTaslak] = useState(varsayilanBolgeTaslak());
   const [adgKanit, setAdgKanit] = useState<AdgKanitSenaryo>('muhafazakar');
   const [isletmeGiderBas, setIsletmeGiderBas] = useState('');
   const [olumOran, setOlumOran] = useState('');
@@ -202,12 +203,15 @@ export default function BesiPlanlamaScreen() {
 
   const alisBrutKar = cozAlis.alisBas ?? (sayi(girisKg) === 25 ? 12000 : null);
   const karkasV = karkasVerimOku(karkasVerim);
+  const satisKaynak = bolgeTaslak.satisKaynak;
   const piyasaOzet =
     sayi(girisKg) != null && alisBrutKar != null
       ? hesaplaBesiPiyasaOzet({
           girisKg: sayi(girisKg)!,
           alisBas: alisBrutKar,
           satisKaynak,
+          kullaniciSatisFiyatKg: sayi(satisFiyat),
+          kullaniciBolgeSatisKg: bolgeTaslak.kullaniciSatisKg,
           satisBirimi,
           karkasVerim: karkasV,
           adgSenaryo: 'senaryo_taban',
@@ -236,6 +240,8 @@ export default function BesiPlanlamaScreen() {
             yemFireYuzde: 5,
             irkTaslak,
             basSayisi: basAdet,
+            kullaniciSatisFiyatKg: sayi(satisFiyat),
+            kullaniciBolgeSatisKg: bolgeTaslak.kullaniciSatisKg,
             isletmeGiderBas: isletmeGiderBas.trim() ? sayi(isletmeGiderBas) : null,
             olumOranYuzde: olumOran.trim() ? sayi(olumOran) : null,
           },
@@ -285,6 +291,7 @@ export default function BesiPlanlamaScreen() {
       ekonomiKalemler,
       butceTaslagi: butceTaslak ?? undefined,
       irkTaslagi: irkTaslak,
+      bolgeTaslagi: bolgeTaslak,
     });
     setSenaryoId(s.id);
     await yukle();
@@ -387,6 +394,7 @@ export default function BesiPlanlamaScreen() {
           colors={colors}
           planKilitli={planKilitli}
         />
+        <BesiBolgeSecimi taslak={bolgeTaslak} onChange={setBolgeTaslak} colors={colors} planKilitli={planKilitli} />
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
           Tahmini alış fiyatı (₺/canlı kg) — {ALIS_KAYNAK_ETIKET.kullanici_planlama_varsayimi}. Canlı borsa veya satış fiyatı değil.
         </Text>
@@ -469,10 +477,8 @@ export default function BesiPlanlamaScreen() {
         {piyasaOzet ? (
           <BesiPiyasaAdgPaneli
             ozet={piyasaOzet}
-            satisKaynak={satisKaynak}
             adgKanit={adgKanit}
             yemIllustrasyon={yemIllustrasyon}
-            onSatisKaynak={setSatisKaynak}
             onAdgKanit={(k) => {
               if (adgSenaryoIrkUygunMu(k, irkAdgPolitikasi(irkTaslak))) setAdgKanit(k);
             }}
@@ -646,6 +652,7 @@ export default function BesiPlanlamaScreen() {
                   if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);
                   setButceTaslak(s.butceTaslagi ?? null);
                   setIrkTaslak(s.irkTaslagi ?? varsayilanIrkTaslak());
+                  setBolgeTaslak(s.bolgeTaslagi ?? varsayilanBolgeTaslak());
                   setSatisBirimi(s.satisBirimi ?? 'canli_kg');
                   setKarkasVerim(s.karkasVerimOrani != null ? String(s.karkasVerimOrani * 100) : '');
                   setSatisFiyat(s.satisFiyatKg != null ? String(s.satisFiyatKg) : '');

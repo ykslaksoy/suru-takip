@@ -9,14 +9,22 @@ import { satisGelirBasHesapla, type SatisFiyatBirimi } from './besi-plan-satis';
 import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
 import type { BesiPlanIrkTaslak } from './besi-plan-irk';
 import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from './besi-plan-irk';
+import {
+  birimForSatisKaynak,
+  cozPiyasaFiyat,
+  piyasaKarsilastirma,
+  type KarsilastirmaSatiri,
+  type PiyasaSatisKaynak,
+} from './besi-plan-piyasa-kaynak';
 
-export type PiyasaSatisKaynak = 'edirne_tobb' | 'ukon' | 'balikesir_canli' | 'balikesir_kemikli' | 'kullanici_senaryo';
+export type { PiyasaSatisKaynak };
 
 export type BesiPiyasaOzetGirdi = {
   girisKg: number;
   alisBas: number;
   satisKaynak: PiyasaSatisKaynak;
   kullaniciSatisFiyatKg?: number | null;
+  kullaniciBolgeSatisKg?: number | null;
   satisBirimi: SatisFiyatBirimi;
   karkasVerim: number | null;
   adgSenaryo: AdgSenaryoTur;
@@ -39,37 +47,13 @@ export type UfukEkonomi = {
 
 export type BesiPiyasaOzet = {
   piyasa: PiyasaFiyatKaydi[];
+  karsilastirma: KarsilastirmaSatiri[];
   kanit: ReturnType<typeof kanitGcaa>;
   irkPolitikasi: ReturnType<typeof irkAdgPolitikasi>;
   ufuk60: UfukEkonomi;
   ufuk90: UfukEkonomi;
   uyari: string[];
 };
-
-function piyasaFiyat(
-  kaynak: PiyasaSatisKaynak,
-  kullanici: number | null | undefined,
-): { fiyatKg: number | null; kayit: PiyasaFiyatKaydi | null; eksik: string[] } {
-  const all = gomuluPiyasaKayitlari();
-  const eksik: string[] = [];
-  if (kaynak === 'kullanici_senaryo') {
-    return { fiyatKg: kullanici ?? null, kayit: null, eksik: kullanici == null ? ['Kullanıcı senaryo fiyatı'] : [] };
-  }
-  const id =
-    kaynak === 'edirne_tobb'
-      ? 'tobb-edirne-kasaplik-kuzu'
-      : kaynak === 'ukon'
-        ? 'ukon-karkas-yagsiz-kuzu'
-        : kaynak === 'balikesir_canli'
-          ? 'balikesir-kuzu-canli-kg-agustos2026'
-          : 'balikesir-kuzu-kemikli-eylul2026';
-  const kayit = all.find((k) => k.id === id);
-  if (!kayit?.deger) {
-    eksik.push(`${kaynak} fiyatı yok`);
-    return { fiyatKg: null, kayit: kayit ?? null, eksik };
-  }
-  return { fiyatKg: kayit.deger, kayit, eksik };
-}
 
 function yemBas(
   girisKg: number,
@@ -130,21 +114,21 @@ export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
     'Sürekli canlı borsa güncellemesi yok — gömülü/önbellek + manuel içe aktarma.',
     '8 model tablo max kazanç kanıt değil.',
   ];
-  const px = piyasaFiyat(g.satisKaynak, g.kullaniciSatisFiyatKg);
+  const px = cozPiyasaFiyat(g.satisKaynak, g.kullaniciSatisFiyatKg, g.kullaniciBolgeSatisKg);
   uyari.push(...px.eksik);
-  let birim = g.satisBirimi;
-  if (g.satisKaynak === 'ukon') birim = 'karkas_kg';
-  if (g.satisKaynak === 'balikesir_kemikli') birim = 'karkas_kg';
-  if (g.satisKaynak === 'edirne_tobb' || g.satisKaynak === 'balikesir_canli') birim = 'canli_kg';
+  uyari.push('Gelecek fiyat garantisi yok — gömülü referans + plan varsayımı.');
+  const birim = birimForSatisKaynak(g.satisKaynak);
   if (g.satisKaynak === 'balikesir_kemikli') {
     uyari.push('Balıkesir kemikli et fiyatı — canlı kg değil; verim ile çevirmeyin');
   }
+  if (px.varsayim) uyari.push('Seçili satış fiyatı kullanıcı varsayımı — resmi borsa değil.');
 
   const irkPolitikasi = irkAdgPolitikasi(g.irkTaslak ?? varsayilanIrkTaslak());
   uyari.push(...irkPolitikasi.uyari.slice(0, 2));
 
   return {
     piyasa: gomuluPiyasaKayitlari(),
+    karsilastirma: piyasaKarsilastirma(g.satisKaynak),
     kanit: kanitGcaa(g.adgKanit),
     irkPolitikasi,
     ufuk60: ufuk(60, g, px.fiyatKg, birim),
