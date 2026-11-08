@@ -196,6 +196,32 @@ export function KilitliAnaSayfa() {
           </View>
         </View>
 
+        <View style={{ paddingHorizontal: yatayPad, marginBottom: 8 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Akıllı Çiftlik simülasyonu"
+            onPress={() => router.push('/akilli-ciftlik' as never)}
+            style={({ pressed }) =>
+              StyleSheet.flatten([
+                styles.akilliCiftlikKart,
+                {
+                  backgroundColor: light ? '#eef6f1' : colors.card,
+                  borderColor: colors.tint,
+                  opacity: pressed ? 0.9 : 1,
+                },
+              ])
+            }>
+            <Ionicons name="game-controller-outline" size={22} color={colors.tint} />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={{ color: colors.text, fontWeight: '800' }}>Akıllı Çiftlik</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                Bütçe ve bakım simülasyonu — gerçek sürü kaydı değişmez
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.tint} />
+          </Pressable>
+        </View>
+
         {/* ── Bugün yapılacaklar ── */}
         <View style={StyleSheet.flatten([styles.bolum, { paddingHorizontal: yatayPad }])}>
           <View style={styles.bolumBaslik}>
@@ -466,6 +492,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   asiRozetYazi: { color: '#2d6a4f', fontWeight: '900', fontSize: 13 },
+  akilliCiftlikKart: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
+  },
   bolum: { marginTop: 22, marginBottom: 22 },
   bolumBaslik: {
     flexDirection: 'row',
