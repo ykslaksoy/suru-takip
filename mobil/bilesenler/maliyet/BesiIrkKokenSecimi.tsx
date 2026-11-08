@@ -10,7 +10,7 @@ import {
   type BesiPlanIrkTaslak,
   irkAdgPolitikasi,
 } from '@/kaynak/maliyet/besi-plan-irk';
-import { IRK_KATALOG_BY_KOD } from '@/kaynak/maliyet/besi-plan-irk-katalog';
+import { IRK_KATALOG_BY_KOD, normalizeHedefIrkKodu } from '@/kaynak/maliyet/besi-plan-irk-katalog';
 import { BesiIrkKatalogSecici } from '@/bilesenler/maliyet/BesiIrkKatalogSecici';
 
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string };
@@ -106,14 +106,9 @@ export function BesiIrkKokenSecimi({
             colors={{ ...colors, card: colors.border + '18' }}
             onSec={(k) => onChange({ ...taslak, hedefIrk: k })}
           />
-          {IRK_KATALOG_BY_KOD[taslak.hedefIrk]?.kaynak ? (
+          {IRK_KATALOG_BY_KOD[normalizeHedefIrkKodu(taslak.hedefIrk)]?.kaynak ? (
             <Text style={{ color: colors.textSecondary, fontSize: 10, marginTop: 4 }}>
-              Kaynak: {IRK_KATALOG_BY_KOD[taslak.hedefIrk].kaynak}
-            </Text>
-          ) : null}
-          {IRK_KATALOG_BY_KOD[taslak.hedefIrk]?.beklemede ? (
-            <Text style={{ color: colors.warning, fontSize: 11, marginTop: 4 }}>
-              {IRK_KATALOG_BY_KOD[taslak.hedefIrk].beklemeNotu}
+              Kaynak: {IRK_KATALOG_BY_KOD[normalizeHedefIrkKodu(taslak.hedefIrk)].kaynak}
             </Text>
           ) : null}
         </>
@@ -149,9 +144,9 @@ export function BesiIrkKokenSecimi({
           />
         ))}
       </View>
-      {(taslak.hedefIrk === 'diger' || taslak.hedefIrk === 'pirit_belirsiz' || taslak.hedefIrk === 'pirlak') && (
+      {(taslak.hedefIrk === 'diger') && (
         <NotInput
-          label={taslak.hedefIrk === 'pirit_belirsiz' ? 'Pırıt / Pırlak / varyete notu' : 'Irk notu'}
+          label="Irk notu"
           value={taslak.hedefIrkNot ?? ''}
           onEnd={(v) => onChange({ ...taslak, hedefIrkNot: v })}
           colors={colors}

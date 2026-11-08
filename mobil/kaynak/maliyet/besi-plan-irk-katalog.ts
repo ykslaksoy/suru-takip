@@ -12,10 +12,10 @@ export const BESI_IRK_GRUP_ETIKET: Record<BesiIrkGrup, string> = {
   yabanci: 'Yabancı ırk (ithal / damızlık)',
 };
 
-export type BesiHedefIrkKodu =
+/** Katalogda görünen kodlar (pirit_belirsiz hariç) */
+export type BesiHedefIrkKodKatalog =
   | 'generic_kuzu'
   | 'merinos_capraz'
-  | 'pirit_belirsiz'
   | 'diger'
   | 'akkaraman'
   | 'morkaraman'
@@ -49,8 +49,15 @@ export type BesiHedefIrkKodu =
   | 'dorper'
   | 'merinoland';
 
+/** Eski plan kayıtları — silinmez; okumada pirlak ile birleşir */
+export type BesiHedefIrkKodu = BesiHedefIrkKodKatalog | 'pirit_belirsiz';
+
+export const LEGACY_HEDEF_IRK_ESLEME: Record<'pirit_belirsiz', BesiHedefIrkKodKatalog> = {
+  pirit_belirsiz: 'pirlak',
+};
+
 export type IrkKatalogSatiri = {
-  kod: BesiHedefIrkKodu;
+  kod: BesiHedefIrkKodKatalog;
   etiket: string;
   grup: BesiIrkGrup;
   aramaAlias?: string[];
@@ -70,16 +77,6 @@ export const BESI_IRK_KATALOG: IrkKatalogSatiri[] = [
     etiket: 'Merinos melezi (genel)',
     grup: 'plan_ozel',
     kaynak: 'Bellisiz merinos hattı — Karacabey / OAM / Anadolu ayrı seçilir',
-  },
-  {
-    kod: 'pirit_belirsiz',
-    etiket: 'Pırıt — netleştirilecek',
-    grup: 'plan_ozel',
-    beklemede: true,
-    beklemeNotu: 'Pırıt ≠ Pırlak (GEKA 2015 ayrı genotip). Pırlak belliyse onu seçin.',
-    kaynak: 'GEKA Denizli koyunculuk haritası 2015',
-    kaynakUrl:
-      'https://geka.gov.tr/uploads/pages_v/denizli-ili-koyunculuk-haritasinin-olusturulmasi-projesi-sonuc-raporu-2015.pdf',
   },
   { kod: 'diger', etiket: 'Diğer (not)', grup: 'plan_ozel' },
 
@@ -177,10 +174,10 @@ export const BESI_IRK_KATALOG: IrkKatalogSatiri[] = [
   },
   {
     kod: 'pirlak',
-    etiket: 'Pırlak',
+    etiket: 'Pırlak (Pırıt)',
     grup: 'gelistirilmis_melez',
-    aramaAlias: ['Pirit yazımı karışır — Pırıt ayrı seçenek'],
-    kaynak: 'TÜBA/Agrovoc yerli genotip — Batı Anadolu',
+    aramaAlias: ['Pırıt', 'Pirit', 'PIRLAK', 'PIRIT', 'pirlak pirit'],
+    kaynak: 'Kullanıcı terimi birleşik — TÜBA/GEKA yerel genotip (Batı Anadolu)',
     kaynakUrl: 'http://terim.tuba.gov.tr/',
   },
   {
@@ -235,20 +232,44 @@ export const BESI_IRK_KATALOG: IrkKatalogSatiri[] = [
   },
 ];
 
-export const HEDEF_IRK_ETIKET: Record<BesiHedefIrkKodu, string> = Object.fromEntries(
-  BESI_IRK_KATALOG.map((r) => [r.kod, r.etiket]),
-) as Record<BesiHedefIrkKodu, string>;
+const _ETIKET_KATALOG = Object.fromEntries(BESI_IRK_KATALOG.map((r) => [r.kod, r.etiket])) as Record<
+  BesiHedefIrkKodKatalog,
+  string
+>;
 
-export const IRK_KATALOG_BY_KOD: Record<BesiHedefIrkKodu, IrkKatalogSatiri> = Object.fromEntries(
+export const HEDEF_IRK_ETIKET: Record<BesiHedefIrkKodu, string> = {
+  ..._ETIKET_KATALOG,
+  pirit_belirsiz: _ETIKET_KATALOG.pirlak,
+};
+
+export const IRK_KATALOG_BY_KOD: Record<BesiHedefIrkKodKatalog, IrkKatalogSatiri> = Object.fromEntries(
   BESI_IRK_KATALOG.map((r) => [r.kod, r]),
-) as Record<BesiHedefIrkKodu, IrkKatalogSatiri>;
+) as Record<BesiHedefIrkKodKatalog, IrkKatalogSatiri>;
+
+export function normalizeHedefIrkKodu(kod: BesiHedefIrkKodu): BesiHedefIrkKodKatalog {
+  if (kod === 'pirit_belirsiz') return LEGACY_HEDEF_IRK_ESLEME.pirit_belirsiz;
+  return kod;
+}
+
+export function hedefIrkKatalogdaVar(kod: string): kod is BesiHedefIrkKodKatalog {
+  return Object.prototype.hasOwnProperty.call(IRK_KATALOG_BY_KOD, kod);
+}
+
+export function isGecerliHedefIrkKodu(kod: string): kod is BesiHedefIrkKodu {
+  return kod === 'pirit_belirsiz' || hedefIrkKatalogdaVar(kod);
+}
+
+/** Yeni seçimlerde kullanılacak kanonik kod (eski JSON’a dokunmaz) */
+export function kanonikHedefIrkKayit(kod: BesiHedefIrkKodu): BesiHedefIrkKodu {
+  return normalizeHedefIrkKodu(kod);
+}
 
 export function irkGrup(kod: BesiHedefIrkKodu): BesiIrkGrup {
-  return IRK_KATALOG_BY_KOD[kod]?.grup ?? 'plan_ozel';
+  return IRK_KATALOG_BY_KOD[normalizeHedefIrkKodu(kod)]?.grup ?? 'plan_ozel';
 }
 
 /** Pazarda karışık grupta seçilebilir kodlar */
-export const KARISIK_IZINLI_IRK: BesiHedefIrkKodu[] = ['generic_kuzu', 'pirit_belirsiz', 'diger'];
+export const KARISIK_IZINLI_IRK: BesiHedefIrkKodKatalog[] = ['generic_kuzu', 'diger'];
 
 export const KATALOG_BREED_SAYISI = BESI_IRK_KATALOG.length;
 

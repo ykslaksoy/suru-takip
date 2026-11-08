@@ -8,6 +8,7 @@ import {
   irkKatalogAra,
   IRK_KATALOG_BY_KOD,
   KARISIK_IZINLI_IRK,
+  normalizeHedefIrkKodu,
 } from '@/kaynak/maliyet/besi-plan-irk-katalog';
 
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string; card: string };
@@ -40,7 +41,8 @@ export function BesiIrkKatalogSecici({
     return GRUP_SIRA.map((g) => ({ grup: g, satirlar: m.get(g)! })).filter((x) => x.satirlar.length > 0);
   }, [satirlar]);
 
-  const meta = IRK_KATALOG_BY_KOD[secili];
+  const canon = normalizeHedefIrkKodu(secili);
+  const meta = IRK_KATALOG_BY_KOD[canon];
 
   return (
     <View>
@@ -53,6 +55,7 @@ export function BesiIrkKatalogSecici({
       />
       <Text style={{ color: colors.tint, fontSize: 11, marginBottom: 4 }}>
         Seçili: {meta?.etiket ?? secili}
+        {secili === 'pirit_belirsiz' ? ' (kayıt: eski pirit_belirsiz)' : ''}
         {karisikPazar ? ' · pazar karışık — sınırlı liste' : ''}
       </Text>
       <ScrollView style={{ maxHeight: 220 }} nestedScrollEnabled>
@@ -71,9 +74,9 @@ export function BesiIrkKatalogSecici({
                   paddingHorizontal: 6,
                   borderRadius: 6,
                   marginTop: 2,
-                  backgroundColor: secili === r.kod ? `${colors.tint}22` : colors.card,
+                  backgroundColor: canon === r.kod ? `${colors.tint}22` : colors.card,
                   borderWidth: 1,
-                  borderColor: secili === r.kod ? colors.tint : colors.border,
+                  borderColor: canon === r.kod ? colors.tint : colors.border,
                 }}>
                 <Text style={{ color: colors.text, fontSize: 11 }}>{r.etiket}</Text>
               </Pressable>

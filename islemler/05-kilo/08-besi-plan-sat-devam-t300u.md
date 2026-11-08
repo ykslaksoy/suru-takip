@@ -69,7 +69,11 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
-## t364u — Irk kataloğu (35 kod)
+## t365u — Pırlak (Pırıt) birleşik
+
+- Katalog `pirlak` · eski `pirit_belirsiz` okunur, etiket birleşir
+
+## t364u — Irk kataloğu (34 görünür)
 
 - `besi-plan-irk-katalog.ts` — gruplu arama seçici
 - Asaf → `gelistirilmis_melez` (yerli değil); Pırlak ≠ Pırıt

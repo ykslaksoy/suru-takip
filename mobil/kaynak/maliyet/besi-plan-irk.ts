@@ -4,13 +4,14 @@ import type { AdgKanitSenaryo } from './besi-adg-kanit';
 import { kanitGcaa } from './besi-adg-kanit';
 import {
   HEDEF_IRK_ETIKET,
-  IRK_KATALOG_BY_KOD,
   type BesiHedefIrkKodu,
   irkGrup,
+  isGecerliHedefIrkKodu,
+  normalizeHedefIrkKodu,
 } from './besi-plan-irk-katalog';
 
 export type { BesiHedefIrkKodu };
-export { HEDEF_IRK_ETIKET };
+export { HEDEF_IRK_ETIKET, isGecerliHedefIrkKodu, normalizeHedefIrkKodu, kanonikHedefIrkKayit } from './besi-plan-irk-katalog';
 
 export type BesiAlisKoken = 'uretim_suru' | 'pazar_toplama';
 export type BesiIrkBilgi = 'irk_belli' | 'irk_kismen' | 'irk_bilinmiyor';
@@ -54,10 +55,6 @@ export type IrkAdgPolitikasi = {
   uyari: string[];
 };
 
-export function isGecerliHedefIrkKodu(k: string): k is BesiHedefIrkKodu {
-  return Object.prototype.hasOwnProperty.call(IRK_KATALOG_BY_KOD, k);
-}
-
 export function varsayilanIrkTaslak(): BesiPlanIrkTaslak {
   return {
     koken: 'pazar_toplama',
@@ -82,11 +79,8 @@ export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
   if (t.cinsiyet && t.cinsiyet !== 'bilinmiyor') uyari.push(`Cinsiyet: ${CINSIYET_ETIKET[t.cinsiyet]} — ADG bantları değişmez, bağlam notu.`);
   else if (t.cinsiyet == null) uyari.push('Cinsiyet girilmedi — tahminde genel bant.');
   if (t.yasDurum && t.yasDurum !== 'bilinmiyor') uyari.push(`Yaş/durum: ${YAS_DURUM_ETIKET[t.yasDurum]}`);
-  if (t.hedefIrk === 'pirit_belirsiz') {
-    uyari.push('Pırıt seçildi — Pırlak’a çevrilmedi; Pırlak belliyse katalogdan seçin.');
-  }
-  if (t.hedefIrk === 'pirlak') {
-    uyari.push('Pırlak seçildi — Pırıt (belirsiz) ile karıştırmayın.');
+  if (normalizeHedefIrkKodu(t.hedefIrk) === 'pirlak') {
+    uyari.push('Pırlak (Pırıt) — plan etiketi; ırka özel büyüme sabiti yok.');
   }
   if (t.hedefIrk === 'merinos_capraz') {
     uyari.push('Merinos melezi ≠ Karacabey / OAM / Anadolu Merinosu — belliyse onu seçin.');
@@ -129,7 +123,7 @@ export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
     };
   }
 
-  const irkAd = HEDEF_IRK_ETIKET[t.hedefIrk] ?? t.hedefIrk;
+  const irkAd = HEDEF_IRK_ETIKET[t.hedefIrk] ?? HEDEF_IRK_ETIKET[normalizeHedefIrkKodu(t.hedefIrk)];
   const grup = irkGrup(t.hedefIrk);
   if (grup === 'yabanci') uyari.push(`${irkAd} — yabancı ırk seçildi; yaygınlık iddiası yok.`);
   uyari.push(`${irkAd} seçildi — yine literatür aralığı; ırka özel max tablo yok`);
