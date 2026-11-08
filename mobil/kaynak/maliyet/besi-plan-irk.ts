@@ -47,6 +47,8 @@ export type BesiPlanIrkTaslak = {
   olcumBit?: string | null;
   cinsiyet?: BesiKuzuCinsiyet | null;
   yasDurum?: BesiKuzuYasDurum | null;
+  /** Pazar alımı uyum düşüşü % — yalnız kullanıcı girerse; varsayılan 0 (otomatik ceza yok) */
+  pazarUyumDususYuzde?: number | null;
 };
 
 export type IrkAdgPolitikasi = {

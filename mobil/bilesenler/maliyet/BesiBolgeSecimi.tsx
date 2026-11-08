@@ -25,7 +25,7 @@ export function BesiBolgeSecimi({
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>İşletme bölgesi / satış referansı (t362u)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>İşletme bölgesi / satış referansı</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 6 }}>
         İl ve ırk ayrı. Resmi kaynak yoksa «İl/bölge varsayım» + ₺/kg girin — 0 veya başka il fiyatı kullanılmaz.
       </Text>

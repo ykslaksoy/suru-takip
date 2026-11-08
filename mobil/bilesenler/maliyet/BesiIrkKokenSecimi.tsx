@@ -45,7 +45,7 @@ export function BesiIrkKokenSecimi({
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>Hedef kuzu — köken ve ırk (t364u katalog)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>Hedef kuzu — köken ve ırk</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 8 }}>
         Alış kökeni ırktan ayrı. Pazar + karışık grupta adlandırılmış ırk max ADG uygulanmaz.
       </Text>
@@ -177,6 +177,24 @@ export function BesiIrkKokenSecimi({
         colors={colors}
         disabled={planKilitli}
       />
+      {taslak.koken === 'pazar_toplama' ? (
+        <MiniInput
+          label="Pazar uyum düşüşü % (opsiyonel — boş = 0)"
+          value={
+            taslak.pazarUyumDususYuzde != null && taslak.pazarUyumDususYuzde > 0
+              ? String(taslak.pazarUyumDususYuzde)
+              : ''
+          }
+          onEnd={(v) =>
+            onChange({
+              ...taslak,
+              pazarUyumDususYuzde: v != null && v > 0 && v <= 40 ? v : null,
+            })
+          }
+          colors={colors}
+          disabled={planKilitli}
+        />
+      ) : null}
 
       <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 8 }}>{politika.etiket}</Text>
       {politika.heterojenlik ? (

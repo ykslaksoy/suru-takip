@@ -17,6 +17,15 @@ export type AdgGrupKodu =
   | 'gelistirilmis_melez'
   | 'yabanci_et';
 
+/** Kullanıcıya gösterilen planlama grubu — deneme sabiti değil */
+export const ADG_PLAN_GRUP_ETIKET: Record<AdgGrupKodu, string> = {
+  genel_belirsiz: 'Belirsiz / karışık grup',
+  yerli_koyun: 'Yerli koyun tipi (plan varsayımı)',
+  merinos_tip: 'Merinos tipi (plan varsayımı)',
+  gelistirilmis_melez: 'Geliştirilmiş melez (plan varsayımı)',
+  yabanci_et: 'Yabancı et ırkı (plan varsayımı)',
+};
+
 export type AdgGrupBand = {
   muhafazakar: number;
   beklenen: number;
@@ -48,9 +57,9 @@ export const ADG_GRUP_BAND: Record<AdgGrupKodu, AdgGrupBand> = {
     iyimser: 280,
     min: 140,
     max: 300,
-    kaynakAd: 'NSW DPI + yerli koyun besi genel aralığı',
+    kaynakAd: 'NSW DPI (feedlot kuzu bandı)',
     kaynakUrl: NSW,
-    baglam: 'Akkaraman, Kıvırcık, Pırlak (Pırıt) vb. — ırk özel sabit yok; ESK/TIGEM bağlam',
+    baglam: 'TR yerli koyun için düzenlenebilir plan bandı — ırk denemesi değil',
   },
   merinos_tip: {
     muhafazakar: 200,
@@ -58,9 +67,9 @@ export const ADG_GRUP_BAND: Record<AdgGrupKodu, AdgGrupBand> = {
     iyimser: 300,
     min: 160,
     max: 320,
-    kaynakAd: 'NSW DPI + TR merinos tipi (Karacabey/OAM)',
-    kaynakUrl: 'https://www.tigem.gov.tr/Bilgi/Detay/Damizlik/Koyunculuk',
-    baglam: 'Karacabey Merinosu — katalog hedefi; deneme ortalaması garanti değil',
+    kaynakAd: 'NSW DPI (feedlot kuzu bandı)',
+    kaynakUrl: NSW,
+    baglam: 'Karacabey vb. katalog seçimi — TR besi denemesi sabiti yok',
   },
   gelistirilmis_melez: {
     muhafazakar: 210,
@@ -68,9 +77,9 @@ export const ADG_GRUP_BAND: Record<AdgGrupKodu, AdgGrupBand> = {
     iyimser: 310,
     min: 170,
     max: 330,
-    kaynakAd: 'NSW DPI + geliştirilmiş melez (Asaf vb.)',
+    kaynakAd: 'NSW DPI (feedlot kuzu bandı)',
     kaynakUrl: NSW,
-    baglam: 'Asaf — süt/et melezi; yerli genotip sanılmamalı',
+    baglam: 'Asaf vb. için düzenlenebilir plan bandı — melez denemesi değil',
   },
   yabanci_et: {
     muhafazakar: 220,
@@ -78,9 +87,9 @@ export const ADG_GRUP_BAND: Record<AdgGrupKodu, AdgGrupBand> = {
     iyimser: 320,
     min: 180,
     max: 350,
-    kaynakAd: 'NSW DPI (et ırkı feedlot üst bandı)',
+    kaynakAd: 'NSW DPI (feedlot kuzu bandı)',
     kaynakUrl: NSW,
-    baglam: 'Suffolk, Texel vb. — TR iklim/adaptasyon farkı olabilir',
+    baglam: 'Yabancı et ırkı — TR uyum farkı kullanıcı varsayımına bırakıldı',
   },
 };
 
@@ -173,7 +182,7 @@ function beslemeAyari(
       if (!b.formulDogrulandi) uyari.push('Karma yem — tam faz girilmeden orta band');
       break;
     case 'hazir_pellet':
-      uyari.push('Hazır pelet — NSW feedlot bandı uygunluk varsayımı (alım kanıtı ayrı)');
+      uyari.push('Hazır pelet — NSW feedlot bandı; günlük alım doğrulanmalı');
       break;
     default:
       break;
@@ -183,9 +192,16 @@ function beslemeAyari(
     uyari.push('Katkı işaretli — tam rasyon yok; ADG artırılmadı');
   }
 
-  if (t.koken === 'pazar_toplama' && (t.yasDurum === 'bilinmiyor' || t.yasDurum == null)) {
-    gcaa = Math.round(gcaa * 0.94);
-    uyari.push('Pazar alımı adaptasyon — %6 ortalama düşüş (etiketli varsayım)');
+  const dusus = t.pazarUyumDususYuzde;
+  if (
+    t.koken === 'pazar_toplama' &&
+    dusus != null &&
+    Number.isFinite(dusus) &&
+    dusus > 0 &&
+    dusus <= 40
+  ) {
+    gcaa = Math.round(gcaa * (1 - dusus / 100));
+    uyari.push(`Pazar uyum düşüşü — kullanıcı %${dusus} (plan varsayımı, araştırma değil)`);
   }
 
   gcaa = cinsiyetAyari(t, gcaa, uyari);

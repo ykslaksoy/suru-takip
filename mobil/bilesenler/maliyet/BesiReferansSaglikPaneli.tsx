@@ -27,7 +27,7 @@ export function BesiReferansSaglikPaneli({ meta, colors }: { meta: ReferansSyncM
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 12 }}>Referans senkron durumu (t368u)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 12 }}>Referans senkron durumu</Text>
       {satir('Son başarılı çekim', meta.sonBasariliIso ?? 'henüz yok')}
       {satir('Son deneme', meta.sonDenemeIso ?? '—')}
       {satir('Tetikleyici', `${meta.sonNeden ?? '—'} → ${meta.sonSonuc ?? '—'}`)}
@@ -38,8 +38,9 @@ export function BesiReferansSaglikPaneli({ meta, colors }: { meta: ReferansSyncM
       {satir('İstemci TTL', `${ttlSaat} saat · odak/resume/açılış`)}
       {satir(
         'Vercel Cron',
-        '0 */6 * * * UTC — yalnız deploy sonrası; sunucu bellek cache 15 dk (kalıcı KV yok)',
+        'Günde 1× 05:00 UTC (Hobby uyumlu); asıl yenileme uygulama açılış/odak TTL',
       )}
+      {satir('Sunucu önbellek', '15 dk bellek — kalıcı KV yok; deploy sonrası sıfırlanır')}
 
       <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 10, marginTop: 8 }}>Kaynak işlem / yayın tarihi</Text>
       {Object.entries(meta.kaynakIslemTarihleri).length === 0

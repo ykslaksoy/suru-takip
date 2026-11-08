@@ -35,7 +35,7 @@ export function BesiReferansOverridePaneli({
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800' }}>Referans / kullanıcı fiyatları (t366u)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800' }}>Referans / kullanıcı fiyatları</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 10, marginBottom: 6 }}>
         Boş alan = güncel referans. “Referans fiyata dön” override’ı kaldırır. Fiyat 0 geçersiz.
       </Text>

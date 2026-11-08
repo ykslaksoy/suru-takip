@@ -7,7 +7,7 @@ type Colors = { text: string; textSecondary: string; border: string; tint: strin
 export function BesiKararSimulasyonPaneli({ sonuc, colors }: { sonuc: KararSimulasyonSonuc; colors: Colors }) {
   return (
     <View style={[styles.wrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800' }}>Karar simülasyonu (t359u)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800' }}>Karar simülasyonu (60 / 90 gün)</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 6 }}>
         Varsayılan: <Text style={{ fontWeight: '700' }}>{sonuc.varsayilanSenaryo}</Text> · tartım girilince tahmin güncellenir, hedef senaryosu donuk kalır.
       </Text>

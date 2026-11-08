@@ -9,6 +9,8 @@ import { varsayilanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
 import { efektifGcaaGramGun } from '@/kaynak/maliyet/besi-plan-irk';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { hesaplaYemIllustrasyon60 } from '@/kaynak/maliyet/besi-plan-yem-illustrasyon';
+import { besiPlanTaslakYazilabilirMi } from '@/kaynak/maliyet/besi-plan-depo-guard';
+import type { BesiPlanSenaryo } from '@/kaynak/maliyet/besi-plan-tipler';
 
 const g = 'Besi ADG besleme t372u';
 
@@ -73,7 +75,12 @@ export const besiPlanAdgBeslemeModul: TestModul = {
       test(g, 'pazar grup belirsiz', adgGrupForIrk(pazar) === 'genel_belirsiz'),
       test(g, 'karacabey merinos_tip', adgGrupForIrk(karacabey) === 'merinos_tip'),
       test(g, 'asaf geliştirilmiş', adgGrupForIrk(asaf) === 'gelistirilmis_melez'),
-      test(g, 'genel bek < 250 adaptasyon', (genelBek.seciliGcaa ?? 0) < 250),
+      test(g, 'genel bek 250 varsayılan', genelBek.seciliGcaa === 250),
+      test(
+        g,
+        'pazar uyum düşüşü kullanıcı',
+        cozPlanAdg('beklenen', { ...pazar, pazarUyumDususYuzde: 6 }, hazir).seciliGcaa === 235,
+      ),
       test(g, 'karacabey bek ~250', kcbBek.seciliGcaa === 250),
       test(g, 'mera düşürür', (meraMuh.seciliGcaa ?? 999) < kcbBek.muhafazakar),
       test(g, 'ev iyimser tavan beklenen', evIyim.seciliGcaa === 250),
@@ -91,6 +98,14 @@ export const besiPlanAdgBeslemeModul: TestModul = {
         'hedef kg',
         hedefCikisKgAdg(25, 60, kcbBek) === 40,
       ),
+      test(g, 'besleme JSON alanı', (() => {
+        const raw = JSON.stringify({
+          beslemeTaslagi: { ...varsayilanBeslemeTaslak(), yontem: 'mera_kaba' },
+        });
+        const p = JSON.parse(raw) as Pick<BesiPlanSenaryo, 'beslemeTaslagi'>;
+        return p.beslemeTaslagi?.yontem === 'mera_kaba';
+      })()),
+      test(g, 'onaylı plan kilit', !besiPlanTaslakYazilabilirMi({ durum: 'onayli' } as BesiPlanSenaryo)),
     ];
   },
 };

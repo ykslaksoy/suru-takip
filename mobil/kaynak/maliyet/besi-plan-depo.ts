@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { kaliciGetItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
+import { besiPlanTaslakYazilabilirMi } from '@/kaynak/maliyet/besi-plan-depo-guard';
 import type { BesiPlanDepo, BesiPlanSenaryo } from '@/kaynak/maliyet/besi-plan-tipler';
+
+export { besiPlanTaslakYazilabilirMi } from '@/kaynak/maliyet/besi-plan-depo-guard';
 
 const KEY = 'sy_besi_plan_senaryo_v1';
 
@@ -34,6 +37,9 @@ export async function kaydetBesiPlanTaslak(
   const depo = await getBesiPlanDepo();
   const now = new Date().toISOString();
   const mevcut = girdi.id ? depo.senaryolar.find((s) => s.id === girdi.id) : undefined;
+  if (!besiPlanTaslakYazilabilirMi(mevcut)) {
+    throw new Error('Onaylı plan değiştirilemez — yeni taslak açın.');
+  }
   const kayit: BesiPlanSenaryo = {
     ...girdi,
     id: mevcut?.id ?? girdi.id ?? uuidv4(),

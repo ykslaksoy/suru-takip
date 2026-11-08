@@ -101,7 +101,7 @@ export const besiPiyasaAdgModul: TestModul = {
         );
         const m = k.satirlar.find((s) => s.senaryo === 'muhafazakar')!;
         return [
-          test(g, 't359u 60g çıkış pazar muh', m.gun60.cikisKg === 36.3),
+          test(g, 't359u 60g çıkış pazar muh', m.gun60.cikisKg === 37),
           test(g, 't359u brüt 60g hesap', m.gun60.brutKar != null),
           test(g, 't359u breakeven kg', (k.breakevenCanliFiyatKg60 ?? 0) > 300),
         ];

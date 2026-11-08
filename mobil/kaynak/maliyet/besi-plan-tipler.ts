@@ -2,6 +2,8 @@
 
 import type { BesiEkonomiKalem } from '@/kaynak/maliyet/besi-ekonomi-kalem';
 import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
+import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
+import type { BesiPlanBeslemeTaslak } from '@/kaynak/maliyet/besi-plan-besleme';
 import type { BesiPlanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
 import type { IsletmeBolgeTaslak } from '@/kaynak/maliyet/besi-plan-bolge-tipler';
 
@@ -53,6 +55,10 @@ export type BesiPlanSenaryo = {
   irkTaslagi?: BesiPlanIrkTaslak;
   /** İşletme ili + satış referansı — ırktan bağımsız */
   bolgeTaslagi?: IsletmeBolgeTaslak;
+  /** Besleme yöntemi + formül/katkı işaretleri */
+  beslemeTaslagi?: BesiPlanBeslemeTaslak;
+  adgKanitSenaryo?: AdgKanitSenaryo;
+  yemIllustrasyonAktif?: boolean;
   olusturma: string;
   guncelleme: string;
   onayTarihi?: string;

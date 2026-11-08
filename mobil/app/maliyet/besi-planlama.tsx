@@ -292,7 +292,9 @@ export default function BesiPlanlamaScreen() {
       Alert.alert('Onaylı plan', 'Bu sürüm kilitli anlık görüntü — değişiklik için yeni taslak açın.');
       return;
     }
-    const s = await kaydetBesiPlanTaslak({
+    let s;
+    try {
+      s = await kaydetBesiPlanTaslak({
       id: senaryoId,
       baslik,
       kapsam: {
@@ -315,7 +317,14 @@ export default function BesiPlanlamaScreen() {
       butceTaslagi: butceTaslak ?? undefined,
       irkTaslagi: irkTaslak,
       bolgeTaslagi: bolgeTaslak,
+      beslemeTaslagi: beslemeTaslak,
+      adgKanitSenaryo: adgKanit,
+      yemIllustrasyonAktif: yemIllustrasyon,
     });
+    } catch (e) {
+      Alert.alert('Kaydedilemedi', e instanceof Error ? e.message : 'Bilinmeyen hata');
+      return;
+    }
     setSenaryoId(s.id);
     await yukle();
     Alert.alert('Taslak kaydedildi', `Sürüm ${s.surum}. Stok/rasyon değişmedi.`);
@@ -478,7 +487,7 @@ export default function BesiPlanlamaScreen() {
         </View>
 
         <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 8, marginBottom: 6 }}>
-          Besi Yönetimi — maliyet kalemleri (t306u)
+          Besi Yönetimi — maliyet kalemleri
         </Text>
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
           Alış, nakliye, yem, çoban, kira, su/elektrik, yatak, veteriner, sermaye (ops.), diğer. Gerçek parti stok değerlerini okuyabilir; muhasebeye yazmaz.
@@ -537,7 +546,7 @@ export default function BesiPlanlamaScreen() {
         )}
 
         <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 12, marginBottom: 6 }}>
-          Kullanıcı bütçe tablosu — mutabakat (t344u)
+          Kullanıcı bütçe tablosu — mutabakat
         </Text>
         {butceTaslak && butceMutabakat ? (
           <BesiButceMutabakatPaneli
@@ -585,7 +594,7 @@ export default function BesiPlanlamaScreen() {
         ) : null}
 
         <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 12, marginBottom: 6 }}>
-          Döngü ekonomisi — aday günler (t303u)
+          Döngü ekonomisi — aday günler
         </Text>
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8, lineHeight: 17 }}>
           Aylık kira/maaş ay adımı + sözleşme minimumu; günlük orantı yok. Tam döngü net ≠ marjinal şimdi-sat (hayvan ekranı).
@@ -700,6 +709,9 @@ export default function BesiPlanlamaScreen() {
                     isGecerliHedefIrkKodu(raw.hedefIrk) ? raw : { ...raw, hedefIrk: 'generic_kuzu' },
                   );
                   setBolgeTaslak(s.bolgeTaslagi ?? varsayilanBolgeTaslak());
+                  setBeslemeTaslak(s.beslemeTaslagi ?? varsayilanBeslemeTaslak());
+                  if (s.adgKanitSenaryo) setAdgKanit(s.adgKanitSenaryo);
+                  if (s.yemIllustrasyonAktif != null) setYemIllustrasyon(s.yemIllustrasyonAktif);
                   setSatisBirimi(s.satisBirimi ?? 'canli_kg');
                   setKarkasVerim(s.karkasVerimOrani != null ? String(s.karkasVerimOrani * 100) : '');
                   setSatisFiyat(s.satisFiyatKg != null ? String(s.satisFiyatKg) : '');

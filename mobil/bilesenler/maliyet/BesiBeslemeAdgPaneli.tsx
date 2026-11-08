@@ -4,7 +4,12 @@ import {
   type BesiPlanBeslemeTaslak,
   type BesiPlanBeslemeYontemi,
 } from '@/kaynak/maliyet/besi-plan-besleme';
-import { cozPlanAdg, VERIM_KAVRAM, type PlanAdgCozum } from '@/kaynak/maliyet/besi-plan-adg-besleme';
+import {
+  ADG_PLAN_GRUP_ETIKET,
+  cozPlanAdg,
+  VERIM_KAVRAM,
+  type PlanAdgCozum,
+} from '@/kaynak/maliyet/besi-plan-adg-besleme';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import type { BesiPlanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
 
@@ -41,7 +46,10 @@ export function BesiBeslemeAdgPaneli({
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800' }}>Besleme + ADG planı (t372u)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800' }}>Besleme ve günlük artış planı</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 10 }}>
+        Bantlar NSW feedlot özetine dayalı plan varsayımıdır; ırk denemesi garantisi yok.
+      </Text>
       <Text style={{ color: colors.textSecondary, fontSize: 10, marginBottom: 6 }}>
         {VERIM_KAVRAM.not}. Katkı veya model seçimi tek başına büyüme artırmaz.
       </Text>
@@ -109,7 +117,7 @@ function AdgSatir({ coz, secili, colors }: { coz: PlanAdgCozum; secili: AdgKanit
   return (
   <View style={{ marginTop: 8 }}>
     <Text style={{ color: colors.textSecondary, fontSize: 10 }}>
-      Grup: {coz.grup} · {coz.band.kaynakAd}
+      Plan grubu: {ADG_PLAN_GRUP_ETIKET[coz.grup]} · {coz.band.kaynakAd}
     </Text>
     <Text style={{ color: colors.textSecondary, fontSize: 9 }}>{coz.band.baglam}</Text>
     <View style={[styles.row, { marginTop: 4 }]}>
