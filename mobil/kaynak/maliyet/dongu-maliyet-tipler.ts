@@ -1,5 +1,7 @@
 /** Alım–satış döngüsü maliyet sınıfları — çift sayım yok. */
 
+import type { EkonomiTamamlik } from '@/kaynak/maliyet/besi-plan-ekonomi-etiket';
+
 export type MaliyetSinifi =
   | 'alis_sabit' /** Döngü batığı — marjinal kararda dışlanır */
   | 'gunluk_degisken_bas'
@@ -60,4 +62,7 @@ export type DonguEkonomiSonuc =
       marjinalGunlukMaliyetBas: number | null;
       yillikDevirTahmini: number | null;
       uyari: string[];
+      tamamlik: EkonomiTamamlik;
+      dengeEtiket: string;
+      suruToplamDenge: number;
     };

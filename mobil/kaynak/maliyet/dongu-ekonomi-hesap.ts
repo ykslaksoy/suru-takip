@@ -1,4 +1,6 @@
 import type { BesiPlanDonemGirdi } from '@/kaynak/maliyet/besi-plan-tipler';
+import { satisGelirBasHesapla } from '@/kaynak/maliyet/besi-plan-satis';
+import { dengeBaslik, ekonomiTamamlikBelirle, EKONOMI_UYARI_GENETIK } from '@/kaynak/maliyet/besi-plan-ekonomi-etiket';
 import type {
   AylikAdimKalem,
   DonguEkonomiGirdi,
@@ -44,8 +46,9 @@ export function hesaplaDonguEkonomi(g: DonguEkonomiGirdi): DonguEkonomiSonuc {
   if (g.alisBas == null || g.alisBas < 0) eksikler.push('Alış maliyeti (₺/baş)');
 
   const uyari: string[] = [
-    'Model senaryoları arasından en yüksek net — evrensel optimum değil.',
-    'Aylık kira/maaş: sözleşme adımı; kısa besi süresi tasarruf sağlamayabilir.',
+    EKONOMI_UYARI_GENETIK,
+    'Adaylar arasında en yüksek model dengesi — garanti optimum değil.',
+    'Aylık kira/maaş: sözleşme adımı; erken satış sözleşme ayını düşürmez.',
   ];
 
   if (eksikler.length) return { durum: 'eksik', eksikler };
@@ -54,17 +57,25 @@ export function hesaplaDonguEkonomi(g: DonguEkonomiGirdi): DonguEkonomiSonuc {
   const gun = Math.floor(g.toplamGun);
   const gelir = Math.round(g.satisGelirBas! * bas);
   const alis = Math.round(g.alisBas! * bas);
-  const degisken = g.yemVeGunlukBakimToplam ?? 0;
+  const degisken = g.yemVeGunlukBakimToplam;
+  const degiskenToplam = degisken ?? 0;
   const aySay = Math.max(...g.aylikKalemler.map((k) => aylikAdimAySayisi(gun, k.minSozlesmeAy)), 0);
   const aylikTop = aylikAdimToplam(gun, g.aylikKalemler);
   const donguSabit = g.donguSabitToplam ?? 0;
   const paylasim = paylasimliToplamHesap(bas, gun, g.paylasimli);
-  const toplamMaliyet = Math.round(alis + degisken + aylikTop + donguSabit + paylasim);
+  const maliyetEksik = degisken == null;
+  const toplamMaliyet = Math.round(alis + degiskenToplam + aylikTop + donguSabit + paylasim);
   const netKar = gelir - toplamMaliyet;
+  const kismiEksik = g.yemVeGunlukBakimToplam == null ? ['Yem/günlük bakım toplamı bilinmiyor'] : [];
+  const tamamlik = ekonomiTamamlikBelirle(kismiEksik, g.yemVeGunlukBakimToplam, maliyetEksik);
 
   const maliyetDokumu: { sinif: import('./dongu-maliyet-tipler').MaliyetSinifi; etiket: string; tutar: number }[] = [
     { sinif: 'alis_sabit', etiket: 'Alış', tutar: alis },
-    { sinif: 'gunluk_degisken_bas', etiket: 'Yem + günlük bakım (plan)', tutar: Math.round(degisken) },
+    {
+      sinif: 'gunluk_degisken_bas',
+      etiket: maliyetEksik ? 'Yem + günlük bakım (eksik)' : 'Yem + günlük bakım (plan)',
+      tutar: Math.round(degiskenToplam),
+    },
     ...g.aylikKalemler.map((k) => ({
       sinif: 'aylik_adim' as const,
       etiket: `${k.etiket} (${aylikAdimAySayisi(gun, k.minSozlesmeAy)} ay)`,
@@ -76,7 +87,7 @@ export function hesaplaDonguEkonomi(g: DonguEkonomiGirdi): DonguEkonomiSonuc {
 
   const batikVeSozlesme = alis + aylikTop + donguSabit;
   const marjinalGunluk =
-    gun > 0 && degisken > 0 ? Math.round((degisken / (bas * gun)) * 100) / 100 : null;
+    gun > 0 && degiskenToplam > 0 ? Math.round((degiskenToplam / (bas * gun)) * 100) / 100 : null;
 
   const yerGun = bas * gun > 0 ? Math.round((netKar / (bas * gun)) * 100) / 100 : null;
 
@@ -91,7 +102,10 @@ export function hesaplaDonguEkonomi(g: DonguEkonomiGirdi): DonguEkonomiSonuc {
 
   return {
     durum: 'hazir',
-    eksikler: g.yemVeGunlukBakimToplam == null ? ['Yem/günlük maliyet planı eksik — kısmi'] : [],
+    eksikler: kismiEksik,
+    tamamlik,
+    dengeEtiket: dengeBaslik(tamamlik),
+    suruToplamDenge: netKar,
     toplamGelir: gelir,
     toplamMaliyet,
     netKar,
@@ -193,8 +207,21 @@ export function karsilastirAdaySatisGunleri(
       continue;
     }
     const canli = plan.cikisKg;
-    const satisKg = temel.satisBirimi === 'canli_kg' ? canli : canli * (temel.karkasVerim ?? 0);
-    const gelirBas = satisKg * temel.satisFiyatKg;
+    const satis = satisGelirBasHesapla({
+      canliKg: canli,
+      birim: temel.satisBirimi,
+      fiyatKg: temel.satisFiyatKg,
+      karkasVerim: temel.karkasVerim,
+    });
+    if (satis.eksikler.length) {
+      satirlar.push({
+        gun,
+        ekonomi: { durum: 'eksik', eksikler: satis.eksikler },
+        satisKgVarsayim: satis.satisKg,
+      });
+      continue;
+    }
+    const gelirBas = satis.gelirBas!;
     const ekonomi = hesaplaDonguEkonomi({
       basSayisi: temel.basSayisi,
       toplamGun: gun,
@@ -206,7 +233,11 @@ export function karsilastirAdaySatisGunleri(
       paylasimli: temel.paylasimli,
       donguArasiBosGun: temel.donguArasiBosGun,
     });
-    satirlar.push({ gun, ekonomi, satisKgVarsayim: Math.round(satisKg * 10) / 10 });
+    satirlar.push({
+      gun,
+      ekonomi,
+      satisKgVarsayim: satis.satisKg != null ? Math.round(satis.satisKg * 10) / 10 : null,
+    });
   }
 
   const hazir = satirlar.filter(

@@ -39,6 +39,20 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - `alisCanliKgFiyat` taslak depoda; onaylı/eski planlar yüklenince değerleri korunur (otomatik 500 yazılmaz)
 - Satış/borsa güncellemesi yok
 
+## Rasyon / ekonomi düzeltmesi (kapsam)
+
+- Canlı vs karkas satış bazı; verim % yoksa karkas geliri hesaplanmaz
+- Model «denge» etiketi; eksik yem maliyeti 0 sayılmaz (`tamamlik`)
+- 8 diyet taslağı — besleme aktive edilemez (`besi-taslak-diyet`)
+- 60/90 gün ayrı kg projeksiyonu (planMaliyetVeKgGunHedef)
+- Onaylı plan salt okunur; 648 ₺/kg karkas tablodan varsayılan değil
+
+### Kısmi / blokaj
+
+- 8 model için kullanıcı reçete/girdi girmediği sürece karşılaştırma boş/eksik
+- Katkı/karkas otomatik artış yok
+- Kesim/enerji/… tüm kalemler ekonomi formunda henüz tam değil
+
 ### Blokaj / eksik
 
 - Fatura/defter satırı API yok — yalnız stok çıkışı parti maliyeti

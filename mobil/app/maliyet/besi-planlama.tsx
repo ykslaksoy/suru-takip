@@ -10,7 +10,7 @@ import {
   type BesiPlanSenaryo,
 } from '@/kaynak/maliyet/besi-plan-tipler';
 import { hesaplaBesiPlanProjeksiyon } from '@/kaynak/maliyet/besi-plan-hesap';
-import { karsilastirAdaySatisGunleri } from '@/kaynak/maliyet/dongu-ekonomi-hesap';
+import { karsilastirAdaySatisGunleri, planMaliyetVeKgGunHedef } from '@/kaynak/maliyet/dongu-ekonomi-hesap';
 import { varsayilanKalemlerBos } from '@/kaynak/maliyet/besi-ekonomi-kalem';
 import { hesaplaBesiEkonomiSenaryo } from '@/kaynak/maliyet/besi-ekonomi-senaryo';
 import { partiMaliyettenOzet } from '@/kaynak/maliyet/besi-ekonomi-gercek';
@@ -31,6 +31,13 @@ import {
   sayiPlanAlis,
   yeniPlanVarsayilanAlisKgFiyat,
 } from '@/kaynak/maliyet/besi-plan-alis';
+import {
+  EKONOMI_UYARI_KARKAS,
+  SATIS_KAYNAK_VARSAYIM,
+  karkasVerimOku,
+  type SatisFiyatBirimi,
+} from '@/kaynak/maliyet/besi-plan-satis';
+import { BesiDiyetTaslakPaneli } from '@/bilesenler/maliyet/BesiDiyetTaslakPaneli';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -70,6 +77,10 @@ export default function BesiPlanlamaScreen() {
   const [paylasim, setPaylasim] = useState('');
   const [kapasiteBasGun, setKapasiteBasGun] = useState('');
   const [satisFiyat, setSatisFiyat] = useState('');
+  const [satisBirimi, setSatisBirimi] = useState<SatisFiyatBirimi>('canli_kg');
+  const [karkasVerim, setKarkasVerim] = useState('');
+  const [kesimKomisyon, setKesimKomisyon] = useState('');
+  const [planKilitli, setPlanKilitli] = useState(false);
   const [adayGunler, setAdayGunler] = useState('60,90');
   const [bosDonguGun, setBosDonguGun] = useState('');
   const [ekonomiKalemler, setEkonomiKalemler] = useState<BesiEkonomiKalem[]>(varsayilanKalemlerBos());
@@ -152,7 +163,8 @@ export default function BesiPlanlamaScreen() {
               ? [{ id: 'maas', etiket: 'Çoban maaşı', aylikTutar: sayi(maas)!, minSozlesmeAy: Math.floor(sayi(maasMinAy) ?? 1), marjinaldeArtar: false }]
               : []),
           ],
-          donguSabitToplam: null,
+          donguSabitToplam:
+            sayi(kesimKomisyon) != null && sayi(kesimKomisyon)! > 0 ? sayi(kesimKomisyon) : null,
           paylasimli:
             sayi(paylasim) && sayi(kapasiteBasGun)
               ? [{ id: 'p', etiket: 'Ortak gider', toplamTutar: sayi(paylasim)!, kapasiteBasGun: sayi(kapasiteBasGun)! }]
@@ -163,12 +175,18 @@ export default function BesiPlanlamaScreen() {
             .map((x) => parseInt(x.trim(), 10))
             .filter((n) => Number.isFinite(n) && n > 0),
           satisFiyatKg: sayi(satisFiyat)!,
-          satisBirimi: 'canli_kg',
-          karkasVerim: null,
+          satisBirimi,
+          karkasVerim: karkasVerimOku(karkasVerim),
         })
       : null;
 
+  const basAdet = Math.floor(sayi(basSayisi) ?? 1);
+
   const kaydet = async () => {
+    if (planKilitli) {
+      Alert.alert('Onaylı plan', 'Bu sürüm kilitli anlık görüntü — değişiklik için yeni taslak açın.');
+      return;
+    }
     const s = await kaydetBesiPlanTaslak({
       id: senaryoId,
       baslik,
@@ -182,6 +200,9 @@ export default function BesiPlanlamaScreen() {
       girisTarih: null,
       alisBasFiyat: sayiPlanAlis(alis),
       alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
+      satisBirimi,
+      karkasVerimOrani: karkasVerimOku(karkasVerim),
+      satisFiyatKg: sayi(satisFiyat),
       hedefCanliKg: projeksiyon.durum === 'hazir' ? projeksiyon.cikisKg : null,
       hedefGun: projeksiyon.durum === 'hazir' ? projeksiyon.toplamGun : null,
       donemler,
@@ -265,8 +286,13 @@ export default function BesiPlanlamaScreen() {
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 12 }}>
           Besi öncesi taslak bütçe. Dönemler (varış, uyum, büyüme, bitirme) ayrı; toplam FCR birleşik yem/artış.
-          Eksik varsayım uydurulmaz. Onay plan kilidi — gerçek tüketim değil.
+          Eksik varsayım uydurulmaz. Onay plan kilidi — gerçek tüketim / doğrulanmamış rasyon başlamaz.
         </Text>
+        {planKilitli ? (
+          <Text style={{ color: colors.warning, fontWeight: '800', marginBottom: 8 }}>
+            Onaylı plan — salt okunur anlık görüntü. Düzenleme yeni taslak gerektirir.
+          </Text>
+        ) : null}
         <TextInput
           value={baslik}
           onChangeText={setBaslik}
@@ -341,7 +367,8 @@ export default function BesiPlanlamaScreen() {
         {ekonomiSenaryo && ekonomiSenaryo.durum !== 'eksik' ? (
           <View style={[styles.kutu, { borderColor: colors.border, backgroundColor: colors.card, marginTop: 8 }]}>
             <Text style={{ color: colors.text, fontWeight: '800' }}>
-              Tam döngü ({ekonomiSenaryo.tamamlik}): net {ekonomiSenaryo.dongu.netKar.toLocaleString('tr-TR')} ₺
+              {ekonomiSenaryo.dongu.dengeEtiket}: {ekonomiSenaryo.dongu.basBasiKar.toLocaleString('tr-TR')} ₺/baş · sürü{' '}
+              {(ekonomiSenaryo.dongu.basBasiKar * basAdet).toLocaleString('tr-TR')} ₺
             </Text>
             {ekonomiSenaryo.kalemlerDokum
               .filter((x) => !x.atlandi && x.tutar != null)
@@ -368,16 +395,43 @@ export default function BesiPlanlamaScreen() {
         <Mini label="Maaş min. süre (ay)" value={maasMinAy} onChange={setMaasMinAy} colors={colors} />
         <Mini label="Paylaşımlı gider toplam ₺" value={paylasim} onChange={setPaylasim} colors={colors} />
         <Mini label="Paylaşım paydası (baş×gün)" value={kapasiteBasGun} onChange={setKapasiteBasGun} colors={colors} />
-        <Mini label="Satış ₺/kg canlı (varsayım)" value={satisFiyat} onChange={setSatisFiyat} colors={colors} />
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>Satış bazı · {SATIS_KAYNAK_VARSAYIM}</Text>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+          {(['canli_kg', 'karkas_kg'] as SatisFiyatBirimi[]).map((b) => (
+            <Pressable
+              key={b}
+              onPress={() => setSatisBirimi(b)}
+              style={{ padding: 8, borderRadius: 8, borderWidth: 1, borderColor: satisBirimi === b ? colors.tint : colors.border }}>
+              <Text style={{ color: colors.text, fontSize: 12 }}>{b === 'canli_kg' ? 'Canlı kg' : 'Karkas kg'}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {satisBirimi === 'karkas_kg' ? (
+          <Text style={{ color: colors.warning, fontSize: 11, marginBottom: 6 }}>{EKONOMI_UYARI_KARKAS}</Text>
+        ) : null}
+        <Mini
+          label={satisBirimi === 'canli_kg' ? 'Satış ₺/kg canlı' : 'Satış ₺/kg karkas'}
+          value={satisFiyat}
+          onChange={setSatisFiyat}
+          colors={colors}
+        />
+        {satisBirimi === 'karkas_kg' ? (
+          <Mini label="Karkas verim % (canlı→karkas)" value={karkasVerim} onChange={setKarkasVerim} colors={colors} />
+        ) : null}
+        <Mini label="Kesim + komisyon ₺ (döngü sabit, ops.)" value={kesimKomisyon} onChange={setKesimKomisyon} colors={colors} />
         <Mini label="Aday satış günleri (virgülle)" value={adayGunler} onChange={setAdayGunler} colors={colors} />
+        <BesiDiyetTaslakPaneli colors={colors} hedefGun={projeksiyon.durum === 'hazir' ? projeksiyon.toplamGun : 90} />
         <Mini label="Döngü arası boş gün (yıllık devir için)" value={bosDonguGun} onChange={setBosDonguGun} colors={colors} />
 
         {adayKarsilastirma ? (
           <View style={[styles.kutu, { borderColor: colors.border, backgroundColor: colors.card }]}>
             {adayKarsilastirma.enIyiGun != null ? (
               <Text style={{ color: colors.text, fontWeight: '800' }}>
-                Modellenen adaylar içinde en yüksek net: {adayKarsilastirma.enIyiGun} gün ·{' '}
-                {adayKarsilastirma.enIyiNetKar?.toLocaleString('tr-TR')} ₺ (garanti değil)
+                Modellenen adaylar içinde en yüksek model dengesi: {adayKarsilastirma.enIyiGun} gün ·{' '}
+                {adayKarsilastirma.enIyiNetKar != null
+                  ? `${(adayKarsilastirma.enIyiNetKar * basAdet).toLocaleString('tr-TR')} ₺ sürü (${basAdet} baş)`
+                  : '—'}{' '}
+                (garanti kâr değil)
               </Text>
             ) : (
               <Text style={{ color: colors.warning, fontWeight: '800' }}>Aday gün karşılaştırması için girdi eksik</Text>
@@ -386,10 +440,12 @@ export default function BesiPlanlamaScreen() {
               s.ekonomi.durum === 'hazir' ? (
                 <View key={s.gun} style={{ marginTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border, paddingTop: 6 }}>
                   <Text style={{ color: colors.text, fontWeight: '700' }}>
-                    {s.gun} gün · ~{s.satisKgVarsayim} kg · net {s.ekonomi.netKar.toLocaleString('tr-TR')} ₺
+                    {s.gun} gün · canlı ~{planMaliyetVeKgGunHedef(sayi(girisKg)!, donemler, s.gun)?.cikisKg ?? '—'} kg ·
+                    satış kg {s.satisKgVarsayim ?? '—'}
                   </Text>
                   <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                    Baş başı {s.ekonomi.basBasiKar.toLocaleString('tr-TR')} ₺ · yer-gün {s.ekonomi.yerGunKar ?? '—'} ₺ ·
+                    {s.ekonomi.dengeEtiket}: {s.ekonomi.netKar.toLocaleString('tr-TR')} ₺/baş · sürü{' '}
+                    {(s.ekonomi.netKar * basAdet).toLocaleString('tr-TR')} ₺ · yer-gün {s.ekonomi.yerGunKar ?? '—'} ₺ ·
                     aylık adım {s.ekonomi.aylikAdimAySayisi} ay
                   </Text>
                   <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
@@ -437,6 +493,10 @@ export default function BesiPlanlamaScreen() {
                   setAlis(s.alisBasFiyat != null ? String(s.alisBasFiyat) : '');
                   setDonemler(s.donemler);
                   if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);
+                  setSatisBirimi(s.satisBirimi ?? 'canli_kg');
+                  setKarkasVerim(s.karkasVerimOrani != null ? String(s.karkasVerimOrani * 100) : '');
+                  setSatisFiyat(s.satisFiyatKg != null ? String(s.satisFiyatKg) : '');
+                  setPlanKilitli(s.durum === 'onayli');
                 }}
                 style={{ paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
                 <Text style={{ color: colors.text }}>

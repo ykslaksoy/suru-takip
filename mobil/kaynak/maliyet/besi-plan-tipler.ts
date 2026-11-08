@@ -37,6 +37,9 @@ export type BesiPlanSenaryo = {
   alisBasFiyat: number | null;
   /** Planlama: canlı kg alış varsayımı (piyasa değil) */
   alisCanliKgFiyat?: number | null;
+  satisBirimi?: 'canli_kg' | 'karkas_kg';
+  karkasVerimOrani?: number | null;
+  satisFiyatKg?: number | null;
   hedefCanliKg: number | null;
   hedefGun: number | null;
   donemler: BesiPlanDonemGirdi[];
