@@ -126,8 +126,11 @@ export function ortakGiderMutabakat(o: OrtakGiderPaylasim): {
     eksik.push('Dönem adedi bilinmiyor');
     return { hamToplam: ham, paylasilan: null, basBasi: null, eksik };
   }
-  const paylasilan = Math.round(ham);
-  const basBasi = Math.round(ham / o.payBasSayisi);
+  let carpan = 1;
+  if (o.donem === 'aylik') carpan = o.donemAdet;
+  else if (o.donem === 'yillik') carpan = o.donemAdet;
+  const paylasilan = Math.round(ham * carpan);
+  const basBasi = Math.round(paylasilan / o.payBasSayisi);
   return { hamToplam: ham, paylasilan, basBasi, eksik };
 }
 

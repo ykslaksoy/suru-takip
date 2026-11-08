@@ -69,6 +69,13 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t355u/t356u — Piyasa + ADG + brüt kâr
+
+- `besi-piyasa-kayit.ts` — TOBB Edirne, UKON, **Balıkesir Ağu/Eyl 2026 bülteni** (8 Kas günlük yok); `manuel_only` yenileme
+- `besi-adg-kanit.ts` — NSW DPI 200–320 g/gün; 25 kg → 60 g ≈ 40 kg (250 g)
+- `besi-plan-piyasa-ozet.ts` — BRÜT KÂR = satış−alış−yem; 60/90 ufuk
+- UI: `BesiPiyasaAdgPaneli` · test `besi-piyasa-adg` (+9 → 844)
+
 ## t349u/t350u — Yem taslak dışı + plan yem
 
 - Kesif/yonca/saman (1080/270/80) `karsilastirmaHaric` — eski tabloda 13580, **yeni karşılaştırmada yok**

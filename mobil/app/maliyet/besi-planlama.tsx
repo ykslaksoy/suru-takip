@@ -41,6 +41,9 @@ import { BesiDiyetTaslakPaneli } from '@/bilesenler/maliyet/BesiDiyetTaslakPanel
 import { BesiButceMutabakatPaneli } from '@/bilesenler/maliyet/BesiButceMutabakatPaneli';
 import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
 import { hesaplaButceMutabakat, ornekButce12000, ornekButce12500 } from '@/kaynak/maliyet/besi-plan-butce-hesap';
+import { BesiPiyasaAdgPaneli } from '@/bilesenler/maliyet/BesiPiyasaAdgPaneli';
+import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
+import { hesaplaBesiPiyasaOzet, type PiyasaSatisKaynak } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -89,6 +92,10 @@ export default function BesiPlanlamaScreen() {
   const [ekonomiKalemler, setEkonomiKalemler] = useState<BesiEkonomiKalem[]>(varsayilanKalemlerBos());
   const [gercekParti, setGercekParti] = useState<PartiGercekMaliyetOzet | null>(null);
   const [butceTaslak, setButceTaslak] = useState<ButceTaslak | null>(null);
+  const [satisKaynak, setSatisKaynak] = useState<PiyasaSatisKaynak>('edirne_tobb');
+  const [adgKanit, setAdgKanit] = useState<AdgKanitSenaryo>('beklenen');
+  const [yemIllustrasyon, setYemIllustrasyon] = useState(true);
+  const [piyasaRefreshNot, setPiyasaRefreshNot] = useState<string | null>(null);
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -185,6 +192,24 @@ export default function BesiPlanlamaScreen() {
       : null;
 
   const basAdet = Math.floor(sayi(basSayisi) ?? 1);
+
+  const alisBrutKar = cozAlis.alisBas ?? (sayi(girisKg) === 25 ? 12000 : null);
+  const karkasV = karkasVerimOku(karkasVerim);
+  const piyasaOzet =
+    sayi(girisKg) != null && alisBrutKar != null
+      ? hesaplaBesiPiyasaOzet({
+          girisKg: sayi(girisKg)!,
+          alisBas: alisBrutKar,
+          satisKaynak,
+          satisBirimi,
+          karkasVerim: karkasV,
+          adgSenaryo: 'senaryo_taban',
+          adgKanit,
+          donemler,
+          yemIllustrasyon,
+          yemFireYuzde: 5,
+        })
+      : null;
 
   const butceMutabakat = butceTaslak
     ? hesaplaButceMutabakat(
@@ -383,6 +408,24 @@ export default function BesiPlanlamaScreen() {
           </Text>
         </Pressable>
         <BesiEkonomiKalemFormu kalemler={ekonomiKalemler} onChange={setEkonomiKalemler} colors={colors} />
+
+        {piyasaOzet ? (
+          <BesiPiyasaAdgPaneli
+            ozet={piyasaOzet}
+            satisKaynak={satisKaynak}
+            adgKanit={adgKanit}
+            yemIllustrasyon={yemIllustrasyon}
+            onSatisKaynak={setSatisKaynak}
+            onAdgKanit={setAdgKanit}
+            onYemIllustrasyon={setYemIllustrasyon}
+            refreshDurum={piyasaRefreshNot}
+            colors={colors}
+          />
+        ) : (
+          <Text style={{ color: colors.warning, fontSize: 12, marginVertical: 8 }}>
+            Piyasa özeti için giriş kg ve alış (ör. 25 kg, 12.000 ₺/baş) girin.
+          </Text>
+        )}
 
         <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 12, marginBottom: 6 }}>
           Kullanıcı bütçe tablosu — mutabakat (t344u)
