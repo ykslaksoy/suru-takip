@@ -15,8 +15,9 @@ await page.addInitScript((v) => {
 await page.goto('http://127.0.0.1:8085/maliyet/besi-planlama', { waitUntil: 'networkidle', timeout: 120000 });
 await page.getByText('Hedef kuzu — köken ve ırk', { exact: false }).waitFor({ timeout: 90000 });
 await page.locator('input').nth(1).fill('25');
-await page.waitForTimeout(400);
-await page.evaluate(() => window.scrollTo(0, 1100));
-await page.waitForTimeout(500);
-await page.screenshot({ path: '/opt/cursor/artifacts/besi-planlama-t359u-karar.png', fullPage: true });
+const girisKg = page.getByPlaceholder('ör. 32').first();
+if (await girisKg.count()) await girisKg.fill('25');
+await page.getByText('Karar simülasyonu', { exact: false }).scrollIntoViewIfNeeded();
+await page.waitForTimeout(600);
+await page.screenshot({ path: '/opt/cursor/artifacts/besi-planlama-t359u-karar.png', fullPage: false });
 await browser.close();
