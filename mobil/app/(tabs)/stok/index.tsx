@@ -29,6 +29,7 @@ import {
   kaydetKatalogKullanim,
   type StokListeSatiri,
 } from '@/kaynak/stok';
+import { filtreleStokSatirlari, stoktaMiktarVar } from '@/kaynak/stok/asi-siralama';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
 import { terim } from '@/sabitler/Metinler';
@@ -61,17 +62,12 @@ export default function StockScreen() {
     if (ready) load();
   }, [ready, refreshKey, load]);
 
-  const filtered = useMemo(() => {
-    const q = arama.trim().toLocaleLowerCase('tr-TR');
-    if (!q) return satirlar;
-    return satirlar.filter(
-      (s) =>
-        s.ad.toLocaleLowerCase('tr-TR').includes(q) ||
-        s.aciklama.toLocaleLowerCase('tr-TR').includes(q)
-    );
-  }, [satirlar, arama]);
+  const filtered = useMemo(() => filtreleStokSatirlari(satirlar, arama), [satirlar, arama]);
 
-  const dusukler = useMemo(() => satirlar.filter((s) => s.item && dusukStokMu(s.item)), [satirlar]);
+  const dusukler = useMemo(
+    () => satirlar.filter((s) => s.item && stoktaMiktarVar(s) && dusukStokMu(s.item)),
+    [satirlar],
+  );
 
   const openFromSatir = (satir: StokListeSatiri) => {
     if (satir.item) {
@@ -183,7 +179,7 @@ export default function StockScreen() {
       <View style={styles.pageHeader}>
         <Text style={[styles.pageTitle, { color: colors.text }]}>Stok</Text>
         <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
-          Tüm liste · çok kullanılan üstte
+          Sık kullanılan üstte · devlet programı aşıları sonda
         </Text>
         <Pressable onPress={() => router.push('/maliyet' as never)} hitSlop={8}>
           <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 4 }}>Maliyet ve kâr →</Text>

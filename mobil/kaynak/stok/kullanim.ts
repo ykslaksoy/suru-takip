@@ -7,6 +7,7 @@ import {
   katalogEsles,
   type StokKatalogKalemi,
 } from './katalog';
+import { karsilastirStokSatirlari, siralaStokListeSatirlari } from './asi-siralama';
 
 const KEY = 'sy_stok_katalog_kullanim';
 
@@ -122,12 +123,7 @@ export async function getSiraliStokListesi(type?: StockType | 'all'): Promise<St
     });
   }
 
-  satirlar.sort((a, b) => {
-    if (b.kullanim !== a.kullanim) return b.kullanim - a.kullanim;
-    // Stokta olanlar aynı skorda biraz öne
-    if (!!b.item !== !!a.item) return a.item ? -1 : 1;
-    return a.ad.localeCompare(b.ad, 'tr');
-  });
+  satirlar.sort(karsilastirStokSatirlari);
 
   return satirlar;
 }
@@ -136,10 +132,17 @@ export function siralaKatalog(
   liste: StokKatalogKalemi[],
   kullanim: Record<string, number>
 ): StokKatalogKalemi[] {
-  return [...liste].sort((a, b) => {
-    const da = skor(kullanim, a);
-    const db = skor(kullanim, b);
-    if (db !== da) return db - da;
-    return a.ad.localeCompare(b.ad, 'tr');
-  });
+  const satirlar: StokListeSatiri[] = liste.map((k) => ({
+    key: k.id,
+    katalogId: k.id,
+    ad: k.ad,
+    type: k.type,
+    birim: k.birim,
+    minMiktar: k.minMiktar,
+    aciklama: k.aciklama,
+    item: null,
+    kullanim: skor(kullanim, k),
+  }));
+  const byId = Object.fromEntries(liste.map((k) => [k.id, k]));
+  return siralaStokListeSatirlari(satirlar).map((s) => byId[s.katalogId!]);
 }

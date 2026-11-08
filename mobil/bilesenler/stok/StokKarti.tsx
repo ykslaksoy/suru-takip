@@ -3,6 +3,7 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
 import type { StokListeSatiri } from '@/kaynak/stok';
+import { stoktaMiktarVar } from '@/kaynak/stok/asi-siralama';
 import { terim } from '@/sabitler/Metinler';
 
 export function StokKarti({
@@ -17,7 +18,9 @@ export function StokKarti({
   const item = satir.item;
   const qty = item?.quantity ?? 0;
   const minQ = item?.minQuantity ?? satir.minMiktar;
-  const isLow = item ? qty <= minQ : false;
+  const stoktaVar = stoktaMiktarVar(satir);
+  const kayitVarSifir = item != null && !stoktaVar;
+  const isLow = stoktaVar ? qty <= minQ : false;
   const stoktaYok = !item;
   const isExpiring =
     item?.expiryDate && new Date(item.expiryDate).getTime() - Date.now() < 90 * 86400000;
@@ -40,6 +43,11 @@ export function StokKarti({
       <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>{satir.aciklama}</Text>
       {stoktaYok ? (
         <Text style={[styles.qty, { color: colors.textSecondary }]}>Stokta yok · dokunarak ekle</Text>
+      ) : kayitVarSifir ? (
+        <Text style={[styles.qty, { color: colors.textSecondary }]}>
+          Kayıtlı · 0 {item!.unit} — stok yok · dokunarak giriş yap
+          {satir.kullanim > 0 ? ` · kullanım ${satir.kullanim}` : ''}
+        </Text>
       ) : (
         <Text style={[styles.qty, { color: isLow ? colors.warning : colors.text }]}>
           {qty} {item!.unit}

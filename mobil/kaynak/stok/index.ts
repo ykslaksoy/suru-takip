@@ -21,6 +21,14 @@ export {
   type StokListeSatiri,
 } from './kullanim';
 
+export {
+  devletProgramAsiMi,
+  filtreleStokSatirlari,
+  karsilastirStokSatirlari,
+  siralaStokListeSatirlari,
+  stoktaMiktarVar,
+} from './asi-siralama';
+
 /** Geriye dönük yardımcılar */
 export function dusukTakviyeler(items: StockItem[]): StockItem[] {
   return items.filter((i) => i.type === 'supplement' && i.quantity <= i.minQuantity);
