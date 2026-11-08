@@ -203,7 +203,7 @@ function birlestirGomulu(ozel: PiyasaFiyatKaydi[]): PiyasaFiyatKaydi[] {
 /** Sunucu proxy ile TOBB+UKON; başarısızsa son önbellek + bayat uyarısı. */
 export async function piyasaReferansYenile(): Promise<{ kayitlar: PiyasaFiyatKaydi[]; depo: PiyasaDepoDurum }> {
   const { besiReferanslariYenile } = await import('./besi-referans-yenile');
-  const sonuc = await besiReferanslariYenile();
+  const sonuc = await besiReferanslariYenile({ force: true, neden: 'manuel' });
   return sonuc.piyasa;
 }
 

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { besiReferanslariYenile } from '@/kaynak/maliyet/besi-referans-yenile';
+import type { ReferansSyncMeta } from '@/kaynak/maliyet/besi-referans-sync-meta';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string; card: string };
 
@@ -18,6 +19,7 @@ export function BesiPiyasaAdgPaneli({
   onAdgKanit,
   onYemIllustrasyon,
   onYenilendi,
+  syncMeta,
   refreshDurum,
   colors,
 }: {
@@ -27,6 +29,7 @@ export function BesiPiyasaAdgPaneli({
   onAdgKanit: (k: AdgKanitSenaryo) => void;
   onYemIllustrasyon: (v: boolean) => void;
   onYenilendi?: () => void;
+  syncMeta?: ReferansSyncMeta | null;
   refreshDurum: string | null;
   colors: Colors;
 }) {
@@ -51,13 +54,19 @@ export function BesiPiyasaAdgPaneli({
       </Text>
       <Pressable
         onPress={() =>
-          void besiReferanslariYenile().then((s) => {
+          void besiReferanslariYenile({ force: true, neden: 'manuel' }).then(() => {
             onYenilendi?.();
           })
         }
         style={[styles.btn, { borderColor: colors.tint, marginBottom: 8 }]}>
-        <Text style={{ color: colors.tint, fontSize: 11 }}>Referansları yenile (TOBB · UKON · USK)</Text>
+        <Text style={{ color: colors.tint, fontSize: 11 }}>Şimdi yenile (otomatik 6 saatte bir)</Text>
       </Pressable>
+      {syncMeta?.sonBasariliIso ? (
+        <Text style={{ color: colors.textSecondary, fontSize: 10, marginBottom: 4 }}>
+          Son otomatik/manuel çekim: {syncMeta.sonBasariliIso.slice(0, 19).replace('T', ' ')}
+          {syncMeta.sonSonuc === 'atlandi' ? ` · ${syncMeta.atlanmaNedeni}` : ''}
+        </Text>
+      ) : null}
       {refreshDurum ? <Text style={{ color: colors.textSecondary, fontSize: 10 }}>{refreshDurum}</Text> : null}
 
       <Text style={{ color: colors.tint, fontWeight: '700', fontSize: 11, marginTop: 4 }}>Bölgesel karşılaştırma (temel karıştırma)</Text>

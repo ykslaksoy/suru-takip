@@ -130,10 +130,17 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `BesiReferansOverridePaneli`, `OndalikFiyatGirdi`, piyasa panelinde yenile düğmesi
 - **Manuel / desteklenmeyen:** Balıkesir PDF bülteni, besi yemi TZOB satırı (USK sayfasında yok), Abalıoğlu pelet illüstrasyonu
 
-### Test (894)
+### t368u — otomatik senkron
 
-- `mobil/test/moduller/besi-referans-yenile.ts` — kayıtlı public HTML fixture + canlı API handler (`ag_ok`, Edirne 397,38)
-- Override sıfırlama, virgül/nokta, bozuk HTML parse fail
+- İstemci **6 saat TTL** — açılış, sekme odağı (`useFocusEffect`), `AppState` resume; paralel istek **dedup**
+- Sunucu **15 dk bellek cache** + upstream dedup (`api/besi/_referans-cache.js`); kalıcı KV yok
+- `vercel.json` **cron** `0 */6 * * *` → `/api/besi/referans-yenile?cron=1` — **yalnız production deploy sonrası** aktif
+- `GET /api/besi/referans-durum` — tanı (upstream çekmez)
+- UI: `BesiReferansSaglikPaneli`, `useBesiReferansOtomatik`
+
+### Test
+
+- `besi-referans-yenile` + `besi-referans-otomatik` — TTL skip, sunucu cache hit, override koruma, live fetch
 
 ## Bilinçli sınırlar
 

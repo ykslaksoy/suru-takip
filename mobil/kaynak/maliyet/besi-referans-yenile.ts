@@ -1,5 +1,5 @@
 /**
- * t366u — istemci yenileme: önce /api/besi/referans-yenile; başarısızsa son önbellek + bayat uyarısı.
+ * t366u/t368u — sunucu proxy + istemci depo; otomatik katman ayrı.
  */
 import type { PiyasaDepoDurum, PiyasaFiyatKaydi } from './besi-piyasa-kayit';
 import { gomuluPiyasaKayitlari, piyasaKayitOku } from './besi-piyasa-kayit';
@@ -11,6 +11,8 @@ import {
   parseUkonKuzuHtml,
   parseUskYemHtml,
 } from './besi-referans-parse';
+import { referansSyncMetaYaz, referansSyncMetaOku } from './besi-referans-sync-meta';
+import type { ReferansSenkronNeden } from './besi-referans-sync-meta';
 
 export type ReferansYenileApiGovde = {
   ok: boolean;
@@ -25,6 +27,8 @@ export type ReferansYenileApiGovde = {
   iz: string[];
   otomatik: Record<string, boolean>;
   kaynaklar: Record<string, string>;
+  kaynakIslemTarihleri?: Record<string, string | null>;
+  zamanlama?: Record<string, unknown>;
 };
 
 const PIYASA_KEY = 'sy_besi_piyasa_kayit_v1';
@@ -117,9 +121,7 @@ export function yemTablosunuParseIleGuncelle(
     const hit = usk.veri.find((u) => u.id === k.id || (u.id === 'saman-bugday' && k.id === 'saman-bugday'));
     if (!hit || hit.fiyat == null) return k;
     const veriTarihi =
-      hit.veriAyi && hit.veriYili
-        ? `${hit.veriYili}-${ayIndeks(hit.veriAyi)}-01`
-        : k.veriTarihi;
+      hit.veriAyi && hit.veriYili ? `${hit.veriYili}-${ayIndeks(hit.veriAyi)}-01` : k.veriTarihi;
     return {
       ...k,
       fiyat: hit.fiyat,
@@ -150,9 +152,10 @@ function ayIndeks(ay: string): string {
   return map[ay] ?? '09';
 }
 
-async function apiYenile(): Promise<ReferansYenileApiGovde | null> {
-  const url = besiReferansApiUrl();
-  if (!url) return null;
+async function apiYenile(force: boolean): Promise<ReferansYenileApiGovde | null> {
+  const base = besiReferansApiUrl();
+  if (!base) return null;
+  const url = force ? `${base}?force=1` : base;
   try {
     const r = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
     if (!r.ok) return null;
@@ -169,10 +172,27 @@ export type ReferansYenileSonuc = {
   kaynakDurum: string;
 };
 
-export async function besiReferanslariYenile(): Promise<ReferansYenileSonuc> {
+function syncMetaFromApi(api: ReferansYenileApiGovde | null, basarili: boolean, durum: string): void {
+  const onceki = referansSyncMetaOku();
+  const now = new Date().toISOString();
+  referansSyncMetaYaz({
+    ...onceki,
+    sonDenemeIso: now,
+    sonBasariliIso: basarili ? now : onceki.sonBasariliIso,
+    sonCekimIso: basarili ? now : onceki.sonCekimIso,
+    sonSonuc: basarili ? 'ok' : 'bayat',
+    kaynakIslemTarihleri: { ...onceki.kaynakIslemTarihleri, ...(api?.kaynakIslemTarihleri ?? {}) },
+    hataMesaji: basarili ? null : durum,
+    atlanmaNedeni: null,
+    sonNeden: onceki.sonNeden,
+  });
+}
+
+/** Gerçek ağ + depo yazımı (TTL kontrolü yok). */
+export async function besiReferanslariYenileAg(opts?: { force?: boolean }): Promise<ReferansYenileSonuc> {
   const { kayitlar: onceki, depo: eskiDepo } = piyasaKayitOku();
   const yemOnce = fiyatReferansDepoOku();
-  const api = await apiYenile();
+  const api = await apiYenile(opts?.force === true);
   const now = new Date().toISOString().slice(0, 10);
   const iz: string[] = [];
 
@@ -188,15 +208,18 @@ export async function besiReferanslariYenile(): Promise<ReferansYenileSonuc> {
       yenilemeSonuc: 'bayat',
       uyari,
     };
+    const durum = 'Son iyi veri korundu; otomatik yenileme başarısız.';
+    syncMetaFromApi(api, false, durum);
     return {
       piyasa: { kayitlar: onceki, depo },
       yemTablo: yemOnce,
       iz: api?.iz ?? ['api:fail'],
-      kaynakDurum: 'Son iyi veri korundu; otomatik yenileme başarısız.',
+      kaynakDurum: durum,
     };
   }
 
   iz.push(...(api.iz ?? []));
+  if (api.zamanlama?.sunucuCacheHit) iz.push('sunucu:cache_hit');
   const piyasaKayit = piyasaKayitlariniParseIleGuncelle(onceki, api, api.alinmaTarihi || now);
   const yemTablo = yemTablosunuParseIleGuncelle(yemOnce, api, api.alinmaTarihi || now);
 
@@ -218,15 +241,30 @@ export async function besiReferanslariYenile(): Promise<ReferansYenileSonuc> {
   }
   fiyatReferansDepoYaz(yemTablo, { sonYenileme: now, yenilemeSonuc: sonuc, iz });
 
+  const kaynakDurum = `Yenilendi ${now} · ${sonuc}`;
+  syncMetaFromApi(api, sonuc === 'önbellek_ok', kaynakDurum);
+
   return {
     piyasa: { kayitlar: piyasaKayit, depo },
     yemTablo,
     iz,
-    kaynakDurum: `Yenilendi ${now} · ${sonuc}`,
+    kaynakDurum,
   };
 }
 
-/** Node/test: fixture HTML ile aynı birleştirme */
+/** Manuel veya sarmalayıcı: TTL + dedup. */
+export async function besiReferanslariYenile(opts?: {
+  force?: boolean;
+  neden?: ReferansSenkronNeden;
+}): Promise<ReferansYenileSonuc> {
+  const { besiReferansOtomatikSenkron } = await import('./besi-referans-otomatik');
+  const s = await besiReferansOtomatikSenkron({
+    force: opts?.force === true,
+    neden: opts?.neden ?? 'manuel',
+  });
+  return s;
+}
+
 export function besiReferanslariFixtureIle(
   tobbHtml: string,
   ukonHtml: string,
@@ -245,11 +283,8 @@ export function besiReferanslariFixtureIle(
     uyari: [],
     iz: [],
     otomatik: { tobb: true, ukon: true, usk_yonca_saman: true, balikesir_pdf: false },
-    kaynaklar: {
-      tobb: 'fixture',
-      ukon: 'fixture',
-      usk: 'fixture',
-    },
+    kaynaklar: { tobb: 'fixture', ukon: 'fixture', usk: 'fixture' },
+    kaynakIslemTarihleri: {},
   };
   const { kayitlar: onceki } = piyasaKayitOku();
   const piyasaKayit = piyasaKayitlariniParseIleGuncelle(onceki, api, alinma);

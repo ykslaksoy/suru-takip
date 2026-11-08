@@ -44,6 +44,8 @@ import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
 import { hesaplaButceMutabakat, ornekButce12000, ornekButce12500 } from '@/kaynak/maliyet/besi-plan-butce-hesap';
 import { BesiPiyasaAdgPaneli } from '@/bilesenler/maliyet/BesiPiyasaAdgPaneli';
 import { BesiReferansOverridePaneli } from '@/bilesenler/maliyet/BesiReferansOverridePaneli';
+import { BesiReferansSaglikPaneli } from '@/bilesenler/maliyet/BesiReferansSaglikPaneli';
+import { useBesiReferansOtomatik } from '@/bilesenler/maliyet/useBesiReferansOtomatik';
 import { efektifBirimFiyat, referansOverrideOku, type BesiRefOverrideDepo } from '@/kaynak/maliyet/besi-referans-override';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
@@ -114,6 +116,7 @@ export default function BesiPlanlamaScreen() {
   const [piyasaRefreshNot, setPiyasaRefreshNot] = useState<string | null>(null);
   const [refOverride, setRefOverride] = useState<BesiRefOverrideDepo>(() => referansOverrideOku());
   const [refTick, setRefTick] = useState(0);
+  const { meta: refSyncMeta, sonDurum: refSyncDurum } = useBesiReferansOtomatik();
   const [irkTaslak, setIrkTaslak] = useState<BesiPlanIrkTaslak>(varsayilanIrkTaslak());
 
   const yukle = useCallback(async () => {
@@ -495,6 +498,7 @@ export default function BesiPlanlamaScreen() {
           onDepoChange={setRefOverride}
           colors={colors}
         />
+        <BesiReferansSaglikPaneli meta={refSyncMeta} colors={colors} />
 
         {piyasaOzet ? (
           <BesiPiyasaAdgPaneli
@@ -505,11 +509,12 @@ export default function BesiPlanlamaScreen() {
               if (adgSenaryoIrkUygunMu(k, irkAdgPolitikasi(irkTaslak))) setAdgKanit(k);
             }}
             onYemIllustrasyon={setYemIllustrasyon}
+            syncMeta={refSyncMeta}
             onYenilendi={() => {
               setRefTick((x) => x + 1);
-              setPiyasaRefreshNot('Referans yenileme tamamlandı — önbellek güncellendi veya bayat uyarısı.');
+              setPiyasaRefreshNot('Manuel yenileme tamamlandı.');
             }}
-            refreshDurum={piyasaRefreshNot}
+            refreshDurum={piyasaRefreshNot ?? refSyncDurum}
             colors={colors}
           />
         ) : (
