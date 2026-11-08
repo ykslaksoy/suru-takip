@@ -31,6 +31,14 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - `besi-ekonomi`: alış bazları, kira min ay, çift sayım atla, bilinmiyor/sıfır
 - `besi-plan-sat-devam`: marjinal/sat, aday günler, aylık adım (mevcut)
 
+## t334u/t335u — Planlama alış ₺/canlı kg
+
+- `besi-plan-alis.ts` — varsayılan **500 ₺/kg** (yeni taslak; 480/12.000 eski varsayım değil)
+- Ekran: `/maliyet/besi-planlama` — «Tahmini alış ₺/canlı kg» + baş başı hesap; kaynak etiketi «Kullanıcı planlama varsayımı»
+- Öncelik: gerçek parti alışı → ₺/baş override → kg×giriş kg
+- `alisCanliKgFiyat` taslak depoda; onaylı/eski planlar yüklenince değerleri korunur (otomatik 500 yazılmaz)
+- Satış/borsa güncellemesi yok
+
 ### Blokaj / eksik
 
 - Fatura/defter satırı API yok — yalnız stok çıkışı parti maliyeti

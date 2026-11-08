@@ -24,6 +24,13 @@ import {
   kaydetBesiPlanTaslak,
   onaylaBesiPlanSenaryo,
 } from '@/kaynak/maliyet/besi-plan-depo';
+import {
+  ALIS_KAYNAK_ETIKET,
+  alisBasCanliKgden,
+  cozPlanAlisBas,
+  sayiPlanAlis,
+  yeniPlanVarsayilanAlisKgFiyat,
+} from '@/kaynak/maliyet/besi-plan-alis';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -52,6 +59,7 @@ export default function BesiPlanlamaScreen() {
   const [basSayisi, setBasSayisi] = useState('1');
   const [girisKg, setGirisKg] = useState('');
   const [alis, setAlis] = useState('');
+  const [alisKgFiyat, setAlisKgFiyat] = useState(String(yeniPlanVarsayilanAlisKgFiyat()));
   const [donemler, setDonemler] = useState<BesiPlanDonemGirdi[]>(VARSAYILAN_DONEMLER.map(bosDonem));
   const [senaryoId, setSenaryoId] = useState<string | undefined>();
   const [kayitli, setKayitli] = useState<BesiPlanSenaryo[]>([]);
@@ -82,6 +90,19 @@ export default function BesiPlanlamaScreen() {
     donemler,
   });
 
+  const cozAlis = cozPlanAlisBas({
+    alisBasFiyat: sayiPlanAlis(alis),
+    alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
+    girisKg: sayi(girisKg),
+    gercekParti,
+    basSayisi: sayi(basSayisi) != null ? Math.floor(sayi(basSayisi)!) : null,
+  });
+
+  const alisBasHesap =
+    sayiPlanAlis(alisKgFiyat) != null && sayi(girisKg) != null
+      ? alisBasCanliKgden(sayiPlanAlis(alisKgFiyat)!, sayi(girisKg)!)
+      : null;
+
   const ekonomiSenaryo =
     projeksiyon.durum === 'hazir' && sayi(satisFiyat) != null
       ? hesaplaBesiEkonomiSenaryo({
@@ -96,6 +117,7 @@ export default function BesiPlanlamaScreen() {
           planDegiskenToplam: projeksiyon.toplamMaliyet,
           gercekParti,
           donguArasiBosGun: sayi(bosDonguGun),
+          planAlisBas: cozAlis.alisBas,
         })
       : null;
 
@@ -116,10 +138,10 @@ export default function BesiPlanlamaScreen() {
   };
 
   const adayKarsilastirma =
-    projeksiyon.durum === 'hazir' && sayi(girisKg) != null && sayi(alis) != null && sayi(satisFiyat) != null
+    projeksiyon.durum === 'hazir' && sayi(girisKg) != null && cozAlis.alisBas != null && sayi(satisFiyat) != null
       ? karsilastirAdaySatisGunleri({
           basSayisi: Math.floor(sayi(basSayisi) ?? 1),
-          alisBas: sayi(alis),
+          alisBas: cozAlis.alisBas,
           girisKg: sayi(girisKg)!,
           donemler,
           aylikKalemler: [
@@ -158,7 +180,8 @@ export default function BesiPlanlamaScreen() {
       basSayisi: sayi(basSayisi) != null ? Math.floor(sayi(basSayisi)!) : null,
       girisKg: sayi(girisKg),
       girisTarih: null,
-      alisBasFiyat: sayi(alis),
+      alisBasFiyat: sayiPlanAlis(alis),
+      alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
       hedefCanliKg: projeksiyon.durum === 'hazir' ? projeksiyon.cikisKg : null,
       hedefGun: projeksiyon.durum === 'hazir' ? projeksiyon.toplamGun : null,
       donemler,
@@ -251,7 +274,32 @@ export default function BesiPlanlamaScreen() {
         />
         <Mini label="Baş sayısı" value={basSayisi} onChange={setBasSayisi} colors={colors} />
         <Mini label="Giriş kg/baş" value={girisKg} onChange={setGirisKg} colors={colors} />
-        <Mini label="Alış ₺/baş (isteğe bağlı)" value={alis} onChange={setAlis} colors={colors} />
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
+          Tahmini alış fiyatı (₺/canlı kg) — {ALIS_KAYNAK_ETIKET.kullanici_planlama_varsayimi}. Canlı borsa veya satış fiyatı değil.
+        </Text>
+        <Mini label="Tahmini alış ₺/canlı kg" value={alisKgFiyat} onChange={setAlisKgFiyat} colors={colors} />
+        {alisBasHesap != null ? (
+          <Text style={{ color: colors.tint, fontSize: 13, marginBottom: 8, fontWeight: '700' }}>
+            ≈ {alisBasHesap.toLocaleString('tr-TR')} ₺/baş ({sayi(girisKg)} kg × {sayiPlanAlis(alisKgFiyat)?.toLocaleString('tr-TR')} ₺/kg)
+          </Text>
+        ) : alisKgFiyat.trim() && sayi(girisKg) == null ? (
+          <Text style={{ color: colors.warning, fontSize: 12, marginBottom: 8 }}>Giriş kg girilince baş başı alış hesaplanır.</Text>
+        ) : null}
+        {cozAlis.alisBas != null ? (
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
+            Bütçe alışı: {cozAlis.alisBas.toLocaleString('tr-TR')} ₺/baş · kaynak: {cozAlis.etiket}
+            {cozAlis.ciftSayimUyarisi ? ` · ${cozAlis.ciftSayimUyarisi}` : ''}
+          </Text>
+        ) : null}
+        <Mini
+          label="Alış ₺/baş override (gerçek/parti)"
+          value={alis}
+          onChange={setAlis}
+          colors={colors}
+        />
+        <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 8 }}>
+          Override girilirse kg varsayımının önüne geçer. Boş bırakırsanız 0 sayılmaz.
+        </Text>
         {donemler.map((d, i) => donemAlan(d, i))}
 
         <View style={[styles.kutu, { borderColor: colors.border, backgroundColor: colors.card }]}>
@@ -384,6 +432,8 @@ export default function BesiPlanlamaScreen() {
                   setBaslik(s.baslik);
                   setBasSayisi(s.basSayisi != null ? String(s.basSayisi) : '');
                   setGirisKg(s.girisKg != null ? String(s.girisKg) : '');
+                  if (s.alisCanliKgFiyat != null) setAlisKgFiyat(String(s.alisCanliKgFiyat));
+                  else setAlisKgFiyat('');
                   setAlis(s.alisBasFiyat != null ? String(s.alisBasFiyat) : '');
                   setDonemler(s.donemler);
                   if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);

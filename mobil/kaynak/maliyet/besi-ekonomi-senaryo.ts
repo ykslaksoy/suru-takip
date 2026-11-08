@@ -16,6 +16,8 @@ export type BesiEkonomiSenaryoGirdi = {
   planDegiskenToplam: number | null;
   gercekParti?: PartiGercekMaliyetOzet | null;
   donguArasiBosGun: number | null;
+  /** Planlama çözülmüş ₺/baş — alış kaleminden önce (çift sayım yok) */
+  planAlisBas?: number | null;
 };
 
 export type BesiEkonomiSenaryoSonuc =
@@ -127,6 +129,10 @@ export function hesaplaBesiEkonomiSenaryo(g: BesiEkonomiSenaryoGirdi): BesiEkono
     }
     yemVeGunluk = plan + gunlukPlanVeyaKalem;
     if (yemVeGunluk === 0) yemVeGunluk = null;
+  }
+
+  if (alisBas == null && g.planAlisBas != null && g.planAlisBas > 0) {
+    alisBas = g.planAlisBas;
   }
 
   if (alisBas == null) {
