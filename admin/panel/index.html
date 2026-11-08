@@ -60,6 +60,19 @@
     <table><thead><tr><th>Id</th><th>Açık</th><th>Açıklama</th><th></th></tr></thead><tbody id="bayrakTablo"></tbody></table>
   </section>
 
+  <section id="besiModelBolum" hidden>
+    <h2>Besi plan teknik modeli</h2>
+    <p class="muted">ADG bantları, pazar uyum %, besleme katsayıları — yalnız admin; sürüm geçmişi korunur. Çiftçi uygulamasında düzenlenemez.</p>
+    <textarea id="besiModelJson" rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12px"></textarea>
+    <div class="row">
+      <input id="besiModelNot" placeholder="Sürüm notu" style="flex:1" />
+      <button type="button" id="besiModelKaydet">Yeni sürüm kaydet</button>
+      <button type="button" id="besiModelYukle">Yenile</button>
+    </div>
+    <p class="muted" id="besiModelDurum"></p>
+    <table><thead><tr><th>#</th><th>Zaman</th><th>Geçerli</th><th>Not</th></tr></thead><tbody id="besiModelGecmis"></tbody></table>
+  </section>
+
   <section id="duyuruBolum" hidden>
     <h2>İçerik sürümü</h2>
     <div class="row">
@@ -104,7 +117,7 @@
     }
 
     function panelAcik(acik) {
-      for (const id of ['icerik', 'destekBolum', 'bayrakBolum', 'duyuruBolum']) {
+      for (const id of ['icerik', 'destekBolum', 'bayrakBolum', 'besiModelBolum', 'duyuruBolum']) {
         document.getElementById(id).hidden = !acik;
       }
       document.getElementById('oturum').textContent = acik ? 'Oturum açık' : '';
@@ -184,10 +197,26 @@
       document.getElementById('duyuruYayin').checked = !!c.yayinlandi;
     }
 
+    async function yukleBesiModel() {
+      const j = await adminApi('/api/admin/besi-model');
+      const aktif = j.aktif?.model || j.varsayilan;
+      document.getElementById('besiModelJson').value = JSON.stringify(aktif, null, 2);
+      document.getElementById('besiModelDurum').textContent =
+        j.aktif ? `Geçerli sürüm #${j.aktif.surum_no} · ${j.aktif.created_at?.slice(0, 19) || ''}` : 'Yalnız kod varsayılanı (henüz admin sürümü yok)';
+      const tb = document.getElementById('besiModelGecmis');
+      tb.innerHTML = '';
+      for (const s of j.gecmis || []) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.surum_no}</td><td>${s.created_at?.slice(0, 19) || ''}</td><td>${s.gecerli ? '✓' : '—'}</td><td>${s.not || ''}</td>`;
+        tb.appendChild(tr);
+      }
+    }
+
     async function yukleHepsi() {
       await yukleCiftlik();
       await yukleDestek();
       await yukleBayrak();
+      await yukleBesiModel();
       await yukleDuyuru();
     }
 
@@ -199,6 +228,22 @@
       document.getElementById('destekKonu').value = '';
       await yukleDestek();
     };
+    document.getElementById('besiModelYukle').onclick = () => yukleBesiModel().catch((e) => hata(e.message));
+    document.getElementById('besiModelKaydet').onclick = async () => {
+      hata('');
+      try {
+        const model = JSON.parse(document.getElementById('besiModelJson').value);
+        await adminApi('/api/admin/besi-model', {
+          method: 'POST',
+          body: JSON.stringify({ model, not: document.getElementById('besiModelNot').value.trim() }),
+        });
+        alert('Teknik model sürümü kaydedildi');
+        await yukleBesiModel();
+      } catch (e) {
+        hata(e.message);
+      }
+    };
+
     document.getElementById('duyuruKaydet').onclick = async () => {
       await adminApi('/api/admin/icerik', {
         method: 'PATCH',

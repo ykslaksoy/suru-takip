@@ -11,6 +11,7 @@ import {
   type PlanAdgCozum,
 } from '@/kaynak/maliyet/besi-plan-adg-besleme';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
+import type { BesiModelBirlesik } from '@/kaynak/maliyet/besi-model-birles';
 import type { BesiPlanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
 
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string };
@@ -30,6 +31,7 @@ export function BesiBeslemeAdgPaneli({
   onBeslemeChange,
   colors,
   planKilitli,
+  teknikModel,
 }: {
   irk: BesiPlanIrkTaslak;
   besleme: BesiPlanBeslemeTaslak;
@@ -37,8 +39,9 @@ export function BesiBeslemeAdgPaneli({
   onBeslemeChange: (b: BesiPlanBeslemeTaslak) => void;
   colors: Colors;
   planKilitli: boolean;
+  teknikModel: BesiModelBirlesik;
 }) {
-  const coz = cozPlanAdg(adgSenaryo, irk, besleme);
+  const coz = cozPlanAdg(adgSenaryo, irk, besleme, teknikModel);
   const ornek60 =
     coz.seciliGcaa != null ? Math.round((25 + (coz.seciliGcaa / 1000) * 60) * 10) / 10 : null;
   const ornek90 =

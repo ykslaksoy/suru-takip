@@ -12,6 +12,9 @@ import {
 } from '@/kaynak/maliyet/besi-plan-irk';
 import { IRK_KATALOG_BY_KOD, normalizeHedefIrkKodu } from '@/kaynak/maliyet/besi-plan-irk-katalog';
 import { BesiIrkKatalogSecici } from '@/bilesenler/maliyet/BesiIrkKatalogSecici';
+import type { BesiPlanGercekOlcum } from '@/kaynak/maliyet/besi-plan-gercek-olcum';
+import { irkTaslakHesapIcin } from '@/kaynak/maliyet/besi-plan-irk-efektif';
+import { pazarUyumYuzdeModel, type BesiModelBirlesik } from '@/kaynak/maliyet/besi-model-birles';
 
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string };
 
@@ -34,13 +37,18 @@ export function BesiIrkKokenSecimi({
   onChange,
   colors,
   planKilitli,
+  gercekOlcum,
+  teknikModel,
 }: {
   taslak: BesiPlanIrkTaslak;
   onChange: (t: BesiPlanIrkTaslak) => void;
   colors: Colors;
   planKilitli: boolean;
+  gercekOlcum: BesiPlanGercekOlcum | null;
+  teknikModel: BesiModelBirlesik;
 }) {
-  const politika = irkAdgPolitikasi(taslak);
+  const politika = irkAdgPolitikasi(irkTaslakHesapIcin(taslak, gercekOlcum));
+  const pazarModel = pazarUyumYuzdeModel(teknikModel, taslak);
   const karisikOneri = taslak.koken === 'pazar_toplama' && taslak.irkBilgi !== 'irk_belli';
 
   return (
@@ -154,47 +162,46 @@ export function BesiIrkKokenSecimi({
         />
       )}
 
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-        <MiniInput
+      <View style={[styles.readonly, { borderColor: colors.border, marginTop: 8 }]}>
+        <Text style={{ color: colors.tint, fontWeight: '800', fontSize: 12 }}>Gerçek kayıtlar (okunur)</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 10, marginBottom: 6 }}>
+          Tartım ve sürü kaydından; teknik band ve pazar uyumu yalnız admin panelinden değişir.
+        </Text>
+        <OlcumSatir
           label="Plan baş (kapsam)"
-          value={taslak.planBasSayisi != null ? String(taslak.planBasSayisi) : ''}
-          onEnd={(v) => onChange({ ...taslak, planBasSayisi: v })}
+          deger={gercekOlcum?.planBasSayisi != null ? String(gercekOlcum.planBasSayisi) : '—'}
           colors={colors}
-          disabled={planKilitli}
         />
-        <MiniInput
+        <OlcumSatir
           label="Irkı bilinen baş"
-          value={taslak.bilinenIrkBas != null ? String(taslak.bilinenIrkBas) : ''}
-          onEnd={(v) => onChange({ ...taslak, bilinenIrkBas: v })}
+          deger={gercekOlcum?.bilinenIrkBas != null ? String(gercekOlcum.bilinenIrkBas) : '—'}
           colors={colors}
-          disabled={planKilitli}
         />
+        <OlcumSatir
+          label="Tartım ADG (g/gün) — gerçek eğilim"
+          deger={
+            gercekOlcum?.olcumGcaaGramGun != null
+              ? `${gercekOlcum.olcumGcaaGramGun}`
+              : 'Yeterli tartım yok'
+          }
+          colors={colors}
+        />
+        {taslak.koken === 'pazar_toplama' ? (
+          <OlcumSatir
+            label="Pazar uyum düşüşü % (admin modeli)"
+            deger={pazarModel != null && pazarModel > 0 ? String(pazarModel) : '0'}
+            colors={colors}
+          />
+        ) : null}
+        {gercekOlcum?.aciklama.slice(0, 3).map((a) => (
+          <Text key={a} style={{ color: colors.textSecondary, fontSize: 10 }}>
+            · {a}
+          </Text>
+        ))}
+        <Text style={{ color: colors.textSecondary, fontSize: 9, marginTop: 4 }}>
+          Teknik model: {teknikModel.kaynak === 'admin_surum' ? `admin sürüm ${teknikModel.surum}` : 'kod varsayılanı'}
+        </Text>
       </View>
-      <MiniInput
-        label="Tartım ADG (g/gün) — gerçek eğilim"
-        value={taslak.olcumGcaaGramGun != null ? String(taslak.olcumGcaaGramGun) : ''}
-        onEnd={(v) => onChange({ ...taslak, olcumGcaaGramGun: v })}
-        colors={colors}
-        disabled={planKilitli}
-      />
-      {taslak.koken === 'pazar_toplama' ? (
-        <MiniInput
-          label="Pazar uyum düşüşü % (opsiyonel — boş = 0)"
-          value={
-            taslak.pazarUyumDususYuzde != null && taslak.pazarUyumDususYuzde > 0
-              ? String(taslak.pazarUyumDususYuzde)
-              : ''
-          }
-          onEnd={(v) =>
-            onChange({
-              ...taslak,
-              pazarUyumDususYuzde: v != null && v > 0 && v <= 40 ? v : null,
-            })
-          }
-          colors={colors}
-          disabled={planKilitli}
-        />
-      ) : null}
 
       <Text style={{ color: colors.tint, fontSize: 12, fontWeight: '700', marginTop: 8 }}>{politika.etiket}</Text>
       {politika.heterojenlik ? (
@@ -205,6 +212,23 @@ export function BesiIrkKokenSecimi({
           · {u}
         </Text>
       ))}
+    </View>
+  );
+}
+
+function OlcumSatir({
+  label,
+  deger,
+  colors,
+}: {
+  label: string;
+  deger: string;
+  colors: Colors;
+}) {
+  return (
+    <View style={{ marginTop: 4 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 10 }}>{label}</Text>
+      <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>{deger}</Text>
     </View>
   );
 }
@@ -302,5 +326,6 @@ function NotInput({
 const styles = StyleSheet.create({
   wrap: { borderWidth: 1, borderRadius: 12, padding: 12, marginVertical: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  readonly: { borderWidth: 1, borderRadius: 10, padding: 10, backgroundColor: '#f8faf8' },
   input: { borderWidth: 1, borderRadius: 8, padding: 6, fontSize: 14, marginTop: 2 },
 });

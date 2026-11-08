@@ -4,6 +4,7 @@
 
 import type { AdgKanitSenaryo } from './besi-adg-kanit';
 import { kanitGcaa } from './besi-adg-kanit';
+import type { BesiModelBirlesik } from './besi-model-birles';
 import type { BesiPlanIrkTaslak } from './besi-plan-irk';
 import { efektifGcaaGramGun } from './besi-plan-irk';
 import { hesaplaBrutKar, BRUT_KAR_ETIKET } from './besi-plan-brut-kar';
@@ -49,11 +50,17 @@ function cikisKg(
   senaryo: AdgKanitSenaryo,
   irk: BesiPlanIrkTaslak,
   besleme: KararSimGirdi['beslemeTaslak'],
+  model?: BesiModelBirlesik | null,
 ): number {
   if (irk.olcumGcaaGramGun != null) {
     return Math.round((girisKg + (irk.olcumGcaaGramGun / 1000) * gun) * 10) / 10;
   }
-  const ef = efektifGcaaGramGun(senaryo, irk, besleme ?? { yontem: 'hazir_pellet', formulDogrulandi: false, katkiSecildi: false });
+  const ef = efektifGcaaGramGun(
+    senaryo,
+    irk,
+    besleme ?? { yontem: 'hazir_pellet', formulDogrulandi: false, katkiSecildi: false },
+    model ?? undefined,
+  );
   const gcaa = ef.gcaa ?? kanitGcaa(senaryo).gcaaGramGun;
   return Math.round((girisKg + (gcaa / 1000) * gun) * 10) / 10;
 }
@@ -108,19 +115,24 @@ export function hesaplaKararSimulasyon(g: KararSimGirdi, satisFiyatKgOverride: n
 
   const satirlar: KararSatir[] = SENARYOLAR.map((senaryo) => {
     const k = kanitGcaa(senaryo);
-    const kg60 = cikisKg(g.girisKg, 60, senaryo, g.irkTaslak, g.beslemeTaslak);
-    const kg90 = cikisKg(g.girisKg, 90, senaryo, g.irkTaslak, g.beslemeTaslak);
+    const kg60 = cikisKg(g.girisKg, 60, senaryo, g.irkTaslak, g.beslemeTaslak, g.teknikModel);
+    const kg90 = cikisKg(g.girisKg, 90, senaryo, g.irkTaslak, g.beslemeTaslak, g.teknikModel);
     const u60 = ufukBrut(g, senaryo, 60, kg60, fiyatKg, birim);
     const u90 = ufukBrut(g, senaryo, 90, kg90, fiyatKg, birim);
     return {
       senaryo,
       etiket: senaryo === 'muhafazakar' ? 'Alt aralık — yeni başlayan öneri' : k.not,
       gcaa:
-        efektifGcaaGramGun(senaryo, g.irkTaslak, g.beslemeTaslak ?? {
-          yontem: 'hazir_pellet',
-          formulDogrulandi: false,
-          katkiSecildi: false,
-        }).gcaa ?? k.gcaaGramGun,
+        efektifGcaaGramGun(
+          senaryo,
+          g.irkTaslak,
+          g.beslemeTaslak ?? {
+            yontem: 'hazir_pellet',
+            formulDogrulandi: false,
+            katkiSecildi: false,
+          },
+          g.teknikModel ?? undefined,
+        ).gcaa ?? k.gcaaGramGun,
       gun60: { cikisKg: kg60, ...u60 },
       gun90: { cikisKg: kg90, ...u90 },
     };

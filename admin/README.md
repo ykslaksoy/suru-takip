@@ -4,6 +4,8 @@ Minimal operasyon yüzeyi — çiftçi uygulamasına gömülü değil.
 
 - UI: `admin/panel/index.html` → Vercel `dist/admin/` (build: `mobil/scripts/admin-panel-kopyala.js`)
 - API: `api/admin/*` (service role yalnız sunucu)
-- Şema: `mobil/supabase/schema.sql` (`admin_kullanici`, `destek_talebi`, `admin_ozellik_bayrak`, `icerik_surum`)
+- Şema: `mobil/supabase/schema.sql` (`admin_kullanici`, `destek_talebi`, `admin_ozellik_bayrak`, `icerik_surum`, `admin_besi_model_surum`)
+- Besi teknik model: `/admin` (panel) → **Besi plan teknik modeli**; API `GET /api/besi/model` (okuma), `GET|POST /api/admin/besi-model` (yalnız allowlist admin)
+- Canlı admin panel: **https://superkuzu.vercel.app/admin** (Supabase Auth + `admin_kullanici` satırı gerekli)
 
 İlk admin: Supabase SQL Editor’da `admin_kullanici` tablosuna allowlist satırı ekleyin.

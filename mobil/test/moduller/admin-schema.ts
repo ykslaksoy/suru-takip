@@ -12,6 +12,7 @@ export const adminSchemaModul: TestModul = {
       test('Admin şema', 'admin_ozellik_bayrak', schema.includes('admin_ozellik_bayrak')),
       test('Admin şema', 'icerik_surum', schema.includes('icerik_surum')),
       test('Admin şema', 'admin_kullanici', schema.includes('admin_kullanici')),
+      test('Admin şema', 'admin_besi_model_surum', schema.includes('admin_besi_model_surum')),
     ];
   },
 };
