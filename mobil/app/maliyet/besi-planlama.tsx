@@ -46,6 +46,8 @@ import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet, type PiyasaSatisKaynak } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { BesiIrkKokenSecimi } from '@/bilesenler/maliyet/BesiIrkKokenSecimi';
 import { varsayilanIrkTaslak, type BesiPlanIrkTaslak, adgSenaryoIrkUygunMu, irkAdgPolitikasi } from '@/kaynak/maliyet/besi-plan-irk';
+import { BesiKararSimulasyonPaneli } from '@/bilesenler/maliyet/BesiKararSimulasyonPaneli';
+import { hesaplaKararSimulasyon, kararVarsayilanSenaryo } from '@/kaynak/maliyet/besi-plan-karar-sim';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -95,7 +97,9 @@ export default function BesiPlanlamaScreen() {
   const [gercekParti, setGercekParti] = useState<PartiGercekMaliyetOzet | null>(null);
   const [butceTaslak, setButceTaslak] = useState<ButceTaslak | null>(null);
   const [satisKaynak, setSatisKaynak] = useState<PiyasaSatisKaynak>('edirne_tobb');
-  const [adgKanit, setAdgKanit] = useState<AdgKanitSenaryo>('beklenen');
+  const [adgKanit, setAdgKanit] = useState<AdgKanitSenaryo>('muhafazakar');
+  const [isletmeGiderBas, setIsletmeGiderBas] = useState('');
+  const [olumOran, setOlumOran] = useState('');
   const [yemIllustrasyon, setYemIllustrasyon] = useState(true);
   const [piyasaRefreshNot, setPiyasaRefreshNot] = useState<string | null>(null);
   const [irkTaslak, setIrkTaslak] = useState<BesiPlanIrkTaslak>(varsayilanIrkTaslak());
@@ -214,6 +218,29 @@ export default function BesiPlanlamaScreen() {
           olcumGcaa: irkTaslak.olcumGcaaGramGun,
           irkTaslak,
         })
+      : null;
+
+  const kararSim =
+    sayi(girisKg) != null && alisBrutKar != null
+      ? hesaplaKararSimulasyon(
+          {
+            girisKg: sayi(girisKg)!,
+            alisBas: alisBrutKar,
+            satisKaynak,
+            satisBirimi,
+            karkasVerim: karkasV,
+            adgSenaryo: 'senaryo_taban',
+            adgKanit,
+            donemler,
+            yemIllustrasyon,
+            yemFireYuzde: 5,
+            irkTaslak,
+            basSayisi: basAdet,
+            isletmeGiderBas: isletmeGiderBas.trim() ? sayi(isletmeGiderBas) : null,
+            olumOranYuzde: olumOran.trim() ? sayi(olumOran) : null,
+          },
+          sayi(satisFiyat),
+        )
       : null;
 
   const butceMutabakat = butceTaslak
@@ -351,7 +378,15 @@ export default function BesiPlanlamaScreen() {
         />
         <Mini label="Baş sayısı" value={basSayisi} onChange={setBasSayisi} colors={colors} />
         <Mini label="Giriş kg/baş" value={girisKg} onChange={setGirisKg} colors={colors} />
-        <BesiIrkKokenSecimi taslak={irkTaslak} onChange={setIrkTaslak} colors={colors} planKilitli={planKilitli} />
+        <BesiIrkKokenSecimi
+          taslak={irkTaslak}
+          onChange={(t) => {
+            setIrkTaslak(t);
+            if (t.olcumGcaaGramGun == null) setAdgKanit(kararVarsayilanSenaryo(t));
+          }}
+          colors={colors}
+          planKilitli={planKilitli}
+        />
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
           Tahmini alış fiyatı (₺/canlı kg) — {ALIS_KAYNAK_ETIKET.kullanici_planlama_varsayimi}. Canlı borsa veya satış fiyatı değil.
         </Text>
@@ -415,6 +450,21 @@ export default function BesiPlanlamaScreen() {
           </Text>
         </Pressable>
         <BesiEkonomiKalemFormu kalemler={ekonomiKalemler} onChange={setEkonomiKalemler} colors={colors} />
+
+        <Mini
+          label="İşletme gideri ₺/baş (brüt dışı — sağlık/çoban payı; boş = net hesaplanmaz)"
+          value={isletmeGiderBas}
+          onChange={setIsletmeGiderBas}
+          colors={colors}
+        />
+        <Mini
+          label="Ölüm/kayıp % (opsiyonel — girilmezse 0 sayılmaz)"
+          value={olumOran}
+          onChange={setOlumOran}
+          colors={colors}
+        />
+
+        {kararSim ? <BesiKararSimulasyonPaneli sonuc={kararSim} colors={colors} /> : null}
 
         {piyasaOzet ? (
           <BesiPiyasaAdgPaneli

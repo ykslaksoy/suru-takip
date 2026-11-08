@@ -69,6 +69,12 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t359u — Karar simülasyonu (muhafazakar varsayılan)
+
+- Pazar/karışık → **muhafazakar 200 g/gün** başlangıç; 320 varsayılan değil
+- `besi-plan-karar-sim.ts` — üç bant 60/90 brüt kâr, başa çıkış ₺/kg, duyarlılık, net (gider girilince)
+- İşletme gideri / ölüm % opsiyonel — eksikse net yok
+
 ## t358u — Köken / ırk seçimi
 
 - `besi-plan-irk.ts` + `BesiIrkKokenSecimi` — üretim vs pazar toplama; ırk belli/kısmen/bilinmiyor

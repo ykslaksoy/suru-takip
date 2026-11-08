@@ -5,6 +5,7 @@ import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { hesaplaBrutKar, BRUT_KAR_ETIKET } from '@/kaynak/maliyet/besi-plan-brut-kar';
 import { ortakGiderMutabakat } from '@/kaynak/maliyet/besi-plan-butce-hesap';
 import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
+import { hesaplaKararSimulasyon, kararVarsayilanSenaryo } from '@/kaynak/maliyet/besi-plan-karar-sim';
 
 const g = 'Besi piyasa ADG t355u';
 
@@ -65,6 +66,33 @@ export const besiPiyasaAdgModul: TestModul = {
       test(g, 't358u ölçüm gcaa', efektifGcaaGramGun('iyimser', olcumIrk).gcaa === 210),
       test(g, 't358u 60g 37.6kg', ozetOlcum.ufuk60.cikisKg === 37.6),
       test(g, 't358u irk tip', pazar.irkBilgi === 'irk_bilinmiyor'),
-    ];
+      test(g, 't359u varsayılan muhafazakar', kararVarsayilanSenaryo(pazar) === 'muhafazakar'),
+      test(g, 't359u politik default muh', irkAdgPolitikasi(pazar).varsayilanSenaryo === 'muhafazakar'),
+      (() => {
+        const k = hesaplaKararSimulasyon(
+          {
+            girisKg: 25,
+            alisBas: 12000,
+            satisKaynak: 'edirne_tobb',
+            satisBirimi: 'canli_kg',
+            karkasVerim: null,
+            adgSenaryo: 'senaryo_taban',
+            adgKanit: 'muhafazakar',
+            donemler: [],
+            yemIllustrasyon: true,
+            yemFireYuzde: 5,
+            irkTaslak: pazar,
+            basSayisi: 1,
+          },
+          null,
+        );
+        const m = k.satirlar.find((s) => s.senaryo === 'muhafazakar')!;
+        return [
+          test(g, 't359u 60g çıkış 37', m.gun60.cikisKg === 37),
+          test(g, 't359u brüt 60g hesap', m.gun60.brutKar != null),
+          test(g, 't359u breakeven kg', (k.breakevenCanliFiyatKg60 ?? 0) > 300),
+        ];
+      })(),
+    ].flat();
   },
 };

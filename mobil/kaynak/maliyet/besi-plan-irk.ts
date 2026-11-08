@@ -91,10 +91,11 @@ export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
   }
 
   if (generic) {
-    uyari.push('Pazardan toplama / ırk bilinmiyor — genel 200–320 g/gün (NSW DPI aralığı)');
+    uyari.push('Pazardan toplama / ırk bilinmiyor — başlangıç muhafazakar 200 g/gün (NSW 150–250)');
+    uyari.push('İyimser 320 g/gün varsayılan değil — yalnız karşılaştırma bandı');
     return {
-      etiket: 'Genel kuzu senaryosu',
-      varsayilanSenaryo: 'beklenen',
+      etiket: 'Genel kuzu — yeni giriş',
+      varsayilanSenaryo: 'muhafazakar',
       izinliSenaryolar: ['muhafazakar', 'beklenen', 'iyimser'],
       iyimserGcaaUst: 320,
       heterojenlik,
