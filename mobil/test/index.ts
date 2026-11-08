@@ -44,6 +44,7 @@ import { besiPiyasaAdgModul } from './moduller/besi-piyasa-adg';
 import { besiReferansYenileModul } from './moduller/besi-referans-yenile';
 import { besiReferansOtomatikModul } from './moduller/besi-referans-otomatik';
 import { besiPlanAdgBeslemeModul } from './moduller/besi-plan-adg-besleme';
+import { besiModelAdminModul } from './moduller/besi-model-admin';
 import { besiEkonomiModul } from './moduller/besi-ekonomi';
 import { performansMetrikEtiketModul } from './moduller/performans-metrik-etiket';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
@@ -111,6 +112,7 @@ const MODULLER = [
   besiReferansYenileModul,
   besiReferansOtomatikModul,
   besiPlanAdgBeslemeModul,
+  besiModelAdminModul,
   besiEkonomiModul,
   performansMetrikEtiketModul,
   stokEslesmeModul,

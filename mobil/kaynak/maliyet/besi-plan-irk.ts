@@ -2,6 +2,8 @@
 
 import type { AdgKanitSenaryo } from './besi-adg-kanit';
 import { kanitGcaa } from './besi-adg-kanit';
+import type { BesiModelBirlesik } from './besi-model-birles';
+import { varsayilanBesiModel } from './besi-model-birles';
 import { cozPlanAdg } from './besi-plan-adg-besleme';
 import type { BesiPlanBeslemeTaslak } from './besi-plan-besleme';
 import { varsayilanBeslemeTaslak } from './besi-plan-besleme';
@@ -150,8 +152,9 @@ export function efektifGcaaGramGun(
   senaryo: AdgKanitSenaryo,
   t: BesiPlanIrkTaslak,
   besleme: BesiPlanBeslemeTaslak = varsayilanBeslemeTaslak(),
+  model: BesiModelBirlesik = varsayilanBesiModel(),
 ): { gcaa: number | null; kaynak: string; cozum: ReturnType<typeof cozPlanAdg> } {
-  const cozum = cozPlanAdg(senaryo, t, besleme);
+  const cozum = cozPlanAdg(senaryo, t, besleme, model);
   if (cozum.seciliGcaa == null) {
     const k = kanitGcaa(senaryo);
     return { gcaa: k.gcaaGramGun, kaynak: `${k.kaynakAd} (yedek)`, cozum };

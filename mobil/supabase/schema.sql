@@ -247,10 +247,26 @@ insert into public.icerik_surum (id, surum, duyuru_metni, yayinlandi) values
   ('genel', '1', '', false)
 on conflict (id) do nothing;
 
+-- Besi plan teknik modeli — yalnız service role / admin API (sürümlü, geçmiş korunur)
+create table if not exists public.admin_besi_model_surum (
+  id uuid primary key default gen_random_uuid(),
+  surum_no integer not null,
+  gecerli boolean not null default false,
+  model jsonb not null,
+  degistiren uuid references auth.users(id) on delete set null,
+  degistiren_eposta text not null default '',
+  not text not null default '',
+  created_at timestamptz not null default now(),
+  unique (surum_no)
+);
+create index if not exists admin_besi_model_gecerli on public.admin_besi_model_surum (gecerli) where gecerli = true;
+create index if not exists admin_besi_model_zaman on public.admin_besi_model_surum (created_at desc);
+
 alter table public.admin_kullanici enable row level security;
 alter table public.destek_talebi enable row level security;
 alter table public.admin_ozellik_bayrak enable row level security;
 alter table public.icerik_surum enable row level security;
+alter table public.admin_besi_model_surum enable row level security;
 
 create or replace function public.destek_guncelle_zaman() returns trigger language plpgsql as $$
 begin

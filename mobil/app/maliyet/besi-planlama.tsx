@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import Colors from '@/sabitler/Renkler';
@@ -62,6 +62,13 @@ import {
 } from '@/kaynak/maliyet/besi-plan-irk';
 import { BesiKararSimulasyonPaneli } from '@/bilesenler/maliyet/BesiKararSimulasyonPaneli';
 import { hesaplaKararSimulasyon, kararVarsayilanSenaryo } from '@/kaynak/maliyet/besi-plan-karar-sim';
+import { getBesiTeknikModel } from '@/kaynak/maliyet/besi-model-servis';
+import { varsayilanBesiModel, type BesiModelBirlesik } from '@/kaynak/maliyet/besi-model-birles';
+import {
+  besiPlanGercekOlcumYukle,
+  irkTaslakHesapIcin,
+  type BesiPlanGercekOlcum,
+} from '@/kaynak/maliyet/besi-plan-gercek-olcum';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -121,6 +128,26 @@ export default function BesiPlanlamaScreen() {
   const { meta: refSyncMeta, sonDurum: refSyncDurum } = useBesiReferansOtomatik();
   const [irkTaslak, setIrkTaslak] = useState<BesiPlanIrkTaslak>(varsayilanIrkTaslak());
   const [beslemeTaslak, setBeslemeTaslak] = useState<BesiPlanBeslemeTaslak>(varsayilanBeslemeTaslak());
+  const [teknikModel, setTeknikModel] = useState<BesiModelBirlesik>(() => varsayilanBesiModel());
+  const [gercekOlcum, setGercekOlcum] = useState<BesiPlanGercekOlcum | null>(null);
+
+  useEffect(() => {
+    void getBesiTeknikModel().then(setTeknikModel);
+  }, []);
+
+  useEffect(() => {
+    const basFallback = sayi(basSayisi) != null ? Math.floor(sayi(basSayisi)!) : null;
+    void besiPlanGercekOlcumYukle({
+      padok: padok ?? null,
+      hedefIrk: irkTaslak.hedefIrk,
+      planBasSayisiFallback: basFallback,
+    }).then(setGercekOlcum);
+  }, [padok, irkTaslak.hedefIrk, irkTaslak.koken, basSayisi]);
+
+  const irkHesap = useMemo(
+    () => irkTaslakHesapIcin(irkTaslak, gercekOlcum),
+    [irkTaslak, gercekOlcum],
+  );
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -240,9 +267,10 @@ export default function BesiPlanlamaScreen() {
           donemler,
           yemIllustrasyon,
           yemFireYuzde: 5,
-          olcumGcaa: irkTaslak.olcumGcaaGramGun,
-          irkTaslak,
+          olcumGcaa: irkHesap.olcumGcaaGramGun,
+          irkTaslak: irkHesap,
           beslemeTaslak,
+          teknikModel,
         })
       : null;
 
@@ -260,8 +288,9 @@ export default function BesiPlanlamaScreen() {
             donemler,
             yemIllustrasyon,
             yemFireYuzde: 5,
-            irkTaslak,
+            irkTaslak: irkHesap,
             basSayisi: basAdet,
+            teknikModel,
             kullaniciSatisFiyatKg: sayi(satisFiyat),
             kullaniciBolgeSatisKg: bolgeTaslak.kullaniciSatisKg,
             isletmeGiderBas: isletmeGiderBas.trim() ? sayi(isletmeGiderBas) : null,
@@ -421,18 +450,21 @@ export default function BesiPlanlamaScreen() {
           taslak={irkTaslak}
           onChange={(t) => {
             setIrkTaslak(t);
-            if (t.olcumGcaaGramGun == null) setAdgKanit(kararVarsayilanSenaryo(t));
+            setAdgKanit(kararVarsayilanSenaryo(irkTaslakHesapIcin(t, gercekOlcum)));
           }}
           colors={colors}
           planKilitli={planKilitli}
+          gercekOlcum={gercekOlcum}
+          teknikModel={teknikModel}
         />
         <BesiBeslemeAdgPaneli
-          irk={irkTaslak}
+          irk={irkHesap}
           besleme={beslemeTaslak}
           adgSenaryo={adgKanit}
           onBeslemeChange={setBeslemeTaslak}
           colors={colors}
           planKilitli={planKilitli}
+          teknikModel={teknikModel}
         />
         <BesiBolgeSecimi taslak={bolgeTaslak} onChange={setBolgeTaslak} colors={colors} planKilitli={planKilitli} />
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>

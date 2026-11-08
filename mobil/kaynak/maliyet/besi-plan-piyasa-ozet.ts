@@ -8,6 +8,7 @@ import { piyasaKayitOku, type PiyasaFiyatKaydi } from './besi-piyasa-kayit';
 import { efektifBirimFiyat } from './besi-referans-override';
 import { satisGelirBasHesapla, type SatisFiyatBirimi } from './besi-plan-satis';
 import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
+import type { BesiModelBirlesik } from './besi-model-birles';
 import type { BesiPlanIrkTaslak } from './besi-plan-irk';
 import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from './besi-plan-irk';
 import type { BesiPlanBeslemeTaslak } from './besi-plan-besleme';
@@ -39,6 +40,7 @@ export type BesiPiyasaOzetGirdi = {
   olcumGcaa?: number | null;
   irkTaslak?: BesiPlanIrkTaslak | null;
   beslemeTaslak?: BesiPlanBeslemeTaslak | null;
+  teknikModel?: BesiModelBirlesik | null;
 };
 
 export type UfukEkonomi = {
@@ -90,7 +92,8 @@ function ufuk(
   const h = gun === 60 ? kars.gun60 : kars.gun90;
   let cikisKg = h.cikisKg;
   const irk = g.irkTaslak;
-  const efektif = irk ? efektifGcaaGramGun(g.adgKanit, irk, besleme) : null;
+  const model = g.teknikModel ?? undefined;
+  const efektif = irk ? efektifGcaaGramGun(g.adgKanit, irk, besleme, model) : null;
   if (efektif?.gcaa != null) {
     cikisKg = Math.round((g.girisKg + (efektif.gcaa / 1000) * gun) * 10) / 10;
   } else if (cikisKg == null) {
@@ -118,6 +121,7 @@ function ufuk(
 }
 
 export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
+  const model = g.teknikModel ?? undefined;
   const uyari = [
     'TOBB/UKON sunucu proxy ile yenilenir; Balıkesir PDF manuel/bayat.',
     '8 model tablo max kazanç kanıt değil.',
@@ -141,14 +145,14 @@ export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
   const irkPolitikasi = irkAdgPolitikasi(g.irkTaslak ?? varsayilanIrkTaslak());
   uyari.push(...irkPolitikasi.uyari.slice(0, 2));
   const besleme = g.beslemeTaslak ?? varsayilanBeslemeTaslak();
-  const adgCoz = cozPlanAdg(g.adgKanit, g.irkTaslak ?? varsayilanIrkTaslak(), besleme);
+  const adgCoz = cozPlanAdg(g.adgKanit, g.irkTaslak ?? varsayilanIrkTaslak(), besleme, model);
   uyari.push(
     `ADG bandı ${adgCoz.grup}: muh ${adgCoz.muhafazakar} / bek ${adgCoz.beklenen} / iyim ${adgCoz.iyimser} g·gün`,
   );
   uyari.push(...adgCoz.uyari.slice(0, 2));
   uyari.push(VERIM_KAVRAM.not);
 
-  const efektifKanit = efektifGcaaGramGun(g.adgKanit, g.irkTaslak ?? varsayilanIrkTaslak(), besleme);
+  const efektifKanit = efektifGcaaGramGun(g.adgKanit, g.irkTaslak ?? varsayilanIrkTaslak(), besleme, model);
 
   return {
     piyasa: piyasaKayitOku().kayitlar,

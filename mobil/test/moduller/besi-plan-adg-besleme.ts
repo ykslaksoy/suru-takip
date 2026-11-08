@@ -1,4 +1,5 @@
 import { test, type TestModul } from '../cerceve';
+import { birlesBesiModel } from '@/kaynak/maliyet/besi-model-birles';
 import {
   adgGrupForIrk,
   cozPlanAdg,
@@ -78,8 +79,18 @@ export const besiPlanAdgBeslemeModul: TestModul = {
       test(g, 'genel bek 250 varsayılan', genelBek.seciliGcaa === 250),
       test(
         g,
-        'pazar uyum düşüşü kullanıcı',
-        cozPlanAdg('beklenen', { ...pazar, pazarUyumDususYuzde: 6 }, hazir).seciliGcaa === 235,
+        'pazar uyum admin modeli',
+        cozPlanAdg(
+          'beklenen',
+          { ...pazar, pazarUyumDususYuzde: 99 },
+          hazir,
+          birlesBesiModel({
+            surum: 2,
+            adgGrupBand: {},
+            pazarUyumDususYuzde: { irk_belli: 0, irk_kismen: 0, irk_bilinmiyor: 6 },
+            beslemeKatsayi: {},
+          }),
+        ).seciliGcaa === 235,
       ),
       test(g, 'karacabey bek ~250', kcbBek.seciliGcaa === 250),
       test(g, 'mera düşürür', (meraMuh.seciliGcaa ?? 999) < kcbBek.muhafazakar),
