@@ -170,6 +170,10 @@ export async function simdiSenkronEt(): Promise<SenkronRapor | null> {
     const meta0 = (await jsonOku<SenkronMeta>(META_ANAHTAR)) ?? bosMeta();
     const { meta, rapor } = await senkronEt(yerelDepo, c.tasiyici(o, guncel.ciftlik_id), meta0, { finansYetkisi: finans });
     await kaliciSetItem(META_ANAHTAR, JSON.stringify(meta));
+    if (!rapor.hata && rapor.gonderilenAnahtarlar?.includes('sy_animals')) {
+      const { flushSyncQueue } = await import('@/kaynak/cekirdek/veritabani');
+      await flushSyncQueue().catch(() => undefined);
+    }
     if (!rapor.hata) {
       try {
         await fotoSenkron({

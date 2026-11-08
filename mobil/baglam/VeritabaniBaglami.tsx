@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { countAnimals, getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';
+import { countAnimals } from '@/kaynak/cekirdek/veritabani';
+import { getSenkronBekleyenSayisi } from '@/kaynak/bulut/bekleyen-sayim';
 import { ensurePadokKuzuVerisi, seedDemoDataIfEmpty } from '@/kaynak/cekirdek/ornek-veri';
 import { demoSeedOtomatik } from '@/sabitler/Ortam';
 import { limitAsimindaPaketAc } from '@/kaynak/abonelik/limit';
@@ -41,7 +42,7 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
       if (hayvan > 0) {
         await limitAsimindaPaketAc(hayvan);
       }
-      const count = await getPendingSyncCount();
+      const count = await getSenkronBekleyenSayisi();
       setPendingSync(count);
       setReady(true);
     })();

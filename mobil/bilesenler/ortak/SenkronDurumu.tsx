@@ -4,7 +4,8 @@ import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
-import { getPendingSyncCount } from '@/kaynak/cekirdek/veritabani';
+import { getSenkronBekleyenSayisi } from '@/kaynak/bulut/bekleyen-sayim';
+import { bulutSenkronKapsamOzeti } from '@/kaynak/bulut/kapsam';
 import { isleSenkronKuyrugu, senkronDurumOzet } from '@/kaynak/cekirdek/senkron-motor';
 
 export function SenkronDurumu() {
@@ -16,7 +17,7 @@ export function SenkronDurumu() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    setBekleyen(await getPendingSyncCount());
+    setBekleyen(await getSenkronBekleyenSayisi());
     setOzet(await senkronDurumOzet());
   }, []);
 
@@ -40,6 +41,9 @@ export function SenkronDurumu() {
     <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <Text style={[styles.title, { color: colors.text }]}>Veri ve senkron</Text>
       <Text style={{ color: colors.textSecondary, lineHeight: 20 }}>{ozet}</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 6, lineHeight: 18 }}>
+        {bulutSenkronKapsamOzeti()}
+      </Text>
       <Text style={{ color: colors.text, marginTop: 8, fontWeight: '700' }}>
         Bekleyen: {bekleyen}
       </Text>

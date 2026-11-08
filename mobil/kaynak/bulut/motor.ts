@@ -104,7 +104,13 @@ export function uzakKazanirMi(u: UzakBelge, meta: SenkronMeta): boolean {
   return u.updated_at > yerelZ;
 }
 
-export type SenkronRapor = { gonderilen: number; alinan: number; bekleyen: number; hata?: string };
+export type SenkronRapor = {
+  gonderilen: number;
+  alinan: number;
+  bekleyen: number;
+  gonderilenAnahtarlar?: string[];
+  hata?: string;
+};
 
 export async function senkronEt(
   depo: YerelDepo,
@@ -136,12 +142,23 @@ export async function senkronEt(
       meta.bekleyen = meta.bekleyen.filter((k) => k !== u.anahtar);
       alinan++;
     }
-    // 2) Gönder
+    // 2) Gönder — yalnız başarılı POST sonrası bekleyen listesinden düş
     const giden = await bekleyenBelgeler(depo, meta, opts.finansYetkisi);
-    if (giden.length) await tasiyici.gonder(giden);
-    gonderilen = giden.length;
-    meta = { ...meta, bekleyen: [], ilkYukleme: true };
-    return { meta, rapor: { gonderilen, alinan, bekleyen: 0 } };
+    const gonderilenAnahtarlar: string[] = [];
+    if (giden.length) {
+      await tasiyici.gonder(giden);
+      gonderilen = giden.length;
+      gonderilenAnahtarlar.push(...giden.map((b) => b.anahtar));
+    }
+    meta = {
+      ...meta,
+      bekleyen: meta.bekleyen.filter((k) => !gonderilenAnahtarlar.includes(k)),
+      ilkYukleme: meta.ilkYukleme || gonderilen > 0,
+    };
+    return {
+      meta,
+      rapor: { gonderilen, alinan, bekleyen: meta.bekleyen.length, gonderilenAnahtarlar },
+    };
   } catch (e) {
     // Çevrimdışı / hata: bekleyenler korunur, sonraki denemede gönderilir
     return { meta, rapor: { gonderilen: 0, alinan, bekleyen: meta.bekleyen.length, hata: e instanceof Error ? e.message : String(e) } };
