@@ -6,6 +6,10 @@ const ONBELLEK = ON_EK + AYAR.surum;
 const AG_BEKLEME_MS = 4000;
 const VAR = new Set(AYAR.dosyalar);
 
+function adminMutlakYol(pathname) {
+  return pathname === '/admin' || pathname.startsWith('/admin/');
+}
+
 function yol(url) {
   let p = url.pathname.replace(/\/+$/, '') || '/';
   if (p.endsWith('.html')) p = p.slice(0, -5) || '/';
@@ -32,8 +36,8 @@ self.addEventListener('install', (e) => {
           ),
         );
       }
-      // İlk kurulumda hemen devral; güncellemede kullanıcı "Yenile"ye basınca
-      if (!self.registration.active) await self.skipWaiting();
+      // Yeni sürümü hızlı devral (admin köprü düzeltmeleri için; veri sunucuda)
+      await self.skipWaiting();
     })(),
   );
 });
@@ -66,11 +70,11 @@ async function sayfa(req) {
     if (r && (r.ok || r.status === 404)) return r;
     throw new Error('ağ hatası');
   } catch {
-    const adminYolu = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
-  const kayitli =
-    (await c.match(anahtar)) ||
-    (adminYolu ? await c.match('/admin') : null) ||
-    (adminYolu ? null : await c.match('/'));
+    const adminYolu = adminMutlakYol(url.pathname);
+    const kayitli =
+      (await c.match(anahtar)) ||
+      (adminYolu ? await c.match('/admin') : null) ||
+      (adminYolu ? null : await c.match('/'));
     if (kayitli) return kayitli;
     return new Response('<!doctype html><meta charset="utf-8"><title>SüperKuzu</title><body style="font-family:sans-serif;padding:24px">İnternet yok ve bu sayfa daha önce açılmamış. İnternet gelince bir kez açın; sonra çevrimdışı da çalışır.</body>', {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -106,6 +110,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // dış servisler: dokunma
   if (url.pathname.startsWith('/_vercel') || url.pathname === '/sw.js') return;
+  if (adminMutlakYol(url.pathname)) return;
   if (req.mode === 'navigate') {
     e.respondWith(sayfa(req));
     return;

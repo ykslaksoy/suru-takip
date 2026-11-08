@@ -17,6 +17,7 @@ export function cevrimdisiKur(): void {
       .register('/sw.js', { scope: '/' })
       .then((reg) => {
         if (reg.active) baglantiGuncelle({ hazir: true });
+        void reg.update().catch(() => undefined);
         const izle = (w: ServiceWorker | null) => {
           if (!w) return;
           w.addEventListener('statechange', () => {
@@ -33,8 +34,12 @@ export function cevrimdisiKur(): void {
         }
         izle(reg.installing);
         reg.addEventListener('updatefound', () => izle(reg.installing));
-        // Uzun açık kalan sekmede saatte bir güncelleme kontrolü
-        setInterval(() => void reg.update().catch(() => undefined), 60 * 60 * 1000);
+        const kontrol = () => void reg.update().catch(() => undefined);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') kontrol();
+        });
+        window.addEventListener('pageshow', kontrol);
+        setInterval(kontrol, 60 * 60 * 1000);
       })
       .catch(() => undefined);
   if (document.readyState === 'complete') kaydet();

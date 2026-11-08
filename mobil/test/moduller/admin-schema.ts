@@ -19,7 +19,17 @@ export const adminSchemaModul: TestModul = {
         'sw admin build sırası',
         webBuild.indexOf('admin-panel-kopyala') < webBuild.indexOf('sw-olustur'),
       ),
-      test('Admin şema', 'sw admin fallback', swSablon.includes('adminYolu')),
+      test('Admin şema', 'sw admin fallback', swSablon.includes('adminMutlakYol')),
+      test(
+        'Admin şema',
+        'sw admin ağ geçişi',
+        swSablon.includes('if (adminMutlakYol(url.pathname)) return'),
+      ),
+      test(
+        'Admin şema',
+        'expo admin köprü',
+        fs.existsSync(path.join(__dirname, '../../app/admin/index.tsx')),
+      ),
     ];
   },
 };
