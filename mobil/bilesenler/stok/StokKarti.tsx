@@ -3,6 +3,8 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { STOCK_TYPE_LABELS } from '@/kaynak/cekirdek/tipler';
 import type { StokListeSatiri } from '@/kaynak/stok';
+import { stoktaMiktarVar } from '@/kaynak/stok/asi-siralama';
+import { asiMetaOku } from '@/kaynak/stok/asi-urun-meta';
 import { terim } from '@/sabitler/Metinler';
 
 export function StokKarti({
@@ -14,10 +16,13 @@ export function StokKarti({
 }) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const asiMeta = satir.type === 'vaccine' && satir.item ? asiMetaOku(satir.item) : null;
   const item = satir.item;
   const qty = item?.quantity ?? 0;
   const minQ = item?.minQuantity ?? satir.minMiktar;
-  const isLow = item ? qty <= minQ : false;
+  const stoktaVar = stoktaMiktarVar(satir);
+  const kayitVarSifir = item != null && !stoktaVar;
+  const isLow = stoktaVar ? qty <= minQ : false;
   const stoktaYok = !item;
   const isExpiring =
     item?.expiryDate && new Date(item.expiryDate).getTime() - Date.now() < 90 * 86400000;
@@ -38,8 +43,21 @@ export function StokKarti({
         <Text style={[styles.type, { color: colors.tint }]}>{STOCK_TYPE_LABELS[satir.type]}</Text>
       </View>
       <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>{satir.aciklama}</Text>
+      {asiMeta?.etiketDozKaynak === 'etiket_manuel' && asiMeta.etiketDoz ? (
+        <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>Etiket dozu: {asiMeta.etiketDoz}</Text>
+      ) : asiMeta && asiMeta.etiketDozKaynak === 'bilinmiyor' ? (
+        <Text style={{ color: colors.warning, fontSize: 11, marginTop: 2 }}>Etiket dozu bilinmiyor</Text>
+      ) : null}
+      {asiMeta?.etiketKapsamKaynak === 'etiket_manuel' && asiMeta.etiketKapsam ? (
+        <Text style={{ color: colors.textSecondary, fontSize: 11 }}>Kapsam (etiket): {asiMeta.etiketKapsam}</Text>
+      ) : null}
       {stoktaYok ? (
         <Text style={[styles.qty, { color: colors.textSecondary }]}>Stokta yok · dokunarak ekle</Text>
+      ) : kayitVarSifir ? (
+        <Text style={[styles.qty, { color: colors.textSecondary }]}>
+          Kayıtlı · 0 {item!.unit} — stok yok · dokunarak giriş yap
+          {satir.kullanim > 0 ? ` · kullanım ${satir.kullanim}` : ''}
+        </Text>
       ) : (
         <Text style={[styles.qty, { color: isLow ? colors.warning : colors.text }]}>
           {qty} {item!.unit}

@@ -29,11 +29,20 @@ import {
   kaydetKatalogKullanim,
   type StokListeSatiri,
 } from '@/kaynak/stok';
+import { filtreleStokSatirlari, stoktaMiktarVar } from '@/kaynak/stok/asi-siralama';
 import type { StockItem, StockType } from '@/kaynak/cekirdek/tipler';
 import { STOCK_TYPE_LABELS, STOCK_TYPE_ORDER } from '@/kaynak/cekirdek/tipler';
 import { terim } from '@/sabitler/Metinler';
 import { birimFiyatCoz, oneriMetni } from '@/kaynak/maliyet/tahmini-fiyat';
 import { referansTarihMetni } from '@/kaynak/maliyet/fiyat-referans';
+import { AsiStokMetaFormu } from '@/bilesenler/stok/AsiStokMetaFormu';
+import {
+  asiMetaYaz,
+  asiUrunDogrula,
+  bosAsiStokMeta,
+  stokGorunenAd,
+  type AsiStokMeta,
+} from '@/kaynak/stok/asi-urun-meta';
 
 export default function StockScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -51,7 +60,9 @@ export default function StockScreen() {
     minQuantity: '10',
     expiryDate: '',
     katalogId: null as string | null,
+    kullaniciNot: '',
   });
+  const [asiMeta, setAsiMeta] = useState<AsiStokMeta>(() => bosAsiStokMeta());
 
   const load = useCallback(async () => {
     setSatirlar(await getSiraliStokListesi(typeFilter));
@@ -61,17 +72,12 @@ export default function StockScreen() {
     if (ready) load();
   }, [ready, refreshKey, load]);
 
-  const filtered = useMemo(() => {
-    const q = arama.trim().toLocaleLowerCase('tr-TR');
-    if (!q) return satirlar;
-    return satirlar.filter(
-      (s) =>
-        s.ad.toLocaleLowerCase('tr-TR').includes(q) ||
-        s.aciklama.toLocaleLowerCase('tr-TR').includes(q)
-    );
-  }, [satirlar, arama]);
+  const filtered = useMemo(() => filtreleStokSatirlari(satirlar, arama), [satirlar, arama]);
 
-  const dusukler = useMemo(() => satirlar.filter((s) => s.item && dusukStokMu(s.item)), [satirlar]);
+  const dusukler = useMemo(
+    () => satirlar.filter((s) => s.item && stoktaMiktarVar(s) && dusukStokMu(s.item)),
+    [satirlar],
+  );
 
   const openFromSatir = (satir: StokListeSatiri) => {
     if (satir.item) {
@@ -86,7 +92,9 @@ export default function StockScreen() {
       minQuantity: String(satir.minMiktar),
       expiryDate: '',
       katalogId: satir.katalogId,
+      kullaniciNot: '',
     });
+    setAsiMeta(bosAsiStokMeta(satir.type === 'vaccine' ? satir.katalogId : null));
     setModalVisible(true);
   };
 
@@ -95,14 +103,33 @@ export default function StockScreen() {
       Alert.alert('Hata', 'Stok adı gerekli');
       return;
     }
-    await upsertStockItem({
+    const metaKayit = form.type === 'vaccine' ? { ...asiMeta, sablonKatalogId: asiMeta.sablonKatalogId ?? form.katalogId } : null;
+    const notes = metaKayit ? asiMetaYaz(form.kullaniciNot, metaKayit) : form.kullaniciNot;
+    if (metaKayit) {
+      const dogrula = asiUrunDogrula(metaKayit, form.unit);
+      if (dogrula.uyari.length) {
+        Alert.alert('Aşı ürünü', dogrula.uyari.join('\n'));
+      }
+    }
+    const taslak: StockItem = {
+      id: 'temp',
       name: form.name.trim(),
+      type: form.type,
+      quantity: 0,
+      unit: form.unit,
+      minQuantity: 0,
+      expiryDate: form.expiryDate || null,
+      notes,
+    };
+    const name = form.type === 'vaccine' ? stokGorunenAd(taslak) : form.name.trim();
+    await upsertStockItem({
+      name,
       type: form.type,
       quantity: parseFloat(form.quantity) || 0,
       unit: form.unit,
       minQuantity: parseFloat(form.minQuantity) || 0,
       expiryDate: form.expiryDate || null,
-      notes: '',
+      notes,
     });
     if (form.katalogId) await kaydetKatalogKullanim(form.katalogId, 3);
     else await kaydetKatalogKullanim(form.name.trim(), 2);
@@ -183,7 +210,7 @@ export default function StockScreen() {
       <View style={styles.pageHeader}>
         <Text style={[styles.pageTitle, { color: colors.text }]}>Stok</Text>
         <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
-          Tüm liste · çok kullanılan üstte
+          Sık kullanılan üstte · devlet programı aşıları sonda
         </Text>
         <Pressable onPress={() => router.push('/maliyet' as never)} hitSlop={8}>
           <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 4 }}>Maliyet ve kâr →</Text>
@@ -245,7 +272,9 @@ export default function StockScreen() {
               minQuantity: '10',
               expiryDate: '',
               katalogId: null,
+              kullaniciNot: '',
             });
+            setAsiMeta(bosAsiStokMeta());
             setModalVisible(true);
           }}
         />
@@ -256,6 +285,11 @@ export default function StockScreen() {
           <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}>
             <View style={[styles.modal, { backgroundColor: colors.card }]}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Stok kaydı</Text>
+              {form.type === 'vaccine' && form.katalogId ? (
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
+                  Şablon: {form.name} — aşağıya fiziksel ürün etiketini girin.
+                </Text>
+              ) : null}
               {(['name', 'quantity', 'minQuantity', 'unit', 'expiryDate'] as const).map((field) => (
                 <TextInput
                   key={field}
@@ -275,6 +309,16 @@ export default function StockScreen() {
                   style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                 />
               ))}
+              {form.type === 'vaccine' ? (
+                <AsiStokMetaFormu meta={asiMeta} onChange={setAsiMeta} colors={colors} />
+              ) : null}
+              <TextInput
+                placeholder="Serbest not (opsiyonel)"
+                placeholderTextColor={colors.textSecondary}
+                value={form.kullaniciNot}
+                onChangeText={(kullaniciNot) => setForm({ ...form, kullaniciNot })}
+                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              />
               <View style={styles.typeRow}>
                 {STOCK_TYPE_ORDER.map((t) => (
                   <Pressable

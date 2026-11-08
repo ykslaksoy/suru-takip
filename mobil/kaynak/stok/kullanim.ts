@@ -7,6 +7,8 @@ import {
   katalogEsles,
   type StokKatalogKalemi,
 } from './katalog';
+import { karsilastirStokSatirlari, siralaStokListeSatirlari } from './asi-siralama';
+import { asiMetaOku, kullaniciNotuAyikla, markaliAsiUrunuMu, stokGorunenAd } from './asi-urun-meta';
 
 const KEY = 'sy_stok_katalog_kullanim';
 
@@ -88,9 +90,17 @@ export async function getSiraliStokListesi(type?: StockType | 'all'): Promise<St
   for (const k of katalog) {
     const n = katalogAdNormalize(k.ad);
     const item =
-      items.find((i) => katalogAdNormalize(i.name) === n) ??
-      items.find((i) => katalogAdNormalize(i.name).includes(n) || n.includes(katalogAdNormalize(i.name))) ??
-      null;
+      items.find((i) => {
+        if (i.type !== k.type) return false;
+        if (markaliAsiUrunuMu(i)) return false;
+        const m = asiMetaOku(i);
+        if (m?.sablonKatalogId && m.sablonKatalogId !== k.id) return false;
+        return (
+          katalogAdNormalize(i.name) === n ||
+          katalogAdNormalize(i.name).includes(n) ||
+          n.includes(katalogAdNormalize(i.name))
+        );
+      }) ?? null;
     if (item) kullanilanAdlar.add(item.id);
     satirlar.push({
       key: k.id,
@@ -109,25 +119,22 @@ export async function getSiraliStokListesi(type?: StockType | 'all'): Promise<St
   for (const item of items) {
     if (kullanilanAdlar.has(item.id)) continue;
     if (type && type !== 'all' && item.type !== type) continue;
+    const m = asiMetaOku(item);
+    const sablon = m?.sablonKatalogId ?? null;
     satirlar.push({
       key: `custom-${item.id}`,
-      katalogId: null,
-      ad: item.name,
+      katalogId: sablon,
+      ad: stokGorunenAd(item),
       type: item.type,
       birim: item.unit,
       minMiktar: item.minQuantity,
-      aciklama: item.notes || 'Özel kalem',
+      aciklama: kullaniciNotuAyikla(item.notes) || (sablon ? `Şablon bağlı ürün (${sablon})` : 'Özel kalem'),
       item,
-      kullanim: skor(kullanim, { ad: item.name }),
+      kullanim: skor(kullanim, { ad: item.name, id: sablon ?? undefined }),
     });
   }
 
-  satirlar.sort((a, b) => {
-    if (b.kullanim !== a.kullanim) return b.kullanim - a.kullanim;
-    // Stokta olanlar aynı skorda biraz öne
-    if (!!b.item !== !!a.item) return a.item ? -1 : 1;
-    return a.ad.localeCompare(b.ad, 'tr');
-  });
+  satirlar.sort(karsilastirStokSatirlari);
 
   return satirlar;
 }
@@ -136,10 +143,17 @@ export function siralaKatalog(
   liste: StokKatalogKalemi[],
   kullanim: Record<string, number>
 ): StokKatalogKalemi[] {
-  return [...liste].sort((a, b) => {
-    const da = skor(kullanim, a);
-    const db = skor(kullanim, b);
-    if (db !== da) return db - da;
-    return a.ad.localeCompare(b.ad, 'tr');
-  });
+  const satirlar: StokListeSatiri[] = liste.map((k) => ({
+    key: k.id,
+    katalogId: k.id,
+    ad: k.ad,
+    type: k.type,
+    birim: k.birim,
+    minMiktar: k.minMiktar,
+    aciklama: k.aciklama,
+    item: null,
+    kullanim: skor(kullanim, k),
+  }));
+  const byId = Object.fromEntries(liste.map((k) => [k.id, k]));
+  return siralaStokListeSatirlari(satirlar).map((s) => byId[s.katalogId!]);
 }
