@@ -8,6 +8,7 @@ import {
   type StokKatalogKalemi,
 } from './katalog';
 import { karsilastirStokSatirlari, siralaStokListeSatirlari } from './asi-siralama';
+import { asiMetaOku, kullaniciNotuAyikla, markaliAsiUrunuMu, stokGorunenAd } from './asi-urun-meta';
 
 const KEY = 'sy_stok_katalog_kullanim';
 
@@ -89,9 +90,17 @@ export async function getSiraliStokListesi(type?: StockType | 'all'): Promise<St
   for (const k of katalog) {
     const n = katalogAdNormalize(k.ad);
     const item =
-      items.find((i) => katalogAdNormalize(i.name) === n) ??
-      items.find((i) => katalogAdNormalize(i.name).includes(n) || n.includes(katalogAdNormalize(i.name))) ??
-      null;
+      items.find((i) => {
+        if (i.type !== k.type) return false;
+        if (markaliAsiUrunuMu(i)) return false;
+        const m = asiMetaOku(i);
+        if (m?.sablonKatalogId && m.sablonKatalogId !== k.id) return false;
+        return (
+          katalogAdNormalize(i.name) === n ||
+          katalogAdNormalize(i.name).includes(n) ||
+          n.includes(katalogAdNormalize(i.name))
+        );
+      }) ?? null;
     if (item) kullanilanAdlar.add(item.id);
     satirlar.push({
       key: k.id,
@@ -110,16 +119,18 @@ export async function getSiraliStokListesi(type?: StockType | 'all'): Promise<St
   for (const item of items) {
     if (kullanilanAdlar.has(item.id)) continue;
     if (type && type !== 'all' && item.type !== type) continue;
+    const m = asiMetaOku(item);
+    const sablon = m?.sablonKatalogId ?? null;
     satirlar.push({
       key: `custom-${item.id}`,
-      katalogId: null,
-      ad: item.name,
+      katalogId: sablon,
+      ad: stokGorunenAd(item),
       type: item.type,
       birim: item.unit,
       minMiktar: item.minQuantity,
-      aciklama: item.notes || 'Özel kalem',
+      aciklama: kullaniciNotuAyikla(item.notes) || (sablon ? `Şablon bağlı ürün (${sablon})` : 'Özel kalem'),
       item,
-      kullanim: skor(kullanim, { ad: item.name }),
+      kullanim: skor(kullanim, { ad: item.name, id: sablon ?? undefined }),
     });
   }
 

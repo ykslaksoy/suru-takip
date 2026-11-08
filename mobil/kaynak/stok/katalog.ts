@@ -94,11 +94,11 @@ export const ILAC_KATALOGU: StokKatalogKalemi[] = [
 
 /** Aşılar — ASI_PROGRAMI ile uyumlu; doz her kuzuya ml */
 export const ASI_KATALOGU: StokKatalogKalemi[] = [
-  k('karma', 'Karma aşı', 'vaccine', 'doz', 20, 'Her kuzuya 2 ml · klostridiyal + pastörella'),
+  k('karma', 'Karma aşı', 'vaccine', 'doz', 20, 'Şablon — fiziksel ürün: marka · lot · etiket dozu ile ekleyin'),
   k('pasteurella', 'Solunum (Pastörella)', 'vaccine', 'doz', 10, 'Her kuzuya 2 ml'),
-  k('clostridial', 'Klostridiyal (Clostridial)', 'vaccine', 'doz', 20, 'Her kuzuya 2 ml'),
+  k('clostridial', 'Klostridiyal (Clostridial)', 'vaccine', 'doz', 20, 'Hastalık grubu şablonu — ürün etiketinden girin'),
   k('enterotoksemi', 'Enterotoksemi (Çelertme)', 'vaccine', 'doz', 10, 'Her kuzuya 1 ml'),
-  k('septisemi', 'Septisemi', 'vaccine', 'doz', 10, 'Her kuzuya 2 ml'),
+  k('septisemi', 'Septisemi', 'vaccine', 'doz', 10, 'Sendrom şablonu — tek marka aşı değil, etiketle eşleyin'),
   k('ektima', 'Ektima (ORF)', 'vaccine', 'doz', 10, 'Çizik · uyluk içi'),
   k('tetanos', 'Tetanoz', 'vaccine', 'doz', 10, 'Her kuzuya 1 ml'),
   k('ppr', 'Veba (PPR)', 'vaccine', 'doz', 10, 'Devlet · destek şartı · VETBİS'),

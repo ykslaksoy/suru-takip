@@ -1,8 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ASI_PROGRAMI, asiDozEtiketi, asiKategori, type AsiProgramKalemi } from '@/kaynak/cekirdek/asi-programi';
 import type { Animal, StockItem } from '@/kaynak/cekirdek/tipler';
-import { addHealthRecord, adjustStock, getStockItems } from '@/kaynak/cekirdek/veritabani';
+import { addHealthRecord, adjustStock, getStockItems, getStockMovements } from '@/kaynak/cekirdek/veritabani';
 import { kaydetKatalogKullanim } from '@/kaynak/stok/kullanim';
+import {
+  asiDozEtiketiStok,
+  asiHareketIzAnahtar,
+  asiMetaOku,
+  asiPartiSec,
+  asiSaglikStokIzNotu,
+  asiStokAdaylari,
+  asiStokDusumPlanla,
+  stokGorunenAd,
+} from '@/kaynak/stok/asi-urun-meta';
 import { getKuzular, planGuncelle, type AsiPlani } from './asi-modu';
 
 function normalize(s: string): string {
@@ -93,11 +103,32 @@ export async function uygulaAsiPlani(plan: AsiPlani): Promise<AsiUygulaSonuc> {
     };
   }
 
-  const mlEtiket = asiDozEtiketi(program);
   const medicine = `${program.koruma} (${program.ad})`;
   const recordedAt = plan.tarih.includes('T') ? plan.tarih : `${plan.tarih}T12:00:00.000Z`;
   const kayitTipi = asiKategori(program) === 'parazit' ? 'treatment' : 'vaccine';
   const etiket = asiKategori(program) === 'parazit' ? 'parazit' : 'aşı';
+
+  const stock = await getStockItems();
+  const adaylar =
+    asiKategori(program) === 'parazit'
+      ? []
+      : asiStokAdaylari(program.id, [program.koruma, program.ad, ...program.stokAnahtarlar], stock);
+  const legacy = stokBul(program, stock);
+  const item = asiPartiSec(adaylar.length ? adaylar : legacy ? [legacy] : []);
+  const mlKaynak = asiDozEtiketiStok(program.dozHayvan, item);
+  const mlEtiket = mlKaynak.bilinmiyor
+    ? `${asiDozEtiketi(program)} · etiket dozu eksik`
+    : mlKaynak.etiket;
+  const stokIz =
+    item && asiKategori(program) !== 'parazit'
+      ? asiSaglikStokIzNotu({
+          stockId: item.id,
+          partiLot: asiMetaOku(item)?.partiLot ?? null,
+          miktar: mlKaynak.birimDoz,
+          birim: item.unit,
+          urunAd: stokGorunenAd(item),
+        })
+      : null;
 
   let kayitSayisi = 0;
   for (const hayvan of kuzular) {
@@ -116,36 +147,59 @@ export async function uygulaAsiPlani(plan: AsiPlani): Promise<AsiUygulaSonuc> {
         `Plan: ${plan.id.slice(0, 8)}`,
         program.devletNotu ?? '',
         `Küpe: ${hayvan.earTag}`,
+        stokIz ?? '',
       ]
         .filter(Boolean)
         .join(' · '),
     });
     kayitSayisi += 1;
   }
-
-  const stock = await getStockItems();
-  const item = stokBul(program, stock);
-  const gerekenDoz = kuzular.length * program.dozHayvan;
+  const gerekenDoz = kuzular.length * mlKaynak.birimDoz;
   let stokDusum = 0;
   let stokUyari: string | null = null;
   let stokAdi: string | null = null;
 
   if (!item) {
     stokUyari = `Stokta "${program.koruma}" bulunamadı — sağlık kaydı yazıldı, stok düşülmedi.`;
-  } else if (item.quantity < gerekenDoz) {
-    stokAdi = item.name;
-    const dusulecek = Math.max(0, item.quantity);
-    if (dusulecek > 0) {
-      await adjustStock(item.id, 'out', dusulecek, `${etiket} planı · ${plan.tarih} · ${kuzular.length} hayvan`);
-      await kaydetKatalogKullanim(program.id, dusulecek);
-      stokDusum = dusulecek;
-    }
-    stokUyari = `Stok yetersiz: ${gerekenDoz} doz gerekli, ${item.quantity} vardı — ${dusulecek} düşüldü.`;
   } else {
-    stokAdi = item.name;
-    await adjustStock(item.id, 'out', gerekenDoz, `${etiket} planı · ${plan.tarih} · ${kuzular.length} hayvan`);
-    await kaydetKatalogKullanim(program.id, gerekenDoz);
-    stokDusum = gerekenDoz;
+    const meta = asiMetaOku(item);
+    const iz = asiHareketIzAnahtar(plan.id, item.id, meta?.partiLot ?? null);
+    const hareketler = await getStockMovements({ stockId: item.id });
+    const planD = asiStokDusumPlanla(
+      item.quantity,
+      gerekenDoz,
+      hareketler.map((h) => h.notes),
+      iz,
+    );
+    stokAdi = stokGorunenAd(item);
+    if (planD.ciftSayim) {
+      stokUyari = 'Bu plan için bu parti stoktan zaten düşülmüş (çift düşüm engellendi).';
+    } else if (planD.dusulecek <= 0) {
+      stokUyari = `Stok yetersiz veya boş (${item.quantity}) — kayıt yazıldı, düşüm yok.`;
+    } else {
+      const not = [
+        etiket,
+        'planı',
+        plan.tarih,
+        `${kuzular.length} hayvan`,
+        iz,
+        meta?.partiLot ? `lot ${meta.partiLot}` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      await adjustStock(item.id, 'out', planD.dusulecek, not);
+      await kaydetKatalogKullanim(meta?.sablonKatalogId ?? program.id, planD.dusulecek);
+      stokDusum = planD.dusulecek;
+      if (adaylar.length > 1) {
+        stokUyari = `${adaylar.length} parti var — bu düşüm: ${stokAdi} (SKT yakın tek parti).`;
+      }
+      if (planD.eksik > 0) {
+        stokUyari = `Stok yetersiz: ${gerekenDoz} gerekli — ${planD.dusulecek} düşüldü.`;
+      }
+      if (mlKaynak.bilinmiyor) {
+        stokUyari = [stokUyari, 'Ürün etiket dozu girilmedi — miktar program dozuna göre.'].filter(Boolean).join(' ');
+      }
+    }
   }
 
   const guncel: AsiPlani = {
@@ -196,11 +250,32 @@ export async function uygulaAsiHayvana(opts: {
   });
 
   const stock = await getStockItems();
-  const item = stokBul(program, stock);
-  if (item && item.quantity >= program.dozHayvan) {
-    await adjustStock(item.id, 'out', program.dozHayvan, `Aşı · ${opts.animal.earTag}`);
-    await kaydetKatalogKullanim(program.id, program.dozHayvan);
-    return { ok: true, message: `${opts.animal.earTag} · ${medicine} · ${mlEtiket} · stok −${program.dozHayvan}` };
+  const adaylar =
+    asiKategori(program) === 'parazit'
+      ? []
+      : asiStokAdaylari(program.id, [program.koruma, program.ad, ...program.stokAnahtarlar], stock);
+  const legacy = stokBul(program, stock);
+  const item = asiPartiSec(adaylar.length ? adaylar : legacy ? [legacy] : []);
+  const mlKaynak = asiDozEtiketiStok(program.dozHayvan, item);
+  const doz = mlKaynak.birimDoz;
+  const meta = item ? asiMetaOku(item) : null;
+  const iz = item ? asiHareketIzAnahtar(`${opts.animal.id}:${program.id}`, item.id, meta?.partiLot ?? null) : '';
+  if (item) {
+    const hareketler = await getStockMovements({ stockId: item.id });
+    const planD = asiStokDusumPlanla(item.quantity, doz, hareketler.map((h) => h.notes), iz);
+    if (planD.dusulecek > 0 && !planD.ciftSayim) {
+      await adjustStock(
+        item.id,
+        'out',
+        planD.dusulecek,
+        [`Aşı`, opts.animal.earTag, iz, meta?.partiLot ? `lot ${meta.partiLot}` : ''].filter(Boolean).join(' · '),
+      );
+      await kaydetKatalogKullanim(meta?.sablonKatalogId ?? program.id, planD.dusulecek);
+      return {
+        ok: true,
+        message: `${opts.animal.earTag} · ${medicine} · ${mlKaynak.etiket} · stok −${planD.dusulecek} (${stokGorunenAd(item)})`,
+      };
+    }
   }
 
   return {

@@ -14,6 +14,15 @@ Stok → Aşı filtresinde `kullanim=0` iken «stok kaydı var» + alfabetik sı
 - `StokKarti` — 0 miktar ayrı metin
 - Test: `stok-asi-siralama` modülü
 
+## t310u — Markalı ürün / parti (taslak)
+
+- Mevcut şema öncesi: yalnız `name`, `quantity`, `unit`, `expiryDate`, `notes`
+- `asi-urun-meta.ts` — marka, ürün, lot, şişe hacmi, etiket kapsam/doz (kaynak: bilinmiyor | etiket_manuel); meta `notes` içinde v1
+- Şablon vs fiziksel: markalı lotlar ayrı stok satırı; katalog placeholder generic kalır
+- `asi-uygula` — tek parti düşüm, iz anahtarı, sağlık kaydında stok/lot ref
+- UI: `AsiStokMetaFormu` stok eklemede (aşı)
+- Blokaj: gerçek etiket foto/metin kullanıcıdan; örnek marka testte yalnızca birim test
+
 ## Dokunulmayan
 
-Aşı uygulama, hatırlatma, devlet uyarı metinleri, doz mantığı.
+Hatırlatma, devlet zorunluluk uyarıları, otomatik aşı denkliği / booster iptali.
