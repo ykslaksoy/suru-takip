@@ -39,6 +39,7 @@ import { performansEsikModul } from './moduller/performans-esik';
 import { besiPlanSatDevamModul } from './moduller/besi-plan-sat-devam';
 import { besiPlanAlisModul } from './moduller/besi-plan-alis';
 import { besiPlanEkonomiGuardsModul } from './moduller/besi-plan-ekonomi-guards';
+import { besiPlanButceModul } from './moduller/besi-plan-butce';
 import { besiEkonomiModul } from './moduller/besi-ekonomi';
 import { performansMetrikEtiketModul } from './moduller/performans-metrik-etiket';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
@@ -101,6 +102,7 @@ const MODULLER = [
   besiPlanSatDevamModul,
   besiPlanAlisModul,
   besiPlanEkonomiGuardsModul,
+  besiPlanButceModul,
   besiEkonomiModul,
   performansMetrikEtiketModul,
   stokEslesmeModul,

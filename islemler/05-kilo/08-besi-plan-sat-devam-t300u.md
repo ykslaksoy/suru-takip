@@ -60,6 +60,21 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - Paylaşımlı overhead sadece tip/hesap; form alanı sonraki
 - `sat-devam` henüz tam `hesaplaBesiEkonomiSenaryo` marjinal break-even ile birleşmedi
 
+## t344u — Kullanıcı bütçe tablosu / mutabakat
+
+- `besi-plan-butce-tipler.ts` — işletme / ortak / damızlık / RFID / yatırım faz1-faz2 sınıfları; bilinmiyor | sıfır | tutar
+- `besi-plan-butce-hesap.ts` — listelenen 13.580 vs iddia 14.500 → **920 ₺ açık fark** (otomatik «diğer» eklenmez); satış 17.000 − listelenen = **3.420 işletme dengesi** (net kâr değil); 12.500 senaryosu 14.080 / 2.920
+- Ortak gider 142.000 (kira/çoban/elektrik/diğer 30k) — dönem ve pay baş sayısı bilinmeden 90 güne bölünmez
+- Yatırım 400k+760k ve damızlık alımları nakit/sermaye; işletme dengesine karışmaz; faz2 «sonra» kapalıyken tutarlar durur
+- UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
+- Test: `besi-plan-butce` (+8, toplam 831)
+
+### t344u — kullanıcıdan beklenen
+
+- Ortak gider dönemi (ay / döngü / yıl) ve paylaşım hayvan sayısı
+- RFID çip adedi ve damızlık adetleri
+- Yatırım fazlarını plana dahil etme ve isteğe bağlı amortisman yıl/hurda
+
 ## Bilinçli sınırlar
 
 - Gerçekleşen vs plan otomatik stok karşılaştırması sonraki adım

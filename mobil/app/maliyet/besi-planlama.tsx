@@ -38,6 +38,9 @@ import {
   type SatisFiyatBirimi,
 } from '@/kaynak/maliyet/besi-plan-satis';
 import { BesiDiyetTaslakPaneli } from '@/bilesenler/maliyet/BesiDiyetTaslakPaneli';
+import { BesiButceMutabakatPaneli } from '@/bilesenler/maliyet/BesiButceMutabakatPaneli';
+import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
+import { hesaplaButceMutabakat, ornekButce12000, ornekButce12500 } from '@/kaynak/maliyet/besi-plan-butce-hesap';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -85,6 +88,7 @@ export default function BesiPlanlamaScreen() {
   const [bosDonguGun, setBosDonguGun] = useState('');
   const [ekonomiKalemler, setEkonomiKalemler] = useState<BesiEkonomiKalem[]>(varsayilanKalemlerBos());
   const [gercekParti, setGercekParti] = useState<PartiGercekMaliyetOzet | null>(null);
+  const [butceTaslak, setButceTaslak] = useState<ButceTaslak | null>(null);
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -182,6 +186,16 @@ export default function BesiPlanlamaScreen() {
 
   const basAdet = Math.floor(sayi(basSayisi) ?? 1);
 
+  const butceMutabakat = butceTaslak
+    ? hesaplaButceMutabakat(butceTaslak, basAdet, {
+        alisBasFiyat: sayiPlanAlis(alis),
+        alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
+        girisKg: sayi(girisKg),
+        gercekParti,
+        basSayisi: basAdet,
+      })
+    : null;
+
   const kaydet = async () => {
     if (planKilitli) {
       Alert.alert('Onaylı plan', 'Bu sürüm kilitli anlık görüntü — değişiklik için yeni taslak açın.');
@@ -207,6 +221,7 @@ export default function BesiPlanlamaScreen() {
       hedefGun: projeksiyon.durum === 'hazir' ? projeksiyon.toplamGun : null,
       donemler,
       ekonomiKalemler,
+      butceTaslagi: butceTaslak ?? undefined,
     });
     setSenaryoId(s.id);
     await yukle();
@@ -364,6 +379,35 @@ export default function BesiPlanlamaScreen() {
         </Pressable>
         <BesiEkonomiKalemFormu kalemler={ekonomiKalemler} onChange={setEkonomiKalemler} colors={colors} />
 
+        <Text style={{ color: colors.tint, fontWeight: '800', marginTop: 12, marginBottom: 6 }}>
+          Kullanıcı bütçe tablosu — mutabakat (t344u)
+        </Text>
+        {butceTaslak && butceMutabakat ? (
+          <BesiButceMutabakatPaneli
+            taslak={butceTaslak}
+            sonuc={butceMutabakat}
+            onChange={setButceTaslak}
+            colors={colors}
+            planKilitli={planKilitli}
+          />
+        ) : (
+          <View style={{ marginBottom: 8 }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 8 }}>
+              Plan alışı varsayılanı 500 ₺/kg (25 kg → 12.500) ayrı kalır. Bütçe satırları silinmez; gereksizleri siz sıfırlayın.
+            </Text>
+            {!planKilitli ? (
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Pressable onPress={() => setButceTaslak(ornekButce12000())} style={[styles.btnOutline, { borderColor: colors.tint }]}>
+                  <Text style={{ color: colors.tint, fontWeight: '700' }}>12.000 ₺/baş tablo</Text>
+                </Pressable>
+                <Pressable onPress={() => setButceTaslak(ornekButce12500())} style={[styles.btnOutline, { borderColor: colors.tint }]}>
+                  <Text style={{ color: colors.tint, fontWeight: '700' }}>12.500 (500×25)</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
+        )}
+
         {ekonomiSenaryo && ekonomiSenaryo.durum !== 'eksik' ? (
           <View style={[styles.kutu, { borderColor: colors.border, backgroundColor: colors.card, marginTop: 8 }]}>
             <Text style={{ color: colors.text, fontWeight: '800' }}>
@@ -493,6 +537,7 @@ export default function BesiPlanlamaScreen() {
                   setAlis(s.alisBasFiyat != null ? String(s.alisBasFiyat) : '');
                   setDonemler(s.donemler);
                   if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);
+                  setButceTaslak(s.butceTaslagi ?? null);
                   setSatisBirimi(s.satisBirimi ?? 'canli_kg');
                   setKarkasVerim(s.karkasVerimOrani != null ? String(s.karkasVerimOrani * 100) : '');
                   setSatisFiyat(s.satisFiyatKg != null ? String(s.satisFiyatKg) : '');
@@ -543,4 +588,5 @@ const styles = StyleSheet.create({
   donem: { borderWidth: 1, borderRadius: 12, padding: 10, marginBottom: 10 },
   kutu: { borderWidth: 1, borderRadius: 12, padding: 12, marginVertical: 12 },
   btn: { borderRadius: 12, padding: 14, alignItems: 'center' },
+  btnOutline: { borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 1, flex: 1 },
 });
