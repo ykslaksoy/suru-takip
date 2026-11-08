@@ -66,7 +66,11 @@ async function sayfa(req) {
     if (r && (r.ok || r.status === 404)) return r;
     throw new Error('ağ hatası');
   } catch {
-    const kayitli = (await c.match(anahtar)) || (await c.match('/'));
+    const adminYolu = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
+  const kayitli =
+    (await c.match(anahtar)) ||
+    (adminYolu ? await c.match('/admin') : null) ||
+    (adminYolu ? null : await c.match('/'));
     if (kayitli) return kayitli;
     return new Response('<!doctype html><meta charset="utf-8"><title>SüperKuzu</title><body style="font-family:sans-serif;padding:24px">İnternet yok ve bu sayfa daha önce açılmamış. İnternet gelince bir kez açın; sonra çevrimdışı da çalışır.</body>', {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
