@@ -84,6 +84,8 @@ export default function RootLayout() {
                     <Stack.Screen name="giris-yontemi/kurulum" options={{ title: 'Giriş yöntemi kurulumu' }} />
                     <Stack.Screen name="giris-yontemi/index" options={{ title: 'Kuzu seçim & tartım' }} />
                     <Stack.Screen name="maliyet/index" options={{ title: 'Maliyet ve Kâr' }} />
+                    <Stack.Screen name="maliyet/besi-planlama" options={{ title: 'Besi Yönetimi' }} />
+                    <Stack.Screen name="maliyet/sat-devam" options={{ title: 'Satış / besiye devam' }} />
                     <Stack.Screen name="akilli-ciftlik/index" options={{ title: 'Akıllı Çiftlik' }} />
                     <Stack.Screen name="cari/index" options={{ title: 'Cari hesaplar' }} />
                     <Stack.Screen name="verim/index" options={{ title: 'Süt & yapağı verim' }} />
