@@ -4,7 +4,8 @@ import type { BesiPlanDonemGirdi } from './besi-plan-tipler';
 import { hesaplaBrutKar, type BrutKarSonuc } from './besi-plan-brut-kar';
 import { hesaplaYemIllustrasyon60 } from './besi-plan-yem-illustrasyon';
 import { karsilastir60ve90, type AdgSenaryoTur } from './besi-plan-adg';
-import { gomuluPiyasaKayitlari, type PiyasaFiyatKaydi } from './besi-piyasa-kayit';
+import { piyasaKayitOku, type PiyasaFiyatKaydi } from './besi-piyasa-kayit';
+import { efektifBirimFiyat } from './besi-referans-override';
 import { satisGelirBasHesapla, type SatisFiyatBirimi } from './besi-plan-satis';
 import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
 import type { BesiPlanIrkTaslak } from './besi-plan-irk';
@@ -111,10 +112,17 @@ function ufuk(
 
 export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
   const uyari = [
-    'Sürekli canlı borsa güncellemesi yok — gömülü/önbellek + manuel içe aktarma.',
+    'TOBB/UKON sunucu proxy ile yenilenir; Balıkesir PDF manuel/bayat.',
     '8 model tablo max kazanç kanıt değil.',
   ];
-  const px = cozPiyasaFiyat(g.satisKaynak, g.kullaniciSatisFiyatKg, g.kullaniciBolgeSatisKg);
+  const refPx = cozPiyasaFiyat(g.satisKaynak, g.kullaniciSatisFiyatKg, g.kullaniciBolgeSatisKg);
+  const satisOv = efektifBirimFiyat(refPx.fiyatKg, 'satis_canli_kg');
+  const px = {
+    ...refPx,
+    fiyatKg: satisOv.deger,
+    varsayim: refPx.varsayim || satisOv.kaynak === 'override',
+  };
+  if (satisOv.kaynak === 'override') uyari.push('Satış fiyatı kullanıcı override — referans korunur.');
   uyari.push(...px.eksik);
   uyari.push('Gelecek fiyat garantisi yok — gömülü referans + plan varsayımı.');
   const birim = birimForSatisKaynak(g.satisKaynak);
@@ -127,7 +135,7 @@ export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
   uyari.push(...irkPolitikasi.uyari.slice(0, 2));
 
   return {
-    piyasa: gomuluPiyasaKayitlari(),
+    piyasa: piyasaKayitOku().kayitlar,
     karsilastirma: piyasaKarsilastirma(g.satisKaynak),
     kanit: kanitGcaa(g.adgKanit),
     irkPolitikasi,

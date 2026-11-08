@@ -3,7 +3,7 @@
  */
 
 import type { PiyasaFiyatKaydi } from './besi-piyasa-kayit';
-import { gomuluPiyasaKayitlari } from './besi-piyasa-kayit';
+import { piyasaKayitOku } from './besi-piyasa-kayit';
 import type { SatisFiyatBirimi } from './besi-plan-satis';
 
 export type PiyasaSatisKaynak =
@@ -103,7 +103,7 @@ export function cozPiyasaFiyat(
     eksik.push('Kaynak eşlemesi yok');
     return { fiyatKg: null, kayit: null, eksik, varsayim: false };
   }
-  const kayit = gomuluPiyasaKayitlari().find((k) => k.id === meta.piyasaKayitId) ?? null;
+  const kayit = piyasaKayitOku().kayitlar.find((k) => k.id === meta.piyasaKayitId) ?? null;
   if (!kayit) {
     eksik.push(`${n} kaydı bulunamadı`);
     return { fiyatKg: null, kayit: null, eksik, varsayim: false };
@@ -130,7 +130,7 @@ export type KarsilastirmaSatiri = {
 
 export function piyasaKarsilastirma(secili: PiyasaSatisKaynak): KarsilastirmaSatiri[] {
   const n = normalizeSatisKaynak(secili);
-  const all = gomuluPiyasaKayitlari();
+  const all = piyasaKayitOku().kayitlar;
   return SATIS_KAYNAK_META.filter((m) => m.karsilastirma && m.piyasaKayitId).map((m) => {
     const k = all.find((x) => x.id === m.piyasaKayitId);
     return {

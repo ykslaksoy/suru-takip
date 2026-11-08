@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
-import { piyasaReferansYenile } from '@/kaynak/maliyet/besi-piyasa-kayit';
+import { besiReferanslariYenile } from '@/kaynak/maliyet/besi-referans-yenile';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string; card: string };
 
@@ -17,6 +17,7 @@ export function BesiPiyasaAdgPaneli({
   yemIllustrasyon,
   onAdgKanit,
   onYemIllustrasyon,
+  onYenilendi,
   refreshDurum,
   colors,
 }: {
@@ -25,6 +26,7 @@ export function BesiPiyasaAdgPaneli({
   yemIllustrasyon: boolean;
   onAdgKanit: (k: AdgKanitSenaryo) => void;
   onYemIllustrasyon: (v: boolean) => void;
+  onYenilendi?: () => void;
   refreshDurum: string | null;
   colors: Colors;
 }) {
@@ -45,12 +47,16 @@ export function BesiPiyasaAdgPaneli({
     <View style={[styles.wrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
       <Text style={{ color: colors.tint, fontWeight: '800' }}>Piyasa + ADG (t355u/t356u)</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 6 }}>
-        Alış 12.000 ayrı · sağlık 150 ve sabit giderler brüt kârda yok. Otomatik borsa parse yok.
+        Alış 12.000 ayrı · sağlık 150 ve sabit giderler brüt kârda yok. TOBB/UKON/USK sunucu proxy.
       </Text>
       <Pressable
-        onPress={() => void piyasaReferansYenile()}
+        onPress={() =>
+          void besiReferanslariYenile().then((s) => {
+            onYenilendi?.();
+          })
+        }
         style={[styles.btn, { borderColor: colors.tint, marginBottom: 8 }]}>
-        <Text style={{ color: colors.tint, fontSize: 11 }}>Referans durumunu yenile (manuel_only)</Text>
+        <Text style={{ color: colors.tint, fontSize: 11 }}>Referansları yenile (TOBB · UKON · USK)</Text>
       </Pressable>
       {refreshDurum ? <Text style={{ color: colors.textSecondary, fontSize: 10 }}>{refreshDurum}</Text> : null}
 

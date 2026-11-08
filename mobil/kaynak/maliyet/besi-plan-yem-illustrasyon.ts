@@ -1,4 +1,6 @@
-/** t355u — örnek 60 gün yem miktarı; varsayılan plana yazılmaz. */
+/** t355u/t366u — örnek 60 gün yem miktarı; fiyatlar referans+override katmanından. */
+import { efektifBirimFiyat } from './besi-referans-override';
+import { fiyatReferansDepoOku } from './fiyat-referans-depo';
 
 export type YemIllustrasyonSonuc = {
   aktif: boolean;
@@ -8,7 +10,7 @@ export type YemIllustrasyonSonuc = {
   yoncaFiyatKg: number;
   samanKg: number;
   samanFiyatKg: number;
-  araToplam: number;
+  araToplam: number | null;
   fireOrani: number | null;
   fireDahil: number | null;
   kaynaklar: { etiket: string; url: string | null; veriTarihi: string | null; not: string }[];
@@ -21,19 +23,31 @@ const UYARI = [
   'KDV/nakliye bilinmiyor (Abalıoğlu 50 kg pelet).',
 ];
 
+function refFiyat(id: string, fallback: number | null): number | null {
+  const k = fiyatReferansDepoOku().kalemler.find((x) => x.id === id);
+  return k?.fiyat ?? fallback;
+}
+
 export function hesaplaYemIllustrasyon60(opts: {
   aktif: boolean;
   fireYuzde?: number | null;
 }): YemIllustrasyonSonuc {
   const hazirKg = 60;
-  const hazirFiyatKg = 21.5;
   const yoncaKg = 18;
-  const yoncaFiyatKg = 12.91;
   const samanKg = 6;
-  const samanFiyatKg = 4.38;
-  const araToplam = Math.round((hazirKg * hazirFiyatKg + yoncaKg * yoncaFiyatKg + samanKg * samanFiyatKg) * 100) / 100;
+  const hazirRef = refFiyat('fabrika-kuzu', 21.5) ?? refFiyat('besi-yemi', 19.11);
+  const yoncaRef = refFiyat('yonca-kuru', 12.91);
+  const samanRef = refFiyat('saman-bugday', 4.38);
+  const hazirFiyatKg = efektifBirimFiyat(hazirRef, 'yem_hazir_kg').deger;
+  const yoncaFiyatKg = efektifBirimFiyat(yoncaRef, 'yem_yonca_kg').deger;
+  const samanFiyatKg = efektifBirimFiyat(samanRef, 'yem_saman_kg').deger;
+  const araToplam =
+    hazirFiyatKg != null && yoncaFiyatKg != null && samanFiyatKg != null
+      ? Math.round((hazirKg * hazirFiyatKg + yoncaKg * yoncaFiyatKg + samanKg * samanFiyatKg) * 100) / 100
+      : NaN;
   const fire = opts.fireYuzde != null && opts.fireYuzde > 0 ? opts.fireYuzde / 100 : null;
-  const fireDahil = fire != null ? Math.round(araToplam * (1 + fire) * 100) / 100 : null;
+  const fireDahil =
+    fire != null && Number.isFinite(araToplam) ? Math.round(araToplam * (1 + fire) * 100) / 100 : null;
 
   return {
     aktif: opts.aktif,
@@ -43,7 +57,7 @@ export function hesaplaYemIllustrasyon60(opts: {
     yoncaFiyatKg,
     samanKg,
     samanFiyatKg,
-    araToplam,
+    araToplam: Number.isFinite(araToplam) ? araToplam : null,
     fireOrani: fire,
     fireDahil,
     kaynaklar: [

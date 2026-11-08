@@ -1,4 +1,4 @@
-/** t355u — normalize piyasa referansı; otomatik TOBB parse yok, gömülü + önbellek. */
+/** t355u/t366u — piyasa referansı; gömülü taban + önbellek; yenileme sunucu proxy parse. */
 
 export type PiyasaKategori = 'canli_kg' | 'karkas_kg' | 'bas_adet';
 export type PiyasaBolge = 'edirne_tobb' | 'ukon' | 'balikesir' | 'kullanici';
@@ -152,9 +152,6 @@ function ukonBolgeKayitlari(islemTarihi: string): PiyasaFiyatKaydi[] {
 
 const KEY = 'sy_besi_piyasa_kayit_v1';
 
-/** Otomatik TOBB/HTML parse yok */
-export const PIYASA_YENILEME_SONUC: PiyasaDepoDurum['yenilemeSonuc'] = 'manuel_only';
-
 export function gomuluPiyasaKayitlari(): PiyasaFiyatKaydi[] {
   return GOMULU.map((k) => ({ ...k }));
 }
@@ -203,22 +200,16 @@ function birlestirGomulu(ozel: PiyasaFiyatKaydi[]): PiyasaFiyatKaydi[] {
   return [...byId.values()];
 }
 
-/** Güvenli otomatik TOBB çekimi yok — yalnızca gömülü tabloyu tarihler. */
+/** Sunucu proxy ile TOBB+UKON; başarısızsa son önbellek + bayat uyarısı. */
 export async function piyasaReferansYenile(): Promise<{ kayitlar: PiyasaFiyatKaydi[]; depo: PiyasaDepoDurum }> {
-  const now = new Date().toISOString().slice(0, 10);
-  const depo: PiyasaDepoDurum = {
-    sonYenileme: now,
-    yenilemeSonuc: 'manuel_only',
-    uyari: [
-      'Canlı borsa parse edilmiyor — gömülü/önbellek veya manuel içe aktarma kullanın.',
-      '0 fiyata düşülmez; Balıkesir doğrulanmadan null kalır.',
-    ],
-  };
-  const kayitlar = gomuluPiyasaKayitlari();
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(KEY, JSON.stringify({ kayitlar, depo }));
-  }
-  return { kayitlar, depo };
+  const { besiReferanslariYenile } = await import('./besi-referans-yenile');
+  const sonuc = await besiReferanslariYenile();
+  return sonuc.piyasa;
+}
+
+/** Son depo yenileme sonucu (test/UI). */
+export function piyasaYenilemeDurumu(): PiyasaDepoDurum['yenilemeSonuc'] {
+  return piyasaKayitOku().depo.yenilemeSonuc;
 }
 
 export function piyasaManuelIceAktar(yeni: PiyasaFiyatKaydi): { kayitlar: PiyasaFiyatKaydi[]; depo: PiyasaDepoDurum } {

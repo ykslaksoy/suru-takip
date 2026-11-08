@@ -121,6 +121,20 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - RFID çip adedi ve damızlık adetleri
 - Yatırım fazlarını plana dahil etme ve isteğe bağlı amortisman yıl/hurda
 
+## t366u — dinamik referans yenileme + override
+
+- `GET /api/besi/referans-yenile` — sunucu proxy: TOBB ot kuzusu, UKON yağsız karkas bölgeleri, USK yonca/saman (Eylül 2026 grafik)
+- `besi-referans-parse.ts` / istemci `besi-referans-yenile.ts` — parse birleştirme; başarısızda son önbellek + bayat uyarısı (0 veya sahte tarih yok)
+- `besi-referans-override.ts` — `sy_besi_ref_override_v1`; alış/satış/yem alanları; boş veya «Referans fiyata dön» → güncel referans; fiyat 0 geçersiz
+- `fiyat-referans-depo.ts` — `sy_besi_fiyat_referans_v1`; onaylı plan geçmişi değişmez, yalnız taslak/illüstrasyon yeni referans okur
+- UI: `BesiReferansOverridePaneli`, `OndalikFiyatGirdi`, piyasa panelinde yenile düğmesi
+- **Manuel / desteklenmeyen:** Balıkesir PDF bülteni, besi yemi TZOB satırı (USK sayfasında yok), Abalıoğlu pelet illüstrasyonu
+
+### Test (894)
+
+- `mobil/test/moduller/besi-referans-yenile.ts` — kayıtlı public HTML fixture + canlı API handler (`ag_ok`, Edirne 397,38)
+- Override sıfırlama, virgül/nokta, bozuk HTML parse fail
+
 ## Bilinçli sınırlar
 
 - Gerçekleşen vs plan otomatik stok karşılaştırması sonraki adım

@@ -1,5 +1,5 @@
 import { test, type TestModul } from '../cerceve';
-import { PIYASA_YENILEME_SONUC, piyasaKayitOku } from '@/kaynak/maliyet/besi-piyasa-kayit';
+import { piyasaKayitOku, piyasaYenilemeDurumu } from '@/kaynak/maliyet/besi-piyasa-kayit';
 import { hedefCanliKgKanit } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { hesaplaBrutKar, BRUT_KAR_ETIKET } from '@/kaynak/maliyet/besi-plan-brut-kar';
@@ -70,7 +70,7 @@ export const besiPiyasaAdgModul: TestModul = {
       test(g, '60g hedef ~40kg', hedefCanliKgKanit(25, 60, 'beklenen') === 40),
       test(g, 'Brüt kar aşı hariç etiket', brut.etiket === BRUT_KAR_ETIKET),
       test(g, 'Brüt kar 10', brut.brutKar === 10),
-      test(g, 'Yenile manual_only', PIYASA_YENILEME_SONUC === 'manuel_only'),
+      test(g, 't366u yenileme sabit değil manuel_only', piyasaYenilemeDurumu() !== 'manuel_only'),
       test(g, '60g brut hesap', ozet.ufuk60.brutKar.brutKar != null),
       test(g, 'Ortak dönem çarpan', ortak.basBasi === 1080),
       test(g, 'Yem illustrasyon', ozet.ufuk60.yemKaynak === 'illustrasyon' || ozet.ufuk60.yemBas != null),

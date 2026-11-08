@@ -29,6 +29,7 @@ import {
   alisBasCanliKgden,
   cozPlanAlisBas,
   sayiPlanAlis,
+  VARSAYILAN_ALIS_CANLI_KG_FIYAT,
   yeniPlanVarsayilanAlisKgFiyat,
 } from '@/kaynak/maliyet/besi-plan-alis';
 import {
@@ -42,6 +43,8 @@ import { BesiButceMutabakatPaneli } from '@/bilesenler/maliyet/BesiButceMutabaka
 import type { ButceTaslak } from '@/kaynak/maliyet/besi-plan-butce-tipler';
 import { hesaplaButceMutabakat, ornekButce12000, ornekButce12500 } from '@/kaynak/maliyet/besi-plan-butce-hesap';
 import { BesiPiyasaAdgPaneli } from '@/bilesenler/maliyet/BesiPiyasaAdgPaneli';
+import { BesiReferansOverridePaneli } from '@/bilesenler/maliyet/BesiReferansOverridePaneli';
+import { efektifBirimFiyat, referansOverrideOku, type BesiRefOverrideDepo } from '@/kaynak/maliyet/besi-referans-override';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { BesiBolgeSecimi, varsayilanBolgeTaslak } from '@/bilesenler/maliyet/BesiBolgeSecimi';
@@ -109,6 +112,8 @@ export default function BesiPlanlamaScreen() {
   const [olumOran, setOlumOran] = useState('');
   const [yemIllustrasyon, setYemIllustrasyon] = useState(true);
   const [piyasaRefreshNot, setPiyasaRefreshNot] = useState<string | null>(null);
+  const [refOverride, setRefOverride] = useState<BesiRefOverrideDepo>(() => referansOverrideOku());
+  const [refTick, setRefTick] = useState(0);
   const [irkTaslak, setIrkTaslak] = useState<BesiPlanIrkTaslak>(varsayilanIrkTaslak());
 
   const yukle = useCallback(async () => {
@@ -126,9 +131,12 @@ export default function BesiPlanlamaScreen() {
     donemler,
   });
 
+  const efektifAlisKg =
+    sayiPlanAlis(alisKgFiyat) ??
+    efektifBirimFiyat(VARSAYILAN_ALIS_CANLI_KG_FIYAT, 'alis_canli_kg').deger;
   const cozAlis = cozPlanAlisBas({
     alisBasFiyat: sayiPlanAlis(alis),
-    alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
+    alisCanliKgFiyat: efektifAlisKg,
     girisKg: sayi(girisKg),
     gercekParti,
     basSayisi: sayi(basSayisi) != null ? Math.floor(sayi(basSayisi)!) : null,
@@ -210,6 +218,7 @@ export default function BesiPlanlamaScreen() {
   const alisBrutKar = cozAlis.alisBas ?? (sayi(girisKg) === 25 ? 12000 : null);
   const karkasV = karkasVerimOku(karkasVerim);
   const satisKaynak = bolgeTaslak.satisKaynak;
+  void refTick;
   const piyasaOzet =
     sayi(girisKg) != null && alisBrutKar != null
       ? hesaplaBesiPiyasaOzet({
@@ -480,6 +489,13 @@ export default function BesiPlanlamaScreen() {
 
         {kararSim ? <BesiKararSimulasyonPaneli sonuc={kararSim} colors={colors} /> : null}
 
+        <BesiReferansOverridePaneli
+          satisKaynak={satisKaynak}
+          overrideDepo={refOverride}
+          onDepoChange={setRefOverride}
+          colors={colors}
+        />
+
         {piyasaOzet ? (
           <BesiPiyasaAdgPaneli
             ozet={piyasaOzet}
@@ -489,6 +505,10 @@ export default function BesiPlanlamaScreen() {
               if (adgSenaryoIrkUygunMu(k, irkAdgPolitikasi(irkTaslak))) setAdgKanit(k);
             }}
             onYemIllustrasyon={setYemIllustrasyon}
+            onYenilendi={() => {
+              setRefTick((x) => x + 1);
+              setPiyasaRefreshNot('Referans yenileme tamamlandı — önbellek güncellendi veya bayat uyarısı.');
+            }}
             refreshDurum={piyasaRefreshNot}
             colors={colors}
           />
