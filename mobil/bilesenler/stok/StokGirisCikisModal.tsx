@@ -66,7 +66,7 @@ export function StokGirisCikisModal({
                 <Text style={[styles.bolumBaslik, { color: colors.text }]}>Hangi padok?</Text>
                 <FormAlani
                   label="Padok adı (opsiyonel)"
-                  helper="Yem çıkışında padok yazarsanız günlük tüketim ve FCR o gruba paylaştırılır. Boş bırakabilirsiniz."
+                  helper="Yem çıkışında padok yazarsanız tüketim paylaşımı Yemden yararlanma oranı (FCR) hesabına girer (as-fed). Boş bırakabilirsiniz."
                   value={padok}
                   onChangeText={onPadokChange}
                   placeholder="Örn. Padok A"

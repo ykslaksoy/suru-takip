@@ -151,9 +151,10 @@ export const FIYAT_EKSIK: { id: string; ad: string; birim: string }[] = FIYAT_RE
   (k) => ({ id: k.id, ad: k.ad, birim: k.birim }),
 );
 
-/** İleride uzaktan çekilecek; şimdilik gömülü tablo döner. */
+/** Önbellek veya gömülü tablo (t366u USK yenileme ile birleşir). */
 export async function getFiyatReferans(): Promise<FiyatReferansTablosu> {
-  return FIYAT_REFERANS_TABLOSU;
+  const { fiyatReferansDepoOku } = await import('./fiyat-referans-depo');
+  return fiyatReferansDepoOku();
 }
 
 /** "16.10.2026" */

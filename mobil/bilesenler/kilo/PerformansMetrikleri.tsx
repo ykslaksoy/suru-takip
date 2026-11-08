@@ -4,11 +4,13 @@ import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import type { WeightRecord } from '@/kaynak/cekirdek/tipler';
 import { getAnimal } from '@/kaynak/cekirdek/veritabani';
-import { hesaplaFcr, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
+import { hesaplaFcrSonuc, type FcrHesap } from '@/kaynak/kilo/fcr-hesap';
 import { ensureRationPlan, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
 import { sonYemSayimMiktari } from '@/kaynak/stok/yem-tuketim';
 import { PHASE_LABELS } from '@/kaynak/rasyon/hesapla';
-import { fcrDeger, terim } from '@/sabitler/Metinler';
+import { fcrDeger, metrikBaslik, metrikTooltip, metrikYetersizVeri } from '@/sabitler/Metinler';
+import { fcrYemBazAciklamasi } from '@/kaynak/kilo/performans-metrik-etiket';
+import { hayvanPerformansEsikOzeti } from '@/kaynak/kilo/performans-esik-hayvan';
 import { YemAdgTablosu } from '@/bilesenler/kilo/YemAdgTablosu';
 
 const KAYNAK_ETIKET: Record<FcrHesap['kaynak'], string> = {
@@ -29,9 +31,12 @@ export function PerformansMetrikleri({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const [fcrHesap, setFcrHesap] = useState<FcrHesap | null>(null);
+  const [fcrNeden, setFcrNeden] = useState<string | null>(null);
   const [dailyGivenKg, setDailyGivenKg] = useState<number | null>(null);
   const [phaseLabel, setPhaseLabel] = useState<string>('');
   const [sonSayim, setSonSayim] = useState<number | null>(null);
+  const [esikUyari, setEsikUyari] = useState<string | null>(null);
+  const [esikAktif, setEsikAktif] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const a = await getAnimal(animalId);
@@ -45,7 +50,17 @@ export function PerformansMetrikleri({
     setDailyGivenKg(plan?.dailyGivenKg ?? null);
     setPhaseLabel(plan ? PHASE_LABELS[plan.phase] : '');
     setSonSayim(await sonYemSayimMiktari());
-    setFcrHesap(await hesaplaFcr(a, records));
+    const fcr = await hesaplaFcrSonuc(a, records);
+    if (fcr.durum === 'hazir') {
+      setFcrHesap(fcr.hesap);
+      setFcrNeden(null);
+    } else {
+      setFcrHesap(null);
+      setFcrNeden(fcr.neden);
+    }
+    const esik = await hayvanPerformansEsikOzeti(a, records);
+    setEsikAktif(esik.aktifEsik);
+    setEsikUyari(esik.uyariBaslik ? `${esik.uyariBaslik}${esik.uyariGovde ? ` · ${esik.uyariGovde}` : ''}` : null);
   }, [animalId, records]);
 
   useEffect(() => {
@@ -57,7 +72,7 @@ export function PerformansMetrikleri({
       <Text style={[styles.title, { color: colors.tint }]}>Performans</Text>
 
       <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
-        kg/gün iki anlama gelir: günlük yem veya günlük kilo artışı (ADG). Tabloda ikisi de notlu gösterilir.
+        {metrikTooltip('GCAA')}
       </Text>
 
       <YemAdgTablosu gunlukYemKg={dailyGivenKg} adgGram={adg} />
@@ -75,9 +90,11 @@ export function PerformansMetrikleri({
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 6 }]}>{terim('FCR')}</Text>
+      <Text style={[styles.label, { color: colors.text, fontWeight: '800', marginBottom: 6 }]}>
+        {metrikBaslik('FCR')}
+      </Text>
       <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 8, lineHeight: 18 }}>
-        Tartım dönemi + günlük rasyon + stok/sayım birlikte hesaplanır.
+        {metrikTooltip('FCR')}
       </Text>
 
       {fcrHesap ? (
@@ -87,8 +104,20 @@ export function PerformansMetrikleri({
             {fcrHesap.startWeightKg} → {fcrHesap.endWeightKg} kg)
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 4 }}>
-            Verilen yem (dönem): {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg · kaynak:{' '}
-            {KAYNAK_ETIKET[fcrHesap.kaynak]}
+            Verilen yem (dönem): {fcrHesap.totalFeedKg.toLocaleString('tr-TR')} kg · {KAYNAK_ETIKET[fcrHesap.kaynak]}
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, lineHeight: 17 }}>
+            {fcrYemBazAciklamasi(fcrHesap.kaynak)}
+          </Text>
+          <Text
+            style={{
+              color: fcrHesap.tahsis ? colors.tint : colors.textSecondary,
+              fontSize: 12,
+              marginBottom: 4,
+              lineHeight: 17,
+            }}
+          >
+            {fcrHesap.yemAciklamasi}
           </Text>
           {fcrHesap.stokToplamKg != null && fcrHesap.kaynak !== 'gunluk_rasyon' ? (
             <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
@@ -104,9 +133,15 @@ export function PerformansMetrikleri({
         </>
       ) : (
         <Text style={[styles.value, { color: colors.textSecondary }]}>
-          — (en az 2 tartım, pozitif artış ve rasyon gerekir)
+          — {fcrNeden ?? metrikYetersizVeri('FCR')}
         </Text>
       )}
+
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+      <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 17 }}>{esikAktif}</Text>
+      {esikUyari ? (
+        <Text style={{ color: colors.tint, fontSize: 12, marginTop: 6, lineHeight: 17 }}>{esikUyari}</Text>
+      ) : null}
     </View>
   );
 }

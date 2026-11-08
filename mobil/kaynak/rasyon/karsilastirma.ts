@@ -1,8 +1,11 @@
 import { calculateADG, getAnimals, getLatestWeight, getWeightRecords } from '@/kaynak/cekirdek/veritabani';
-import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
+import { hesaplaFcrSonuc } from '@/kaynak/kilo/fcr-hesap';
+import { suruFcrBirlestir } from '@/kaynak/kilo/padok-performans-analitik';
+import { getPerformansEsikDepo } from '@/kaynak/kilo/performans-esik-depo';
+import { cozumlePerformansEsikleri } from '@/kaynak/kilo/performans-esik-oncelik';
 import { akilliRasyonOnerisi } from '@/kaynak/rasyon/akilli-oneri';
 import { dailyFeedForAnimal, getAnimalRationPlan } from '@/kaynak/rasyon/hayvan-plani';
-import { adgDeger, fcrDeger } from '@/sabitler/Metinler';
+import { adgDeger, fcrDeger, metrikBaslik } from '@/sabitler/Metinler';
 
 export type KarsilastirmaDurum = 'iyi' | 'kotu' | 'notr';
 
@@ -48,7 +51,7 @@ export async function rasyonKarsilastirma(): Promise<RasyonKarsilastirma | null>
   if (animals.length === 0) return null;
 
   const adgler: number[] = [];
-  const fcrs: number[] = [];
+  const fcrParcalar: { toplamYemKg: number; artisKg: number }[] = [];
   let toplamVerilen = 0;
   let verilenSay = 0;
 
@@ -56,8 +59,13 @@ export async function rasyonKarsilastirma(): Promise<RasyonKarsilastirma | null>
     const adg = await calculateADG(a.id);
     if (adg != null) adgler.push(adg);
     const records = await getWeightRecords(a.id);
-    const fcr = await hesaplaFcr(a, records);
-    if (fcr?.fcr != null) fcrs.push(fcr.fcr);
+    const fcrSonuc = await hesaplaFcrSonuc(a, records);
+    if (fcrSonuc.durum === 'hazir') {
+      fcrParcalar.push({
+        toplamYemKg: fcrSonuc.hesap.totalFeedKg,
+        artisKg: fcrSonuc.hesap.gainKg,
+      });
+    }
     const w = await getLatestWeight(a.id);
     const plan = await getAnimalRationPlan(a.id);
     const given = plan?.dailyGivenKg ?? (w != null ? dailyFeedForAnimal(a, w) : 0);
@@ -68,17 +76,18 @@ export async function rasyonKarsilastirma(): Promise<RasyonKarsilastirma | null>
   }
 
   const ortAdg = adgler.length ? Math.round(adgler.reduce((s, v) => s + v, 0) / adgler.length) : null;
-  const ortFcr = fcrs.length
-    ? Math.round((fcrs.reduce((s, v) => s + v, 0) / fcrs.length) * 100) / 100
-    : null;
+  const ortFcr = suruFcrBirlestir(fcrParcalar).fcr;
   const gercekYem = verilenSay ? Math.round((toplamVerilen / verilenSay) * 100) / 100 : null;
   const oneriYem = oneri.hesap.dailyFeedKg;
-  const hedefAdg = 180;
+  const esikDepo = await getPerformansEsikDepo();
+  const ciftlikEsik = cozumlePerformansEsikleri(esikDepo, '', 'lamb_fattening');
+  const hedefAdg = ciftlikEsik.gcaaAltGram;
+  const hedefFcr = ciftlikEsik.fcrUst;
 
   const satirlar: KarsilastirmaSatiri[] = [
     satir('Günlük yem / hayvan', oneriYem, gercekYem, 'kg', true),
-    satir('Ort. ADG (30 gün)', hedefAdg, ortAdg, 'g/gün', false),
-    satir('Ort. FCR', 6.5, ortFcr, '', true),
+    satir(`Ort. ${metrikBaslik('GCAA')} (30 gün)`, hedefAdg, ortAdg, 'g/gün', false),
+    satir(`Ort. ${metrikBaslik('FCR')}`, hedefFcr, ortFcr, 'kg yem/kg artış', true),
   ];
 
   if (oneri.tahminiGunlukMaliyet != null && gercekYem != null && oneriYem > 0) {

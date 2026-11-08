@@ -24,7 +24,7 @@ export const KILITLI_HIZLI_ISLEMLER: KilitliHizliIslem[] = [
   { id: 'rasyon', label: 'Rasyon', href: '/(tabs)/rasyon', icon: 'rasyon' },
   { id: 'veteriner', label: 'Veteriner', href: '/(tabs)/veteriner', icon: 'veteriner' },
   { id: 'stok', label: 'Stok', href: '/(tabs)/stok', icon: 'stok' },
-  { id: 'fcr-gca', label: 'FCR GCA', href: '/(tabs)/yolculuk', icon: 'fcr-gca' },
+  { id: 'fcr-gca', label: 'FCR · GCAA', href: '/(tabs)/yolculuk', icon: 'fcr-gca' },
   { id: 'gorevler', label: 'Görevler', href: '/gorevler', icon: 'gorevler' },
 ];
 

@@ -12,6 +12,7 @@ import type {
   StockMovement,
   WeightRecord,
 } from './tipler';
+import { adgGramGunuOrNull } from '@/kaynak/kilo/adg';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -284,15 +285,7 @@ export async function getLatestWeight(animalId: string): Promise<number | null> 
 
 export async function calculateADG(animalId: string, days = 30): Promise<number | null> {
   const records = await getWeightRecords(animalId);
-  if (records.length < 2) return null;
-  const latest = records[0];
-  const cutoff = new Date(latest.recordedAt);
-  cutoff.setDate(cutoff.getDate() - days);
-  const older = records.find((r) => new Date(r.recordedAt) <= cutoff) ?? records[records.length - 1];
-  if (older.id === latest.id) return null;
-  const dayDiff = (new Date(latest.recordedAt).getTime() - new Date(older.recordedAt).getTime()) / 86400000;
-  if (dayDiff <= 0) return null;
-  return Math.round(((latest.weightKg - older.weightKg) / dayDiff) * 1000);
+  return adgGramGunuOrNull(records, days);
 }
 
 export type HealthRecordsOpts = {

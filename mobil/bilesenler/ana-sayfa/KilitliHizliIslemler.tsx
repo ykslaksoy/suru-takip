@@ -31,7 +31,9 @@ const EK_SATIRLAR: { id: string; label: string; href: string; icon: keyof typeof
   { id: 'maliyet', label: 'Maliyet ve Kâr', href: '/maliyet', icon: 'cash-outline' },
   { id: 'gecmis', label: 'İşlem geçmişi', href: '/gecmis', icon: 'time-outline' },
 ];
-const ETIKET_DUZELT: Partial<Record<KilitliHizliIslemId, string>> = { 'fcr-gca': 'Yem verimi' };
+const ETIKET_DUZELT: Partial<Record<KilitliHizliIslemId, string>> = {
+  'fcr-gca': 'FCR · GCAA (performans)',
+};
 
 export function KilitliHizliIslemler({ yatayPad = 16 }: { yatayPad?: number } = {}) {
   const scheme = useColorScheme() ?? 'light';

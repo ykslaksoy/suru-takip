@@ -33,6 +33,19 @@ import { girisYontemiModul } from './moduller/giris-yontemi';
 import { topluModul } from './moduller/toplu';
 import { planTakvimModul } from './moduller/plan-takvim';
 import { hizliTartimModul } from './moduller/hizli-tartim';
+import { tartimAnalitikModul } from './moduller/tartim-analitik';
+import { analitikPadokFcrModul } from './moduller/analitik-padok-fcr';
+import { performansEsikModul } from './moduller/performans-esik';
+import { besiPlanSatDevamModul } from './moduller/besi-plan-sat-devam';
+import { besiPlanAlisModul } from './moduller/besi-plan-alis';
+import { besiPlanEkonomiGuardsModul } from './moduller/besi-plan-ekonomi-guards';
+import { besiPlanButceModul } from './moduller/besi-plan-butce';
+import { besiPiyasaAdgModul } from './moduller/besi-piyasa-adg';
+import { besiReferansYenileModul } from './moduller/besi-referans-yenile';
+import { besiReferansOtomatikModul } from './moduller/besi-referans-otomatik';
+import { besiPlanAdgBeslemeModul } from './moduller/besi-plan-adg-besleme';
+import { besiEkonomiModul } from './moduller/besi-ekonomi';
+import { performansMetrikEtiketModul } from './moduller/performans-metrik-etiket';
 import { stokEslesmeModul } from './moduller/stok-eslesme';
 import { maliyetModul } from './moduller/maliyet';
 import { zamanCizelgesiModul } from './moduller/zaman-cizelgesi';
@@ -87,6 +100,19 @@ const MODULLER = [
   topluModul,
   planTakvimModul,
   hizliTartimModul,
+  tartimAnalitikModul,
+  analitikPadokFcrModul,
+  performansEsikModul,
+  besiPlanSatDevamModul,
+  besiPlanAlisModul,
+  besiPlanEkonomiGuardsModul,
+  besiPlanButceModul,
+  besiPiyasaAdgModul,
+  besiReferansYenileModul,
+  besiReferansOtomatikModul,
+  besiPlanAdgBeslemeModul,
+  besiEkonomiModul,
+  performansMetrikEtiketModul,
   stokEslesmeModul,
   maliyetModul,
   zamanCizelgesiModul,

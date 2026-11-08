@@ -1,6 +1,9 @@
-import { calculateADG, getAnimals, getLatestWeight, getLowStockItems } from '@/kaynak/cekirdek/veritabani';
+import { getAnimals, getLowStockItems } from '@/kaynak/cekirdek/veritabani';
+import { padokTartimOzeti } from '@/kaynak/kilo/padok-tartim-ozet';
 import { getBugunGorevleri, type Gorev } from '@/kaynak/gorevler/liste';
 import { getSmartSuggestions, type SmartSuggestion } from '@/kaynak/akilli-kuzu/oneri';
+import { getPerformansEsikDepo } from '@/kaynak/kilo/performans-esik-depo';
+import { suruOrtGcaaEsikDegerlendir } from '@/kaynak/kilo/performans-esik-suruk';
 import { getAsiTakvimiDurumu } from '@/kaynak/saglik/asi-takvimi';
 import { asiBuHaftaListesi } from '@/kaynak/saglik/asi-hafta-listesi';
 
@@ -15,8 +18,12 @@ export type AnaSayfaParti = {
   yasEtiket: string;
   bas: number;
   ton: AnaSayfaPartiTon;
-  /** Son tartımların ortalaması (kg) — tartım yoksa null */
+  /** Son tartımların ortalaması (kg) — yalnız tartılmış üyeler */
   ortKg?: number | null;
+  /** Padoktaki tartılmış kuzu sayısı (güncel üyelik) */
+  tartilanSayisi?: number;
+  /** Ölçüm kapsamı — tahmin değil */
+  tartimKapsam?: string;
 };
 
 /** Ana sayfa "Bugün yapılacaklar" satırı — görev veya Akıllı Kuzu önerisinden */
@@ -171,23 +178,39 @@ export async function getAnaSayfaOzeti(): Promise<AnaSayfaOzet> {
   ]);
   const aktif = (padok: string) =>
     hayvanlar.filter((a) => sezonKuzuMu(a.id, padok) && a.status !== 'sold' && a.status !== 'dead');
-  const partiler = await Promise.all(
+  const partiVerileri = await Promise.all(
     KILITLI_PADOKLAR.map(async (p) => {
       const liste = aktif(p.ad);
-      const kilolar = await Promise.all(liste.map((a) => getLatestWeight(a.id).catch(() => null)));
-      const ort = ortalama(kilolar);
-      return { ...p, bas: liste.length, ortKg: ort == null ? null : Math.round(ort * 10) / 10 };
+      const tartim = await padokTartimOzeti(liste);
+      return { sablon: p, liste, tartim };
     }),
   );
-  const sezonKuzulari = KILITLI_PADOKLAR.flatMap((p) => aktif(p.ad));
-  const adgler = await Promise.all(sezonKuzulari.map((a) => calculateADG(a.id).catch(() => null)));
-  const ortAdg = ortalama(adgler);
-  // Gerçek veriden bağlam (eski sabit demo bağlamı yerine): düşük stok + ortalama günlük artış
+  const partiler = partiVerileri.map(({ sablon, liste, tartim }) => ({
+    ...sablon,
+    bas: liste.length,
+    ortKg: tartim.ortKg,
+    tartilanSayisi: tartim.tartilanSayisi,
+    tartimKapsam: tartim.kapsamMetni,
+  }));
+  const ortAdg = ortalama(partiVerileri.map((x) => x.tartim.ortAdgGram));
   const dusukStok = await getLowStockItems().catch(() => []);
+  const esikDepo = await getPerformansEsikDepo();
+  const padokAd = partiVerileri[0]?.sablon.ad ?? 'Padok A';
+  const gcaaEsik = suruOrtGcaaEsikDegerlendir(esikDepo, ortAdg, padokAd);
+  const gcaaHedefAltinda =
+    gcaaEsik.durum === 'hedef_alti'
+      ? {
+          ortGcaa: gcaaEsik.ortGcaa,
+          hedefGram: gcaaEsik.hedef,
+          kaynak: gcaaEsik.kaynak,
+          kontrolListesi: gcaaEsik.kontrolListesi,
+        }
+      : undefined;
   const oneriler = getSmartSuggestions({
     lowStock: dusukStok.length > 0,
     lowStockAdlar: dusukStok.map((s) => s.name),
     adgGrams: ortAdg == null ? null : Math.round(ortAdg),
+    gcaaHedefAltinda,
   });
   return {
     hayvanSayisi: partiler.reduce((s, p) => s + p.bas, 0),

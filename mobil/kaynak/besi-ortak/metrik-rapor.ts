@@ -4,10 +4,11 @@ import {
   getLatestWeight,
   getWeightRecords,
 } from '@/kaynak/cekirdek/veritabani';
-import { hesaplaFcr } from '@/kaynak/kilo/fcr-hesap';
+import { hesaplaFcrSonuc } from '@/kaynak/kilo/fcr-hesap';
+import { suruFcrBirlestir } from '@/kaynak/kilo/padok-performans-analitik';
 import { akilliRasyonOnerisi } from '@/kaynak/rasyon/akilli-oneri';
 import { rasyonKarsilastirma } from '@/kaynak/rasyon/karsilastirma';
-import { adgDeger, fcrDeger } from '@/sabitler/Metinler';
+import { adgDeger, fcrDeger, metrikYetersizVeri } from '@/sabitler/Metinler';
 
 export type Mod1MetrikRapor = {
   hayvanSayisi: number;
@@ -29,7 +30,7 @@ export async function hesaplaMod1MetrikRapor(): Promise<Mod1MetrikRapor | null> 
   const kars = await rasyonKarsilastirma();
 
   const adgler: number[] = [];
-  const fcrs: number[] = [];
+  const fcrParcalar: { toplamYemKg: number; artisKg: number }[] = [];
   let toplamYem = 0;
   let yemSay = 0;
 
@@ -37,27 +38,32 @@ export async function hesaplaMod1MetrikRapor(): Promise<Mod1MetrikRapor | null> 
     const adg = await calculateADG(a.id);
     if (adg != null) adgler.push(adg);
     const records = await getWeightRecords(a.id);
-    const fcr = await hesaplaFcr(a, records);
-    if (fcr?.dailyGivenKg != null && fcr.dailyGivenKg > 0) {
-      toplamYem += fcr.dailyGivenKg;
-      yemSay += 1;
+    const fcrSonuc = await hesaplaFcrSonuc(a, records);
+    if (fcrSonuc.durum === 'hazir') {
+      const fcr = fcrSonuc.hesap;
+      fcrParcalar.push({ toplamYemKg: fcr.totalFeedKg, artisKg: fcr.gainKg });
+      if (fcr.dailyGivenKg > 0) {
+        toplamYem += fcr.dailyGivenKg;
+        yemSay += 1;
+      }
     }
-    if (fcr?.fcr != null) fcrs.push(fcr.fcr);
   }
 
   const ortalamaAdg = adgler.length
     ? Math.round(adgler.reduce((s, v) => s + v, 0) / adgler.length)
     : null;
-  const ortalamaFcr = fcrs.length
-    ? Math.round((fcrs.reduce((s, v) => s + v, 0) / fcrs.length) * 100) / 100
-    : null;
+  const birlestir = suruFcrBirlestir(fcrParcalar);
+  const ortalamaFcr = birlestir.fcr;
   const gercekGunlukYemKg = yemSay ? Math.round((toplamYem / yemSay) * 100) / 100 : null;
 
   const notlar: string[] = [];
   if (ortalamaAdg != null) notlar.push(`Sürü ort. ${adgDeger(ortalamaAdg)} (30 gün)`);
-  else notlar.push('ADG için en az iki tartım gerekli.');
-  if (ortalamaFcr != null) notlar.push(`Sürü ort. ${fcrDeger(ortalamaFcr)}`);
-  else notlar.push('FCR için tartım + yem kaydı gerekli.');
+  else notlar.push(metrikYetersizVeri('GCAA'));
+  if (ortalamaFcr != null) {
+    notlar.push(
+      `Sürü FCR (toplam yem/toplam artış): ${fcrDeger(ortalamaFcr)} · ${birlestir.olculenSayisi}/${animals.length} hayvan`,
+    );
+  } else notlar.push(metrikYetersizVeri('FCR'));
   if (oneri?.tahminiGunlukMaliyet != null) {
     notlar.push(`Tahmini günlük maliyet ≈ ${oneri.tahminiGunlukMaliyet} ₺`);
   }

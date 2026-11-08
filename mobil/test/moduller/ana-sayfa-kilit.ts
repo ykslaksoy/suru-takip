@@ -12,7 +12,7 @@ const HIZLI_ETIKET = [
   'Rasyon',
   'Veteriner',
   'Stok',
-  'FCR GCA',
+  'FCR · GCAA',
   'Görevler',
 ];
 
