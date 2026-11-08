@@ -11,15 +11,6 @@ export const SUPERARI_REF = 'ssminvxldxaqnzizbrfy';
 
 export type BulutAyar = { url: string; anonKey: string };
 
-/** Expo derlemesine gömülmesi için her kaynak doğrudan process.env ile okunur. */
-function envSatir(...anahtarlar: string[]): string {
-  for (const k of anahtarlar) {
-    const v = String(process.env[k] ?? '').trim();
-    if (v) return v;
-  }
-  return '';
-}
-
 /** Yalnız SuperKuzu projesi; SüperArı DB'si asla kullanılmaz. */
 export function bulutAyarDogrula(url: string, anonKey: string): BulutAyar | null {
   if (!url || !anonKey || !/^https:\/\//.test(url)) return null;
@@ -27,20 +18,22 @@ export function bulutAyarDogrula(url: string, anonKey: string): BulutAyar | null
   return { url, anonKey };
 }
 
+/**
+ * Metro/Expo web: yalnızca sabit EXPO_PUBLIC_* erişimleri derleme zamanında gömülür.
+ * Dinamik process.env[değişken] döngüsü tarayıcıda boş kalır — kullanılmaz.
+ */
 export function bulutAyar(): BulutAyar | null {
-  const url = envSatir(
-    'EXPO_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'SUPABASE_URL',
-  ).replace(/\/+$/, '');
-  const anonKey = envSatir(
-    'EXPO_PUBLIC_SUPABASE_ANON_KEY',
-    'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
-    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_PUBLISHABLE_KEY',
-    'SUPABASE_ANON_KEY',
+  const url = String(process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(
+    /\/+$/,
+    '',
   );
+  const anonKey = String(
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
+      process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      '',
+  ).trim();
   return bulutAyarDogrula(url, anonKey);
 }
 

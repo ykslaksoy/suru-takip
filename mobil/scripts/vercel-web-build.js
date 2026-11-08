@@ -19,3 +19,4 @@ run('npx', ['expo', 'export', '-p', 'web'], root);
 run(process.execPath, [path.join(__dirname, 'vercel-dinamik.js')], root);
 run(process.execPath, [path.join(__dirname, 'admin-panel-kopyala.js')], root);
 run(process.execPath, [path.join(__dirname, 'sw-olustur.js')], root);
+run(process.execPath, [path.join(__dirname, 'bulut-bundle-dogrula.js')], root);
