@@ -127,6 +127,11 @@ function MaliyetScreenIcerik() {
             style={[styles.linkBtn, { borderColor: colors.tint, backgroundColor: colors.card }]}>
             <Text style={{ color: colors.tint, fontWeight: '800' }}>Besi Yönetimi</Text>
           </Pressable>
+          <Pressable
+            onPress={() => router.push('/akilli-ciftlik' as never)}
+            style={[styles.linkBtn, { borderColor: colors.accent, backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.accent, fontWeight: '800' }}>Akıllı Çiftlik (simülasyon)</Text>
+          </Pressable>
         </View>
         {soru ? fiyatSor(soru) : null}
         {tahminiler.length ? (

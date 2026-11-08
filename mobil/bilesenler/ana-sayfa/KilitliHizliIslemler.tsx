@@ -29,6 +29,7 @@ const DIGER_IDLER: KilitliHizliIslemId[] = ['rasyon', 'veteriner', 'stok', 'fcr-
 /** "Tümü" altında PNG ikonu olmayan ek ekranlar */
 const EK_SATIRLAR: { id: string; label: string; href: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { id: 'maliyet', label: 'Maliyet ve Kâr', href: '/maliyet', icon: 'cash-outline' },
+  { id: 'akilli-ciftlik', label: 'Akıllı Çiftlik', href: '/akilli-ciftlik', icon: 'game-controller-outline' },
   { id: 'gecmis', label: 'İşlem geçmişi', href: '/gecmis', icon: 'time-outline' },
 ];
 const ETIKET_DUZELT: Partial<Record<KilitliHizliIslemId, string>> = {
