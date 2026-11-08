@@ -2,17 +2,16 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   CINSIYET_ETIKET,
   HEDEF_IRK_ETIKET,
-  HEDEF_IRK_SIRASI,
   YAS_DURUM_ETIKET,
   type BesiAlisKoken,
-  type BesiHedefIrkKodu,
   type BesiIrkBilgi,
   type BesiKuzuCinsiyet,
   type BesiKuzuYasDurum,
   type BesiPlanIrkTaslak,
   irkAdgPolitikasi,
 } from '@/kaynak/maliyet/besi-plan-irk';
-import { IRK_PLAN_REFERANS } from '@/kaynak/maliyet/besi-plan-irk-referans';
+import { IRK_KATALOG_BY_KOD } from '@/kaynak/maliyet/besi-plan-irk-katalog';
+import { BesiIrkKatalogSecici } from '@/bilesenler/maliyet/BesiIrkKatalogSecici';
 
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string };
 
@@ -46,7 +45,7 @@ export function BesiIrkKokenSecimi({
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border }]}>
-      <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>Hedef kuzu — köken ve ırk (t358u)</Text>
+      <Text style={{ color: colors.tint, fontWeight: '800', marginBottom: 6 }}>Hedef kuzu — köken ve ırk (t364u katalog)</Text>
       <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 8 }}>
         Alış kökeni ırktan ayrı. Pazar + karışık grupta adlandırılmış ırk max ADG uygulanmaz.
       </Text>
@@ -99,30 +98,22 @@ export function BesiIrkKokenSecimi({
 
       {!karisikOneri || taslak.irkBilgi === 'irk_belli' ? (
         <>
-          <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 6 }}>Plan hedef ırk</Text>
-          <View style={styles.row}>
-            {HEDEF_IRK_SIRASI.filter((h) => (karisikOneri ? h === 'generic_kuzu' || h === 'diger' || h === 'pirit_belirsiz' : true)).map((h) => (
-              <Chip
-                key={h}
-                aktif={taslak.hedefIrk === h}
-                label={HEDEF_IRK_ETIKET[h]}
-                disabled={planKilitli || (karisikOneri && h !== 'generic_kuzu' && h !== 'diger' && h !== 'pirit_belirsiz')}
-                onPress={() => onChange({ ...taslak, hedefIrk: h })}
-                colors={colors}
-              />
-            ))}
-          </View>
-          {IRK_PLAN_REFERANS[taslak.hedefIrk]?.kaynak ? (
+          <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 6 }}>Plan hedef ırk — arama / gruplu</Text>
+          <BesiIrkKatalogSecici
+            secili={taslak.hedefIrk}
+            karisikPazar={karisikOneri && taslak.irkBilgi !== 'irk_belli'}
+            disabled={planKilitli}
+            colors={{ ...colors, card: colors.border + '18' }}
+            onSec={(k) => onChange({ ...taslak, hedefIrk: k })}
+          />
+          {IRK_KATALOG_BY_KOD[taslak.hedefIrk]?.kaynak ? (
             <Text style={{ color: colors.textSecondary, fontSize: 10, marginTop: 4 }}>
-              Kaynak: {IRK_PLAN_REFERANS[taslak.hedefIrk].kaynak}
-              {IRK_PLAN_REFERANS[taslak.hedefIrk].aramaAlias?.length
-                ? ` · arama: ${IRK_PLAN_REFERANS[taslak.hedefIrk].aramaAlias!.join(', ')}`
-                : ''}
+              Kaynak: {IRK_KATALOG_BY_KOD[taslak.hedefIrk].kaynak}
             </Text>
           ) : null}
-          {IRK_PLAN_REFERANS[taslak.hedefIrk]?.beklemede ? (
+          {IRK_KATALOG_BY_KOD[taslak.hedefIrk]?.beklemede ? (
             <Text style={{ color: colors.warning, fontSize: 11, marginTop: 4 }}>
-              {IRK_PLAN_REFERANS[taslak.hedefIrk].beklemeNotu}
+              {IRK_KATALOG_BY_KOD[taslak.hedefIrk].beklemeNotu}
             </Text>
           ) : null}
         </>
@@ -158,7 +149,7 @@ export function BesiIrkKokenSecimi({
           />
         ))}
       </View>
-      {(taslak.hedefIrk === 'diger' || taslak.hedefIrk === 'pirit_belirsiz') && (
+      {(taslak.hedefIrk === 'diger' || taslak.hedefIrk === 'pirit_belirsiz' || taslak.hedefIrk === 'pirlak') && (
         <NotInput
           label={taslak.hedefIrk === 'pirit_belirsiz' ? 'Pırıt / Pırlak / varyete notu' : 'Irk notu'}
           value={taslak.hedefIrkNot ?? ''}

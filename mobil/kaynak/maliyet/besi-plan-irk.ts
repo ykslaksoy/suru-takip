@@ -1,35 +1,19 @@
-/** t358u — plan hedef ırk / köken; hayvan kartı kaydı değiştirilmez. */
+/** t358u / t364u — plan hedef ırk / köken; hayvan kartı kaydı değiştirilmez. */
 
 import type { AdgKanitSenaryo } from './besi-adg-kanit';
 import { kanitGcaa } from './besi-adg-kanit';
+import {
+  HEDEF_IRK_ETIKET,
+  IRK_KATALOG_BY_KOD,
+  type BesiHedefIrkKodu,
+  irkGrup,
+} from './besi-plan-irk-katalog';
+
+export type { BesiHedefIrkKodu };
+export { HEDEF_IRK_ETIKET };
 
 export type BesiAlisKoken = 'uretim_suru' | 'pazar_toplama';
 export type BesiIrkBilgi = 'irk_belli' | 'irk_kismen' | 'irk_bilinmiyor';
-
-export type BesiHedefIrkKodu =
-  | 'generic_kuzu'
-  | 'kivircik'
-  | 'akkaraman'
-  | 'ivesi'
-  | 'merinos_capraz'
-  | 'karacabey_merinos'
-  | 'asaf'
-  | 'pirit_belirsiz'
-  | 'sakiz'
-  | 'diger';
-
-export const HEDEF_IRK_ETIKET: Record<BesiHedefIrkKodu, string> = {
-  generic_kuzu: 'Genel kuzu (ırk belirsiz)',
-  kivircik: 'Kıvırcık',
-  akkaraman: 'Akkaraman',
-  ivesi: 'İvesi',
-  merinos_capraz: 'Merinos melezi (genel)',
-  karacabey_merinos: 'Karacabey Merinosu',
-  asaf: 'Asaf',
-  pirit_belirsiz: 'Pırıt — netleştirilecek',
-  sakiz: 'Sakız',
-  diger: 'Diğer (not)',
-};
 
 export type BesiKuzuCinsiyet = 'erkek' | 'disi' | 'karisik' | 'bilinmiyor';
 export type BesiKuzuYasDurum = 'sutten_kesim' | 'genc' | 'bilinmiyor';
@@ -52,14 +36,11 @@ export type BesiPlanIrkTaslak = {
   irkBilgi: BesiIrkBilgi;
   hedefIrk: BesiHedefIrkKodu;
   hedefIrkNot?: string | null;
-  /** Plan kapsamındaki baş — heterojenlik için */
   planBasSayisi?: number | null;
   bilinenIrkBas?: number | null;
-  /** Tartım penceresinden g/gün — varsa senaryoyu ezer */
   olcumGcaaGramGun?: number | null;
   olcumBas?: string | null;
   olcumBit?: string | null;
-  /** Tahmin bağlamı — ırktan bağımsız; boş = varsayım üretilmez */
   cinsiyet?: BesiKuzuCinsiyet | null;
   yasDurum?: BesiKuzuYasDurum | null;
 };
@@ -68,11 +49,14 @@ export type IrkAdgPolitikasi = {
   etiket: string;
   varsayilanSenaryo: AdgKanitSenaryo;
   izinliSenaryolar: AdgKanitSenaryo[];
-  /** İyimser üst gcaa — null ise ırk tavanı uygulanmaz */
   iyimserGcaaUst: number | null;
   heterojenlik: string | null;
   uyari: string[];
 };
+
+export function isGecerliHedefIrkKodu(k: string): k is BesiHedefIrkKodu {
+  return Object.prototype.hasOwnProperty.call(IRK_KATALOG_BY_KOD, k);
+}
 
 export function varsayilanIrkTaslak(): BesiPlanIrkTaslak {
   return {
@@ -90,19 +74,6 @@ export function varsayilanIrkTaslak(): BesiPlanIrkTaslak {
   };
 }
 
-export const HEDEF_IRK_SIRASI: BesiHedefIrkKodu[] = [
-  'generic_kuzu',
-  'kivircik',
-  'akkaraman',
-  'ivesi',
-  'asaf',
-  'karacabey_merinos',
-  'merinos_capraz',
-  'sakiz',
-  'pirit_belirsiz',
-  'diger',
-];
-
 export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
   const uyari = [
     'Cinsiyet, yaş, sağlık ve yemleme ADG’yi değiştirir — ırk tek başına garanti değil.',
@@ -112,10 +83,16 @@ export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
   else if (t.cinsiyet == null) uyari.push('Cinsiyet girilmedi — tahminde genel bant.');
   if (t.yasDurum && t.yasDurum !== 'bilinmiyor') uyari.push(`Yaş/durum: ${YAS_DURUM_ETIKET[t.yasDurum]}`);
   if (t.hedefIrk === 'pirit_belirsiz') {
-    uyari.push('Pırıt seçildi — Pırlak’a çevrilmedi; kullanıcı netleştirmesi bekleniyor (Diğer/not).');
+    uyari.push('Pırıt seçildi — Pırlak’a çevrilmedi; Pırlak belliyse katalogdan seçin.');
+  }
+  if (t.hedefIrk === 'pirlak') {
+    uyari.push('Pırlak seçildi — Pırıt (belirsiz) ile karıştırmayın.');
   }
   if (t.hedefIrk === 'merinos_capraz') {
-    uyari.push('Merinos melezi ≠ Karacabey Merinosu — belli Karacabey ise onu seçin.');
+    uyari.push('Merinos melezi ≠ Karacabey / OAM / Anadolu Merinosu — belliyse onu seçin.');
+  }
+  if (t.hedefIrk === 'asaf') {
+    uyari.push('Asaf — geliştirilmiş ırk (Ostfriesisch × İvesi); yerli genotip etiketi değil.');
   }
   const karisik = t.koken === 'pazar_toplama' && (t.irkBilgi === 'irk_bilinmiyor' || t.irkBilgi === 'irk_kismen');
   const generic = t.hedefIrk === 'generic_kuzu' || karisik;
@@ -152,9 +129,10 @@ export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
     };
   }
 
-  /** Belli ırk + üretim/pazar belli — yine kanıtlı genel aralık; ırka özel sabit max yok */
-  const irkAd = HEDEF_IRK_ETIKET[t.hedefIrk];
-  uyari.push(`${irkAd} seçildi — yine literatür aralığı; 8 model tablo max’ı kullanılmaz`);
+  const irkAd = HEDEF_IRK_ETIKET[t.hedefIrk] ?? t.hedefIrk;
+  const grup = irkGrup(t.hedefIrk);
+  if (grup === 'yabanci') uyari.push(`${irkAd} — yabancı ırk seçildi; yaygınlık iddiası yok.`);
+  uyari.push(`${irkAd} seçildi — yine literatür aralığı; ırka özel max tablo yok`);
   return {
     etiket: irkAd,
     varsayilanSenaryo: 'beklenen',

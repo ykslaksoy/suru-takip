@@ -46,7 +46,13 @@ import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { BesiBolgeSecimi, varsayilanBolgeTaslak } from '@/bilesenler/maliyet/BesiBolgeSecimi';
 import { BesiIrkKokenSecimi } from '@/bilesenler/maliyet/BesiIrkKokenSecimi';
-import { varsayilanIrkTaslak, type BesiPlanIrkTaslak, adgSenaryoIrkUygunMu, irkAdgPolitikasi } from '@/kaynak/maliyet/besi-plan-irk';
+import {
+  varsayilanIrkTaslak,
+  type BesiPlanIrkTaslak,
+  adgSenaryoIrkUygunMu,
+  irkAdgPolitikasi,
+  isGecerliHedefIrkKodu,
+} from '@/kaynak/maliyet/besi-plan-irk';
 import { BesiKararSimulasyonPaneli } from '@/bilesenler/maliyet/BesiKararSimulasyonPaneli';
 import { hesaplaKararSimulasyon, kararVarsayilanSenaryo } from '@/kaynak/maliyet/besi-plan-karar-sim';
 
@@ -651,7 +657,10 @@ export default function BesiPlanlamaScreen() {
                   setDonemler(s.donemler);
                   if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);
                   setButceTaslak(s.butceTaslagi ?? null);
-                  setIrkTaslak(s.irkTaslagi ?? varsayilanIrkTaslak());
+                  const raw = s.irkTaslagi ?? varsayilanIrkTaslak();
+                  setIrkTaslak(
+                    isGecerliHedefIrkKodu(raw.hedefIrk) ? raw : { ...raw, hedefIrk: 'generic_kuzu' },
+                  );
                   setBolgeTaslak(s.bolgeTaslagi ?? varsayilanBolgeTaslak());
                   setSatisBirimi(s.satisBirimi ?? 'canli_kg');
                   setKarkasVerim(s.karkasVerimOrani != null ? String(s.karkasVerimOrani * 100) : '');

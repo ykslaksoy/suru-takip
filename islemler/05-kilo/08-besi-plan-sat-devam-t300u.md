@@ -69,6 +69,11 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t364u — Irk kataloğu (35 kod)
+
+- `besi-plan-irk-katalog.ts` — gruplu arama seçici
+- Asaf → `gelistirilmis_melez` (yerli değil); Pırlak ≠ Pırıt
+
 ## t363u — Irk genişletme
 
 - Karacabey Merinosu, Asaf (Assaf alias metin); `merinos_capraz` genel kaldı
