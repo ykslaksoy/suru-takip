@@ -8,6 +8,6 @@ await page.goto('http://127.0.0.1:8085/maliyet/besi-planlama', { waitUntil: 'net
 await page.getByText('t364u katalog', { exact: false }).waitFor({ timeout: 60000 });
 await page.getByText('Kendi sürü', { exact: false }).first().click();
 await page.getByPlaceholder('Ara', { exact: false }).fill('Pırlak');
-await page.getByText('Pırlak', { exact: true }).click();
+await page.getByText('Pırlak (Pırıt)', { exact: false }).click();
 await page.screenshot({ path: '/opt/cursor/artifacts/besi-planlama-t364u-katalog.png', fullPage: false });
 await browser.close();
