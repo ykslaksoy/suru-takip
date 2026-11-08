@@ -22,6 +22,8 @@ export type ButceSatir = {
   birim: 'bas' | 'toplam' | 'adet';
   not?: string;
   kaynak: ButceKalemKaynak;
+  /** Eski kullanıcı tablosu — yeni karşılaştırmada toplanmaz (t349u) */
+  karsilastirmaHaric?: boolean;
 };
 
 export type OrtakGiderPaylasim = {
@@ -59,4 +61,10 @@ export type ButceTaslak = {
   satisGelirBas: number | null;
   rfidCipAdet: number | null;
   rfidCipUcret: number | null;
+  /** Plan motoru yem maliyeti için gün (varsayılan 60) */
+  karsilastirmaGun?: number;
+  /** Hammadde ₺/kg kaynak tarihi — doğrulanmış fiyat değil */
+  yemFiyatKaynakTarih?: string | null;
+  /** Faz yem kg varsayımı notu (plan dönemleri) */
+  fazYemVarsayimNot?: string | null;
 };

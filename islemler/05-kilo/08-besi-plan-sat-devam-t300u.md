@@ -69,6 +69,13 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t349u/t350u — Yem taslak dışı + plan yem
+
+- Kesif/yonca/saman (1080/270/80) `karsilastirmaHaric` — eski tabloda 13580, **yeni karşılaştırmada yok**
+- Yeni: alış **12.000** + aşı + `planMaliyetVeKgGunHedef` (varsayılan **60 gün**) — plan fazlarında kg ve ₺/kg girilince
+- 28,20 ₺/gün / 1.692 ortalama **kullanılmaz**
+- UI: ortak dönem türü, dönem adedi, pay baş; yem fiyat tarihi alanı
+
 ### t344u — kullanıcıdan beklenen
 
 - Ortak gider dönemi (ay / döngü / yıl) ve paylaşım hayvan sayısı

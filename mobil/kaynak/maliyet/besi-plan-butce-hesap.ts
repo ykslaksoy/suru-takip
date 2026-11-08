@@ -1,19 +1,35 @@
+import type { BesiPlanDonemGirdi } from './besi-plan-tipler';
 import type { ButceSatir, ButceTaslak, OrtakGiderPaylasim } from './besi-plan-butce-tipler';
 import { cozPlanAlisBas } from './besi-plan-alis';
+import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
+
+export const USER_FEED_DRAFT_IDS = ['kesif', 'yonca', 'saman'] as const;
 
 export type MutabakatSatir = { etiket: string; tutar: number | null; not?: string };
 
 export type ButceMutabakatSonuc = {
+  /** Eski kullanıcı tablosu (tüm aktif işletme satırları) */
   isletmeKalemler: MutabakatSatir[];
   listelenenToplam: number;
+  taslakDisiKalemler: MutabakatSatir[];
   kullaniciIddiaToplam: number | null;
   aciklanmamisFark: number | null;
   farkAciklama: string | null;
   satisGelirBas: number | null;
+  /** Eski tablo dengesi — yeni karşılaştırma değil */
   isletmeOncesiDenge: number | null;
   dengeEtiket: string;
+  /** t349u — plan motoru + alış override; yem taslakları hariç */
+  yeniKarsilastirmaSatirlar: MutabakatSatir[];
+  yeniKarsilastirmaToplam: number | null;
+  yeniKarsilastirmaDenge: number | null;
+  yeniDengeEtiket: string;
+  planYemGun: number;
+  planYemMaliyetBas: number | null;
+  planYemEksik: string[];
   ortakGiderHam: number | null;
   ortakPaylasim: number | null;
+  ortakBasBasi: number | null;
   ortakEksik: string[];
   yatirimFaz1: number | null;
   yatirimFaz2: number | null;
@@ -32,6 +48,12 @@ function satirTutar(s: ButceSatir, basSayisi: number): number | null {
   return Math.round(s.tutar);
 }
 
+function satirMutabakat(s: ButceSatir, basSayisi: number, extraNot?: string): MutabakatSatir {
+  const t = satirTutar(s, basSayisi);
+  const notlar = [extraNot, s.not, s.kaynak === 'kullanici_girdi' ? 'kullanıcı tahmini' : undefined].filter(Boolean);
+  return { etiket: s.etiket, tutar: t, not: notlar.join(' · ') || undefined };
+}
+
 export function isletmeKalemlerToplam(satirlar: ButceSatir[], basSayisi: number): { satirlar: MutabakatSatir[]; toplam: number } {
   const isletme = satirlar.filter((s) => s.sinif === 'besi_isletme');
   const out: MutabakatSatir[] = [];
@@ -41,45 +63,90 @@ export function isletmeKalemlerToplam(satirlar: ButceSatir[], basSayisi: number)
     const t = satirTutar(s, basSayisi);
     if (t == null) eksik = true;
     else toplam += t;
-    out.push({ etiket: s.etiket, tutar: t, not: s.kaynak === 'kullanici_girdi' ? 'kullanıcı tahmini' : undefined });
+    out.push(satirMutabakat(s, basSayisi));
   }
   return { satirlar: out, toplam: eksik ? NaN : toplam };
+}
+
+export function yeniKarsilastirmaIsletme(
+  satirlar: ButceSatir[],
+  basSayisi: number,
+  planYemMaliyetBas: number | null,
+  planYemGun: number,
+): { satirlar: MutabakatSatir[]; toplam: number | null; eksik: string[] } {
+  const eksik: string[] = [];
+  const out: MutabakatSatir[] = [];
+  let toplam = 0;
+  let tutarEksik = false;
+
+  for (const s of satirlar.filter((x) => x.sinif === 'besi_isletme')) {
+    if (s.karsilastirmaHaric || USER_FEED_DRAFT_IDS.includes(s.id as (typeof USER_FEED_DRAFT_IDS)[number])) {
+      continue;
+    }
+    const t = satirTutar(s, basSayisi);
+    if (t == null) tutarEksik = true;
+    else toplam += t;
+    out.push(satirMutabakat(s, basSayisi, 'yeni karşılaştırma'));
+  }
+
+  if (planYemMaliyetBas == null) {
+    eksik.push(`${planYemGun} gün plan yem maliyeti hesaplanamadı — eksik faz ₺/kg veya kg/baş/gün`);
+  } else {
+    toplam += planYemMaliyetBas;
+    out.push({
+      etiket: `Plan yem (${planYemGun} gün)`,
+      tutar: planYemMaliyetBas,
+      not: 'Plan dönemleri — kullanıcı yem tablosu (1080/270/80) değil',
+    });
+  }
+
+  if (tutarEksik) eksik.push('İşletme satırında bilinmeyen tutar');
+  return { satirlar: out, toplam: eksik.length ? null : toplam, eksik };
 }
 
 export function ortakGiderMutabakat(o: OrtakGiderPaylasim): {
   hamToplam: number | null;
   paylasilan: number | null;
+  basBasi: number | null;
   eksik: string[];
 } {
   const eksik: string[] = [];
   const parts = [o.kira, o.coban, o.elektrik, o.digerToplam];
-  if (parts.every((p) => p == null)) return { hamToplam: null, paylasilan: null, eksik: ['Ortak gider girilmedi'] };
+  if (parts.every((p) => p == null)) return { hamToplam: null, paylasilan: null, basBasi: null, eksik: ['Ortak gider girilmedi'] };
   const ham = parts.reduce((s, p) => s + (p ?? 0), 0);
   if (o.donem === 'bilinmiyor') {
     eksik.push('Ortak gider dönemi bilinmiyor — 142.000 TL otomatik 90 güne bölünmez');
-    return { hamToplam: ham, paylasilan: null, eksik };
+    return { hamToplam: ham, paylasilan: null, basBasi: null, eksik };
   }
   if (o.payBasSayisi == null || o.payBasSayisi < 1) {
     eksik.push('Paylaşım hayvan sayısı bilinmiyor');
-    return { hamToplam: ham, paylasilan: null, eksik };
+    return { hamToplam: ham, paylasilan: null, basBasi: null, eksik };
   }
   if (o.donemAdet == null || o.donemAdet < 1) {
     eksik.push('Dönem adedi bilinmiyor');
-    return { hamToplam: ham, paylasilan: null, eksik };
+    return { hamToplam: ham, paylasilan: null, basBasi: null, eksik };
   }
   const paylasilan = Math.round(ham);
-  return { hamToplam: ham, paylasilan, eksik };
+  const basBasi = Math.round(ham / o.payBasSayisi);
+  return { hamToplam: ham, paylasilan, basBasi, eksik };
 }
+
+export type ButcePlanYemGirdi = {
+  girisKg: number | null;
+  donemler: BesiPlanDonemGirdi[];
+};
 
 export function hesaplaButceMutabakat(
   taslak: ButceTaslak,
   basSayisi: number,
   planAlis?: Parameters<typeof cozPlanAlisBas>[0],
+  planYem?: ButcePlanYemGirdi,
 ): ButceMutabakatSonuc {
   const uyari = [
     'Rakamlar kullanıcı tahmini — teklif veya piyasa doğrulaması yok.',
     'Açıklanmamış fark için otomatik «diğer maliyet» eklenmez.',
-    'Net kâr iddiası yok — yalnızca listelenen işletme kalemleri vs satış.',
+    '28,20 ₺/gün veya 1.692/60 gün doğrulanmış hesap değil — kullanılmaz.',
+    'Yeni karşılaştırma: plan motoru yem + alış override; eski yem satırları taslak.',
   ];
 
   let satirlar = [...taslak.satirlar];
@@ -96,6 +163,27 @@ export function hesaplaButceMutabakat(
   }
 
   const { satirlar: isletmeKalemler, toplam: listelenenToplam } = isletmeKalemlerToplam(satirlar, basSayisi);
+  const taslakDisiKalemler = satirlar
+    .filter(
+      (s) =>
+        s.sinif === 'besi_isletme' &&
+        (s.karsilastirmaHaric || USER_FEED_DRAFT_IDS.includes(s.id as (typeof USER_FEED_DRAFT_IDS)[number])),
+    )
+    .map((s) => satirMutabakat(s, basSayisi, 'taslak — yeni karşılaştırmada yok'));
+
+  const planYemGun = Math.max(1, Math.floor(taslak.karsilastirmaGun ?? 60));
+  let planYemMaliyetBas: number | null = null;
+  const planYemEksik: string[] = [];
+  if (planYem?.girisKg != null && planYem.girisKg > 0) {
+    const p = planMaliyetVeKgGunHedef(planYem.girisKg, planYem.donemler, planYemGun);
+    if (p) planYemMaliyetBas = p.yemMaliyet;
+    else planYemEksik.push('Plan fazlarında yem kg veya ₺/kg eksik — 0 yazılmaz');
+  } else {
+    planYemEksik.push('Giriş kg girilince plan yem hesaplanır');
+  }
+
+  const yeniK = yeniKarsilastirmaIsletme(satirlar, basSayisi, planYemMaliyetBas, planYemGun);
+  planYemEksik.push(...yeniK.eksik.filter((e) => !planYemEksik.includes(e)));
   const iddia = taslak.kullaniciIddiaToplamMaliyet;
   let aciklanmamisFark: number | null = null;
   let farkAciklama: string | null = null;
@@ -110,6 +198,8 @@ export function hesaplaButceMutabakat(
   const satis = taslak.satisGelirBas;
   const isletmeOncesiDenge =
     satis != null && Number.isFinite(listelenenToplam) ? Math.round(satis - listelenenToplam) : null;
+  const yeniKarsilastirmaDenge =
+    satis != null && yeniK.toplam != null ? Math.round(satis - yeniK.toplam) : null;
 
   const ortak = ortakGiderMutabakat(taslak.ortak);
   const y1 =
@@ -127,14 +217,23 @@ export function hesaplaButceMutabakat(
   return {
     isletmeKalemler,
     listelenenToplam: Number.isFinite(listelenenToplam) ? listelenenToplam : NaN,
+    taslakDisiKalemler,
     kullaniciIddiaToplam: iddia,
     aciklanmamisFark,
     farkAciklama,
     satisGelirBas: satis,
     isletmeOncesiDenge,
-    dengeEtiket: 'İşletme dengesi (ortak gider ve yatırım hariç; net kâr değil)',
+    dengeEtiket: 'Eski tablo dengesi (13580 tipi; yem taslakları dahil — net kâr değil)',
+    yeniKarsilastirmaSatirlar: yeniK.satirlar,
+    yeniKarsilastirmaToplam: yeniK.toplam,
+    yeniKarsilastirmaDenge,
+    yeniDengeEtiket: 'Yeni karşılaştırma dengesi (plan yem + alış; ortak/yatırım hariç)',
+    planYemGun,
+    planYemMaliyetBas,
+    planYemEksik: [...new Set(planYemEksik)],
     ortakGiderHam: ortak.hamToplam,
     ortakPaylasim: ortak.paylasilan,
+    ortakBasBasi: ortak.basBasi,
     ortakEksik: ortak.eksik,
     yatirimFaz1: y1,
     yatirimFaz2: y2,
@@ -171,6 +270,8 @@ export function ornekButce12000(): ButceTaslak {
         tutar: 1080,
         birim: 'bas',
         kaynak: 'kullanici_girdi',
+        karsilastirmaHaric: true,
+        not: 'Eski kullanıcı tablosu — doğrulanmış fiyat değil',
       },
       {
         id: 'yonca',
@@ -180,6 +281,8 @@ export function ornekButce12000(): ButceTaslak {
         tutar: 270,
         birim: 'bas',
         kaynak: 'kullanici_girdi',
+        karsilastirmaHaric: true,
+        not: 'Eski kullanıcı tablosu',
       },
       {
         id: 'asi',
@@ -198,6 +301,8 @@ export function ornekButce12000(): ButceTaslak {
         tutar: 80,
         birim: 'bas',
         kaynak: 'kullanici_girdi',
+        karsilastirmaHaric: true,
+        not: 'Eski kullanıcı tablosu',
       },
       {
         id: 'koyun-damizlik',
@@ -228,6 +333,9 @@ export function ornekButce12000(): ButceTaslak {
       donemAdet: null,
       payBasSayisi: null,
     },
+    karsilastirmaGun: 60,
+    yemFiyatKaynakTarih: null,
+    fazYemVarsayimNot: 'Plan dönemleri kg/baş/gün ve ₺/kg — araştırma bekleniyor',
     yatirim: {
       faz1Aktif: false,
       citTelSuluk: 100000,

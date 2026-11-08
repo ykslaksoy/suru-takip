@@ -187,13 +187,18 @@ export default function BesiPlanlamaScreen() {
   const basAdet = Math.floor(sayi(basSayisi) ?? 1);
 
   const butceMutabakat = butceTaslak
-    ? hesaplaButceMutabakat(butceTaslak, basAdet, {
-        alisBasFiyat: sayiPlanAlis(alis),
-        alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
-        girisKg: sayi(girisKg),
-        gercekParti,
-        basSayisi: basAdet,
-      })
+    ? hesaplaButceMutabakat(
+        butceTaslak,
+        basAdet,
+        {
+          alisBasFiyat: sayiPlanAlis(alis),
+          alisCanliKgFiyat: sayiPlanAlis(alisKgFiyat),
+          girisKg: sayi(girisKg),
+          gercekParti,
+          basSayisi: basAdet,
+        },
+        { girisKg: sayi(girisKg), donemler },
+      )
     : null;
 
   const kaydet = async () => {
