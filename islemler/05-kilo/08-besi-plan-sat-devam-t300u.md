@@ -69,6 +69,12 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t363u — Irk genişletme
+
+- Karacabey Merinosu, Asaf (Assaf alias metin); `merinos_capraz` genel kaldı
+- `pirit_belirsiz` — Pırlak’a map yok, beklemede
+- Cinsiyet / yaş chip (ADG bantı değişmez)
+
 ## t362u — Bölge + satış kaynağı
 
 - `BesiBolgeSecimi` — serbest il, UKON 7 bölge + TOBB Edirne/Gaziantep + Balıkesir; karşılaştırma tablosu

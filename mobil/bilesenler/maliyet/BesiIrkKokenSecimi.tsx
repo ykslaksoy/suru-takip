@@ -1,12 +1,18 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
+  CINSIYET_ETIKET,
   HEDEF_IRK_ETIKET,
+  HEDEF_IRK_SIRASI,
+  YAS_DURUM_ETIKET,
   type BesiAlisKoken,
   type BesiHedefIrkKodu,
   type BesiIrkBilgi,
+  type BesiKuzuCinsiyet,
+  type BesiKuzuYasDurum,
   type BesiPlanIrkTaslak,
   irkAdgPolitikasi,
 } from '@/kaynak/maliyet/besi-plan-irk';
+import { IRK_PLAN_REFERANS } from '@/kaynak/maliyet/besi-plan-irk-referans';
 
 type Colors = { text: string; textSecondary: string; border: string; tint: string; warning: string };
 
@@ -21,7 +27,8 @@ const IRK_BILGI: { k: BesiIrkBilgi; e: string }[] = [
   { k: 'irk_bilinmiyor', e: 'Irk bilinmiyor' },
 ];
 
-const HEDEF: BesiHedefIrkKodu[] = ['generic_kuzu', 'kivircik', 'akkaraman', 'ivesi', 'merinos_capraz', 'sakiz', 'diger'];
+const CINS: BesiKuzuCinsiyet[] = ['bilinmiyor', 'erkek', 'disi', 'karisik'];
+const YAS: BesiKuzuYasDurum[] = ['bilinmiyor', 'sutten_kesim', 'genc'];
 
 export function BesiIrkKokenSecimi({
   taslak,
@@ -94,22 +101,71 @@ export function BesiIrkKokenSecimi({
         <>
           <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 6 }}>Plan hedef ırk</Text>
           <View style={styles.row}>
-            {HEDEF.filter((h) => (karisikOneri ? h === 'generic_kuzu' || h === 'diger' : true)).map((h) => (
+            {HEDEF_IRK_SIRASI.filter((h) => (karisikOneri ? h === 'generic_kuzu' || h === 'diger' || h === 'pirit_belirsiz' : true)).map((h) => (
               <Chip
                 key={h}
                 aktif={taslak.hedefIrk === h}
                 label={HEDEF_IRK_ETIKET[h]}
-                disabled={planKilitli || (karisikOneri && h !== 'generic_kuzu' && h !== 'diger')}
+                disabled={planKilitli || (karisikOneri && h !== 'generic_kuzu' && h !== 'diger' && h !== 'pirit_belirsiz')}
                 onPress={() => onChange({ ...taslak, hedefIrk: h })}
                 colors={colors}
               />
             ))}
           </View>
+          {IRK_PLAN_REFERANS[taslak.hedefIrk]?.kaynak ? (
+            <Text style={{ color: colors.textSecondary, fontSize: 10, marginTop: 4 }}>
+              Kaynak: {IRK_PLAN_REFERANS[taslak.hedefIrk].kaynak}
+              {IRK_PLAN_REFERANS[taslak.hedefIrk].aramaAlias?.length
+                ? ` · arama: ${IRK_PLAN_REFERANS[taslak.hedefIrk].aramaAlias!.join(', ')}`
+                : ''}
+            </Text>
+          ) : null}
+          {IRK_PLAN_REFERANS[taslak.hedefIrk]?.beklemede ? (
+            <Text style={{ color: colors.warning, fontSize: 11, marginTop: 4 }}>
+              {IRK_PLAN_REFERANS[taslak.hedefIrk].beklemeNotu}
+            </Text>
+          ) : null}
         </>
       ) : (
         <Text style={{ color: colors.warning, fontSize: 12, marginTop: 6 }}>
           Pazardan toplama · karışık/ırk bilinmiyor → yalnızca «{HEDEF_IRK_ETIKET.generic_kuzu}»
         </Text>
+      )}
+
+      <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 6 }}>Cinsiyet (tahmin bağlamı)</Text>
+      <View style={styles.row}>
+        {CINS.map((c) => (
+          <Chip
+            key={c}
+            aktif={(taslak.cinsiyet ?? 'bilinmiyor') === c}
+            label={CINSIYET_ETIKET[c]}
+            disabled={planKilitli}
+            onPress={() => onChange({ ...taslak, cinsiyet: c === 'bilinmiyor' ? null : c })}
+            colors={colors}
+          />
+        ))}
+      </View>
+      <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4 }}>Yaş / sütten kesim</Text>
+      <View style={styles.row}>
+        {YAS.map((y) => (
+          <Chip
+            key={y}
+            aktif={(taslak.yasDurum ?? 'bilinmiyor') === y}
+            label={YAS_DURUM_ETIKET[y]}
+            disabled={planKilitli}
+            onPress={() => onChange({ ...taslak, yasDurum: y === 'bilinmiyor' ? null : y })}
+            colors={colors}
+          />
+        ))}
+      </View>
+      {(taslak.hedefIrk === 'diger' || taslak.hedefIrk === 'pirit_belirsiz') && (
+        <NotInput
+          label={taslak.hedefIrk === 'pirit_belirsiz' ? 'Pırıt / Pırlak / varyete notu' : 'Irk notu'}
+          value={taslak.hedefIrkNot ?? ''}
+          onEnd={(v) => onChange({ ...taslak, hedefIrkNot: v })}
+          colors={colors}
+          disabled={planKilitli}
+        />
       )}
 
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
@@ -203,6 +259,35 @@ function MiniInput({
           const t = e.nativeEvent.text.trim();
           const n = t === '' ? null : parseFloat(t.replace(',', '.'));
           onEnd(n != null && Number.isFinite(n) ? n : null);
+        }}
+        style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+      />
+    </View>
+  );
+}
+
+function NotInput({
+  label,
+  value,
+  onEnd,
+  colors,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onEnd: (s: string | null) => void;
+  colors: Colors;
+  disabled?: boolean;
+}) {
+  return (
+    <View style={{ marginTop: 6 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 10 }}>{label}</Text>
+      <TextInput
+        editable={!disabled}
+        defaultValue={value}
+        onEndEditing={(e) => {
+          const t = e.nativeEvent.text.trim();
+          onEnd(t === '' ? null : t);
         }}
         style={[styles.input, { borderColor: colors.border, color: colors.text }]}
       />

@@ -4,7 +4,14 @@ import { hedefCanliKgKanit } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { hesaplaBrutKar, BRUT_KAR_ETIKET } from '@/kaynak/maliyet/besi-plan-brut-kar';
 import { ortakGiderMutabakat } from '@/kaynak/maliyet/besi-plan-butce-hesap';
-import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
+import {
+  efektifGcaaGramGun,
+  HEDEF_IRK_ETIKET,
+  HEDEF_IRK_SIRASI,
+  irkAdgPolitikasi,
+  varsayilanIrkTaslak,
+} from '@/kaynak/maliyet/besi-plan-irk';
+import { IRK_PLAN_REFERANS } from '@/kaynak/maliyet/besi-plan-irk-referans';
 import { hesaplaKararSimulasyon, kararVarsayilanSenaryo } from '@/kaynak/maliyet/besi-plan-karar-sim';
 import { cozPiyasaFiyat, piyasaKarsilastirma } from '@/kaynak/maliyet/besi-plan-piyasa-kaynak';
 import { ilIcinOneriler } from '@/kaynak/maliyet/besi-plan-bolge-tipler';
@@ -105,6 +112,13 @@ export const besiPiyasaAdgModul: TestModul = {
       test(g, 't362u karsilastirma satir', piyasaKarsilastirma('edirne_tobb').length >= 10),
       test(g, 't362u balikesir oneri', ilIcinOneriler('Balıkesir').ukon === 'ege'),
       test(g, 't362u gaziantep canlı', cozPiyasaFiyat('gaziantep_tobb', null, null).fiyatKg === 362.29),
+      test(g, 't363u irk listesi 10', HEDEF_IRK_SIRASI.length === 10),
+      test(g, 't363u Karacabey etiket', HEDEF_IRK_ETIKET.karacabey_merinos === 'Karacabey Merinosu'),
+      test(g, 't363u Asaf etiket', HEDEF_IRK_ETIKET.asaf === 'Asaf'),
+      test(g, 't363u pirit beklemede', IRK_PLAN_REFERANS.pirit_belirsiz.beklemede === true),
+      test(g, 't363u karacabey ADG kanıt', efektifGcaaGramGun('beklenen', { ...varsayilanIrkTaslak(), hedefIrk: 'karacabey_merinos', irkBilgi: 'irk_belli', koken: 'uretim_suru' }).gcaa === 250),
+      test(g, 't363u pirit uyarı', irkAdgPolitikasi({ ...varsayilanIrkTaslak(), hedefIrk: 'pirit_belirsiz', irkBilgi: 'irk_belli', koken: 'uretim_suru' }).uyari.some((u) => u.includes('Pırlak'))),
+      test(g, 't363u merinos ayır', irkAdgPolitikasi({ ...varsayilanIrkTaslak(), hedefIrk: 'merinos_capraz', irkBilgi: 'irk_belli', koken: 'uretim_suru' }).uyari.some((u) => u.includes('Karacabey'))),
     ].flat();
   },
 };

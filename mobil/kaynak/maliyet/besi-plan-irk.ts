@@ -12,6 +12,9 @@ export type BesiHedefIrkKodu =
   | 'akkaraman'
   | 'ivesi'
   | 'merinos_capraz'
+  | 'karacabey_merinos'
+  | 'asaf'
+  | 'pirit_belirsiz'
   | 'sakiz'
   | 'diger';
 
@@ -20,9 +23,28 @@ export const HEDEF_IRK_ETIKET: Record<BesiHedefIrkKodu, string> = {
   kivircik: 'Kıvırcık',
   akkaraman: 'Akkaraman',
   ivesi: 'İvesi',
-  merinos_capraz: 'Merinos melezi',
+  merinos_capraz: 'Merinos melezi (genel)',
+  karacabey_merinos: 'Karacabey Merinosu',
+  asaf: 'Asaf',
+  pirit_belirsiz: 'Pırıt — netleştirilecek',
   sakiz: 'Sakız',
   diger: 'Diğer (not)',
+};
+
+export type BesiKuzuCinsiyet = 'erkek' | 'disi' | 'karisik' | 'bilinmiyor';
+export type BesiKuzuYasDurum = 'sutten_kesim' | 'genc' | 'bilinmiyor';
+
+export const CINSIYET_ETIKET: Record<BesiKuzuCinsiyet, string> = {
+  erkek: 'Erkek',
+  disi: 'Dişi',
+  karisik: 'Karışık grup',
+  bilinmiyor: 'Bilinmiyor',
+};
+
+export const YAS_DURUM_ETIKET: Record<BesiKuzuYasDurum, string> = {
+  sutten_kesim: 'Sütten kesim / damızlık öncesi',
+  genc: 'Genç (sürüde)',
+  bilinmiyor: 'Bilinmiyor',
 };
 
 export type BesiPlanIrkTaslak = {
@@ -37,6 +59,9 @@ export type BesiPlanIrkTaslak = {
   olcumGcaaGramGun?: number | null;
   olcumBas?: string | null;
   olcumBit?: string | null;
+  /** Tahmin bağlamı — ırktan bağımsız; boş = varsayım üretilmez */
+  cinsiyet?: BesiKuzuCinsiyet | null;
+  yasDurum?: BesiKuzuYasDurum | null;
 };
 
 export type IrkAdgPolitikasi = {
@@ -60,14 +85,38 @@ export function varsayilanIrkTaslak(): BesiPlanIrkTaslak {
     olcumGcaaGramGun: null,
     olcumBas: null,
     olcumBit: null,
+    cinsiyet: null,
+    yasDurum: null,
   };
 }
+
+export const HEDEF_IRK_SIRASI: BesiHedefIrkKodu[] = [
+  'generic_kuzu',
+  'kivircik',
+  'akkaraman',
+  'ivesi',
+  'asaf',
+  'karacabey_merinos',
+  'merinos_capraz',
+  'sakiz',
+  'pirit_belirsiz',
+  'diger',
+];
 
 export function irkAdgPolitikasi(t: BesiPlanIrkTaslak): IrkAdgPolitikasi {
   const uyari = [
     'Cinsiyet, yaş, sağlık ve yemleme ADG’yi değiştirir — ırk tek başına garanti değil.',
     'Plan taslak; onaylı hayvan ırk kaydına yazılmaz.',
   ];
+  if (t.cinsiyet && t.cinsiyet !== 'bilinmiyor') uyari.push(`Cinsiyet: ${CINSIYET_ETIKET[t.cinsiyet]} — ADG bantları değişmez, bağlam notu.`);
+  else if (t.cinsiyet == null) uyari.push('Cinsiyet girilmedi — tahminde genel bant.');
+  if (t.yasDurum && t.yasDurum !== 'bilinmiyor') uyari.push(`Yaş/durum: ${YAS_DURUM_ETIKET[t.yasDurum]}`);
+  if (t.hedefIrk === 'pirit_belirsiz') {
+    uyari.push('Pırıt seçildi — Pırlak’a çevrilmedi; kullanıcı netleştirmesi bekleniyor (Diğer/not).');
+  }
+  if (t.hedefIrk === 'merinos_capraz') {
+    uyari.push('Merinos melezi ≠ Karacabey Merinosu — belli Karacabey ise onu seçin.');
+  }
   const karisik = t.koken === 'pazar_toplama' && (t.irkBilgi === 'irk_bilinmiyor' || t.irkBilgi === 'irk_kismen');
   const generic = t.hedefIrk === 'generic_kuzu' || karisik;
 
