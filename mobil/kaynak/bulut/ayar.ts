@@ -22,7 +22,9 @@ export function bulutAyarDogrula(url: string, anonKey: string): BulutAyar | null
  * Metro/Expo web: yalnızca sabit EXPO_PUBLIC_* erişimleri derleme zamanında gömülür.
  * Dinamik process.env[değişken] döngüsü tarayıcıda boş kalır — kullanılmaz.
  */
-export function bulutAyar(): BulutAyar | null {
+let ortamDosyasi: BulutAyar | null | undefined;
+
+function gomuluAyar(): BulutAyar | null {
   const url = String(process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(
     /\/+$/,
     '',
@@ -35,6 +37,37 @@ export function bulutAyar(): BulutAyar | null {
       '',
   ).trim();
   return bulutAyarDogrula(url, anonKey);
+}
+
+/** Web: Vercel build JSON (/bulut-ortam.json). Native/dev: EXPO_PUBLIC gömümü. */
+export async function bulutOrtamYukle(): Promise<void> {
+  if (ortamDosyasi !== undefined) return;
+  const g = gomuluAyar();
+  if (g) {
+    ortamDosyasi = g;
+    return;
+  }
+  if (typeof window === 'undefined') {
+    ortamDosyasi = null;
+    return;
+  }
+  try {
+    const r = await fetch('/bulut-ortam.json', { cache: 'no-store' });
+    if (!r.ok) {
+      ortamDosyasi = null;
+      return;
+    }
+    const j = (await r.json()) as { url?: string; anonKey?: string };
+    ortamDosyasi = bulutAyarDogrula(String(j.url ?? ''), String(j.anonKey ?? ''));
+  } catch {
+    ortamDosyasi = null;
+  }
+}
+
+export function bulutAyar(): BulutAyar | null {
+  const g = gomuluAyar();
+  if (g) return g;
+  return ortamDosyasi ?? null;
 }
 
 export function bulutAcik(): boolean {

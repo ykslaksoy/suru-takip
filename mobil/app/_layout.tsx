@@ -15,6 +15,7 @@ import { GirisYontemiProvider } from '@/baglam/GirisYontemiBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
 import { BaglantiSeridi } from '@/bilesenler/ortak/BaglantiSeridi';
+import { bulutOrtamYukle } from '@/kaynak/bulut/ayar';
 import { bulutBaslat } from '@/kaynak/bulut/servis';
 
 export { ErrorBoundary } from 'expo-router';
@@ -39,9 +40,8 @@ export default function RootLayout() {
     if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
-  // Bulut eşitleme: env yoksa hiçbir şey yapmaz
   useEffect(() => {
-    bulutBaslat();
+    void bulutOrtamYukle().then(() => bulutBaslat());
   }, []);
 
   if (!loaded) return null;

@@ -18,6 +18,7 @@ export const bulutSenkronPipelineModul: TestModul = {
         'ayar sabit EXPO_PUBLIC gömümü',
         ayar.includes('process.env.EXPO_PUBLIC_SUPABASE_URL') && !ayar.includes('process.env[k]'),
       ),
+      test(G, 'bulut-ortam.json yükleme', ayar.includes('bulutOrtamYukle') && ayar.includes('/bulut-ortam.json')),
       test(
         G,
         'kuyruk flush önce sunucu senkronu',

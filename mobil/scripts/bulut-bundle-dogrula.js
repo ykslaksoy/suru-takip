@@ -24,14 +24,11 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-let urlGomulu = false;
-let refGomulu = false;
+const ortamYolu = path.join(dist, 'bulut-ortam.json');
 let serviceRole = false;
 
 for (const f of files) {
   const t = fs.readFileSync(f, 'utf8');
-  if (t.includes('.supabase.co') || t.includes(SUPERKUZU_REF)) refGomulu = true;
-  if (t.includes('EXPO_PUBLIC_SUPABASE_URL') && t.includes(SUPERKUZU_REF)) urlGomulu = true;
   if (/service_role/i.test(t)) serviceRole = true;
 }
 
@@ -39,9 +36,24 @@ if (serviceRole) {
   console.error('bulut-bundle-dogrula: service_role metni bulundu — reddedildi');
   process.exit(1);
 }
-if (!refGomulu) {
-  console.error('bulut-bundle-dogrula: SuperKuzu Supabase referansı bundle içinde yok');
-  process.exit(1);
+
+if (fs.existsSync(ortamYolu)) {
+  const j = JSON.parse(fs.readFileSync(ortamYolu, 'utf8'));
+  if (j.url?.includes(SUPERKUZU_REF) && j.anonKey) {
+    console.log('bulut-bundle-dogrula: OK (bulut-ortam.json)');
+    process.exit(0);
+  }
 }
 
-console.log('bulut-bundle-dogrula: OK (publishable/anon gömümü, service role yok)');
+let refGomulu = false;
+for (const f of files) {
+  const t = fs.readFileSync(f, 'utf8');
+  if (t.includes(SUPERKUZU_REF) && t.includes('.supabase.co')) refGomulu = true;
+}
+if (refGomulu) {
+  console.log('bulut-bundle-dogrula: OK (bundle gömümü)');
+  process.exit(0);
+}
+
+console.error('bulut-bundle-dogrula: Supabase yapılandırması dist içinde yok');
+process.exit(1);

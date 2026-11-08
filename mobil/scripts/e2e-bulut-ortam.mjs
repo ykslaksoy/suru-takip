@@ -11,16 +11,16 @@ await page.goto(BASE, { waitUntil: 'networkidle', timeout: 90000 });
 const sonuc = await page.evaluate(async () => {
   const r = await fetch('/_expo/.routes.json');
   const hasRoutes = r.ok;
-  const entry = [...document.scripts].map((s) => s.src).find((u) => u.includes('entry-')) ?? '';
-  let bulutAcik = false;
+  const ortam = await fetch('/bulut-ortam.json', { cache: 'no-store' });
+  let bulutOrtam = false;
   let refVar = false;
-  if (entry) {
-    const js = await fetch(entry).then((x) => x.text());
-    refVar = js.includes('eferktaopilgoeetgggk');
-    bulutAcik = refVar && js.includes('.supabase.co');
+  if (ortam.ok) {
+    const j = await ortam.json();
+    refVar = String(j.url ?? '').includes('eferktaopilgoeetgggk');
+    bulutOrtam = refVar && !!j.anonKey;
   }
-  return { hasRoutes, refVar, bulutAcikBundle: bulutAcik };
+  return { hasRoutes, refVar, bulutOrtamDosyasi: bulutOrtam };
 });
 console.log(JSON.stringify({ base: BASE, ...sonuc }, null, 2));
 await browser.close();
-process.exit(sonuc.bulutAcikBundle ? 0 : 1);
+process.exit(sonuc.bulutOrtamDosyasi ? 0 : 1);
