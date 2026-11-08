@@ -102,6 +102,10 @@ export function BesiPiyasaAdgPaneli({
       <Text style={{ color: colors.textSecondary, fontSize: 10 }}>
         {ozet.kanit.kaynakAd} · {ozet.kanit.gcaaGramGun} g/gün ({ozet.kanit.min}–{ozet.kanit.max})
       </Text>
+      <Text style={{ color: colors.tint, fontSize: 11, marginTop: 4 }}>
+        Irk politikası: {ozet.irkPolitikasi.etiket}
+        {ozet.irkPolitikasi.iyimserGcaaUst != null ? ` · iyimser üst ${ozet.irkPolitikasi.iyimserGcaaUst} g/gün` : ''}
+      </Text>
 
       <Pressable onPress={() => onYemIllustrasyon(!yemIllustrasyon)} style={{ marginVertical: 8 }}>
         <Text style={{ color: colors.tint, fontWeight: '700' }}>

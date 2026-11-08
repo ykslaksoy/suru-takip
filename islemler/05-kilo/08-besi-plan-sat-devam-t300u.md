@@ -69,6 +69,12 @@ Ayrı dal: `cursor/besi-planlama-sat-devam-09a5` — tartım analitiği PR’ın
 - UI: `/maliyet/besi-planlama` — `butceTaslagi` taslak depoda; 500 ₺/kg plan alışı ayrı kalır
 - Test: `besi-plan-butce` (+8, toplam 831)
 
+## t358u — Köken / ırk seçimi
+
+- `besi-plan-irk.ts` + `BesiIrkKokenSecimi` — üretim vs pazar toplama; ırk belli/kısmen/bilinmiyor
+- Pazar karışık → `generic_kuzu`, iyimser ADG üst 320; tartım ADG öncelik; `irkTaslagi` depoda (hayvan kaydı değişmez)
+- Test: `besi-piyasa-adg` (+5 t358u → 849)
+
 ## t355u/t356u — Piyasa + ADG + brüt kâr
 
 - `besi-piyasa-kayit.ts` — TOBB Edirne, UKON, **Balıkesir Ağu/Eyl 2026 bülteni** (8 Kas günlük yok); `manuel_only` yenileme

@@ -7,6 +7,8 @@ import { karsilastir60ve90, type AdgSenaryoTur } from './besi-plan-adg';
 import { gomuluPiyasaKayitlari, type PiyasaFiyatKaydi } from './besi-piyasa-kayit';
 import { satisGelirBasHesapla, type SatisFiyatBirimi } from './besi-plan-satis';
 import { planMaliyetVeKgGunHedef } from './dongu-ekonomi-hesap';
+import type { BesiPlanIrkTaslak } from './besi-plan-irk';
+import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from './besi-plan-irk';
 
 export type PiyasaSatisKaynak = 'edirne_tobb' | 'ukon' | 'balikesir_canli' | 'balikesir_kemikli' | 'kullanici_senaryo';
 
@@ -23,6 +25,7 @@ export type BesiPiyasaOzetGirdi = {
   yemIllustrasyon: boolean;
   yemFireYuzde?: number | null;
   olcumGcaa?: number | null;
+  irkTaslak?: BesiPlanIrkTaslak | null;
 };
 
 export type UfukEkonomi = {
@@ -37,6 +40,7 @@ export type UfukEkonomi = {
 export type BesiPiyasaOzet = {
   piyasa: PiyasaFiyatKaydi[];
   kanit: ReturnType<typeof kanitGcaa>;
+  irkPolitikasi: ReturnType<typeof irkAdgPolitikasi>;
   ufuk60: UfukEkonomi;
   ufuk90: UfukEkonomi;
   uyari: string[];
@@ -93,7 +97,11 @@ function ufuk(
   const kars = karsilastir60ve90(g.girisKg, g.donemler, g.adgSenaryo, g.adgKanit);
   const h = gun === 60 ? kars.gun60 : kars.gun90;
   let cikisKg = h.cikisKg;
-  if (cikisKg == null) {
+  const irk = g.irkTaslak;
+  const efektif = irk ? efektifGcaaGramGun(g.adgKanit, irk) : null;
+  if (irk?.olcumGcaaGramGun != null && efektif?.gcaa != null) {
+    cikisKg = Math.round((g.girisKg + (efektif.gcaa / 1000) * gun) * 10) / 10;
+  } else if (cikisKg == null) {
     cikisKg = hedefCanliKgKanit(g.girisKg, gun, g.adgKanit);
   }
   const satis =
@@ -132,11 +140,16 @@ export function hesaplaBesiPiyasaOzet(g: BesiPiyasaOzetGirdi): BesiPiyasaOzet {
     uyari.push('Balıkesir kemikli et fiyatı — canlı kg değil; verim ile çevirmeyin');
   }
 
+  const irkPolitikasi = irkAdgPolitikasi(g.irkTaslak ?? varsayilanIrkTaslak());
+  uyari.push(...irkPolitikasi.uyari.slice(0, 2));
+
   return {
     piyasa: gomuluPiyasaKayitlari(),
     kanit: kanitGcaa(g.adgKanit),
+    irkPolitikasi,
     ufuk60: ufuk(60, g, px.fiyatKg, birim),
     ufuk90: ufuk(90, g, px.fiyatKg, birim),
     uyari,
   };
 }
+

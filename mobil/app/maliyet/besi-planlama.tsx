@@ -44,6 +44,8 @@ import { hesaplaButceMutabakat, ornekButce12000, ornekButce12500 } from '@/kayna
 import { BesiPiyasaAdgPaneli } from '@/bilesenler/maliyet/BesiPiyasaAdgPaneli';
 import type { AdgKanitSenaryo } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet, type PiyasaSatisKaynak } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
+import { BesiIrkKokenSecimi } from '@/bilesenler/maliyet/BesiIrkKokenSecimi';
+import { varsayilanIrkTaslak, type BesiPlanIrkTaslak, adgSenaryoIrkUygunMu, irkAdgPolitikasi } from '@/kaynak/maliyet/besi-plan-irk';
 
 function sayi(m: string): number | null {
   const n = parseFloat(m.replace(',', '.'));
@@ -96,6 +98,7 @@ export default function BesiPlanlamaScreen() {
   const [adgKanit, setAdgKanit] = useState<AdgKanitSenaryo>('beklenen');
   const [yemIllustrasyon, setYemIllustrasyon] = useState(true);
   const [piyasaRefreshNot, setPiyasaRefreshNot] = useState<string | null>(null);
+  const [irkTaslak, setIrkTaslak] = useState<BesiPlanIrkTaslak>(varsayilanIrkTaslak());
 
   const yukle = useCallback(async () => {
     const d = await getBesiPlanDepo();
@@ -208,6 +211,8 @@ export default function BesiPlanlamaScreen() {
           donemler,
           yemIllustrasyon,
           yemFireYuzde: 5,
+          olcumGcaa: irkTaslak.olcumGcaaGramGun,
+          irkTaslak,
         })
       : null;
 
@@ -252,6 +257,7 @@ export default function BesiPlanlamaScreen() {
       donemler,
       ekonomiKalemler,
       butceTaslagi: butceTaslak ?? undefined,
+      irkTaslagi: irkTaslak,
     });
     setSenaryoId(s.id);
     await yukle();
@@ -345,6 +351,7 @@ export default function BesiPlanlamaScreen() {
         />
         <Mini label="Baş sayısı" value={basSayisi} onChange={setBasSayisi} colors={colors} />
         <Mini label="Giriş kg/baş" value={girisKg} onChange={setGirisKg} colors={colors} />
+        <BesiIrkKokenSecimi taslak={irkTaslak} onChange={setIrkTaslak} colors={colors} planKilitli={planKilitli} />
         <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>
           Tahmini alış fiyatı (₺/canlı kg) — {ALIS_KAYNAK_ETIKET.kullanici_planlama_varsayimi}. Canlı borsa veya satış fiyatı değil.
         </Text>
@@ -416,7 +423,9 @@ export default function BesiPlanlamaScreen() {
             adgKanit={adgKanit}
             yemIllustrasyon={yemIllustrasyon}
             onSatisKaynak={setSatisKaynak}
-            onAdgKanit={setAdgKanit}
+            onAdgKanit={(k) => {
+              if (adgSenaryoIrkUygunMu(k, irkAdgPolitikasi(irkTaslak))) setAdgKanit(k);
+            }}
             onYemIllustrasyon={setYemIllustrasyon}
             refreshDurum={piyasaRefreshNot}
             colors={colors}
@@ -586,6 +595,7 @@ export default function BesiPlanlamaScreen() {
                   setDonemler(s.donemler);
                   if (s.ekonomiKalemler?.length) setEkonomiKalemler(s.ekonomiKalemler);
                   setButceTaslak(s.butceTaslagi ?? null);
+                  setIrkTaslak(s.irkTaslagi ?? varsayilanIrkTaslak());
                   setSatisBirimi(s.satisBirimi ?? 'canli_kg');
                   setKarkasVerim(s.karkasVerimOrani != null ? String(s.karkasVerimOrani * 100) : '');
                   setSatisFiyat(s.satisFiyatKg != null ? String(s.satisFiyatKg) : '');

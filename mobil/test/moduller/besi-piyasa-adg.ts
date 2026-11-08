@@ -4,6 +4,7 @@ import { hedefCanliKgKanit } from '@/kaynak/maliyet/besi-adg-kanit';
 import { hesaplaBesiPiyasaOzet } from '@/kaynak/maliyet/besi-plan-piyasa-ozet';
 import { hesaplaBrutKar, BRUT_KAR_ETIKET } from '@/kaynak/maliyet/besi-plan-brut-kar';
 import { ortakGiderMutabakat } from '@/kaynak/maliyet/besi-plan-butce-hesap';
+import { efektifGcaaGramGun, irkAdgPolitikasi, varsayilanIrkTaslak } from '@/kaynak/maliyet/besi-plan-irk';
 
 const g = 'Besi piyasa ADG t355u';
 
@@ -35,6 +36,20 @@ export const besiPiyasaAdgModul: TestModul = {
       payBasSayisi: 100,
     });
 
+    const pazar = { ...varsayilanIrkTaslak(), koken: 'pazar_toplama' as const, irkBilgi: 'irk_bilinmiyor' as const };
+    const olcumIrk = { ...pazar, olcumGcaaGramGun: 210 };
+    const ozetOlcum = hesaplaBesiPiyasaOzet({
+      girisKg: 25,
+      alisBas: 12000,
+      satisKaynak: 'edirne_tobb',
+      satisBirimi: 'canli_kg',
+      karkasVerim: null,
+      adgSenaryo: 'senaryo_taban',
+      adgKanit: 'beklenen',
+      donemler: [],
+      yemIllustrasyon: true,
+      irkTaslak: olcumIrk,
+    });
     return [
       test(g, 'Balıkesir canlı fiyat dolu', (bal?.deger ?? 0) > 300),
       test(g, 'Edirne 397.38', edirne?.deger === 397.38),
@@ -45,6 +60,11 @@ export const besiPiyasaAdgModul: TestModul = {
       test(g, '60g brut hesap', ozet.ufuk60.brutKar.brutKar != null),
       test(g, 'Ortak dönem çarpan', ortak.basBasi === 1080),
       test(g, 'Yem illustrasyon', ozet.ufuk60.yemKaynak === 'illustrasyon' || ozet.ufuk60.yemBas != null),
+      test(g, 't358u pazar generic', pazar.hedefIrk === 'generic_kuzu'),
+      test(g, 't358u iyimser üst 320', irkAdgPolitikasi(pazar).iyimserGcaaUst === 320),
+      test(g, 't358u ölçüm gcaa', efektifGcaaGramGun('iyimser', olcumIrk).gcaa === 210),
+      test(g, 't358u 60g 37.6kg', ozetOlcum.ufuk60.cikisKg === 37.6),
+      test(g, 't358u irk tip', pazar.irkBilgi === 'irk_bilinmiyor'),
     ];
   },
 };
