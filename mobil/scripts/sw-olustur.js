@@ -34,6 +34,9 @@ function gez(dir) {
   }
 }
 gez(dist);
+if (fs.existsSync(path.join(dist, 'admin', 'index.html')) && !dosyalar.includes('/admin')) {
+  dosyalar.push('/admin');
+}
 const vercel = JSON.parse(fs.readFileSync(fs.existsSync(kok) ? kok : yerel, 'utf8'));
 const yonlendirmeler = (vercel.rewrites || []).map((r) => [
   '^' + r.source.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/:[a-zA-Z]+/g, '[^/]+') + '$',
