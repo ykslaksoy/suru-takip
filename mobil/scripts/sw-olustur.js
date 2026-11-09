@@ -46,4 +46,5 @@ const surum = ozet.digest('hex').slice(0, 12);
 const ayar = { surum, dosyalar: ['/', ...dosyalar.filter((d) => d !== '/')], yonlendirmeler };
 const sablon = fs.readFileSync(path.join(__dirname, 'sw-sablon.js'), 'utf8');
 fs.writeFileSync(path.join(dist, 'sw.js'), `self.__SW_AYAR__ = ${JSON.stringify(ayar)};\n${sablon}`);
+fs.writeFileSync(path.join(dist, 'surum.json'), JSON.stringify({ surum, dosya: ayar.dosyalar.length }), 'utf8');
 console.log(`sw-olustur: ${ayar.dosyalar.length} dosya · sürüm ${surum}`);

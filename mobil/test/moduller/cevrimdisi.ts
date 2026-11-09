@@ -17,7 +17,7 @@ export const cevrimdisiModul: TestModul = {
     t('çevrimiçi ve güncel: çip yok', baglantiMetni(temel, 0) === null);
     t('çevrimdışı çipi', baglantiMetni({ ...temel, cevrimici: false }, 0)?.tur === 'cevrimdisi');
     t('tekrar çevrimiçi 4 sn görünür, sonra kaybolur', baglantiMetni({ ...temel, geriGeldi: 1000 }, 3000)?.tur === 'geri' && baglantiMetni({ ...temel, geriGeldi: 1000 }, 6000) === null);
-    t('yeni sürüm çipi (çevrimdışı öncelikli)', baglantiMetni({ ...temel, guncellemeVar: true }, 0)?.tur === 'guncelleme' && baglantiMetni({ ...temel, guncellemeVar: true, cevrimici: false }, 0)?.tur === 'cevrimdisi');
+    t('yeni sürüm çipi (çevrimdışı öncelikli)', baglantiMetni({ ...temel, guncellemeVar: true }, 0)?.metin.includes('Yeni sürüm') && baglantiMetni({ ...temel, guncellemeVar: true, cevrimici: false }, 0)?.tur === 'cevrimdisi');
     baglantiGuncelle({ cevrimici: false });
     const kapali = !cevrimiciMi();
     baglantiGuncelle({ cevrimici: true });

@@ -86,6 +86,7 @@ async function sayfa(req) {
   }
 }
 
+/** Önbellek önce — yalnız uzun ömürlü statik varlıklar için */
 async function dosya(req) {
   const c = await caches.open(ONBELLEK);
   const kayitli = await c.match(req, { ignoreSearch: true });
@@ -93,6 +94,20 @@ async function dosya(req) {
   const r = await fetch(req);
   if (r.ok && r.type === 'basic') c.put(req, r.clone());
   return r;
+}
+
+/** Expo JS/CSS: ağ önce — eski bundle takılı kalmayı önler */
+async function bundleAgOnce(req) {
+  const c = await caches.open(ONBELLEK);
+  try {
+    const r = await fetch(req);
+    if (r.ok && r.type === 'basic') c.put(req, r.clone());
+    return r;
+  } catch (e) {
+    const kayitli = await c.match(req, { ignoreSearch: true });
+    if (kayitli) return kayitli;
+    throw e;
+  }
 }
 
 async function agOnce(req) {
@@ -117,6 +132,10 @@ self.addEventListener('fetch', (e) => {
   if (adminMutlakYol(url.pathname) || agYalnizcaYol(url.pathname)) return;
   if (req.mode === 'navigate') {
     e.respondWith(sayfa(req));
+    return;
+  }
+  if (url.pathname.startsWith('/_expo/static/js/')) {
+    e.respondWith(bundleAgOnce(req));
     return;
   }
   if (url.pathname.startsWith('/_expo/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/ikon/') || url.pathname === '/favicon.ico') {
