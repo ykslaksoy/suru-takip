@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { AnaButon } from '@/bilesenler/ortak/AnaButon';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
 import { useDatabase } from '@/baglam/VeritabaniBaglami';
+import { bulutOrtamBekle } from '@/kaynak/bulut/ayar';
 import { getSenkronBekleyenSayisi } from '@/kaynak/bulut/bekleyen-sayim';
 import { bulutSenkronKapsamOzeti } from '@/kaynak/bulut/kapsam';
 import { isleSenkronKuyrugu, senkronDurumOzet } from '@/kaynak/cekirdek/senkron-motor';
@@ -11,18 +13,20 @@ import { isleSenkronKuyrugu, senkronDurumOzet } from '@/kaynak/cekirdek/senkron-
 export function SenkronDurumu() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const { refresh, refreshKey } = useDatabase();
-  const [ozet, setOzet] = useState('');
-  const [bekleyen, setBekleyen] = useState(0);
+  const { refresh, refreshKey, pendingSync } = useDatabase();
+  const [ozet, setOzet] = useState('Yükleniyor…');
+  const [bekleyen, setBekleyen] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    setBekleyen(await getSenkronBekleyenSayisi());
-    setOzet(await senkronDurumOzet());
-  }, []);
+    const [, n, o] = await Promise.all([bulutOrtamBekle(), getSenkronBekleyenSayisi(), senkronDurumOzet()]);
+    setBekleyen(n);
+    setOzet(o);
+    if (n !== pendingSync) refresh();
+  }, [pendingSync, refresh]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load, refreshKey]);
 
   const senkronla = async () => {
@@ -37,6 +41,8 @@ export function SenkronDurumu() {
     }
   };
 
+  const bekleyenGoster = bekleyen ?? pendingSync;
+
   return (
     <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <Text style={[styles.title, { color: colors.text }]}>Veri ve senkron</Text>
@@ -45,10 +51,26 @@ export function SenkronDurumu() {
         {bulutSenkronKapsamOzeti()}
       </Text>
       <Text style={{ color: colors.text, marginTop: 8, fontWeight: '700' }}>
-        Bekleyen: {bekleyen}
+        Bekleyen kuyruk satırı: {bekleyenGoster}
+        {bekleyen !== null && bekleyen !== pendingSync ? (
+          <Text style={{ fontWeight: '400', color: colors.textSecondary, fontSize: 12 }}>
+            {' '}
+            (üst çip {pendingSync} — sayıları eşitlemek için yenilendi)
+          </Text>
+        ) : null}
       </Text>
-      <View style={{ marginTop: 10 }}>
-        <AnaButon title={busy ? 'İşleniyor…' : 'Kuyruğu işle'} onPress={senkronla} disabled={busy || bekleyen === 0} />
+      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
+        Bu sayı stok satırı değil; gönderim kuyruğu. Sürü/stok listeleri cihazınızda kalır.
+      </Text>
+      <View style={{ marginTop: 10, gap: 8 }}>
+        <AnaButon
+          title={busy ? 'İşleniyor…' : 'Kuyruğu işle'}
+          onPress={senkronla}
+          disabled={busy || bekleyenGoster === 0}
+        />
+        <Pressable onPress={() => router.push('/bulut' as never)} accessibilityRole="link">
+          <Text style={{ color: colors.tint, fontWeight: '700', textAlign: 'center' }}>Bulut girişi ve eşitleme →</Text>
+        </Pressable>
       </View>
     </View>
   );

@@ -39,7 +39,7 @@ export function cevrimiciMi(): boolean {
 /** Durum metni — saf, test edilir */
 export function baglantiMetni(d: BaglantiDurum, simdi: number): { metin: string; tur: 'cevrimdisi' | 'geri' | 'guncelleme' } | null {
   if (!d.cevrimici) return { metin: '📴 Çevrimdışı · kayıtlar bu cihaza yazılıyor', tur: 'cevrimdisi' };
-  if (d.guncellemeVar) return { metin: '⬆️ Yeni sürüm hazır · Yenile', tur: 'guncelleme' };
+  if (d.guncellemeVar) return { metin: '⬆️ Yeni sürüm — yenile', tur: 'guncelleme' };
   if (d.geriGeldi && simdi - d.geriGeldi < 4000) return { metin: '✅ Tekrar çevrimiçi', tur: 'geri' };
   return null;
 }

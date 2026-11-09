@@ -22,6 +22,20 @@ export const bulutSenkronPipelineModul: TestModul = {
       test(G, 'bulutDurum ortam bekler', servis.includes('bulutOrtamBekle')),
       test(
         G,
+        'ayarlar özeti ortam bekler',
+        readFileSync(new URL('../../kaynak/cekirdek/senkron-motor.ts', import.meta.url), 'utf8').includes(
+          'bulutOrtamBekle',
+        ),
+      ),
+      test(
+        G,
+        'SenkronDurumu bulut linki',
+        readFileSync(new URL('../../bilesenler/ortak/SenkronDurumu.tsx', import.meta.url), 'utf8').includes(
+          "router.push('/bulut'",
+        ),
+      ),
+      test(
+        G,
         'SW bulut-ortam ağ geçişi',
         readFileSync(new URL('../../scripts/sw-sablon.js', import.meta.url), 'utf8').includes('bulut-ortam.json'),
       ),

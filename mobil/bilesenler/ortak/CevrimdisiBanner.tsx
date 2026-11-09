@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import Colors from '@/sabitler/Renkler';
 import { useColorScheme } from '@/bilesenler/ortak/useRenkSemasi';
-import { bulutSenkronAktif } from '@/sabitler/Ortam';
+import { bulutOrtamBekle } from '@/kaynak/bulut/ayar';
 
 /**
  * İnce senkron çipi — eski tam genişlik yeşil şerit kaldırıldı.
@@ -11,24 +11,23 @@ import { bulutSenkronAktif } from '@/sabitler/Ortam';
 export function CevrimdisiBanner({ pendingSync }: { pendingSync: number }) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
-  const cloud = bulutSenkronAktif();
+  const [cloud, setCloud] = useState<boolean | null>(null);
   const [gizli, setGizli] = useState(false);
 
   useEffect(() => {
-    // Yeni bekleyen kayıt gelince tekrar göster
+    void bulutOrtamBekle().then(setCloud);
+  }, []);
+
+  useEffect(() => {
     if (pendingSync > 0) setGizli(false);
   }, [pendingSync]);
 
-  if (gizli) return null;
+  if (gizli || cloud === null) return null;
 
-  // Boşta ve bulut kapalıyken şerit gösterme — gereksiz yer
   if (!cloud && pendingSync <= 0) return null;
-  // Bulut açık ve kuyruk boşsa da gösterme
   if (cloud && pendingSync <= 0) return null;
 
-  const kisa = cloud
-    ? `${pendingSync} bekliyor`
-    : `${pendingSync} yerel · bulut kapalı`;
+  const kisa = cloud ? `${pendingSync} bekliyor` : `${pendingSync} yerel · bulut kapalı`;
 
   return (
     <View style={styles.wrap} pointerEvents="box-none">
