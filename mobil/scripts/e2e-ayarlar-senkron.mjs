@@ -10,7 +10,7 @@ const browser = await chromium.launch({ headless: true });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: ua });
 await ctx.addInitScript((v) => localStorage.setItem('sy_giris_yontemi_tercih', v), tercih);
 const page = await ctx.newPage();
-await page.goto(`${BASE}/daha/ayarlar`, { waitUntil: 'networkidle', timeout: 90000 });
+await page.goto(`${BASE}/ayarlar`, { waitUntil: 'domcontentloaded', timeout: 90000 });
 await page.waitForTimeout(3000);
 const t = await page.textContent('body');
 const sonuc = {
