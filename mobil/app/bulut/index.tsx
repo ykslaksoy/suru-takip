@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack } from 'expo-router';
+import { bulutOrtamYukle } from '@/kaynak/bulut/ayar';
 import {
   bulutDurum,
   cikis,
@@ -49,19 +50,36 @@ export default function BulutEkrani() {
   const [yerelEkip, setYerelEkip] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [beklemeSn, setBeklemeSn] = useState(0);
+  const [ortamYukleniyor, setOrtamYukleniyor] = useState(true);
+  const [ortamHata, setOrtamHata] = useState<string | null>(null);
 
   const yenile = useCallback(async () => {
     const x = await bulutDurum();
     setD(x);
     if (x.uyelik) setEkip(await ekipListesi().catch(() => []));
   }, []);
+
+  const ortamHazirla = useCallback(async (zorla = false) => {
+    setOrtamYukleniyor(true);
+    setOrtamHata(null);
+    const acik = await bulutOrtamYukle(zorla);
+    setOrtamYukleniyor(false);
+    if (!acik) {
+      setOrtamHata(
+        'Bulut ayarı bu oturumda yüklenemedi. Eski uygulama önbelleği olabilir — aşağıdan tekrar deneyin veya sayfayı yenileyin.',
+      );
+      setD({ acik: false, oturum: null, uyelik: null, son: null });
+      return;
+    }
+    await yenile();
+  }, [yenile]);
   useEffect(() => {
     void ekipYukle().then(() => setYerelEkip(yerelEkipProfiliVar(ekipAnlik())));
     return ekipDinle(() => setYerelEkip(yerelEkipProfiliVar(ekipAnlik())));
   }, []);
   useEffect(() => {
-    void yenile();
-  }, [yenile]);
+    void ortamHazirla();
+  }, [ortamHazirla]);
 
   useEffect(() => {
     let t: ReturnType<typeof setInterval> | undefined;
@@ -84,18 +102,32 @@ export default function BulutEkrani() {
     await yenile();
   };
 
-  if (!d) return null;
+  if (ortamYukleniyor || !d) {
+    return (
+      <ScrollView contentContainerStyle={s.kap}>
+        <Stack.Screen options={{ title: 'Bulut eşitleme' }} />
+        <Text style={s.baslik}>Bulut yapılandırması yükleniyor…</Text>
+        <Text style={s.metin}>Kayıtların cihazında güvende; birkaç saniye bekleyin.</Text>
+      </ScrollView>
+    );
+  }
 
   if (!d.acik) {
     return (
       <ScrollView contentContainerStyle={s.kap}>
         <Stack.Screen options={{ title: 'Bulut eşitleme' }} />
-        <Text style={s.baslik}>Bulut eşitleme henüz açık değil</Text>
+        <Text style={s.baslik}>Bulut bağlantısı hazır değil</Text>
         <Text style={s.metin}>
-          Kayıtların şu an yalnızca bu cihazda duruyor ve uygulama tamamen çalışıyor. Bulut açılınca sürü kayıtları, ekip ve
-          fotoğraflar bütün telefonlarda ortak olacak.
+          {ortamHata ??
+            'Sunucu yapılandırması okunamadı. Kayıtlar yalnızca bu cihazda; silinmez. Yedek için Excel / CSV kullanabilirsin.'}
         </Text>
-        <Text style={s.metin}>Yedek için Excel / CSV dışa aktarmayı kullanabilirsin.</Text>
+        <Dugme etiket="Tekrar dene" onPress={() => void ortamHazirla(true)} />
+        {Platform.OS === 'web' ? (
+          <Text style={s.metin}>
+            iPhone Safari: sekme adres çubuğundaki yenile düğmesine basın veya uygulamayı tamamen kapatıp{' '}
+            <Text style={{ fontWeight: '700' }}>superkuzu.vercel.app</Text> adresini yeniden açın (veriler silinmez).
+          </Text>
+        ) : null}
       </ScrollView>
     );
   }

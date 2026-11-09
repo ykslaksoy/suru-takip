@@ -23,7 +23,7 @@ export const adminSchemaModul: TestModul = {
       test(
         'Admin şema',
         'sw admin ağ geçişi',
-        swSablon.includes('if (adminMutlakYol(url.pathname)) return'),
+        swSablon.includes('adminMutlakYol(url.pathname)') && swSablon.includes('agYalnizcaYol(url.pathname)'),
       ),
       test(
         'Admin şema',
