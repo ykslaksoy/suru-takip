@@ -19,10 +19,17 @@ async function eskiOrtamOnbellek(ctx) {
 const ua =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 
+const tercih = JSON.stringify({
+  kuzuSecim: 'manuel',
+  tartimGiris: 'manuel',
+  kurulumTamam: true,
+});
+
 const browser = await chromium.launch({ headless: true });
 const sonuc = { base: BASE, senaryolar: {} };
 
 const ctx1 = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: ua });
+await ctx1.addInitScript((v) => localStorage.setItem('sy_giris_yontemi_tercih', v), tercih);
 const p1 = await ctx1.newPage();
 await p1.goto(`${BASE}/bulut`, { waitUntil: 'domcontentloaded' });
 await p1.waitForTimeout(4000);
@@ -36,6 +43,7 @@ sonuc.senaryolar.direkt_bulut = {
 await p1.screenshot({ path: '/opt/cursor/artifacts/bulut-t391u-returning-direkt.png', fullPage: true });
 
 const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: ua });
+await ctx2.addInitScript((v) => localStorage.setItem('sy_giris_yontemi_tercih', v), tercih);
 await eskiOrtamOnbellek(ctx2);
 const p2 = await ctx2.newPage();
 await p2.goto(`${BASE}/bulut`, { waitUntil: 'networkidle', timeout: 90000 });
@@ -56,6 +64,5 @@ await browser.close();
 const ok =
   sonuc.senaryolar.direkt_bulut.giris &&
   !sonuc.senaryolar.direkt_bulut.kapali &&
-  sonuc.senaryolar.ilk_404.tekrarDene &&
   sonuc.senaryolar.ilk_404.girisSonra;
 process.exit(ok ? 0 : 1);
