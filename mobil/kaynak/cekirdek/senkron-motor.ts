@@ -1,5 +1,5 @@
 import { flushSyncQueue, getSyncQueueEntries } from '@/kaynak/cekirdek/veritabani';
-import { bulutSenkronAktif } from '@/sabitler/Ortam';
+import { bulutOrtamBekle } from '@/kaynak/bulut/ayar';
 import { getSenkronBekleyenSayisi } from '@/kaynak/bulut/bekleyen-sayim';
 import { simdiSenkronEt } from '@/kaynak/bulut/servis';
 
@@ -15,14 +15,23 @@ export type SenkronSonuc = {
 export async function isleSenkronKuyrugu(): Promise<SenkronSonuc> {
   const bekleyen = await getSenkronBekleyenSayisi();
   if (bekleyen === 0) {
-    return { islenen: 0, kalan: 0, mesaj: 'Bekleyen kayıt yok.' };
+    const bulutHazir = await bulutOrtamBekle();
+    if (bulutHazir) {
+      return {
+        islenen: 0,
+        kalan: 0,
+        mesaj: 'Bekleyen kuyruk yok. Buluta aktarmak için Daha → Bulut: giriş yapıp “Şimdi eşitle”.',
+      };
+    }
+    return { islenen: 0, kalan: 0, mesaj: 'Bekleyen kayıt yok (yerel sürü/stok kayıtları duruyor).' };
   }
 
-  if (!bulutSenkronAktif()) {
+  const bulutHazir = await bulutOrtamBekle();
+  if (!bulutHazir) {
     return {
       islenen: 0,
       kalan: bekleyen,
-      mesaj: `${bekleyen} kayıt bu cihazda bekliyor. Bulut bağlantısı bu sürümde yapılandırılmamış — yerel kayıtlar silinmez.`,
+      mesaj: `${bekleyen} kayıt bu cihazda bekliyor. Bulut yapılandırması yüklenemedi — sayfayı yenileyin veya Daha → Bulut → Tekrar dene.`,
     };
   }
 
@@ -32,7 +41,7 @@ export async function isleSenkronKuyrugu(): Promise<SenkronSonuc> {
     return {
       islenen: 0,
       kalan: bekleyen,
-      mesaj: 'Buluta göndermek için Daha → Bulut: e-posta kodu ile giriş ve çiftlik seçimi gerekli. Yeni hesap otomatik açılmaz.',
+      mesaj: 'Buluta göndermek için Daha → Bulut: e-posta kodu ile giriş ve çiftlik seçimi gerekli.',
     };
   }
   if (rapor.hata) {
@@ -56,13 +65,17 @@ export async function isleSenkronKuyrugu(): Promise<SenkronSonuc> {
 }
 
 export async function senkronDurumOzet(): Promise<string> {
-  const bekleyen = await getSenkronBekleyenSayisi();
-  if (bekleyen === 0) {
-    return bulutSenkronAktif()
-      ? 'Bulut senkron güncel (son deneme başarılı veya bekleyen yok).'
-      : 'Yerel kayıtlar güncel. Bulut API bu derlemede yok — JSON/Excel yedek önerilir.';
+  const [bekleyen, bulutHazir] = await Promise.all([getSenkronBekleyenSayisi(), bulutOrtamBekle()]);
+
+  if (!bulutHazir) {
+    return bekleyen > 0
+      ? `${bekleyen} kayıt cihazda bekliyor; bulut ayarı henüz yüklenmedi. Daha → Bulut veya sayfayı yenileyin.`
+      : 'Yerel kayıtlar cihazda. Bulut ayarı yüklenemedi — Daha → Bulut ekranında “Tekrar dene” veya Safari’de bir kez yenileyin.';
   }
-  return bulutSenkronAktif()
-    ? `${bekleyen} değişiklik buluta gönderilmeyi bekliyor — Bulut ekranından giriş yapıp “Şimdi eşitle”.`
-    : `${bekleyen} kayıt yalnızca bu cihazda (bulut yapılandırması kapalı).`;
+
+  if (bekleyen === 0) {
+    return 'Bulut bağlantısı hazır. Bekleyen kuyruk satırı yok; sürü/stok verileri cihazda. Aktarmak için Daha → Bulut → giriş → “Şimdi eşitle”.';
+  }
+
+  return `${bekleyen} değişiklik gönderilmeyi bekliyor (legacy kuyruk veya belge listesi). Daha → Bulut: giriş yapıp “Şimdi eşitle”.`;
 }
