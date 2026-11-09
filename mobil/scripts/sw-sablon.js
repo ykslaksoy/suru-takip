@@ -10,6 +10,10 @@ function adminMutlakYol(pathname) {
   return pathname === '/admin' || pathname.startsWith('/admin/');
 }
 
+function agYalnizcaYol(pathname) {
+  return pathname === '/bulut-ortam.json' || pathname.startsWith('/bulut-ortam.json');
+}
+
 function yol(url) {
   let p = url.pathname.replace(/\/+$/, '') || '/';
   if (p.endsWith('.html')) p = p.slice(0, -5) || '/';
@@ -110,7 +114,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // dış servisler: dokunma
   if (url.pathname.startsWith('/_vercel') || url.pathname === '/sw.js') return;
-  if (adminMutlakYol(url.pathname)) return;
+  if (adminMutlakYol(url.pathname) || agYalnizcaYol(url.pathname)) return;
   if (req.mode === 'navigate') {
     e.respondWith(sayfa(req));
     return;

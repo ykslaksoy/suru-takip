@@ -18,11 +18,8 @@ export function bulutAyarDogrula(url: string, anonKey: string): BulutAyar | null
   return { url, anonKey };
 }
 
-/**
- * Metro/Expo web: yalnızca sabit EXPO_PUBLIC_* erişimleri derleme zamanında gömülür.
- * Dinamik process.env[değişken] döngüsü tarayıcıda boş kalır — kullanılmaz.
- */
 let ortamDosyasi: BulutAyar | null | undefined;
+let yuklemePromise: Promise<boolean> | null = null;
 
 function gomuluAyar(): BulutAyar | null {
   const url = String(process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(
@@ -39,35 +36,52 @@ function gomuluAyar(): BulutAyar | null {
   return bulutAyarDogrula(url, anonKey);
 }
 
-/** Web: Vercel build JSON (/bulut-ortam.json). Native/dev: EXPO_PUBLIC gömümü. */
-export async function bulutOrtamYukle(): Promise<void> {
-  if (ortamDosyasi !== undefined) return;
-  const g = gomuluAyar();
-  if (g) {
-    ortamDosyasi = g;
-    return;
-  }
-  if (typeof window === 'undefined') {
-    ortamDosyasi = null;
-    return;
-  }
+async function ortamDosyasindanOku(onbellekKir: number): Promise<BulutAyar | null> {
+  if (typeof window === 'undefined') return null;
   try {
-    const r = await fetch('/bulut-ortam.json', { cache: 'no-store' });
-    if (!r.ok) {
-      ortamDosyasi = null;
-      return;
-    }
+    const r = await fetch(`/bulut-ortam.json?v=${onbellekKir}`, { cache: 'no-store' });
+    if (!r.ok) return null;
     const j = (await r.json()) as { url?: string; anonKey?: string };
-    ortamDosyasi = bulutAyarDogrula(String(j.url ?? ''), String(j.anonKey ?? ''));
+    return bulutAyarDogrula(String(j.url ?? ''), String(j.anonKey ?? ''));
   } catch {
-    ortamDosyasi = null;
+    return null;
   }
+}
+
+/**
+ * Web: `/bulut-ortam.json` yüklemesi. Tek promise — yarışları önler.
+ * @returns true ise bulut yapılandırması kullanılabilir
+ */
+export async function bulutOrtamYukle(zorla = false): Promise<boolean> {
+  if (zorla) {
+    ortamDosyasi = undefined;
+    yuklemePromise = null;
+  }
+  if (yuklemePromise) return yuklemePromise;
+
+  yuklemePromise = (async () => {
+    const g = gomuluAyar();
+    if (g) {
+      ortamDosyasi = g;
+      return true;
+    }
+    ortamDosyasi = await ortamDosyasindanOku(Date.now());
+    return ortamDosyasi !== null;
+  })();
+
+  return yuklemePromise;
+}
+
+/** Bulut API kullanmadan önce bekleyin (race önleme). */
+export async function bulutOrtamBekle(): Promise<boolean> {
+  return bulutOrtamYukle();
 }
 
 export function bulutAyar(): BulutAyar | null {
   const g = gomuluAyar();
   if (g) return g;
-  return ortamDosyasi ?? null;
+  if (ortamDosyasi === undefined) return null;
+  return ortamDosyasi;
 }
 
 export function bulutAcik(): boolean {

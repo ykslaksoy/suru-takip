@@ -15,7 +15,6 @@ import { GirisYontemiProvider } from '@/baglam/GirisYontemiBaglami';
 import { WebOnizlemeCercevesi } from '@/bilesenler/ortak/WebOnizlemeCercevesi';
 import { AyarlarKaplama } from '@/bilesenler/ayarlar/AyarlarKaplama';
 import { BaglantiSeridi } from '@/bilesenler/ortak/BaglantiSeridi';
-import { bulutOrtamYukle } from '@/kaynak/bulut/ayar';
 import { bulutBaslat } from '@/kaynak/bulut/servis';
 
 export { ErrorBoundary } from 'expo-router';
@@ -41,7 +40,7 @@ export default function RootLayout() {
   }, [loaded]);
 
   useEffect(() => {
-    void bulutOrtamYukle().then(() => bulutBaslat());
+    bulutBaslat();
   }, []);
 
   if (!loaded) return null;

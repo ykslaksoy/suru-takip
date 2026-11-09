@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { kaliciGetItem, kaliciRemoveItem, kaliciSetItem } from '@/kaynak/cekirdek/web-kalici-depo';
 import { metaOku } from '@/kaynak/galeri/meta';
 import { gorselHamOku, gorselHamYaz } from '@/kaynak/galeri/gorsel';
-import { bulutAyar } from './ayar';
+import { bulutAyar, bulutOrtamBekle } from './ayar';
 import { BulutIstemci, type Oturum, type Uyelik } from './istemci';
 import { bosMeta, META_ANAHTAR, senkronEt, type SenkronMeta, type SenkronRapor, type YerelDepo } from './motor';
 import { fotoSenkron } from './foto-senkron';
@@ -50,8 +50,8 @@ const yerelDepo: YerelDepo = {
 };
 
 export async function bulutDurum(): Promise<BulutDurum> {
-  const acik = bulutAyar() !== null;
-  if (!acik) return { acik, oturum: null, uyelik: null, son: null };
+  const acik = await bulutOrtamBekle();
+  if (!acik) return { acik: false, oturum: null, uyelik: null, son: null };
   return { acik, oturum: await jsonOku<Oturum>(OTURUM), uyelik: await jsonOku<Uyelik>(CIFTLIK), son: await jsonOku(SON) };
 }
 
@@ -199,6 +199,14 @@ let zamanlayici: ReturnType<typeof setInterval> | null = null;
 
 /** Uygulama açılışında çağrılır: periyodik + çevrimiçi olunca senkron. Bayrak kapalıysa no-op. */
 export function bulutBaslat(): void {
+  if (zamanlayici) return;
+  void bulutOrtamBekle().then((acik) => {
+    if (!acik) return;
+    bulutBaslatDevam();
+  });
+}
+
+function bulutBaslatDevam(): void {
   if (!bulutAyar() || zamanlayici) return;
   void baglantiyiIsle().catch(() => {}).then(() => simdiSenkronEt().catch(() => {}));
   zamanlayici = setInterval(() => void simdiSenkronEt().catch(() => {}), 60_000);

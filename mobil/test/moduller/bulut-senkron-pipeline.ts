@@ -19,6 +19,12 @@ export const bulutSenkronPipelineModul: TestModul = {
         ayar.includes('process.env.EXPO_PUBLIC_SUPABASE_URL') && !ayar.includes('process.env[k]'),
       ),
       test(G, 'bulut-ortam.json yükleme', ayar.includes('bulutOrtamYukle') && ayar.includes('/bulut-ortam.json')),
+      test(G, 'bulutDurum ortam bekler', servis.includes('bulutOrtamBekle')),
+      test(
+        G,
+        'SW bulut-ortam ağ geçişi',
+        readFileSync(new URL('../../scripts/sw-sablon.js', import.meta.url), 'utf8').includes('bulut-ortam.json'),
+      ),
       test(
         G,
         'kuyruk flush önce sunucu senkronu',
